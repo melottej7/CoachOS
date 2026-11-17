@@ -1,0 +1,29 @@
+{
+  "name": "@coachos/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "typecheck": "tsc --noEmit -p .",
+    "lint": "tsc --noEmit -p .",
+    "db:reset": "tsx scripts/db-reset.ts"
+  },
+  "dependencies": {
+    "@coachos/domain": "0.1.0",
+    "@electric-sql/pglite": "0.5.16",
+    "next": "16.4.6",
+    "react": "19.2.9",
+    "react-dom": "19.2.9",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.15",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "tsx": "4.21.1",
+    "typescript": "5.9.3"
+  }
+}

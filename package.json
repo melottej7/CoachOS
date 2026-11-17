@@ -1,0 +1,20 @@
+{
+  "name": "coachos",
+  "private": true,
+  "type": "module",
+  "workspaces": ["apps/*", "packages/*"],
+  "engines": { "node": ">=22.12" },
+  "scripts": {
+    "dev": "npm run dev -w @coachos/web",
+    "build": "npm run build -w @coachos/web",
+    "start": "npm run start -w @coachos/web",
+    "typecheck": "npm run typecheck -w @coachos/domain && npm run typecheck -w @coachos/web",
+    "lint": "npm run lint -w @coachos/web",
+    "test": "vitest run",
+    "db:reset": "npm run db:reset -w @coachos/web"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "4.1.12"
+  }
+}

@@ -1,0 +1,43 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { formatDuration, formatLongDate, formatShortDate, todayIn, RESULT_STATE_LABELS, SPORT_LABELS } from '@coachos/domain';
+import { requireActor } from '@/server/auth/session';
+import { athleteSchedule, nextWorkout } from '@/server/repo/athlete';
+import { athleteContext } from '@/server/repo/context';
+import { Pill } from '@/components/ui';
+
+export const metadata = { title: 'Aujourd’hui' };
+
+/** X40 : le prochain geste utile. Séance du jour en une action, sinon la prochaine. */
+export default async function Today({ params }: { params: Promise<{ wid: string }> }) {
+  const { wid } = await params;
+  const actor = await requireActor();
+  const ctx = await athleteContext(actor.userId, wid);
+  if (!ctx) notFound();
+  const today = todayIn(ctx.athlete.timeZone);
+  const todays = await athleteSchedule(actor.userId, wid, ctx.athlete.id, today, today);
+  const next = todays.length ? null : await nextWorkout(actor.userId, wid, ctx.athlete.id, today);
+  const base = `/athlete/${wid}`;
+  return (
+    <>
+      <div className="kicker">{formatLongDate(today)} · {ctx.athlete.timeZone}</div>
+      <h1>Aujourd’hui</h1>
+      {todays.length ? todays.map((w) => (
+        <article className="athlete-card" key={w.id}>
+          <Pill>{SPORT_LABELS[w.sport]}</Pill> {w.canceled ? <Pill tone="attn">Annulée</Pill> : null}
+          <h2>{w.title}</h2>
+          <p className="sub">{formatDuration(w.durationSeconds) ?? 'Durée libre'}</p>
+          <div className="actions">
+            <Link className="btn primary" href={`${base}/workouts/${w.id}`}>Voir la séance</Link>
+            {w.feedbackState ? <Pill tone="neutral">Retour envoyé · {RESULT_STATE_LABELS[w.feedbackState]}</Pill> : null}
+          </div>
+        </article>
+      )) : (
+        <div className="card empty" style={{ marginTop: 14 }}>
+          <p><strong>Pas de séance aujourd’hui.</strong> Jour de repos ou programme pas encore publié.</p>
+          {next ? <p style={{ marginTop: 8 }}>Prochaine séance : <Link href={`${base}/workouts/${next.id}`}>{next.title}</Link>, {formatShortDate(next.localDate)}.</p> : null}
+        </div>
+      )}
+    </>
+  );
+}

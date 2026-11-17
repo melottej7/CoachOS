@@ -1,0 +1,46 @@
+import { z } from 'zod';
+
+export const RESULT_STATES = ['completed', 'partial', 'missed'] as const;
+export type ResultState = (typeof RESULT_STATES)[number];
+
+export const RESULT_STATE_LABELS: Record<ResultState, string> = {
+  completed: 'Réalisée',
+  partial: 'Partiellement réalisée',
+  missed: 'Non réalisée',
+};
+
+/**
+ * PUT feedback. RPE 0 à 10 (PRD §21, C06-04), commentaire 1000 caractères (SQL).
+ * Une chaîne vide devient null. Pour « missed », durée et distance ne sont pas supposées.
+ */
+export const saveFeedbackSchema = z
+  .object({
+    publishedRevision: z.number().int().min(1),
+    expectedRevision: z.number().int().min(1).nullish().transform((v) => v ?? null),
+    state: z.enum(RESULT_STATES, { message: 'Choisir un état' }),
+    durationSeconds: z.number().int().min(1, { message: 'Durée positive' }).max(86400, { message: '24 h au plus' }).nullish().transform((v) => v ?? null),
+    distanceM: z.number().int().min(1).max(1_000_000).nullish().transform((v) => v ?? null),
+    rpe: z.number().int({ message: 'Nombre entier' }).min(0, { message: 'Entre 0 et 10' }).max(10, { message: 'Entre 0 et 10' }).nullish().transform((v) => v ?? null),
+    comment: z
+      .string()
+      .max(1000, { message: '1000 caractères au plus' })
+      .nullish()
+      .transform((v) => {
+        const t = v?.trim() ?? '';
+        return t === '' ? null : t;
+      }),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.state === 'missed' && (value.durationSeconds !== null || value.distanceM !== null)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['durationSeconds'],
+        message: 'Une séance non réalisée ne porte ni durée ni distance',
+      });
+    }
+  });
+
+export type SaveFeedbackInput = z.output<typeof saveFeedbackSchema>;
+
+export const markReviewedSchema = z.object({ expectedRevision: z.number().int().min(1) }).strict();

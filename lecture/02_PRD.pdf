@@ -1,0 +1,2058 @@
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R /Lang (fr-BE) >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R 10 0 R 12 0 R 14 0 R 16 0 R 18 0 R 20 0 R 22 0 R 24 0 R 26 0 R 28 0 R 30 0 R 32 0 R 34 0 R 36 0 R 38 0 R 40 0 R 42 0 R 44 0 R 46 0 R 48 0 R 50 0 R 52 0 R 54 0 R 56 0 R 58 0 R 60 0 R 62 0 R 64 0 R 66 0 R 68 0 R 70 0 R 72 0 R 74 0 R 76 0 R 78 0 R 80 0 R 82 0 R 84 0 R 86 0 R 88 0 R 90 0 R 92 0 R 94 0 R 96 0 R 98 0 R 100 0 R 102 0 R 104 0 R 106 0 R 108 0 R] /Count 52 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Length 2728 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (VISION   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Promesse produit) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (CoachOS relie deux usages hebdomadaires. Le coach planifie, publie et traite les retours) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (depuis sa semaine. L’athlète ouvre l’application sur son téléphone, comprend sa séance) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (et indique ce qu’il a fait. Chaque rôle doit voir la prochaine action utile.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Pour une semaine type, la prescription reste versionnée du brouillon au retour. Le coach) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (peut retrouver la séance effectivement vue par l’athlète et mesurer les cas traités.) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (L’athlète invité utilise gratuitement Web et, en V1, Expo.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (La première tranche recouvre toute la boucle sur une séance. Mesurer d’abord le nombre) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (de gestes, les hésitations et les échecs pour chaque rôle. Les améliorations et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 413 Tm (l’assistance IA suivent les preuves de fluidité et le temps de revue mesuré.) Tj ET
+0.92 0.95 1 rg 54 288 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 376 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 357 Tm (C09-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 357 Tm (Seuls les retours courants sans revue sont comptés) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 335 Tm (C09-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 335 Tm (Le lien aboutit au retour source ou explique son indisponibilité) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 313 Tm (C09-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 313 Tm (Le filtre reste actif lors du retour du détail) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (01 / 52) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 2666 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (VISION   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Hypothèses et exclusions) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Le travail se divise entre construction de semaine, publication, remontée de feedback,) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (revue et réponse. Les temps consacrés aux corrections et à la coordination appartiennent) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (au coût de suivi.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (L’objectif de prise en charge de 50 à 300 athlètes dépend du niveau de service. Le pilote) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (valide d’abord 15 à 50 par coach. Le dimensionnement de l’architecture évalue des) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (portefeuilles à 300 et 20 000 athlètes au total.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Aucun projet de marché athlète payant. Les tableaux avancés, les connecteurs) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (secondaires et le traitement des données de santé exigent une preuve spécifique. Evaluer) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 413 Tm (la coexistence avant de demander un basculement complet.) Tj ET
+0.92 0.95 1 rg 54 288 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 376 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 357 Tm (C14-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 357 Tm (Chaque espace autorisé accède aux drapeaux dédiés) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 335 Tm (C14-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 335 Tm (Le coach peut accomplir invite, publication et feedback sans aide) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 313 Tm (C14-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 313 Tm (Le parcours complet clavier et lecteur d’écran fonctionne sur le web) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (02 / 52) Tj ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
+endobj
+9 0 obj
+<< /Length 2512 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (PERSONAS   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Coach indépendant) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Le coach indépendant gère 15 à 50 athlètes, souvent avec plusieurs interfaces et des) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (horaires irréguliers. Il paie pour déléguer la collecte et accélérer la revue sans perdre le) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (détail d’un dossier.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Scénario, il crée trois prescriptions types, invite les athlètes volontaires, publie son) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (premier lot et traite les commentaires reçus dans la semaine. Le coaching continue) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (pendant la transition.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Mesurer temps d’activation, nombre de dossiers actifs et taux d’effort manuel. Poser la) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (question du changement seulement après deux semaines comparables.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C03-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Un propriétaire voit la fiche créée avec état invité) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C03-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Le lien révoqué ne peut plus relier le compte) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C03-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Après archive, aucune nouvelle séance ni message ne peut être écrit dans le dossier) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (03 / 52) Tj ET
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 9 0 R >>
+endobj
+11 0 obj
+<< /Length 2532 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (PERSONAS   /   V1) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Coach premium) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Ce coach gère 50 à 200 athlètes. Son principal besoin est de préserver qualité et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (réactivité alors que le volume d’exceptions augmente. Il veut expliquer sa méthode et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (avoir un aperçu avant toute publication.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Scénario, il trie les retours par jour et priorité, traite une exception, copie une semaine) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (type et compare le brouillon générique avec celui de sa version DNA. La préparation ne) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (doit pas devenir une nouvelle boîte de réception.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Mesurer la revue de 50 dossiers ainsi que les cas silencieux ou oubliés. Les portefeuilles) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (lourds requièrent un contrôle spécifique de latence et support.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C09-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Seuls les retours courants sans revue sont comptés) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C09-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Le lien aboutit au retour source ou explique son indisponibilité) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C09-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Le filtre reste actif lors du retour du détail) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (04 / 52) Tj ET
+endstream
+endobj
+12 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 11 0 R >>
+endobj
+13 0 obj
+<< /Length 2528 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (PERSONAS   /   V2) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Club et délégation) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Le club achète pour un espace partagé, avec un propriétaire qui gère les droits et des) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (coachs qui suivent les dossiers attribués. Une équipe aide à organiser le travail mais) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (n’étend pas les droits.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Scénario, un coach arrive pour une période définie. Le propriétaire l’affecte à un athlète,) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (vérifie la fin de délégation, puis l’enlève. Le compte club et l’historique sportif restent) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (accessibles selon leur périmètre.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Avant ouverture, couvrir retrait immédiat, coaffectation, fin de mandat, transfert de) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (propriété et absence de visibilité transversale. Mesurer temps de support par club.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C21-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Une équipe ne change pas les permissions des athlètes) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C21-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (La prochaine requête perd accès aux athlètes et jobs associés) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C21-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Le droit cesse à la date d’expiration prévue) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (05 / 52) Tj ET
+endstream
+endobj
+14 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 13 0 R >>
+endobj
+15 0 obj
+<< /Length 2456 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (PERSONAS   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Athlète invité) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (L’athlète veut identifier le travail du jour, comprendre les unités, rapporter le réalisé et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (poser une question. Il peut avoir plusieurs relations dans CoachOS. Chaque relation est) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (indépendante et reste identifiable.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Scénario, ouverture de l’invitation, réglage du fuseau et de la langue, lecture de la séance) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (du jour puis réponse courte après entraînement, éventuellement après perte du réseau.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 485 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 464 Tm (Ne rien exiger pour un commentaire facultatif. Mentionner qui verra le retour. Le) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (programme versionné et le feedback restent accessibles sans paiement athlète.) Tj ET
+0.92 0.95 1 rg 54 322 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 410 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 391 Tm (C06-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 391 Tm (L’athlète ne voit que ses séances publiées) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 369 Tm (C06-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 369 Tm (Le serveur valide entier de 0 à 10 et accepte absence de réponse) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 347 Tm (C06-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 347 Tm (Une republication ne change pas la séance observée au moment du retour) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (06 / 52) Tj ET
+endstream
+endobj
+16 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 15 0 R >>
+endobj
+17 0 obj
+<< /Length 2944 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (GOUVERNANCE   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Carte des versions) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Le MVP est une bêta de la boucle manuelle. Must have, identité, droits, athlètes,) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (planning, publication, retour, revue et droits des données. Les tâches apparaissent au bon) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (moment dans l’espace de chaque rôle. Modèles simples et échanges complètent les) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 568 Tm (usages fréquents.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 537 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (Après observation de la boucle, activer sous drapeau résumé et DNA déclaratif. V1 ouvre) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (Expo, anglais et import autorisé selon le bénéfice mesuré. Paiement et stratégie) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 482 Tm (commerciale démarrent après validation du produit. V2 et V3 restent guidées par les) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 465 Tm (preuves.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 434 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 413 Tm (L’ordre par tranches dans la roadmap prévaut sur la tentation de terminer tous les écrans) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 396 Tm (d’un module avant de faire essayer le parcours. Les gates sur les accès réels restent) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 379 Tm (strictes.) Tj ET
+0.92 0.95 1 rg 54 240 487 122 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 342 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 323 Tm (C01-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 323 Tm (Un clone installe les versions du lockfile et compile web et paquets sans) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 309 Tm (configuration privée) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 287 Tm (C01-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 287 Tm (Une base vierge atteint la version attendue dans l’ordre du manifeste) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 265 Tm (C01-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 265 Tm (Le build client ne contient aucune clé privée) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (07 / 52) Tj ET
+endstream
+endobj
+18 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 17 0 R >>
+endobj
+19 0 obj
+<< /Length 2508 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (IDENTITÉ   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Accueil du coach) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Le coach ouvre une session avec Supabase Auth. Le serveur valide l’identité. L’espace) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (et le propriétaire sont créés dans une seule opération. La première action utile est) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (l’invitation d’un athlète.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Email en erreur ou inconnu, rendre une réponse uniforme. Lien expiré, offrir un) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (renouvellement. Retour navigateur après déconnexion, rediriger. Si plusieurs espaces, en) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (afficher la liste et le rôle courant.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Le nom de l’espace est modifiable. La création idempotente ne produit aucun rôle) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (multiple. La date locale d’espace utilise une zone IANA valide.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C02-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Un compte vérifié arrive à la création d’espace sans double profil) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C02-02) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Un lien expiré affiche une demande de renouvellement) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C02-03) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (La transaction crée à la fois espace et rôle propriétaire) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (08 / 52) Tj ET
+endstream
+endobj
+20 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 19 0 R >>
+endobj
+21 0 obj
+<< /Length 2536 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (IDENTITÉ   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Acceptation de l’invitation) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Une invitation est émise pour un dossier, une adresse vérifiable et un délai défini. Un lien) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (consommé, révoqué ou expiré ne rattache plus de compte. L’activation dépend du quota) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (au moment de l’acceptation.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Si le compte connecté ne possède pas l’adresse attendue, l’athlète repart vers une) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (authentification contrôlée. Réémettre remplace l’ancien lien. Aucune adresse brute) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (n’apparaît dans les logs ou erreurs.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Le dossier devient actif avec une identité et une relation. L’athlète choisit son fuseau, sa) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (langue et découvre sa notice avant les usages concernés.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C03-02) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Le lien est à usage unique, expire et masque le token dans les logs) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C03-03) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Une identité avec email vérifié égal active exactement une affectation) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C03-05) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Le dernier lien est valable et l’ancien échoue) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (09 / 52) Tj ET
+endstream
+endobj
+22 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 21 0 R >>
+endobj
+23 0 obj
+<< /Length 2580 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (IDENTITÉ   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Choix d’espace et rôle) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (L’identité peut être coach ici et athlète ailleurs. Le sélecteur rend le rôle explicite. Pour) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (chaque requête, l’espace du chemin fixe le contexte et la base décide l’accès à la date) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (de la demande.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Le propriétaire gère les droits de son espace et les abonnements. Lire un dossier requiert) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (une affectation. Un coach collaborateur ne voit aucun dossier d’une équipe sans) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (affectation. Un athlète voit ses relations et ses propres données publiées.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (L’onglet précédent est fermé ou purgé au changement de contexte. Retour vers une) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (relation révoquée, afficher une erreur neutre et les options autorisées.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C03-06) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Les pages par curseur restent stables avec deux noms identiques) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C03-07) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Une recherche filtrée ne montre que les affectations légitimes) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C03-10) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Un athlète invité dans deux espaces voit deux contextes indépendants) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (10 / 52) Tj ET
+endstream
+endobj
+24 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 23 0 R >>
+endobj
+25 0 obj
+<< /Length 2443 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (PORTEFEUILLE   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Liste et fiches athlètes) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (La liste affiche nom, état, synthèse de semaine et cas ouverts. La pagination est stable) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (pour deux noms égaux. Rechercher et filtrer sans révéler les dossiers non assignés.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 571 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 550 Tm (Créer une fiche avec nom et fuseau. État invited tant qu’aucune identité n’a accepté,) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (active après activation, archived après fin. Une fiche inactive ne consomme pas la) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (capacité d’abonnement.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 485 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 464 Tm (Le détail donne accès aux séances, objectifs, notes privées et retours du dossier. À la) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (sélection d’un athlète dans le calendrier, vérifier de nouveau les droits.) Tj ET
+0.92 0.95 1 rg 54 322 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 410 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 391 Tm (C03-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 391 Tm (Un propriétaire voit la fiche créée avec état invité) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 369 Tm (C03-06) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 369 Tm (Les pages par curseur restent stables avec deux noms identiques) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 347 Tm (C03-07) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 347 Tm (Une recherche filtrée ne montre que les affectations légitimes) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (11 / 52) Tj ET
+endstream
+endobj
+26 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 25 0 R >>
+endobj
+27 0 obj
+<< /Length 2531 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (PORTEFEUILLE   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Fin de relation) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Un coach attribué archive après confirmation. Le système empêche les nouveaux) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (messages, publications et séances. L’historique accessible dépend du rôle et de la) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (politique de conservation.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Un dossier archivé ne bloque pas une demande d’accès ou d’effacement. Le coach peut) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (encore rapprocher une facture ou identifier le changement de statut sans consulter de) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (données non autorisées.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Vérifier la concurrence archive/publication/invitation. Révoquer le traitement asynchrone) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (qui dépend d’une affectation disparue et invalider les suggestions en cours.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C03-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Le lien révoqué ne peut plus relier le compte) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C03-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Après archive, aucune nouvelle séance ni message ne peut être écrit dans le dossier) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C03-10) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Un athlète invité dans deux espaces voit deux contextes indépendants) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (12 / 52) Tj ET
+endstream
+endobj
+28 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 27 0 R >>
+endobj
+29 0 obj
+<< /Length 2496 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (PLANIFICATION   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Objectifs et plans) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Un objectif daté ou non donne un contexte sportif partagé. Son état est planifié, atteint ou) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (annulé. Un plan encadre une préparation par dates locales inclusives. Une préparation) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (peut exister sans objectif de compétition.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Les blocs ont un début et une fin dans les bornes du plan. Leur nom et ordre organisent la) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (préparation sans réécrire les séances existantes. Les séances restent liées au bon) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (athlète et espace.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Séparer modification du plan et accès à la prescription. Un coach peut créer un plan vide.) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (Une plage hors bornes renvoie un contrôle localisé.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C04-02) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Une date de fin antérieure au début est refusée) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C04-03) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Le bloc doit être contenu dans la période du plan) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C04-06) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (L’échéance peut être vide et le statut est explicite) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (13 / 52) Tj ET
+endstream
+endobj
+30 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 29 0 R >>
+endobj
+31 0 obj
+<< /Length 2700 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (PLANIFICATION   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Calendrier et fuseaux) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Stocker la date locale et la zone de la séance. Utiliser l’instant UTC pour l’audit et les) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (événements. Les jours restent stables quand le décalage UTC évolue. Le coach voit le) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (fuseau utilisé avant de publier.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (La semaine commence le lundi en FR et EN au lancement. Afficher cellules jour, liste) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (accessible et navigation précédente/suivante. La fenêtre maximale de lecture du) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (calendrier est de 42 jours.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Si deux séances partagent une date, conserver leur ordre puis l’identifiant. Aucune date) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (de séance n’est dérivée arbitrairement du fuseau du navigateur.) Tj ET
+0.92 0.95 1 rg 54 277 487 136 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C04-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Les sept dates suivent le fuseau sélectionné et restent stables lors du changement) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 360 Tm (d’heure) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 338 Tm (C04-07) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 338 Tm (Le coach peut créer une séance depuis la cellule du jour) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 316 Tm (C04-09) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 316 Tm (La durée prévue est affichée dans la bonne unité et les données inconnues sont) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 302 Tm (identifiées) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (14 / 52) Tj ET
+endstream
+endobj
+32 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 31 0 R >>
+endobj
+33 0 obj
+<< /Length 2531 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (PLANIFICATION   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Création de séance) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (La séance a un sport, une date locale, un ordre, un titre et des instructions. Durée et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (distance restent facultatives. Une séance structurée simple porte des étapes avec durée) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (ou distance, cible et répétitions bornées.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Le brouillon est invisible à l’athlète. Le coach lit la version en cours et la version publiée.) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (Modifier une séance publiée ne change pas immédiatement la prescription lue.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 485 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 464 Tm (Pour valider une étape, sa cible et son unité doivent être compatibles. Présenter les) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (sous-totaux connus et indiquer les parties manquantes. Aucune conversion implicite) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (entre sports.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C05-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (L’athlète voit la nouvelle révision après confirmation coach) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C05-05) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Une séance annulée reste dans l’historique avec sa raison) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C05-07) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Chaque étape indique valeur, unité et répétitions) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (15 / 52) Tj ET
+endstream
+endobj
+34 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 33 0 R >>
+endobj
+35 0 obj
+<< /Length 2533 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (PLANIFICATION   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Publication en lot) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Le coach affiche l’aperçu, le fuseau et 1 à 50 révisions d’un seul dossier. La) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (confirmation sélectionne précisément les révisions à publier. Le serveur valide tout le lot) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (avant de déplacer ses pointeurs.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (L’action refuse les doublons de séance. Si un statut ou une révision a changé, aucune) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (ligne n’est publiée. Présenter la ligne en conflit et permettre la correction puis un nouvel) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (envoi.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Notification asynchrone après commit. En replay, même clé et même lot rendent le même) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (résultat. L’accès athlète se fonde sur le commit, indépendamment de la notification.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C05-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Une seule version publiée est visible après double clic) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C05-02) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Un conflit sur une séance empêche le lot entier et désigne la ligne) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C05-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (L’athlète voit la nouvelle révision après confirmation coach) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (16 / 52) Tj ET
+endstream
+endobj
+36 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 35 0 R >>
+endobj
+37 0 obj
+<< /Length 2509 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (PLANIFICATION   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Modification et annulation) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Déplacer, copier ou modifier une séance crée un brouillon. Copier attribue un identifiant) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (neuf et ne copie aucun résultat. Une modification publique passe par republication) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (volontaire.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Annuler exige une raison de communication courte et une révision dédiée. La séance) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (reste identifiable dans l’historique et n’accepte pas de nouveau feedback pour une) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (version annulée.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Quand un retour existant référence une version précédente, la conserver. Afficher au) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (coach le détail des écarts et à l’athlète la version actuellement visible.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C05-03) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Le changement crée un brouillon en conservant la version lue par l’athlète) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C05-05) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Une séance annulée reste dans l’historique avec sa raison) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C05-06) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (La copie a un nouvel ID et ne reprend aucun résultat) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (17 / 52) Tj ET
+endstream
+endobj
+38 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 37 0 R >>
+endobj
+39 0 obj
+<< /Length 2488 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (PLANIFICATION   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Bibliothèque et application) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (La bibliothèque prive les modèles d’informations d’athlète. Une séance modèle contient) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (exercices et unités. Une semaine type contient une séquence et des décalages.) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (L’application crée de nouveaux brouillons.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Un coach propriétaire édite ou archive son modèle. Un partage d’espace explicite peut) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (ouvrir la copie en V2. Une séance créée reste indépendante des évolutions du modèle.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 485 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 464 Tm (La prévisualisation annonce jours, unités et volume partiel. Revalider la version du) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (modèle entre aperçu et confirmation. Aucune séance reçue par l’athlète avant) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (publication.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C07-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Le modèle copie seulement contenu et unités) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C07-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Les instances existantes ne changent pas) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C07-07) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Les séances sont proposées en aperçu avant insertion) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (18 / 52) Tj ET
+endstream
+endobj
+40 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 39 0 R >>
+endobj
+41 0 obj
+<< /Length 2577 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (SPORT   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Sémantique des six sports) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Running, trail, cyclisme, natation, triathlon et duathlon font partie du référentiel. Stocker) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (secondes et mètres. Cibles éventuelles RPE, watts, bpm ou zone adaptée. Triathlon et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (duathlon ont aussi des segments spécialisés.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (En MVP, une séance décrit librement les transitions et peut être créée pour chaque sport.) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (En V2, l’ordre des segments et unités spécialisées s’affichent et se valident) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (explicitement.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Le trail peut afficher un dénivelé absent distinct de zéro. Natation affiche longueurs et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (repos. Vélo privilégie puissance ou durée. Garder les métriques comparables par sport.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C22-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (La limite d’imbrication est validée et les répétitions sont calculées) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C22-03) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Les intervalles reflètent distance et repos plutôt qu’une allure course) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C22-06) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (L’enchaînement ordonne natation, vélo et course en séances liées) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (19 / 52) Tj ET
+endstream
+endobj
+42 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 41 0 R >>
+endobj
+43 0 obj
+<< /Length 2448 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (ATHLÈTE   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Programme du jour) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (L’écran Aujourd’hui montre les séances publiées de la date locale, l’unité, l’ordre, le) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (statut et le détail. En absence de séance, afficher le prochain travail si disponible.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 571 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 550 Tm (Le jour de repos, le silence du calendrier, une séance annulée et un chargement ne sont) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (pas des états équivalents. Le statut est annoncé dans le texte.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 502 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 481 Tm (Sur téléphone, le détail est accessible en une action depuis Aujourd’hui. Observer si) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 464 Tm (l’athlète comprend sport, durée et premières consignes. Un ancien lien ouvre une) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (explication et la version visible lorsque les droits le permettent.) Tj ET
+0.92 0.95 1 rg 54 322 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 410 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 391 Tm (C06-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 391 Tm (L’athlète ne voit que ses séances publiées) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 369 Tm (C06-09) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 369 Tm (La date de revue et l’acteur sont enregistrés une seule fois) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 347 Tm (C06-10) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 347 Tm (Les séances annulées et passées ont des libellés distincts) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (20 / 52) Tj ET
+endstream
+endobj
+44 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 43 0 R >>
+endobj
+45 0 obj
+<< /Length 2640 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (ATHLÈTE   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Saisie de feedback) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Déclarer réalisé, partiel ou manqué avec durée, distance, RPE de 0 à 10 et commentaire) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (facultatif. La version observée est stockée. Un retour par séance, avec révisions) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (d’édition.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Pour réalisé ou partiel, demander les mesures réellement connues. Pour manqué, durée et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (distance ne sont pas supposées. La plage et la taille sont validées côté serveur avec aide) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (dans le formulaire.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Afficher la confirmation après envoi et maintenir l’édition possible. Se donner 30) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (secondes après prise en main pour la saisie courte. Même clé, un seul résultat. Deux) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 413 Tm (appareils qui corrigent le même retour obtiennent une réponse de conflit.) Tj ET
+0.92 0.95 1 rg 54 288 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 376 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 357 Tm (C06-03) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 357 Tm (La vue coach distingue manqué et absence de retour) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 335 Tm (C06-05) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 335 Tm (Le texte respecte la taille, est rendu en texte et reste dans le dossier) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 313 Tm (C06-07) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 313 Tm (La même clé crée un seul feedback après retour du réseau) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (21 / 52) Tj ET
+endstream
+endobj
+46 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 45 0 R >>
+endobj
+47 0 obj
+<< /Length 2433 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (ATHLÈTE   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Historique personnel) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (L’historique reste une lecture des séances publiées et des résultats propres. Une séance) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (révisée après réalisation garde la prescription observée dans le retour. Afficher statut et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (date dans les vues.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Le détail explique si une mesure vient d’une déclaration directe ou d’un import autorisé.) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (Sans donnée réelle, afficher non renseigné. Faire un export sur demande vérifiée.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 485 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 464 Tm (Un changement de relation ou de compte purge la vue. Les données d’un autre athlète) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (n’apparaissent jamais via pagination, recherche ou message d’erreur.) Tj ET
+0.92 0.95 1 rg 54 322 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 410 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 391 Tm (C06-06) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 391 Tm (Une révision obsolète est rejetée avec état actuel) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 369 Tm (C06-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 369 Tm (Une republication ne change pas la séance observée au moment du retour) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 347 Tm (C06-10) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 347 Tm (Les séances annulées et passées ont des libellés distincts) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (22 / 52) Tj ET
+endstream
+endobj
+48 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 47 0 R >>
+endobj
+49 0 obj
+<< /Length 2426 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (COMMUNICATION   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Fil de relation) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Un fil par relation. Les messages sont du texte, jusqu’à 4 000 caractères, rendus sans) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (HTML. Le coach et l’athlète sont les seuls utilisateurs du flux MVP. Pas de pièces) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (jointes.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Conserver ordre avec createdAt et id. Afficher non lu par curseur individuel. Le) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (destinataire reçoit éventuellement une notification sans corps de message. Le retrait) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (d’accès s’applique avant chaque lecture et écriture.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Un envoi lent reste en attente et réutilise la même clé. La lecture ne repositionne pas un) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (curseur vers le passé.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C08-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Deux demandes concurrentes rendent le même fil) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C08-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Le curseur de lecture avance sans régression) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C08-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Un dépassement répond 429 avec délai) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (23 / 52) Tj ET
+endstream
+endobj
+50 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 49 0 R >>
+endobj
+51 0 obj
+<< /Length 2408 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (REVUE   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (File des retours à traiter) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Les cas ouverts sont ordonnés par catégorie, rang, échéance, puis ID. Afficher pourquoi le) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (cas remonte et l’état de complétude. La revue ne qualifie pas une mesure comme) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (diagnostic.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Le coach ouvre la source, lit le résultat et peut reporter ou clore. Reporter exige une date) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (future. Un doublon de notification ne crée pas un second cas pour le même objet logique.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 485 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 464 Tm (Le compteur suit les cas accessibles. L’absence de feedback n’équivaut pas à un) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (manqué. Marquer un cas comme traité produit un audit sans texte libre.) Tj ET
+0.92 0.95 1 rg 54 322 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 410 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 391 Tm (C09-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 391 Tm (Seuls les retours courants sans revue sont comptés) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 369 Tm (C09-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 369 Tm (Le lien aboutit au retour source ou explique son indisponibilité) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 347 Tm (C09-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 347 Tm (Le filtre reste actif lors du retour du détail) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (24 / 52) Tj ET
+endstream
+endobj
+52 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 51 0 R >>
+endobj
+53 0 obj
+<< /Length 2440 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (REVUE   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Notes internes et continuité) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Les notes sont attachées au dossier et à leur auteur. L’athlète, les autres coachs sans) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (autorisation et l’IA MVP n’y accèdent pas. Définir l’usage autorisé et afficher le) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (caractère privé dans le formulaire.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Un coach peut retrouver son dernier contexte après retour du calendrier. La vue de revue) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (dépend uniquement de preuves autorisées et donne un accès rapide au fil ou à la séance.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 485 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 464 Tm (Champ court sans formatage, sans chargement médical dédié. Tester événements) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (d’effacement et tolérance aux changements d’affectation lors d’une session ouverte.) Tj ET
+0.92 0.95 1 rg 54 322 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 410 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 391 Tm (C09-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 391 Tm (Seuls les retours courants sans revue sont comptés) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 369 Tm (C09-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 369 Tm (Le lien aboutit au retour source ou explique son indisponibilité) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 347 Tm (C09-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 347 Tm (Le filtre reste actif lors du retour du détail) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (25 / 52) Tj ET
+endstream
+endobj
+54 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 53 0 R >>
+endobj
+55 0 obj
+<< /Length 2538 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (CONFIDENTIALITÉ   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Information et finalités) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (La notice explique activités, destinataires, durées, droits et contact. L’identité, le) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (planning et le feedback appartiennent à des finalités explicites. Les responsabilités sont) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (attribuées selon le traitement réel.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Évaluer les données de santé avant collecte ou envoi fournisseur. Les commentaires) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (imprévus pouvant contenir du sensible, limiter leur accès, indiquer la finalité et exclure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (leur contenu de l’IA initiale.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Conserver version de notice et date. Paramétrer bases et durées après revue.) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (Documenter les fournisseurs et vérifier routes en cas de retrait du droit.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C10-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (La notice indique finalités et contact du responsable) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C10-02) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (La version affichée est rattachée à l’espace et à la date) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C10-10) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Les propriétés imprévues et les textes libres sont rejetés) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (26 / 52) Tj ET
+endstream
+endobj
+56 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 55 0 R >>
+endobj
+57 0 obj
+<< /Length 2558 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (CONFIDENTIALITÉ   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Export et effacement) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Les demandes d’accès, portabilité et effacement sont liées à l’identité vérifiée et à) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (l’espace concerné. La demande passe par une file et un responsable. Les mesures de) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (délai suivent les obligations applicables.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Générer le fichier côté serveur et vérifier le périmètre. Une URL courte ne suffit pas à) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (autoriser un accès. Exclure données tierces sans droit et notes privées non portables) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (après revue du responsable.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Effacer en ordre, reprendre par lot, révoquer liens, supprimer exports et invalider) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (brouillons dépendants. Tenir un journal minimal compatible avec obligations.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C10-03) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Un accusé identifie la demande sans divulguer son contenu) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C10-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (L’archive ne contient aucune note privée de coach ni donnée tierce) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C10-07) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (La reprise retente les fragments échoués sans recréer les données) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (27 / 52) Tj ET
+endstream
+endobj
+58 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 57 0 R >>
+endobj
+59 0 obj
+<< /Length 2583 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (CONFIDENTIALITÉ   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Rétention minimale) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Cibles d’exploitation à valider, liens d’invitation 7 jours, export disponible 24 h,) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (brouillons IA 90 jours, journaux techniques 30 jours, audit opérationnel 12 mois. Les) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (obligations de facturation suivent une durée distincte.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Le traitement d’historique sportif fermé a une durée justifiée par responsable.) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (S’abstenir de prolonger en silence. Les sauvegardes ont une fenêtre connue et les) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (effacements rejoués après restauration.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Tracer la règle et le résultat de purge. Deux réexécutions produisent le même état. Tester) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (une restauration et l’absence de données réapparues après reprise.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C10-05) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Le téléchargement authentifié expire et est limité au demandeur) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C10-07) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (La reprise retente les fragments échoués sans recréer les données) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C10-09) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Une tâche élimine les journaux échus sans toucher aux écritures obligatoires) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (28 / 52) Tj ET
+endstream
+endobj
+60 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 59 0 R >>
+endobj
+61 0 obj
+<< /Length 2493 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (IA BÊTA   /   Après recette) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Contexte et provenance) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Les faits envoyés au modèle se limitent à données directes autorisées, versions, dates,) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (durées et RPE utiles. Exclure données Strava et dérivées, inconnues, texte libre, notes et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (contacts.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Chaque fait porte ID opaque, origine, unité et révision. Le modèle ne reçoit aucune) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (permission d’accès. Le serveur repositionne un brouillon à périmé si une preuve ou une) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (relation change.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Les fixtures couvrent provenance transitivement interdite, ajout de texte hostile et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (format de sortie invalide. En cas de doute, rester en suivi manuel.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C11-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Le manifeste liste provenance et version pour tout fait transmis) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C11-02) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Un fait inconnu ou Strava bloque sa branche de contexte) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C11-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Une sortie invalide ne produit aucun brouillon) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (29 / 52) Tj ET
+endstream
+endobj
+62 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 61 0 R >>
+endobj
+63 0 obj
+<< /Length 2518 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (IA BÊTA   /   Après recette) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Résumé hebdomadaire) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Le coach commande un résumé de la semaine close sur un dossier affecté. Afficher) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (nombre prévu, déclaré, manqué explicitement et inconnu. Les totaux gardent leur) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (dénominateur et leur sport.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Moins de deux observations, afficher insuffisant et les éléments disponibles. Une) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (hypothèse non étayée est exclue. L’action de revue ne publie jamais un message ou une) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (séance.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Contrôler génération et rendu, texte court, références distinctes et couverture. Mesurer la) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (différence de temps entre traitement manuel et traitement avec brouillon.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C12-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Une semaine avec deux retours liste les faits et leur couverture) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C12-02) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Avec trop peu de faits, le coach voit une abstention et le motif) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C12-03) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Le calcul affiche la source et ignore les unités non comparables) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (30 / 52) Tj ET
+endstream
+endobj
+64 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 63 0 R >>
+endobj
+65 0 obj
+<< /Length 2412 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (IA BÊTA   /   Après recette) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Validation et repli) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Après génération, ouvrir un brouillon avec preuves affichées, version du prompt et profil) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (utilisé. Le coach peut éditer, accepter en interne ou rejeter. Un contexte récent est requis) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (à la décision.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Si erreur, quota ou indisponibilité du fournisseur, l’écran précise l’état et propose la voie) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (manuelle. Une suggestion n’affecte ni plan, ni statut athlète, ni messagerie.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 485 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 464 Tm (L’acceptation traçable ne garde que les données nécessaires. Un concurrent qui change) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (une preuve empêche validation de la version antérieure.) Tj ET
+0.92 0.95 1 rg 54 322 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 410 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 391 Tm (C12-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 391 Tm (Le résumé reste réservé au coach attribué) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 369 Tm (C12-05) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 369 Tm (La version éditée est visible avec auteur et horodatage) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 347 Tm (C12-06) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 347 Tm (La validation conserve le contenu final et l’empreinte des preuves) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (31 / 52) Tj ET
+endstream
+endobj
+66 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 65 0 R >>
+endobj
+67 0 obj
+<< /Length 2538 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (COACH DNA   /   Après recette) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Fiche déclarative) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Le coach saisit philosophie, ton et règles typées de méthode. Le produit sépare style et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (prescriptions. Une règle a périmètre, condition et effet interne permis. Le moteur reste) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (borné.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Une version active par coach et espace. L’activation affiche le diff et le résultat de) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (simulation. Le coach peut revenir à la configuration précédente en créant une version) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (nouvelle.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Sans profil confirmé, utiliser un canevas générique. Une règle contradictoire ou inconnue) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (crée une revue. Ouvrir cette fiche aux pilotes après la recette manuelle des deux rôles.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C13-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (La première version est inactive et appartient au coach) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C13-05) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Le résultat montre règle appliquée et raisons sans écrire au calendrier) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C13-07) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Une seule version active subsiste même avec deux requêtes concurrentes) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (32 / 52) Tj ET
+endstream
+endobj
+68 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 67 0 R >>
+endobj
+69 0 obj
+<< /Length 2460 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (COACH DNA   /   V2) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Apprentissage candidat) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Le coach distingue correction stylistique, méthodologique, exception et manque de) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (données. Une preuve non permise, une exception et une duplication restent hors corpus.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 571 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 550 Tm (Grouper les cas indépendants par sport, métrique et effet. Exiger le support minimal de la) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (section 09, afficher contre-exemples, tester à blanc et décider. Accepter ouvre un draft) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (puis action distincte pour activer.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 485 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 464 Tm (Mesurer qualité par comparaison du même cas avec et sans DNA. La révocation invalide) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (les preuves et ouvre une revue du profil si elles ont déterminé la règle.) Tj ET
+0.92 0.95 1 rg 54 322 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 410 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 391 Tm (C20-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 391 Tm (L’utilisateur choisit style, méthode, cas exceptionnel ou inconnu) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 369 Tm (C20-03) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 369 Tm (Seules des corrections indépendantes et éligibles sont regroupées) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 347 Tm (C20-06) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 347 Tm (Deux conséquences incompatibles demandent un arbitrage) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (33 / 52) Tj ET
+endstream
+endobj
+70 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 69 0 R >>
+endobj
+71 0 obj
+<< /Length 2508 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (COACH DNA   /   V3) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Supervision graduée) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Le mode suggestion demeure le défaut. Supervision interne éventuelle, activée par le) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (coach après démonstration du gain, autorise seulement des tâches réversibles et limitées) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (par fenêtre.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Exemples, créer un élément de revue ou regrouper une alerte. Garde-fou, le profil ne) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (donne pas le droit de modifier un plan, envoyer un conseil ou publier. Toute règle) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (appliquée indique provenance et heure.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Arrêt immédiat en désactivant le mode, quota par cas, audit et retour arrière pour chaque) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (action interne. Tester l’arrêt avec jobs en file.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C29-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Le rapport distingue demandes spontanées et intentions en entretien) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C29-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Le scénario estime acheteurs, coachs et échecs de mise en relation) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C29-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Les permissions documentées, coûts et gains sont tracés) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (34 / 52) Tj ET
+endstream
+endobj
+72 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 71 0 R >>
+endobj
+73 0 obj
+<< /Length 2504 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (IA V2   /   V2) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Variations et anomalies) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Le moteur recherche incohérence de saisie, absence de preuve ou variation du ressenti) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (par comparaison robuste. Les fenêtres et unités sont exposées. Les seuils sont des) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (heuristiques de revue.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Refuser l’inférence physiologique et l’agrégation de sports non comparables. Pour) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (données faibles, afficher de quoi observer ou demander confirmation. Donner priorité à la) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (règle déterministe.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Seuil de mise en service fondé sur exactitude, abstention, revue et bruit. Contrôler que le) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (signal ne déclenche jamais d’action visible athlète.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C19-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Une unité différente ou un dénominateur nul déclenche abstention) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C19-02) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Le calcul déclare fenêtre, observations manquantes et source) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C19-03) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Le coach voit la valeur, la limite et une demande de vérification) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (35 / 52) Tj ET
+endstream
+endobj
+74 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 73 0 R >>
+endobj
+75 0 obj
+<< /Length 2521 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (IA V2   /   V2) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Adaptation et commentaire) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (L’assistant peut expliquer un candidat borné calculé par le moteur et suggérer une) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (formulation. Si indices de prudence ou données manquantes, demander revue. Aucun) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (traitement ou recommandation médicale.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Le coach voit l’avant, l’après, la preuve, la règle et l’espace. La prise de décision) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (revalide l’état. Publication du nouveau brouillon de séance ou envoi du texte par une) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (action explicite existante.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Evaluer les changements erronés, le temps d’édition, les propositions périmées et les) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (oublis. Un nombre élevé de rejets de fond bloque l’extension du module.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C19-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Le brouillon est strictement basé sur les preuves et la locale) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C19-05) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Chaque changement cite une règle et demande confirmation) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C19-07) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Le coach voit dates, écarts et versions avant décision) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (36 / 52) Tj ET
+endstream
+endobj
+76 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 75 0 R >>
+endobj
+77 0 obj
+<< /Length 2623 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (FACTURATION   /   Après G2) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Checkout coach) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (La vente détaillée et la facturation démarrent après validation de la boucle coach et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (athlète. Le propriétaire peut alors sélectionner une offre sur le Web. Un paiement réussi) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (dans le navigateur reste une demande en cours jusqu’à ce que l’état Stripe ait été) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 568 Tm (confirmé côté serveur.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 537 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (Le serveur vérifie l’événement signé, déduplique et relit Stripe. L’ordre d’arrivée ne) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (suffit pas à établir l’état. Le portail client est réservé au propriétaire et résolu côté) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 482 Tm (serveur.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 451 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (Vérifier événement renvoyé, client inconnu, facture sans projection et changement) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 413 Tm (d’offre au même instant. L’athlète ne reçoit aucune page tarifaire privée.) Tj ET
+0.92 0.95 1 rg 54 288 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 376 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 357 Tm (C15-02) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 357 Tm (Le serveur choisit un prix autorisé et lie l’espace) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 335 Tm (C15-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 335 Tm (Un événement échoué ne modifie aucun droit) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 313 Tm (C15-06) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 313 Tm (Le worker récupère l’état courant et la vue locale converge) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (37 / 52) Tj ET
+endstream
+endobj
+78 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 77 0 R >>
+endobj
+79 0 obj
+<< /Length 2575 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (FACTURATION   /   Après G2) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Limites et impayés) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Le quota compte les liens actifs non archivés. Une invitation pendante ne réserve pas de) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (place. Des acceptations simultanées se sérialisent sur l’espace. Les calculs sont) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (visibles au propriétaire.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Si passage à une offre inférieure au nombre actif, maintenir dossiers existants et bloquer) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (les nouvelles activations. En cas d’impayé, délai de grâce affiché et accès coach) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (lecture/exports après échéance.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Reprise de paiement remet en capacité sans recréer les dossiers. L’accès historique) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (athlète et la récupération de données suivent la politique. Aucun effacement automatique.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C15-07) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Des acceptations simultanées ne dépassent jamais la limite contractuelle) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C15-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (La période de grâce est visible puis les mutations bloquées ciblées) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C15-09) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Le dépassement conserve lectures et bloque de nouvelles activations) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (38 / 52) Tj ET
+endstream
+endobj
+80 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 79 0 R >>
+endobj
+81 0 obj
+<< /Length 2510 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (EXPO   /   V1) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Compagnon athlète) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (L’app Expo couvre Aujourd’hui, Programme, Messages et Profil, avec la même API et le) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (même état que le portail Web. Les droits sont lus à chaque opération. Les jetons) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (nécessaires sont en stockage sécurisé.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (L’absence de réseau garde seulement la saisie active en mémoire. L’app ne promet pas) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (la synchronisation hors ligne. Le cache mémoire est purgé après fermeture de session ou) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (changement de compte.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Tester les liens universels, le précédent binaire, VoiceOver/TalkBack et la session) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (expirée. Les modalités de diffusion sont revues pour la boutique concernée.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C16-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Le stockage sécurisé ne conserve que les jetons nécessaires) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C16-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Les séances publiées sont paginées et accessibles) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C16-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Un autre compte sur l’appareil ne retrouve aucune donnée privée) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (39 / 52) Tj ET
+endstream
+endobj
+82 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 81 0 R >>
+endobj
+83 0 obj
+<< /Length 2328 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (INTERNATIONAL   /   V1) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Langues et unités) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Le projet distingue stockage d’unité, présentation, traduction et langue choisie. FR au) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (pilote et EN en V1. Le sportif peut choisir sa langue indépendamment de l’espace.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 571 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 550 Tm (Internationaliser navigation, mails, erreurs, dates, infobulles et textes accessibles.) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Utiliser date ISO au contrat et format local à l’affichage. Tester le séparateur décimal.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 502 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 481 Tm (La préférence d’affichage n’affecte ni les seuils, ni les données sportives. La traduction) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 464 Tm (de contenu libre ne s’active pas sans justification et contrôle de données.) Tj ET
+0.92 0.95 1 rg 54 339 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 427 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 408 Tm (C17-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 408 Tm (Aucune clé brute n’apparaît dans les menus) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 386 Tm (C17-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 386 Tm (Les deux langues gardent la date du portefeuille) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 364 Tm (C17-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 364 Tm (Un libellé long n’empêche pas d’atteindre l’action) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (40 / 52) Tj ET
+endstream
+endobj
+84 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 83 0 R >>
+endobj
+85 0 obj
+<< /Length 2543 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (IMPORT   /   V1) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Résultats de sources permises) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (CoachOS accepte les déclarations manuelles et un CSV direct autorisé après V1. Le) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (guide précise colonnes, provenance, dates, identifiants, taille et unités. Une source) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (inconnue ou Strava est exclue du flux.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Prévisualiser erreurs ligne par ligne, confirmer par empreinte et écrire avec une clé de lot.) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (Les données source sont temporaires et les données canoniques gardent leur) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (provenance.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Répéter le lot sans doublons. Refuser les dates ambiguës et les valeurs des autres) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (espaces. En annulation, conserver les lignes modifiées après l’import et les signaler.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C18-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Le modèle précise identifiants, date, unités et provenance acceptées) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C18-02) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Les erreurs sont localisées ligne et colonne avant écriture) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C18-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Le même lot prévisualisé produit un résultat unique après reprise) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (41 / 52) Tj ET
+endstream
+endobj
+86 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 85 0 R >>
+endobj
+87 0 obj
+<< /Length 2602 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (INTÉGRATION   /   Conditionnel) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Strava selon périmètre autorisé) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Le besoin historique est de réduire la saisie, mais l’accord 2026 impose des restrictions) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (d’affichage et interdit l’usage IA direct ou dérivé. La bêta utilise la saisie et les sources) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (directes autorisées.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Tout pilote Strava nécessite une autorisation qui couvre précisément le parcours. État) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (OAuth court, secrets serveur, portée minimale, stockage isolé, contrôle des quotas et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (révocation. Aucun transfert coach ou IA dans le périmètre par défaut.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Traiter révocation et purge, et maintenir le produit sans le connecteur. Une absence) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (d’autorisation compatible arrête cette piste.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C18-07) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Une preuve datée spécifie les usages autorisés ou le drapeau reste arrêté) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C18-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Les éléments rattachés deviennent inaccessibles et leur purge est tracée) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C18-09) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Aucun objet Strava ne sort vers coach, IA, export coach ou analytics) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (42 / 52) Tj ET
+endstream
+endobj
+88 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 87 0 R >>
+endobj
+89 0 obj
+<< /Length 2581 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (CLUB   /   V2) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Équipe et portefeuille délégué) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Une équipe organise des dossiers déjà autorisés. Chaque délégation dit qui peut agir, à) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (partir de quand, jusqu’à quand et sur quel dossier. Les droits de facturation sont) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (indépendants.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Lors du transfert de propriétaire, effectuer le passage en transaction. Lors du retrait de) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (coach, invalider sessions métiers côté application, queues et suggestions selon les) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (accès courants.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Le test contrôle que ressources publiques, étiquettes et aperçu de calendrier ne) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (divulguent aucune affectation de tiers. Les exports d’équipe respectent les droits) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 413 Tm (explicites.) Tj ET
+0.92 0.95 1 rg 54 288 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 376 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 357 Tm (C21-02) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 357 Tm (Le rôle actif ne donne accès à aucun athlète sans affectation) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 335 Tm (C21-03) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 335 Tm (Le nouveau coach peut lire uniquement la relation accordée) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 313 Tm (C21-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 313 Tm (La prochaine requête perd accès aux athlètes et jobs associés) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (43 / 52) Tj ET
+endstream
+endobj
+90 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 89 0 R >>
+endobj
+91 0 obj
+<< /Length 2508 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (NOTIFICATIONS   /   V2) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Regroupement et fréquence) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Les messages transactionnels d’invitation et d’accès sont distincts des préférences de) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (digest. Pour les notifications optionnelles, offrir réduction, désactivation et centralisation) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (par destinataire.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Ne pas inclure de contenu de retour, détail de séance ou fait de santé. Un lien exige une) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (session et une nouvelle résolution des droits. Une tâche annulée ou obsolète n’envoie) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (plus.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Tester doublon, préférence modifiée entre demande et envoi et téléphone révoqué.) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (Mesurer utilité et signaux ignorés avant d’activer un nouveau canal.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C25-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Le coach peut passer de digest à aucun email optionnel) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C25-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Le retry reprend le même identifiant et respecte le plafond) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C25-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (L’utilisateur voit seulement ses événements et peut les marquer lus) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (44 / 52) Tj ET
+endstream
+endobj
+92 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 91 0 R >>
+endobj
+93 0 obj
+<< /Length 2542 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (SÛRETÉ OPÉRATIONNELLE   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Permissions et traçabilité) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Toute requête reçoit un acteur et un contexte résolus côté serveur. Les jointures,) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (identifiants et résultats sont filtrés avec RLS et contrats. La clé de serveur ne sort) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (jamais des services privés.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Les événements d’audit contiennent action, acteur, cible, heure et identité de requête.) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (Les payloads transférés ne figurent ni dans le log, ni dans la métrique.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 485 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 464 Tm (Un audit d’accès prouve zéro lecture hors périmètre et zéro write interdit. Couvrir) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (anciennes sessions, changements d’état, liens partagés et usage de version périmée.) Tj ET
+0.92 0.95 1 rg 54 308 487 122 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 410 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 391 Tm (C01-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 391 Tm (Un clone installe les versions du lockfile et compile web et paquets sans) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 377 Tm (configuration privée) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 355 Tm (C01-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 355 Tm (Une base vierge atteint la version attendue dans l’ordre du manifeste) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 333 Tm (C01-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 333 Tm (Le build client ne contient aucune clé privée) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (45 / 52) Tj ET
+endstream
+endobj
+94 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 93 0 R >>
+endobj
+95 0 obj
+<< /Length 2535 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (SÛRETÉ OPÉRATIONNELLE   /   V2) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Capacité et dégradation) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (L’architecture est dimensionnée sur 1 000 coachs et 20 000 athlètes, avec portefeuilles) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (lourds. La concurrence porte surtout sur les lectures du lundi, la publication et les jobs.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 571 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 550 Tm (En dégradation, conserver programme, feedback et revue manuelle. Réduire la génération,) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (les notifications facultatives et les opérations gourmandes avant de saturer les routes) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (courantes.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 485 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 464 Tm (Vérifier p95 et RPO/RTO avec fixture réaliste. Exécuter reprise de file, quota par espace) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (et rendu sur réseau mobile. Mesurer d’abord avant d’augmenter la taille du serveur.) Tj ET
+0.92 0.95 1 rg 54 308 487 122 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 410 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 391 Tm (C27-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 391 Tm (Les portefeuilles comprennent des pics à 300 et deux années de données) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 377 Tm (synthétiques) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 355 Tm (C27-04) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 355 Tm (Le burst d’un workspace ne bloque pas les autres) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 333 Tm (C27-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 333 Tm (La décision cite CPU, plan SQL, budget et mesure avant/après) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (46 / 52) Tj ET
+endstream
+endobj
+96 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 95 0 R >>
+endobj
+97 0 obj
+<< /Length 2692 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (MIGRATION   /   Conditionnel) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Évaluer la reprise de Foulée) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Foulée est la première application du fondateur. Elle peut offrir une fonction existante ou) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (des données utiles. Les usages coach et athlète guident l’interface cible. Un dépôt) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (Foulée indisponible laisse avancer CoachOS avec un environnement neuf et des données) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 568 Tm (fictives.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 537 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (Si une reprise est envisagée, examiner schéma, droits, stockage, interfaces, dette et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (exploitation au commit qui sera repris. Comparer chaque composant à la cible et justifier) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 482 Tm (réutilisation ou adaptation par les coûts et les preuves.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 451 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (Exiger une cartographie source et cible, un rapprochement, un second passage sans) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 413 Tm (doublon et un retour arrière simulé avant import d’une cohorte réelle.) Tj ET
+0.92 0.95 1 rg 54 288 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 376 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 357 Tm (C24-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 357 Tm (Les tables et versions sont liées à un export daté) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 335 Tm (C24-02) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 335 Tm (Les collisions d’email ont un résultat explicite et révisable) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 313 Tm (C24-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 313 Tm (Les écritures post bascule sont récupérées dans la simulation) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (47 / 52) Tj ET
+endstream
+endobj
+98 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 97 0 R >>
+endobj
+99 0 obj
+<< /Length 2541 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (GOUVERNANCE   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Mesure activation et rétention) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (L’activation J7 mesure l’usage. Compter les espaces de la cohorte dont un athlète a) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (accepté l’invitation, ouvert une séance publiée, envoyé un retour et dont le coach l’a) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (traité dans la première semaine.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Rétention coach S4, part des activés qui reviennent et traitent au moins un cas ou) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (publient pendant la quatrième semaine. Relever également les athlètes qui ouvrent et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (retournent sur au moins deux semaines consécutives.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Tableau agrégé par cohorte, conserver effectif et semaines incomplètes. Eviter les) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (métriques calculées depuis un texte ou un identifiant athlète dans l’analytics.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C14-02) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (La fiche indique semaine, dénominateur et méthode) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C14-05) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Le rapport identifie l’étape bloquante sans texte privé) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C14-06) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Une raison et une date sont attachées à la cohorte) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (48 / 52) Tj ET
+endstream
+endobj
+100 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 99 0 R >>
+endobj
+101 0 obj
+<< /Length 2530 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (GOUVERNANCE   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Mesure du gain et de la qualité) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (La variable centrale est le temps net du coach sur une semaine comparable, incluant) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (délais, reprises et éditions. Relever deux semaines de référence et quatre d’usage, par) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (coach.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Comparer couverture des retours, heures, délais et corrections de fond. Calculer gain) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (médian relatif et afficher dispersion et effectif. Seuil initial ?30 % si couverture ?90 % des) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (cas attendus.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Le coût utile de l’IA est coût total des appels divisé par suggestions effectivement utiles.) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (Un gain de temps accompagné d’oubli de suivi bloque l’ouverture.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C12-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Une semaine avec deux retours liste les faits et leur couverture) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C12-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Les évaluateurs distinguent fait faux, oubli et préférence stylistique) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C12-09) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Le rapport compare temps total et corrections sur les mêmes cas) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (49 / 52) Tj ET
+endstream
+endobj
+102 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 101 0 R >>
+endobj
+103 0 obj
+<< /Length 2520 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (GOUVERNANCE   /   Après G2) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Scénarios commerciaux différés) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Les scénarios de MRR et de marge sont des hypothèses réservées à la phase) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (commerciale. La priorité pendant la construction est la recette des deux rôles, les usages) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (récurrents et les coûts du pilote. Le plan exact se fonde sur ces données.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Le modèle de base à 50/250/1 000 coachs est une hypothèse. Mesurer l’ARPA, parts) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (des offres et charges réelles mensuelles. Suivre séparément CAC, churn et temps) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (d’installation.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (À budget plus élevé ou signal de faible rétention, réexaminer prix et périmètre. Afficher) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (hypothèses contractuelles et période du rapport.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C26-03) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Le tableau sépare annulations, remboursements et MRR) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C26-06) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Le rapport inclut IA, email, paiement et support) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C26-10) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (La décision cite marge, conversion et tickets liés au quota) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (50 / 52) Tj ET
+endstream
+endobj
+104 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 103 0 R >>
+endobj
+105 0 obj
+<< /Length 2505 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (EXTENSIONS   /   V3) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Marketplace et hors connexion) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (Marketplace, annuaire public et paiement du coaching ne sont pas engagés. Tester) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (demande de part et d’autre, densité par segment, coût de modération et obligations de) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (paiement.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 554 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 533 Tm (Pour hors connexion avancé, valider nécessité, cache chiffré et stratégie de conflit. Une) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (maquette suffit à mesurer le flux de demande. L’accès au programme reste disponible) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (sur Web connecté.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 468 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 447 Tm (Chaque piste possède décision et mesure. Si le besoin n’est pas démontré ou dépasse la) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (capacité solo, la piste retourne au backlog de recherche.) Tj ET
+0.92 0.95 1 rg 54 305 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 393 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 374 Tm (C29-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 374 Tm (Le rapport distingue demandes spontanées et intentions en entretien) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 352 Tm (C29-02) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 352 Tm (Les coachs vérifient leur consentement et le contenu réellement public) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 330 Tm (C29-09) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 330 Tm (Les essais distinguent lecture, saisie et conflits réseau) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (51 / 52) Tj ET
+endstream
+endobj
+106 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 105 0 R >>
+endobj
+107 0 obj
+<< /Length 2796 >>
+stream
+0.98 0.99 1 rg 0 0 595 842 re f
+0.10 0.28 0.64 rg 0 834 595 8 re f
+BT /F2 13 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 792 Tm (CoachOS) Tj ET
+BT /F2 9 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 770 Tm (PRODUCT REQUIREMENTS DOCUMENT  |  VERSION 1.1) Tj ET
+0.78 0.83 0.91 rg 54 747 487 1 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 715 Tm (GOUVERNANCE   /   MVP) Tj ET
+BT /F2 28 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 677 Tm (Critères de sortie) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 640 Tm (Contexte et usage) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 619 Tm (G0, parcours à deux rôles sur données fictives et première tranche choisie. G1, boucle) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 602 Tm (manuelle et accès isolés avant bêta. G2, recette observée sur les deux interfaces et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 585 Tm (blocages corrigés avant vente. G3, preuve spécifique du gain avant extension DNA et) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 568 Tm (clubs.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 537 Tm (Comportement du produit) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 516 Tm (La recette UX demande au coach de créer et publier une séance, puis de traiter un retour.) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 499 Tm (Sur téléphone, l’athlète trouve la séance en une action et envoie un retour court. Inclure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 482 Tm (la reprise après erreur. Rapprocher les preuves, les stories et les contrats.) Tj ET
+BT /F2 11 Tf 0.10 0.28 0.64 rg 1 0 0 1 54 451 Tm (Reprise et mesure) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 430 Tm (La page de clôture indique décisions ouvertes, seuils non atteints et critères du prochain) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 413 Tm (sprint. Les hypothèses deviennent décisions après preuve, pas après changement de) Tj ET
+BT /F1 12 Tf 0.10 0.15 0.25 rg 1 0 0 1 54 396 Tm (date.) Tj ET
+0.92 0.95 1 rg 54 271 487 108 re f
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 359 Tm (CRITÈRES DE RECETTE) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 340 Tm (C30-01) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 340 Tm (La matrice lie stories livrées, routes et migrations) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 318 Tm (C30-08) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 318 Tm (Les commandes et garde-fous référencent des versions disponibles) Tj ET
+BT /F2 9 Tf 0.10 0.28 0.64 rg 1 0 0 1 68 296 Tm (C30-10) Tj ET
+BT /F1 11 Tf 0.10 0.15 0.25 rg 1 0 0 1 127 296 Tm (Les hypothèses et contraintes actualisées sont approuvées avant planification) Tj ET
+0.78 0.83 0.91 rg 54 56 487 1 re f
+BT /F2 8 Tf 0.29 0.36 0.47 rg 1 0 0 1 54 36 Tm (SPÉCIFICATIONS PRODUIT  /  17 NOVEMBRE 2026) Tj ET
+BT /F2 10 Tf 0.10 0.28 0.64 rg 1 0 0 1 488 36 Tm (52 / 52) Tj ET
+endstream
+endobj
+108 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 107 0 R >>
+endobj
+xref
+0 109
+0000000000 65535 f 
+0000000015 00000 n 
+0000000078 00000 n 
+0000000497 00000 n 
+0000000594 00000 n 
+0000000696 00000 n 
+0000003476 00000 n 
+0000003612 00000 n 
+0000006330 00000 n 
+0000006466 00000 n 
+0000009030 00000 n 
+0000009167 00000 n 
+0000011752 00000 n 
+0000011890 00000 n 
+0000014471 00000 n 
+0000014609 00000 n 
+0000017118 00000 n 
+0000017256 00000 n 
+0000020253 00000 n 
+0000020391 00000 n 
+0000022952 00000 n 
+0000023090 00000 n 
+0000025679 00000 n 
+0000025817 00000 n 
+0000028450 00000 n 
+0000028588 00000 n 
+0000031084 00000 n 
+0000031222 00000 n 
+0000033806 00000 n 
+0000033944 00000 n 
+0000036493 00000 n 
+0000036631 00000 n 
+0000039384 00000 n 
+0000039522 00000 n 
+0000042106 00000 n 
+0000042244 00000 n 
+0000044830 00000 n 
+0000044968 00000 n 
+0000047530 00000 n 
+0000047668 00000 n 
+0000050209 00000 n 
+0000050347 00000 n 
+0000052977 00000 n 
+0000053115 00000 n 
+0000055616 00000 n 
+0000055754 00000 n 
+0000058447 00000 n 
+0000058585 00000 n 
+0000061071 00000 n 
+0000061209 00000 n 
+0000063688 00000 n 
+0000063826 00000 n 
+0000066287 00000 n 
+0000066425 00000 n 
+0000068918 00000 n 
+0000069056 00000 n 
+0000071647 00000 n 
+0000071785 00000 n 
+0000074396 00000 n 
+0000074534 00000 n 
+0000077170 00000 n 
+0000077308 00000 n 
+0000079854 00000 n 
+0000079992 00000 n 
+0000082563 00000 n 
+0000082701 00000 n 
+0000085166 00000 n 
+0000085304 00000 n 
+0000087895 00000 n 
+0000088033 00000 n 
+0000090546 00000 n 
+0000090684 00000 n 
+0000093245 00000 n 
+0000093383 00000 n 
+0000095940 00000 n 
+0000096078 00000 n 
+0000098652 00000 n 
+0000098790 00000 n 
+0000101466 00000 n 
+0000101604 00000 n 
+0000104232 00000 n 
+0000104370 00000 n 
+0000106933 00000 n 
+0000107071 00000 n 
+0000109452 00000 n 
+0000109590 00000 n 
+0000112186 00000 n 
+0000112324 00000 n 
+0000114979 00000 n 
+0000115117 00000 n 
+0000117751 00000 n 
+0000117889 00000 n 
+0000120450 00000 n 
+0000120588 00000 n 
+0000123183 00000 n 
+0000123321 00000 n 
+0000125909 00000 n 
+0000126047 00000 n 
+0000128792 00000 n 
+0000128930 00000 n 
+0000131524 00000 n 
+0000131663 00000 n 
+0000134247 00000 n 
+0000134387 00000 n 
+0000136961 00000 n 
+0000137101 00000 n 
+0000139660 00000 n 
+0000139800 00000 n 
+0000142650 00000 n 
+trailer
+<< /Size 109 /Root 1 0 R >>
+startxref
+142790
+%%EOF

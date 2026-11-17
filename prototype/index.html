@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="fr-BE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CoachOS · Prototype des parcours</title>
+<style>
+:root{color-scheme:light;--nav:#102a35;--bg:#f2f5f4;--paper:#fff;--ink:#162e37;--muted:#50646a;--line:#d8e2df;--accent:#0a6452;--mint:#d8f5e8;--amber:#75511a;--soft-amber:#f8edda;--radius:13px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,sans-serif}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #2684e4;outline-offset:3px}
+button:disabled{opacity:.52;cursor:not-allowed}
+h1,h2,h3,p{margin:0}
+h1{font-size:clamp(30px,4vw,48px);line-height:1.05;letter-spacing:-.05em;font-weight:780}
+h2{font-size:21px;letter-spacing:-.035em}
+h3{font-size:15px}
+small,.muted{color:var(--muted)}
+.top{min-height:62px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 31px;position:relative;z-index:1}
+.brand{font-weight:850;letter-spacing:-.07em;font-size:25px;display:flex;align-items:center;gap:9px;line-height:1}
+.mark{display:grid;place-items:center;background:var(--accent);color:#fff;width:28px;height:28px;border-radius:8px;font:800 21px/1 system-ui,sans-serif}
+.demo-note{margin-left:auto;font-size:12px;color:var(--muted)}
+.switch{display:flex;gap:3px;border:1px solid var(--line);padding:3px;background:#f4f7f6;border-radius:9px}
+.switch button{padding:5px 11px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:13px;white-space:nowrap}
+.switch button[aria-pressed=true]{background:var(--nav);color:#fff}
+.shell{min-height:calc(100vh - 62px);display:grid;grid-template-columns:222px minmax(0,1fr)}
+.sidebar{background:var(--nav);color:#fff;padding:25px 16px;display:flex;flex-direction:column;gap:24px}
+.account{display:flex;align-items:center;gap:11px;margin:0 6px}
+.account small{color:#b9cece}
+.avatar{display:inline-grid;place-items:center;background:var(--mint);color:#174639;border-radius:50%;width:36px;height:36px;font-size:12px;font-weight:800;flex:none}
+.sidebar button,.mobile-nav button{display:flex;justify-content:space-between;align-items:center;width:100%;border:0;background:transparent;color:inherit;padding:12px;border-radius:8px;text-align:left}
+.sidebar button:hover,.sidebar button[aria-current=page]{background:#22434d}
+.sidebar nav{display:grid;gap:4px}
+.count{padding:0 7px;background:var(--mint);color:var(--accent);font-size:12px;font-weight:800;border-radius:14px}
+.demo-reset{margin-top:auto}
+.main{padding:32px clamp(18px,4vw,58px);width:100%;max-width:1450px;margin:0 auto}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:24px}
+.kicker{font-size:12px;letter-spacing:.02em;font-weight:760;color:var(--accent);margin-bottom:6px}
+.sub{margin-top:9px;color:var(--muted)}
+.btn{border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:10px 15px;font-weight:690;color:var(--ink);min-height:44px;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.primary:hover{background:#084e41;border-color:#084e41}
+.inline{border:0;background:none;color:var(--accent);font-weight:720;padding:7px 0;text-align:left}
+.inline:hover{text-decoration:underline}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.card + .card{margin-top:16px}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 19px;border-bottom:1px solid var(--line)}
+.select{border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:8px 11px;color:var(--ink);min-height:40px;max-width:100%}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.day{min-height:161px;padding:10px 7px;border-right:1px solid var(--line);min-width:0}
+.day:last-child{border-right:0}
+.day h3{margin:0 0 10px;padding-left:3px;font-size:11px;color:var(--muted);white-space:nowrap}
+.day.today{background:#edf8f3}
+.day.today h3{color:var(--accent)}.day.today h3 span{display:block}
+.session{display:block;width:100%;text-align:left;border:1px solid #c6dfd5;padding:8px 7px;margin:0 0 7px;border-radius:7px;background:#f3faf7;color:var(--ink);overflow-wrap:anywhere}
+.session:hover{border-color:var(--accent)}
+.session strong,.session small{display:block;line-height:1.28}
+.session strong{font-size:12px;margin-bottom:5px}
+.session small{font-size:10px}
+.session.draft{border-style:dashed;background:#fff}
+.day .inline{font-size:11px;margin-left:3px}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:2px 8px;background:var(--mint);color:#135344;font-size:11px;line-height:1.6;font-weight:750;white-space:nowrap}
+.pill.attn{background:var(--soft-amber);color:var(--amber)}
+.pill.neutral{background:#ebf0ef;color:#3c5558}
+.row{display:flex;gap:12px;align-items:center;padding:13px 19px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row p{color:var(--muted);font-size:13px}
+.row-text{min-width:0;flex:1}
+.empty{padding:19px;color:var(--muted)}
+.athlete-zone{max-width:590px;padding:29px 22px 52px;margin:auto}
+.mobile-nav{display:flex;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:22px;gap:4px}
+.mobile-nav button{justify-content:center;padding:10px 6px;white-space:nowrap;color:var(--muted);font-weight:710}
+.mobile-nav button[aria-current=page]{background:var(--mint);color:#174639}
+.athlete-card{border:1px solid #c0e7da;border-radius:var(--radius);overflow:hidden;background:#e7f7f0;margin:16px 0}
+.athlete-card .body{padding:20px}
+.athlete-card h2{font-size:25px;margin-top:10px}
+.athlete-card .btn{margin-top:14px}
+.athlete-actions{display:flex;gap:9px;flex-wrap:wrap}
+.athlete-list .row{padding:12px 13px}
+.narrow-date{width:50px;text-align:center;flex:none;color:var(--muted);font-size:12px}
+.narrow-date strong{display:block;color:var(--ink);font-size:19px;line-height:1.1}
+dialog{border:1px solid var(--line);border-radius:15px;width:min(calc(100% - 24px),525px);padding:0;color:var(--ink);box-shadow:0 20px 60px #102a3530}
+dialog::backdrop{background:#122c3c6c}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);gap:14px}
+.close{border:0;background:#eef3f2;color:var(--ink);padding:4px 10px;font-size:19px;border-radius:7px}
+.modal-body{display:grid;gap:14px;padding:18px 20px 20px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.field{display:grid;gap:5px;font-weight:710}
+.field input,.field select,.field textarea{border:1px solid #879a9b;color:var(--ink);border-radius:7px;padding:8px 10px;background:#fff;width:100%;min-height:41px;font-weight:450}
+.field textarea{resize:vertical;min-height:70px}
+.form-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;background:#f2f6f5;padding:13px;border-radius:8px}
+.details dt{font-size:12px;color:var(--muted)}
+.details dd{font-weight:720;margin:0}
+.feedback-msg{white-space:pre-wrap;overflow-wrap:anywhere}
+#notice{position:fixed;right:18px;bottom:18px;z-index:4;border-radius:8px;max-width:calc(100vw - 36px)}
+#notice:not(:empty){background:var(--nav);color:#fff;padding:12px 17px;box-shadow:0 4px 20px #102a3533}
+@media(max-width:990px){.shell{grid-template-columns:165px minmax(0,1fr)}.main{padding:27px 22px}.day{padding:8px 4px}.session{padding:7px 5px}}
+@media(max-width:720px){.top{padding:9px 13px}.demo-note{display:none}.shell{display:block}.sidebar{padding:0 12px;display:block}.sidebar nav{display:flex}.sidebar button{flex:1;text-align:center;justify-content:center;gap:5px;font-size:12px;padding:9px 6px;margin:2px 0}.sidebar .account,.sidebar .demo-reset{display:none}.main{padding:20px 12px}.head{align-items:flex-start;flex-wrap:wrap}.card-head{padding:12px;flex-wrap:wrap}.week{display:block}.day{display:grid;grid-template-columns:67px 1fr;gap:4px 6px;min-height:0;border-right:0;border-bottom:1px solid var(--line);padding:8px 10px;align-items:center}.day:last-child{border-bottom:0}.day h3{margin:0;grid-row:1}.day .session,.day .inline{grid-column:2;margin-bottom:0}.day:has(.session) .inline{margin-left:3px}.session strong,.session small{display:inline;margin-right:5px}.row{flex-wrap:wrap;padding:12px}.row .btn{margin-left:auto}.athlete-zone{padding:20px 14px 45px}}
+@media(prefers-reduced-motion:no-preference){button{transition:background .12s,border-color .12s}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<dialog id="dialog" aria-labelledby="dialog-title"></dialog>
+<div id="notice" role="status" aria-live="polite"></div>
+<script>
+'use strict';
+const byId = id => document.getElementById(id);
+const dialog = byId('dialog');
+const days = ['Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.', 'Dim.'];
+const athletes = [{id:'camille',name:'Camille Laurent',initials:'CL',sport:'Course à pied'},{id:'noah',name:'Noah Dubois',initials:'ND',sport:'Cyclisme'}];
+const today = '2026-11-17';
+const dates = days.map((_,index) => `2026-11-${16+index}`);
+const sports = ['Course à pied','Trail','Cyclisme','Natation','Triathlon','Duathlon'];
+const feedbackLabels = {done:'Réalisée',partial:'Partiellement réalisée',skipped:'Non réalisée'};
+const initial = [
+ {id:'run1',athlete:'camille',date:'2026-11-16',title:'Endurance fondamentale',sport:'Course à pied',duration:40,notes:'40 min à une allure qui permet de parler en phrases complètes.',status:'published',feedback:{status:'done',effort:'4',comment:'Jambes un peu lourdes au départ.',reviewed:false}},
+ {id:'run2',athlete:'camille',date:today,title:'Footing facile',sport:'Course à pied',duration:35,notes:'10 min très faciles, 20 min à une allure de conversation, puis 5 min de retour au calme.',status:'published'},
+ {id:'run3',athlete:'camille',date:'2026-11-19',title:'Montées régulières',sport:'Trail',duration:45,notes:'Après l’échauffement, faire 6 montées de 45 s à effort régulier, récupération en descente.',status:'draft'},
+ {id:'run4',athlete:'camille',date:'2026-11-22',title:'Sortie longue',sport:'Course à pied',duration:65,notes:'Sortie à allure facile avec une pause si nécessaire.',status:'published'},
+ {id:'bike1',athlete:'noah',date:today,title:'Sortie souple',sport:'Cyclisme',duration:50,notes:'Rester souple et régulier en choisissant un braquet confortable.',status:'published'}
+];
+const storageKey = 'coachos-workflow-v11';
+function readSessions() {
+ try {
+  const saved = JSON.parse(localStorage.getItem(storageKey));
+  if (Array.isArray(saved)) return saved;
+ } catch {}
+ return structuredClone(initial);
+}
+let sessions = readSessions();
+let role = 'coach';
+let currentAthlete = 'camille';
+let coachTab = 'week';
+let athleteTab = 'today';
+let noticeTimer;
+let opener;
+
+const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const athlete = () => athletes.find(a => a.id === currentAthlete);
+const athleteName = id => athletes.find(a => a.id === id)?.name ?? '';
+const selected = () => sessions.filter(s => s.athlete === currentAthlete).sort((a,b) => a.date.localeCompare(b.date));
+const pending = () => sessions.filter(s => s.feedback && !s.feedback.reviewed);
+const shortDate = date => `${Number(date.slice(-2))} nov.`;
+const statusPill = (label,tone='') => `<span class="pill ${tone}">${esc(label)}</span>`;
+function save() {
+ try { localStorage.setItem(storageKey,JSON.stringify(sessions)); } catch {}
+}
+function announce(message) {
+ byId('notice').textContent = message;
+ clearTimeout(noticeTimer);
+ noticeTimer = setTimeout(() => { byId('notice').textContent = ''; }, 3600);
+}
+function toggle(label,value) {
+ return `<button type="button" data-action="role" data-value="${value}" aria-pressed="${role===value}">${label}</button>`;
+}
+function nav(label,value,active,count) {
+ return `<button type="button" data-action="tab" data-value="${value}" ${active===value?'aria-current="page"':''}>${label}${count?` <span class="count">${count}</span>`:''}</button>`;
+}
+function header() {
+ return `<header class="top"><div class="brand"><span class="mark" aria-hidden="true">↗</span>CoachOS</div><div class="demo-note">Prototype · données fictives</div><div class="switch" aria-label="Choisir l’espace">${toggle('Coach','coach')}${toggle('Athlète','athlete')}</div></header>`;
+}
+function coachSidebar() {
+ return `<aside class="sidebar"><div class="account"><span class="avatar">MR</span><div><strong>Marine Roy</strong><br><small>Espace coach</small></div></div>
+ <nav aria-label="Espace coach">${nav('Planning','week',coachTab)}${nav('Retours','review',coachTab,pending().length)}${nav('Athlètes','roster',coachTab)}</nav>
+ <button class="demo-reset" type="button" data-action="ask-reset">Réinitialiser la démo</button></aside>`;
+}
+function workoutButton(s) {
+ const label = s.status === 'draft' ? 'Brouillon' : 'Publié';
+ return `<button class="session ${s.status==='draft'?'draft':''}" type="button" data-action="workout" data-id="${esc(s.id)}"><strong>${esc(s.title)}</strong><small>${s.duration} min · ${label}</small></button>`;
+}
+function coachWeek() {
+ const a = athlete();
+ const own = selected();
+ return `<div class="head"><div><div class="kicker">16–22 novembre 2026</div><h1>Planning</h1><p class="sub">Préparer les séances et publier le programme.</p></div><button class="btn primary" type="button" data-action="new">+ Nouvelle séance</button></div>
+ <section class="card" aria-labelledby="week-title"><div class="card-head"><h2 id="week-title">Semaine du 16 novembre</h2>
+ <select class="select" id="athlete-select" aria-label="Athlète affiché">${athletes.map(p => `<option value="${p.id}" ${p.id===a.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
+ <div class="week">${dates.map((d,i) => `<section class="day ${d===today?'today':''}"><h3>${days[i]} ${d.slice(-2)}<span class="muted">${d===today?' · aujourd’hui':''}</span></h3>${own.filter(s=>s.date===d).map(workoutButton).join('')}<button class="inline" type="button" data-action="new" data-value="${d}" aria-label="Ajouter une séance le ${shortDate(d)}">+ Ajouter</button></section>`).join('')}</div></section>
+ ${reviewCard(pending().filter(s=>s.athlete===a.id),'Retours de '+a.name.split(' ')[0],false)}`;
+}
+function reviewCard(items,title,all) {
+ return `<section class="card" aria-label="${esc(title)}"><div class="card-head"><h2>${esc(title)}</h2>${!all&&pending().length?'<button class="inline" data-action="tab" data-value="review" type="button">Tous les retours →</button>':''}</div>
+ <div>${items.length?items.map(s=>`<div class="row"><span class="avatar">${esc(athletes.find(a=>a.id===s.athlete).initials)}</span><div class="row-text"><h3>${esc(athleteName(s.athlete))} · ${esc(s.title)}</h3><p>${shortDate(s.date)} · ${esc(feedbackLabels[s.feedback.status])}${s.feedback.effort?esc(' · Effort '+s.feedback.effort+'/10'):''}</p></div><button class="btn" type="button" data-action="review" data-id="${esc(s.id)}">Ouvrir le retour</button></div>`).join(''):'<p class="empty">Aucun retour à traiter.</p>'}</div></section>`;
+}
+function coachContent() {
+ if (coachTab === 'review') return `<div class="head"><div><div class="kicker">Suivi des athlètes</div><h1>Retours</h1></div></div>${reviewCard(pending(),'À traiter',true)}`;
+ if (coachTab === 'roster') return `<div class="head"><div><div class="kicker">Portefeuille</div><h1>Athlètes</h1></div></div>
+ <section class="card" aria-label="Athlètes">${athletes.map(a=>`<div class="row"><span class="avatar">${esc(a.initials)}</span><div class="row-text"><h3>${esc(a.name)}</h3><p>${esc(a.sport)} · ${pending().filter(s=>s.athlete===a.id).length} retour(s) à traiter</p></div><button class="btn" type="button" data-action="roster-open" data-value="${a.id}">Ouvrir le planning</button></div>`).join('')}</section>`;
+ return coachWeek();
+}
+function athleteContent() {
+ const a = athlete();
+ const published = selected().filter(s=>s.status==='published');
+ const todays = published.filter(s=>s.date===today);
+ const next = published.find(s=>s.date>today);
+ const date = athleteTab==='today'?'Mardi 17 novembre':'16–22 novembre 2026';
+ const title = athleteTab==='today'?'Aujourd’hui':'Programme';
+ const athleteSession = s => `<div class="athlete-card"><div class="body">${statusPill(s.sport)}<h2>${esc(s.title)}</h2><p class="sub">${s.duration} min · ${shortDate(s.date)}</p><div class="athlete-actions"><button class="btn primary" type="button" data-action="workout" data-id="${esc(s.id)}">Voir la séance</button>
+ ${s.feedback?statusPill('Retour envoyé','neutral'):''}</div></div></div>`;
+ return `<main class="athlete-zone"><nav class="mobile-nav" aria-label="Espace athlète">${nav('Aujourd’hui','today',athleteTab)}${nav('Programme','schedule',athleteTab)}</nav>
+ <div class="head"><div><div class="kicker">${date} · ${esc(a.name)}</div><h1>${title}</h1></div></div>
+ ${athleteTab==='today'?
+ (todays.length?todays.map(athleteSession).join(''):`<div class="card empty">Aucune séance publiée aujourd’hui.${next?` Prochaine séance le ${shortDate(next.date)}.`:''}</div>`):
+ `<section class="card athlete-list" aria-label="Séances publiées">${published.length?published.map(s=>`<div class="row"><div class="narrow-date"><strong>${Number(s.date.slice(-2))}</strong>nov.</div><div class="row-text"><h3>${esc(s.title)}</h3><p>${esc(s.sport)} · ${s.duration} min${s.feedback?' · Retour envoyé':''}</p></div><button class="btn" type="button" data-action="workout" data-id="${esc(s.id)}">Voir</button></div>`).join(''):'<p class="empty">Aucune séance publiée cette semaine.</p>'}</section>`}
+ </main>`;
+}
+function render(focusHeading=false) {
+ byId('app').innerHTML = header() + (role==='coach'
+  ? `<div class="shell">${coachSidebar()}<main class="main">${coachContent()}</main></div>`
+  : athleteContent());
+ if (focusHeading) {
+  const title = document.querySelector('h1');
+  title.tabIndex = -1;
+  title.focus({preventScroll:true});
+ }
+}
+function modal(title,content) {
+ if (!dialog.open) opener = document.activeElement;
+ dialog.innerHTML = `<div class="modal-head"><h2 id="dialog-title">${esc(title)}</h2><button class="close" type="button" data-action="close" aria-label="Fermer">×</button></div><div class="modal-body">${content}</div>`;
+ if (!dialog.open) dialog.showModal();
+ const focus = dialog.querySelector('[autofocus]') ?? dialog.querySelector('.close');
+ focus.focus();
+}
+function closeDialog() {
+ if (dialog.open) dialog.close();
+ if (opener?.isConnected) opener.focus({preventScroll:true});
+}
+function editWorkout(s,date=today) {
+ modal(s?'Modifier le brouillon':'Nouvelle séance',
+ `<p class="muted">${esc(athlete().name)}</p><form class="modal-body" style="padding:0" data-form="workout" data-id="${esc(s?.id)}">
+ <label class="field">Titre<input required autofocus name="title" maxlength="100" value="${esc(s?.title)}" placeholder="Footing facile"></label>
+ <div class="form-row"><label class="field">Date<select name="date">${dates.map(day=>`<option value="${day}" ${day===(s?.date??date)?'selected':''}>${shortDate(day)}</option>`).join('')}</select></label><label class="field">Sport<select name="sport">${sports.map(sp=>`<option ${sp===(s?.sport??athlete().sport)?'selected':''}>${esc(sp)}</option>`).join('')}</select></label></div>
+ <label class="field">Durée en minutes<input type="number" name="duration" min="1" max="600" required value="${esc(s?.duration ?? 35)}"></label>
+ <label class="field">Consignes<textarea name="notes" maxlength="700">${esc(s?.notes)}</textarea></label>
+ <div class="form-actions"><button class="btn" type="button" data-action="close">Annuler</button><button class="btn primary" type="submit">Enregistrer le brouillon</button></div></form>`);
+}
+function workoutDetail(s) {
+ const canFeedback = role==='athlete' && s.date<=today && s.status==='published';
+ modal(s.title,`<div><span class="muted">${shortDate(s.date)} · ${esc(s.sport)} · ${s.duration} min</span> ${role==='coach'?statusPill(s.status==='draft'?'Brouillon':'Publié',s.status==='draft'?'neutral':''):''}</div>
+ <div><h3>Consignes</h3><p class="feedback-msg">${esc(s.notes||'Aucune consigne supplémentaire.')}</p></div>
+ ${s.feedback&&role==='athlete'? `<p>${statusPill('Retour envoyé')} ${esc(feedbackLabels[s.feedback.status])}</p>`:''}
+ <div class="form-actions">${role==='coach'&&s.status==='draft'?
+ `<button class="btn" type="button" data-action="edit" data-id="${s.id}">Modifier</button><button class="btn primary" type="button" data-action="publish" data-id="${s.id}">Publier la séance</button>`:
+ canFeedback?`<button class="btn primary" type="button" data-action="feedback" data-id="${s.id}">${s.feedback?'Modifier le retour':'Donner mon retour'}</button>`:
+ role==='coach'&&s.feedback?`<button class="btn" type="button" data-action="review" data-id="${s.id}">Voir le retour</button>`:
+ '<button class="btn" type="button" data-action="close">Fermer</button>'}</div>`);
+}
+function feedbackForm(s) {
+ modal('Mon retour',`<p class="muted">${esc(s.title)} · ${shortDate(s.date)}</p><form class="modal-body" style="padding:0" data-form="feedback" data-id="${s.id}">
+ <label class="field">As-tu fait cette séance ?<select autofocus name="status">${Object.entries(feedbackLabels).map(([key,label])=>`<option value="${key}" ${key===s.feedback?.status?'selected':''}>${label}</option>`).join('')}</select></label>
+ <label class="field">Effort ressenti de 0 à 10 <small>Facultatif</small><select name="effort"><option value="">Non renseigné</option>${Array.from({length:11},(_,i)=>`<option ${String(i)===s.feedback?.effort?'selected':''}>${i}</option>`).join('')}</select></label>
+ <label class="field">Commentaire au coach <small>Facultatif</small><textarea name="comment" maxlength="500">${esc(s.feedback?.comment)}</textarea></label>
+ <div class="form-actions"><button class="btn" type="button" data-action="workout" data-id="${s.id}">Retour à la séance</button><button class="btn primary" type="submit">Envoyer le retour</button></div></form>`);
+}
+function reviewDetail(s) {
+ const f = s.feedback;
+ modal('Retour de '+athleteName(s.athlete).split(' ')[0],`<h3>${esc(s.title)} · ${shortDate(s.date)}</h3><dl class="details"><div><dt>Prévu</dt><dd>${s.duration} min</dd></div><div><dt>Déclaré</dt><dd>${esc(feedbackLabels[f.status])}</dd></div><div><dt>Effort ressenti</dt><dd>${f.effort!==''?esc(f.effort+'/10'):'Non renseigné'}</dd></div></dl>
+ ${f.comment?`<div><h3>Commentaire de l’athlète</h3><p class="feedback-msg">${esc(f.comment)}</p></div>`:''}
+ <div class="form-actions">${f.reviewed?statusPill('Retour traité'):`<button class="btn primary" type="button" data-action="complete-review" data-id="${s.id}">Marquer comme traité</button>`}</div>`);
+}
+function finish(message) {
+ closeDialog();
+ save();
+ render(true);
+ announce(message);
+}
+document.addEventListener('click', event => {
+ const target = event.target.closest('[data-action]');
+ if (!target) return;
+ const {action,value,id} = target.dataset;
+ const s = sessions.find(item=>item.id===id);
+ switch (action) {
+  case 'role':
+   role = value;
+   closeDialog();
+   render(true);
+   break;
+  case 'tab':
+   if (role==='coach') coachTab = value;
+   else athleteTab = value;
+   render(true);
+   break;
+  case 'roster-open':
+   currentAthlete = value;
+   coachTab = 'week';
+   render(true);
+   break;
+  case 'new': editWorkout(null,value); break;
+  case 'edit': if (s?.status==='draft') editWorkout(s); break;
+  case 'close': closeDialog(); break;
+  case 'workout': if (s) workoutDetail(s); break;
+  case 'publish':
+   if (!s || s.status!=='draft') break;
+   s.status = 'published';
+   finish('Séance publiée et visible par '+athleteName(s.athlete)+'.');
+   break;
+  case 'feedback': if (s) feedbackForm(s); break;
+  case 'review': if (s?.feedback) reviewDetail(s); break;
+  case 'complete-review':
+   if (!s?.feedback) break;
+   s.feedback.reviewed = true;
+   finish('Retour marqué comme traité.');
+   break;
+  case 'ask-reset':
+   modal('Réinitialiser la démo ?', '<p>Les séances et retours saisis dans cette démo seront remplacés par les exemples de départ.</p><div class="form-actions"><button class="btn" type="button" data-action="close">Annuler</button><button class="btn primary" type="button" data-action="reset">Réinitialiser</button></div>');
+   break;
+  case 'reset':
+   sessions = structuredClone(initial);
+   currentAthlete = 'camille';
+   coachTab = 'week';
+   athleteTab = 'today';
+   finish('Données de démonstration réinitialisées.');
+   break;
+ }
+});
+dialog.addEventListener('cancel', event => {
+ event.preventDefault();
+ closeDialog();
+});
+document.addEventListener('change',event => {
+ if (event.target.id !== 'athlete-select') return;
+ currentAthlete = event.target.value;
+ render();
+ byId('athlete-select').focus();
+});
+document.addEventListener('submit',event => {
+ const form = event.target.closest('[data-form]');
+ if (!form) return;
+ event.preventDefault();
+ const fields = Object.fromEntries(new FormData(form));
+ const s = sessions.find(item=>item.id===form.dataset.id);
+ if (form.dataset.form==='workout') {
+  const title = fields.title.trim();
+  if (!title) { form.elements.title.setCustomValidity('Saisis un titre.'); form.elements.title.reportValidity(); return; }
+  const workout = {title,date:fields.date,sport:fields.sport,duration:Number(fields.duration),notes:fields.notes.trim()};
+  if (s?.status==='draft') Object.assign(s,workout);
+  else {
+   const id = `local-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+   sessions.push({...workout,id,athlete:currentAthlete,status:'draft'});
+  }
+  finish('Brouillon enregistré.');
+ } else if (form.dataset.form==='feedback' && s) {
+  s.feedback = {status:fields.status,effort:fields.effort,comment:fields.comment.trim(),reviewed:false};
+  finish('Ton retour a été envoyé au coach.');
+ }
+});
+document.addEventListener('input',event => {
+ if (event.target.name==='title') event.target.setCustomValidity('');
+});
+render();
+</script>
+</body>
+</html>
