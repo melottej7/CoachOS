@@ -11,7 +11,7 @@ export type MutationResult<T> =
  * Appel de mutation /api/v1. L’appelant garde la même Idempotency-Key pour une intention
  * jusqu’au succès : une reprise après coupure réseau ne crée pas de doublon (C06-07).
  */
-export async function mutate<T>(method: 'POST' | 'PUT' | 'PATCH', url: string, body: unknown, idempotencyKey: string): Promise<MutationResult<T>> {
+export async function mutate<T>(method: 'POST' | 'PUT' | 'PATCH' | 'DELETE', url: string, body: unknown, idempotencyKey: string): Promise<MutationResult<T>> {
   let res: Response;
   try {
     res = await fetch(url, {

@@ -13,6 +13,10 @@ const FIELD_LABELS: Record<string, string> = {
   durationSeconds: 'Durée réalisée',
   rpe: 'Effort ressenti',
   comment: 'Commentaire',
+  name: 'Nom de l’espace',
+  displayName: 'Nom de l’athlète',
+  timeZone: 'Fuseau horaire',
+  email: 'Adresse e-mail',
 };
 
 const FIELD_IDS: Record<string, string> = {
@@ -25,6 +29,10 @@ const FIELD_IDS: Record<string, string> = {
   durationSeconds: 'duration',
   rpe: 'rpe-none',
   comment: 'comment',
+  name: 'name',
+  displayName: 'displayName',
+  timeZone: 'timeZone',
+  email: 'email',
 };
 
 /**

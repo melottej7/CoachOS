@@ -95,3 +95,16 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
 - **Configuration locale.** `site_url` et redirections autorisées sur `localhost:3000`, limite d’e-mails relevée à 60/h, modèle d’e-mail en français (`supabase/templates/magic_link.html`). Comptes fictifs créés par l’API d’administration avec des UUID fixes (`npm run supabase:seed`).
 - **Identité de démo.** Conservée en développement comme raccourci (D-003). Une session Supabase est toujours prioritaire.
 - **Réexamen.** Avant tout environnement partagé : désactiver `COACHOS_DEMO_AUTH`, décider `shouldCreateUser` (inscription libre ou sur invitation) et choisir le fournisseur d’e-mails (Resend).
+
+## D-016 · Invitation par lien à usage unique · 2026-11-17
+
+- **Décision.** Jeton aléatoire de 32 octets ; seule son empreinte SHA-256 est stockée (`secret_hash`). L’adresse n’est stockée que sous forme d’HMAC-SHA256 (`email_hmac`, clé `COACHOS_INVITE_HMAC_KEY`, valeur de développement par défaut hors production). Le lien porte le jeton **après `#`** : il n’atteint ni le serveur ni ses journaux dans l’URL ; la page `/invite` le garde dans le navigateur le temps de la connexion par lien puis l’efface. Réémettre révoque le lien actif. Validité 7 jours (PRD).
+- **Acceptation.** L’adresse vérifiée du compte connecté doit correspondre à l’HMAC ; un compte déjà relié à un dossier de l’espace est refusé ; rechargement après acceptation renvoyé comme succès sans doublon. Messages neutres : jamais l’adresse attendue.
+- **Envoi.** E-mail envoyé dans la transaction : un échec d’envoi annule l’invitation et la même clé peut être rejouée. En local, API d’envoi de Mailpit ; en production, refus explicite tant que Resend n’est pas branché. `invitation_delivery` (enveloppe chiffrée pour un envoi différé) n’est pas utilisée.
+- **Non fait.** Aperçu du nom d’espace avant connexion (pas de route au contrat), quota d’activation (facturation après G2).
+- **Réexamen.** Arrivée d’un worker d’envoi (S23) : passer par `invitation_delivery` et sortir l’appel fournisseur de la transaction.
+
+## D-017 · Inscription coach libre en local · 2026-11-17
+
+- **Décision.** `shouldCreateUser: true` : toute adresse qui reçoit un lien crée un compte ; sans espace ni invitation, le compte arrive sur « Aucun espace » avec « Créer un espace coach » (X04). Le propriétaire seul crée des fiches athlètes.
+- **Réexamen.** Avant le pilote : inscription libre ou sur liste d’accès, limite de création d’espaces par compte.

@@ -17,7 +17,7 @@ export function useIntent<T>() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<IntentError | null>(null);
 
-  const run = useCallback(async (method: 'POST' | 'PUT' | 'PATCH', url: string, body: unknown): Promise<T | null> => {
+  const run = useCallback(async (method: 'POST' | 'PUT' | 'PATCH' | 'DELETE', url: string, body: unknown): Promise<T | null> => {
     if (busy.current) return null;
     busy.current = true;
     setPending(true);

@@ -9,8 +9,9 @@ import { Pill } from '@/components/ui';
 export const metadata = { title: 'Aujourd’hui' };
 
 /** X40 : le prochain geste utile. Séance du jour en une action, sinon la prochaine. */
-export default async function Today({ params }: { params: Promise<{ wid: string }> }) {
+export default async function Today({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<{ notice?: string }> }) {
   const { wid } = await params;
+  const { notice } = await searchParams;
   const actor = await requireActor();
   const ctx = await athleteContext(actor.userId, wid);
   if (!ctx) notFound();
@@ -20,6 +21,7 @@ export default async function Today({ params }: { params: Promise<{ wid: string 
   const base = `/athlete/${wid}`;
   return (
     <>
+      {notice === 'joined' ? <p className="banner ok" role="status" style={{ marginBottom: 16 }}>Bienvenue dans {ctx.workspace.name}. Tes séances publiées apparaissent ici et dans Programme.</p> : null}
       <div className="kicker">{formatLongDate(today)} · {ctx.athlete.timeZone}</div>
       <h1>Aujourd’hui</h1>
       {todays.length ? todays.map((w) => (

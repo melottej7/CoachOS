@@ -7,34 +7,45 @@ export interface StoredResponse {
   body: unknown;
 }
 
+interface Scope {
+  /** Absent : opération d’identité (créer un espace, accepter une invitation) → identity_operation_keys. */
+  workspaceId?: string;
+  actorId: string;
+  action: string;
+  key: string;
+  body: unknown;
+}
+
 /**
  * Idempotency-Key (docs/06_API.md) : même clé + même contenu → même réponse pendant 24 h,
  * même clé + contenu différent → 409. La ligne est insérée avant l’effet, dans la même
  * transaction : une requête concurrente attend le commit puis relit la réponse.
  * Si l’effet échoue, la transaction annule aussi la clé et la reprise reste possible.
  */
-export async function idempotent(
-  tx: Tx,
-  scope: { workspaceId: string; actorId: string; action: string; key: string; body: unknown },
-  effect: () => Promise<StoredResponse>,
-): Promise<StoredResponse> {
+export async function idempotent(tx: Tx, scope: Scope, effect: () => Promise<StoredResponse>): Promise<StoredResponse> {
   const hash = createHash('sha256').update(JSON.stringify(scope.body ?? null)).digest('hex');
-  await tx.query(
-    `delete from public.operation_keys
-     where workspace_id = $1 and actor_id = $2 and action = $3 and request_key = $4 and expires_at <= now()`,
-    [scope.workspaceId, scope.actorId, scope.action, scope.key],
-  );
+  const ws = scope.workspaceId !== undefined;
+  const table = ws ? 'public.operation_keys' : 'public.identity_operation_keys';
+  const where = ws
+    ? 'workspace_id = $1 and actor_id = $2 and action = $3 and request_key = $4'
+    : 'actor_id = $1 and action = $2 and request_key = $3';
+  const keyParams = ws
+    ? [scope.workspaceId, scope.actorId, scope.action, scope.key]
+    : [scope.actorId, scope.action, scope.key];
+  const next = `$${keyParams.length + 1}`;
+
+  await tx.query(`delete from ${table} where ${where} and expires_at <= now()`, keyParams);
+  const columns = ws ? 'workspace_id, actor_id, action, request_key' : 'actor_id, action, request_key';
+  const placeholders = keyParams.map((_, i) => `$${i + 1}`).join(', ');
   const inserted = await tx.query(
-    `insert into public.operation_keys(workspace_id, actor_id, action, request_key, request_hash, expires_at)
-     values ($1, $2, $3, $4, $5, now() + interval '24 hours')
-     on conflict do nothing`,
-    [scope.workspaceId, scope.actorId, scope.action, scope.key, hash],
+    `insert into ${table}(${columns}, request_hash, expires_at)
+     values (${placeholders}, ${next}, now() + interval '24 hours') on conflict do nothing`,
+    [...keyParams, hash],
   );
   if ((inserted.affectedRows ?? 0) === 0) {
     const existing = await tx.query<{ request_hash: string; response: StoredResponse | null }>(
-      `select request_hash, response from public.operation_keys
-       where workspace_id = $1 and actor_id = $2 and action = $3 and request_key = $4`,
-      [scope.workspaceId, scope.actorId, scope.action, scope.key],
+      `select request_hash, response from ${table} where ${where}`,
+      keyParams,
     );
     const row = existing.rows[0];
     if (!row || row.request_hash !== hash || !row.response) {
@@ -43,11 +54,7 @@ export async function idempotent(
     return row.response;
   }
   const response = await effect();
-  await tx.query(
-    `update public.operation_keys set response = $5
-     where workspace_id = $1 and actor_id = $2 and action = $3 and request_key = $4`,
-    [scope.workspaceId, scope.actorId, scope.action, scope.key, JSON.stringify(response)],
-  );
+  await tx.query(`update ${table} set response = ${next} where ${where}`, [...keyParams, JSON.stringify(response)]);
   return response;
 }
 

@@ -12,6 +12,8 @@ export interface MutationContext {
   idempotencyKey: string;
   requestId: string;
   body: unknown;
+  /** Origine vérifiée (même hôte) : sert à construire les liens envoyés par e-mail. */
+  origin: string;
 }
 
 function errorResponse(error: AppError, requestId: string) {
@@ -58,7 +60,7 @@ export async function handleMutation(
     } catch {
       throw new AppError('MALFORMED_REQUEST', 'Corps JSON invalide.');
     }
-    const result = await run({ actorId: actor.userId, idempotencyKey: key, requestId, body });
+    const result = await run({ actorId: actor.userId, idempotencyKey: key, requestId, body, origin: new URL(origin).origin });
     return NextResponse.json(result.body, { status: result.status, headers: { 'x-request-id': requestId } });
   } catch (error) {
     if (error instanceof AppError) {

@@ -14,7 +14,13 @@ export default async function Calendar({ params, searchParams }: { params: Promi
   const actor = await requireActor();
   const roster = (await listAssignedAthletes(actor.userId, wid)).filter((a) => a.state !== 'archived');
   if (roster.length === 0) {
-    return <><h1>Planning</h1><p className="sub">Aucun athlète affecté pour l’instant.</p></>;
+    return (
+      <>
+        <h1>Planning</h1>
+        <p className="sub">Aucun athlète pour l’instant. Commence par en ajouter un : tu pourras ensuite préparer et publier ses séances.</p>
+        <p style={{ marginTop: 16 }}><Link className="btn primary" href={`/coach/${wid}/athletes/new`}>+ Ajouter un athlète</Link></p>
+      </>
+    );
   }
   const athlete = roster.find((a) => a.id === sp.athlete) ?? roster[0]!;
   const today = todayIn(athlete.timeZone);

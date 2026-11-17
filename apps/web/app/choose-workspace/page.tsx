@@ -21,7 +21,12 @@ export default async function ChooseWorkspace() {
         <h1>Choisir un espace</h1>
         <p className="sub">Connecté·e en tant que {actor.displayName}.</p>
         <section className="card" style={{ marginTop: 20 }} aria-label="Espaces">
-          {spaces.length === 0 ? <p className="empty">Aucun espace n’est encore associé à ce compte.</p> : null}
+          {spaces.length === 0 ? (
+            <p className="empty">
+              Aucun espace n’est encore associé à ce compte. Athlète : ouvre le bouton « Rejoindre l’espace » de l’e-mail
+              d’invitation de ton coach. Coach : crée ton espace ci-dessous.
+            </p>
+          ) : null}
           {spaces.map((w) => (
             <div className="row" key={w.id}>
               <div className="row-text">
@@ -32,6 +37,7 @@ export default async function ChooseWorkspace() {
             </div>
           ))}
         </section>
+        <p style={{ marginTop: 16 }}><Link className="btn" href="/coach/new">+ Créer un espace coach</Link></p>
       </main>
     </>
   );
