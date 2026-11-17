@@ -1,17 +1,10 @@
 import { z } from 'zod';
 import { isLocalDate, isTimeZone, type LocalDate } from './dates';
 
-export const SPORTS = ['running', 'trail', 'cycling', 'swimming', 'triathlon', 'duathlon'] as const;
-export type Sport = (typeof SPORTS)[number];
+import { SPORTS } from './sports';
+import { structureSchema } from './structure';
 
-export const SPORT_LABELS: Record<Sport, string> = {
-  running: 'Course à pied',
-  trail: 'Trail',
-  cycling: 'Cyclisme',
-  swimming: 'Natation',
-  triathlon: 'Triathlon',
-  duathlon: 'Duathlon',
-};
+export { SPORTS, SPORT_LABELS, type Sport } from './sports';
 
 const optionalText = (max: number) =>
   z
@@ -43,7 +36,7 @@ export const workoutInputSchema = z
     instructions: optionalText(5000),
     durationSeconds: optionalInt(1, 86400),
     distanceM: optionalInt(1, 1_000_000),
-    intervals: z.array(z.unknown()).max(30).default([]),
+    intervals: structureSchema,
   })
   .strict();
 

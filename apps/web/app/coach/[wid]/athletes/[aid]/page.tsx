@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireActor } from '@/server/auth/session';
+import { DAY_LABELS, EXPERIENCE_LABELS, formatLongDate, LEVEL_LABELS, SPORT_LABELS, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS_LABELS } from '@coachos/domain';
+import { readAthleteProfile } from '@/server/commands/athlete-profile';
 import { latestInvitation } from '@/server/commands/invitations';
 import { listAssignedAthletes } from '@/server/repo/coach';
 import { coachContext } from '@/server/repo/context';
@@ -26,6 +28,7 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
   const athlete = ctx ? (await listAssignedAthletes(actor.userId, wid)).find((a) => a.id === aid) : undefined;
   if (!ctx || !athlete) notFound();
   const inv = athlete.state === 'invited' ? await latestInvitation(actor.userId, wid, aid) : null;
+  const profile = athlete.state === 'active' ? await readAthleteProfile(actor.userId, wid, aid) : null;
   const tz = ctx.workspace.timeZone;
   const first = athlete.displayName.split(' ')[0];
   return (
@@ -40,6 +43,34 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
         </div>
         <Link className="btn primary" href={`/coach/${wid}/calendar?athlete=${aid}`}>Ouvrir le planning</Link>
       </div>
+
+      {athlete.state === 'active' ? (
+        <section className="card" aria-labelledby="profile-title">
+          <div className="card-head"><h2 id="profile-title">Profil sportif</h2><Pill tone="neutral">Déclaré par {first}</Pill></div>
+          {profile ? (
+            <div className="card-body stack">
+              <dl className="details">
+                <div><dt>Sport</dt><dd>{SPORT_LABELS[profile.sport]}</dd></div>
+                <div><dt>Niveau</dt><dd>{LEVEL_LABELS[profile.level].label}</dd></div>
+                <div><dt>Pratique depuis</dt><dd>{EXPERIENCE_LABELS[profile.experience]}</dd></div>
+                <div><dt>Séances / semaine</dt><dd>{WEEKLY_SESSIONS_LABELS[profile.weeklySessions]}</dd></div>
+                <div><dt>Volume / semaine</dt><dd>{profile.weeklyHours ? WEEKLY_HOURS_LABELS[profile.weeklyHours] : 'Non précisé'}</dd></div>
+                <div><dt>Jours disponibles</dt><dd>{profile.availableDays.length ? profile.availableDays.map((d) => DAY_LABELS[d - 1]).join(' ') : 'Non précisés'}</dd></div>
+              </dl>
+              <div>
+                <h3>Objectif</h3>
+                <p className="prose">{profile.mainGoal ?? 'Non précisé.'}</p>
+              </div>
+              {profile.nextEventName || profile.nextEventDate ? (
+                <p><strong>Prochaine course :</strong> {profile.nextEventName ?? 'Sans nom'}{profile.nextEventDate ? `, ${formatLongDate(profile.nextEventDate).toLowerCase()}` : ''}</p>
+              ) : null}
+              <p className="muted">Mis à jour le {fmt(profile.updatedAt, tz)}. Ce profil ne contient aucune donnée de santé.</p>
+            </div>
+          ) : (
+            <p className="empty">{first} n’a pas encore rempli son profil sportif.</p>
+          )}
+        </section>
+      ) : null}
 
       {athlete.state === 'invited' ? (
         <section className="card" aria-labelledby="inv-title">

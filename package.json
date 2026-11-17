@@ -22,7 +22,8 @@
     "supabase:status": "PATH=\"$PATH:$HOME/.docker/bin\" supabase status",
     "supabase:env": "npm run supabase:env -w @coachos/web",
     "supabase:seed": "npm run supabase:seed -w @coachos/web",
-    "test:pg": "COACHOS_TEST_PG=1 vitest run apps/web/server/loop.test.ts"
+    "test:pg": "COACHOS_TEST_PG=1 vitest run --no-file-parallelism apps/web/server/loop.test.ts apps/web/server/concurrency.test.ts",
+    "supabase:migrate": "PATH=\"$PATH:$HOME/.docker/bin\" supabase migration up"
   },
   "devDependencies": {
     "supabase": "^3.2.0",

@@ -16,24 +16,35 @@ function TimeZoneSelect({ id, value, onChange, zones }: { id: string; value: str
 }
 
 /** X04 : créer un espace coach. Même clé rejouée → même espace (C02-08). */
-export function WorkspaceForm({ zones, defaultZone }: { zones: string[]; defaultZone: string }) {
+export function WorkspaceForm({ zones, defaultZone, currentName }: { zones: string[]; defaultZone: string; currentName: string }) {
   const router = useRouter();
+  const [coachName, setCoachName] = useState(currentName);
   const [name, setName] = useState('');
   const [timeZone, setTimeZone] = useState(defaultZone);
-  const { run, pending, error } = useIntent<{ id: string }>();
+  const me = useIntent<{ displayName: string }>();
+  const { run, pending: creating, error: createError } = useIntent<{ id: string }>();
+  const pending = creating || me.pending;
+  const error = me.error ?? createError;
 
   async function submit(e?: FormEvent) {
     e?.preventDefault();
+    if (coachName.trim() !== currentName && !(await me.run('PATCH', '/api/v1/me', { displayName: coachName }))) return;
     const done = await run('POST', '/api/v1/workspaces', { name, timeZone });
-    if (done) router.push(`/coach/${done.id}/athletes/new?first=1`);
+    if (done) router.push(`/coach/${done.id}/settings?first=1`);
   }
   const err = (p: string) => fieldError(error, p);
   return (
     <form className="form" onSubmit={submit} noValidate>
       <ErrorSummary error={error} onRetry={() => void submit()} />
       <div className="field">
+        <label htmlFor="displayName">Ton nom <span className="hint">Nom de ton compte, modifiable plus tard dans ton profil</span></label>
+        <input id="displayName" required maxLength={100} autoComplete="name" value={coachName} onChange={(e) => setCoachName(e.target.value)}
+          aria-invalid={!!err('displayName')} />
+        {err('displayName') ? <span className="field-error">{err('displayName')}</span> : null}
+      </div>
+      <div className="field">
         <label htmlFor="name">Nom de l’espace <span className="hint">Visible par tes athlètes, par exemple ton nom ou celui de ton club</span></label>
-        <input id="name" required maxLength={120} autoFocus value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!err('name')} />
+        <input id="name" required maxLength={120} value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!err('name')} />
         {err('name') ? <span className="field-error">{err('name')}</span> : null}
       </div>
       <div className="field">

@@ -34,8 +34,9 @@ export default async function Demo({ searchParams }: { searchParams: Promise<{ r
         {actor ? <p className="muted" style={{ marginBottom: 12 }}>Identité actuelle : {actor.displayName}{actor.source === 'supabase' ? ' (connexion réelle)' : ' (démo)'}.</p> : null}
         {real ? (
           <p className="banner" style={{ marginBottom: 16 }}>
-            Connexion réelle disponible : <a href="/login">se connecter par e-mail</a> avec l’une des adresses ci-dessous.
-            Un clic sur une carte ouvre l’identité directement, sans e-mail (raccourci de développement).
+            Connexion réelle disponible : <a href="/login">se connecter</a> avec l’une des adresses ci-dessous et le mot de passe
+            de démonstration (constante <code>DEMO_PASSWORD</code> de <code>apps/web/server/db/fixtures.ts</code>).
+            Un clic sur une carte ouvre l’identité directement (raccourci de développement).
           </p>
         ) : null}
         <div className="demo-grid">

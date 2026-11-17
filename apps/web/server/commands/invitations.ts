@@ -1,12 +1,13 @@
 import {
   acceptInvitationSchema,
+  inviteRegisterSchema,
   createAthleteSchema,
   createWorkspaceSchema,
   INVITATION_TTL_DAYS,
   inviteSchema,
   parseWith,
 } from '@coachos/domain';
-import { commandAs, type Tx } from '../db/client';
+import { commandAs, systemTx, type Tx } from '../db/client';
 import { emailHmac, newInvitationToken, sha256 } from '../crypto';
 import { invitationEmail, sendEmail } from '../email/send';
 import { AppError, conflict, invalid, notVisible } from '../errors';
@@ -39,7 +40,7 @@ export async function createWorkspace(meta: Meta, body: unknown): Promise<Stored
   });
 }
 
-async function requireOwner(tx: Tx, wid: string) {
+export async function requireOwner(tx: Tx, wid: string) {
   const r = await tx.query<{ coach: boolean; owner: boolean }>(
     'select private.current_coach($1) as coach, private.current_owner($1) as owner',
     [wid],
@@ -83,10 +84,12 @@ export async function issueInvitation(
   const { email } = parsed.value;
   const { workspaceId: wid, athleteId: aid } = meta;
   return commandAs(meta.actorId, async (tx) => {
-    const ok = await tx.query<{ ok: boolean; state: string | null; wname: string }>(
+    const ok = await tx.query<{ ok: boolean; state: string | null; wname: string; coach: string | null; tagline: string | null }>(
       `select private.assigned($1, $2) as ok,
               (select state from public.athletes where workspace_id = $1 and id = $2) as state,
-              (select name from public.workspaces where id = $1) as wname`,
+              (select name from public.workspaces where id = $1) as wname,
+              (select display_name from public.users where id = auth.uid()) as coach,
+              (select tagline from public.workspace_profiles where workspace_id = $1) as tagline`,
       [wid, aid],
     );
     const row = ok.rows[0];
@@ -107,7 +110,7 @@ export async function issueInvitation(
       );
       const { id, expires_at } = inv.rows[0]!;
       await audit(tx, wid, meta.actorId, 'invitation.issue', id, meta.requestId);
-      await sendEmail(invitationEmail(email, row.wname, `${meta.appOrigin}/invite#token=${token}`, INVITATION_TTL_DAYS));
+      await sendEmail(invitationEmail(email, row.wname, `${meta.appOrigin}/invite#token=${token}`, INVITATION_TTL_DAYS, row.coach, row.tagline));
       return { status: 201, body: { invitationId: id, expiresAt: new Date(expires_at).toISOString() } };
     });
   });
@@ -215,4 +218,52 @@ export async function latestInvitation(userId: string, wid: string, aid: string)
     const state = x.used_at ? 'used' : x.revoked_at ? 'revoked' : x.expired ? 'expired' : 'pending';
     return { id: x.id, createdAt: new Date(x.created_at).toISOString(), expiresAt: new Date(x.expires_at).toISOString(), state };
   });
+}
+
+/**
+ * Avant de créer un compte depuis une invitation (D-020) : le lien doit être valable et destiné
+ * à cette adresse. Aucun effet de bord ; les messages ne révèlent pas l’adresse attendue.
+ */
+export async function checkInvitationForEmail(token: string, email: string): Promise<void> {
+  await systemTx(async (tx) => {
+    const r = await tx.query<{ email_hmac: Buffer | Uint8Array; expired: boolean; used_at: Date | null; revoked_at: Date | null; state: string }>(
+      `select i.email_hmac, i.expires_at <= now() as expired, i.used_at, i.revoked_at, a.state
+       from public.invitations i join public.athletes a on a.workspace_id = i.workspace_id and a.id = i.athlete_id
+       where i.secret_hash = $1`,
+      [sha256(token)],
+    );
+    const inv = r.rows[0];
+    if (!inv) throw new AppError('RESOURCE_NOT_VISIBLE', 'Ce lien d’invitation n’est pas valable.');
+    if (inv.used_at) throw conflict('Ce lien a déjà été utilisé. Connecte-toi si tu as déjà rejoint l’espace.');
+    if (inv.revoked_at) throw conflict('Ce lien a été remplacé ou annulé. Utilise le dernier e-mail reçu ou demande un nouveau lien à ton coach.');
+    if (inv.expired) throw conflict('Ce lien a expiré. Demande un nouveau lien à ton coach.');
+    if (inv.state !== 'invited') throw conflict('Cette invitation n’est plus active.');
+    if (!Buffer.from(inv.email_hmac).equals(emailHmac(email))) {
+      throw new AppError('ACTION_FORBIDDEN_OR_FEATURE_DISABLED', 'Cette adresse ne correspond pas à l’invitation. Utilise l’adresse qui a reçu l’e-mail.', [
+        { path: 'email', rule: 'Adresse différente de celle invitée' },
+      ]);
+    }
+  });
+}
+
+export type CreateAuthUser = (input: { email: string; password: string; displayName: string }) => Promise<{ userId: string } | { exists: true }>;
+
+/**
+ * Création du compte athlète depuis l’invitation : vérifier le lien et l’adresse, créer le compte
+ * (adresse considérée vérifiée : le lien a été reçu à cette adresse), puis le profil.
+ * L’acceptation se fait ensuite avec la session ouverte (acceptInvitation).
+ */
+export async function registerFromInvitation(body: unknown, createUser: CreateAuthUser): Promise<{ userId: string; token: string; email: string; password: string }> {
+  const parsed = parseWith(inviteRegisterSchema, body);
+  if (!parsed.ok) throw invalid(parsed.fields);
+  const { token, email, password, displayName } = parsed.value;
+  await checkInvitationForEmail(token, email);
+  const created = await createUser({ email, password, displayName });
+  if ('exists' in created) {
+    throw conflict('Un compte existe déjà avec cette adresse. Utilise « J’ai déjà un compte » pour te connecter.');
+  }
+  await systemTx(async (tx) => {
+    await tx.query('insert into public.users(id, display_name) values ($1, $2) on conflict (id) do nothing', [created.userId, displayName]);
+  });
+  return { userId: created.userId, token, email, password };
 }

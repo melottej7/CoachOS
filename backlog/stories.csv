@@ -299,3 +299,47 @@ C30-07,V3,30,Release,Préparer le cycle suivant,Réviser les versions supportée
 C30-08,V3,30,Release,Préparer le cycle suivant,Vérifier le kit de rollback,P2,S24 + S27 + S28 + S29 + C30-01,0.75,Les commandes et garde-fous référencent des versions disponibles
 C30-09,V3,30,Release,Préparer le cycle suivant,Clore les expérimentations,P2,S24 + S27 + S28 + S29 + C30-01,0.5,"Chaque fonctionnalité pilote a une décision, un responsable et une date"
 C30-10,V3,30,Release,Préparer le cycle suivant,Préparer le prochain cycle,P2,S24 + S27 + S28 + S29 + C30-01,0.5,Les hypothèses et contraintes actualisées sont approuvées avant planification
+CE-C-01,CIBLE,L-C,Visite et retours,Fin tranche C,Visite interactive d’Allure sur les vrais écrans,P0,—,1.5,"L’avatar met en évidence l’élément réel, avance quand l’action est faite et se relance depuis un bouton"
+CE-C-02,CIBLE,L-C,Visite et retours,Fin tranche C,"Retour « reporté », ressenti général et difficulté",P0,C06-02,1,"Les nouveaux états et champs persistent, restent facultatifs et apparaissent dans la revue"
+CE-G-01,CIBLE,L-G,Portefeuille,Groupes et dossiers,"Créer, renommer, réordonner et archiver un groupe",P0,—,1,"Le nom est unique dans l’espace, l’ordre persiste et un groupe archivé disparaît des listes actives"
+CE-G-02,CIBLE,L-G,Portefeuille,Groupes et dossiers,"Ajouter ou retirer des élèves d’un groupe, appartenances multiples",P0,CE-G-01,1,Un élève peut appartenir à deux groupes ; le retrait ne touche aucune séance publiée
+CE-G-03,CIBLE,L-G,Portefeuille,Groupes et dossiers,Vue d’ensemble des groupes,P0,CE-G-02,1,"Chaque groupe affiche effectif, retours à traiter et élèves sans séance publiée sur les 7 prochains jours"
+CE-G-04,CIBLE,L-G,Portefeuille,Groupes et dossiers,Groupe ouvert avec recherche et filtres,P0,CE-G-02,1,"Filtres sport, niveau, statut et recherche ; le retour depuis une fiche restitue groupe, filtres et période"
+CE-G-05,CIBLE,L-G,Portefeuille,Groupes et dossiers,Niveau par sport confirmé par le coach,P0,—,1,Le niveau déclaré reste une proposition jusqu’à confirmation ; l’auteur et la date sont enregistrés
+CE-G-06,CIBLE,L-G,Portefeuille,Groupes et dossiers,Fiche élève centrale,P0,CE-G-05,1.5,"Profil, groupes, niveaux, objectif, prochaines séances, retours et accès direct à la planification"
+CE-G-07,CIBLE,L-G,Portefeuille,Groupes et dossiers,Notes privées du coach,P0,CE-G-06,0.5,"Notes visibles par l’auteur affecté seulement, jamais par l’élève ni l’assistant"
+CE-G-08,CIBLE,L-G,Portefeuille,Groupes et dossiers,Objectifs et échéances dans la fiche,P1,CE-G-06,1,"Créer, réviser, annuler ; l’objectif reste visible par l’élève"
+CE-G2-01,CIBLE,L-G2,Portefeuille,Planning de groupe,Préparer une séance pour un groupe,P1,CE-G-02,1.5,Une base crée un brouillon par destinataire ; la liste exacte des destinataires est affichée
+CE-G2-02,CIBLE,L-G2,Portefeuille,Planning de groupe,Adapter puis publier par élève avec exceptions,P1,CE-G2-01,1.5,Les adaptations individuelles sont conservées ; les exceptions sont montrées avant publication
+CE-G2-03,CIBLE,L-G2,Portefeuille,Planning de groupe,Planning par groupe,P1,CE-G2-01,1,Vue semaine du groupe avec l’état de chaque élève
+CE-H-01,CIBLE,L-H,Accueil coach,"Accueil, tâches et agenda",Accueil coach priorisé,P0,CE-H-02,1.5,"L’accueil montre rendez-vous du jour, tâches en retard, du jour et de la semaine avec leur motif"
+CE-H-02,CIBLE,L-H,Accueil coach,"Accueil, tâches et agenda",Tâches humaines,P0,—,1.5,"Titre, type, élève ou groupe, responsable, échéance, priorité, statut et lien d’action ; transitions vérifiées"
+CE-H-03,CIBLE,L-H,Accueil coach,"Accueil, tâches et agenda",Tâches automatiques dédoublonnées,P0,CE-H-02,1,Un seul suivi ouvert par événement ; réévaluation et clôture quand l’objet est résolu
+CE-H-04,CIBLE,L-H,Accueil coach,"Accueil, tâches et agenda",Règles de relance configurables,P1,CE-H-03,1,"Le coach règle le délai, reporte ou désactive une règle ; une information absente devient une tâche à vérifier"
+CE-H-05,CIBLE,L-H,Accueil coach,"Accueil, tâches et agenda",Rendez-vous et visioconférence,P0,CE-H-02,1,"Fuseau, début, durée, lien, préparation et compte rendu, retrouvés dans la fiche élève"
+CE-H-06,CIBLE,L-H,Accueil coach,"Accueil, tâches et agenda",Tâches récurrentes,P2,CE-H-02,0.75,La récurrence crée l’occurrence suivante à la clôture
+CE-H-07,CIBLE,L-H,Accueil coach,"Accueil, tâches et agenda",Messagerie coach élève,P0,—,2,"Fil privé, envoi, lecture, reprise ; un message reçu crée ou rouvre la tâche de réponse"
+CE-S-01,CIBLE,L-S,Progression,Statistiques de base,Statistiques élève : régularité et volumes,P0,—,1.5,"Séances faites, durée et distance par semaine et par mois, observations manquantes signalées"
+CE-S-02,CIBLE,L-S,Progression,Statistiques de base,Prévu et réalisé,P0,CE-S-01,1,Comparaison par semaine avec séances sources accessibles
+CE-S-03,CIBLE,L-S,Progression,Statistiques de base,Période personnalisée et définitions,P1,CE-S-01,1,"Chaque graphique indique période, unités, définition et provenance ; « données insuffisantes » si trompeur"
+CE-S-04,CIBLE,L-S,Progression,Statistiques de base,Statistiques côté coach dans la fiche,P0,CE-S-01,1,"Même calcul, permissions de l’espace ; aucune statistique coach visible par l’élève"
+CE-B-01,CIBLE,L-B,Méthode,Bibliothèque et bilan,Bibliothèque de séances,P0,—,1.5,"Enregistrer, dupliquer, classer, rechercher et versionner une séance structurée"
+CE-B-02,CIBLE,L-B,Méthode,Bibliothèque et bilan,Semaines types et blocs de préparation,P1,CE-B-01,1.5,Une semaine type s’applique à une date en créant des brouillons indépendants
+CE-B-03,CIBLE,L-B,Méthode,Bibliothèque et bilan,Cibles relatives au profil,P1,CE-B-01,1,"Seuils de l’élève (allure seuil, FTP, FC max) convertissent les zones à l’affichage"
+CE-B-04,CIBLE,L-B,Méthode,Bibliothèque et bilan,Bilan structuré par questionnaire,P0,—,1.5,"Envoi, sauvegarde, reprise, statut de complétude, confirmation par le coach"
+CE-B-05,CIBLE,L-B,Méthode,Bibliothèque et bilan,Bilan par entretien,P0,"CE-B-04,CE-H-05",1,Le coach complète le même bilan pendant ou après l’appel ; les sources restent distinguées
+CE-B-06,CIBLE,L-B,Méthode,Bibliothèque et bilan,Import de l’historique du coach,P1,CE-B-01,2,"Prévisualisation, unités, doublons et validation avant insertion ; prescription ancienne, modèle et réalisé distincts"
+CE-E-01,CIBLE,L-E,Élève,Espace élève et retours,Historique et objectifs côté élève,P0,—,1,"L’élève consulte ses séances passées, ses retours et ses objectifs"
+CE-E-02,CIBLE,L-E,Élève,Espace élève et retours,Échanges côté élève,P0,CE-H-07,1,L’élève écrit à son coach depuis la séance ou l’onglet Échanges
+CE-E-03,CIBLE,L-E,Élève,Espace élève et retours,Progression côté élève,P0,CE-S-01,1,"Onglet Progression avec volumes, régularité et prévu / réalisé"
+CE-P-01,CIBLE,L-P,Méthode,Programmes supervisés,Programme et versions,P0,CE-B-01,1.5,Un programme regroupe des semaines ; chaque publication est une version retraçable
+CE-P-02,CIBLE,L-P,Méthode,Programmes supervisés,Génération supervisée depuis bilan et bibliothèque,P1,"CE-P-01,CE-B-04",3,"Brouillon structuré, références et règles utilisées, informations manquantes explicites"
+CE-P-03,CIBLE,L-P,Méthode,Programmes supervisés,Régénération partielle et différences,P1,CE-P-02,2,"Séance, semaine ou programme régénérés seuls ; séances passées et réalisées protégées"
+CE-P-04,CIBLE,L-P,Méthode,Programmes supervisés,Règles candidates et essais de qualité,P2,CE-P-02,2,Préférence durable et exception distinguées ; jeux d’essai et coûts suivis
+CE-X-01,CIBLE,L-X,Intégrations,Activités et Garmin,Export FIT d’une séance structurée,P0,—,1.5,"Fichier décodable avec étapes, répétitions et cibles ; endurance libre et intervalles validés"
+CE-X-02,CIBLE,L-X,Intégrations,Activités et Garmin,Import manuel FIT et TCX,P1,—,2,"Provenance et version conservées ; mesures préremplies, ressenti éditable séparément"
+CE-X-03,CIBLE,L-X,Intégrations,Activités et Garmin,Rapprochement activité et séance,P1,CE-X-02,1.5,"Plusieurs activités par séance, correction possible, aucun double comptage"
+CE-X-04,CIBLE,L-X,Intégrations,Activités et Garmin,Garmin Activity API,P2,Accès Garmin,2,"Autorisation, dernière synchronisation, erreurs, reprise, déconnexion et suppressions"
+CE-X-05,CIBLE,L-X,Intégrations,Activités et Garmin,Garmin Training API,P2,"Accès Garmin,CE-X-01",2,"Publication, mise à jour, déplacement et annulation ; statut fondé sur les confirmations reçues"
+CE-X-06,CIBLE,L-X,Intégrations,Activités et Garmin,Essai sur une montre réelle,P1,CE-X-01,0.5,Procédure suivie et résultat consigné avant de déclarer le transfert opérationnel
+CE-X-07,CIBLE,L-X,Intégrations,Activités et Garmin,Examen Strava,P2,D04,0.5,"Décision écrite sur affichage, rétention et IA avant tout développement"

@@ -1,27 +1,23 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+import { signInSchema } from '@coachos/domain';
+import { logAuth, redirectTo, sameOrigin } from '@/server/auth/forms';
 import { safeNext, supabaseConfigured, supabaseServer } from '@/server/supabase/server';
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** Envoie le lien magique. Formulaire same-origin ; redirection 303 sans donnée personnelle dans l’URL. */
+/** Connexion par adresse et mot de passe (D-020). Message d’échec unique : ne révèle pas si le compte existe. */
 export async function POST(req: NextRequest) {
   if (!supabaseConfigured()) return new NextResponse(null, { status: 404 });
-  const origin = req.headers.get('origin');
-  if (!origin || new URL(origin).host !== req.headers.get('host')) return new NextResponse(null, { status: 403 });
+  if (!sameOrigin(req)) return new NextResponse(null, { status: 403 });
   const form = await req.formData();
-  const email = String(form.get('email') ?? '').trim().toLowerCase();
   const next = safeNext(String(form.get('next') ?? '/'));
-  const back = (q: string) => NextResponse.redirect(new URL(`/login?${q}${next !== '/' ? `&next=${encodeURIComponent(next)}` : ''}`, req.url), 303);
-  if (!EMAIL.test(email) || email.length > 254) return back('error=email');
+  const parsed = signInSchema.safeParse({ email: String(form.get('email') ?? ''), password: String(form.get('password') ?? '') });
+  if (!parsed.success) return redirectTo(req, '/login', { error: 'credentials', next });
 
-  const supabase = await supabaseServer();
-  const callback = new URL('/auth/callback', origin);
-  if (next !== '/') callback.searchParams.set('next', next);
-  const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: callback.toString(), shouldCreateUser: true } });
+  const { error } = await (await supabaseServer()).auth.signInWithPassword(parsed.data);
   if (error) {
-    console.warn(JSON.stringify({ module: 'auth', code: error.code ?? 'otp_failed', status: error.status }));
-    if (error.status === 429) return back('error=rate');
-    return back('error=send');
+    logAuth(error.code ?? 'signin_failed', error.status);
+    if (error.status === 429) return redirectTo(req, '/login', { error: 'rate', next });
+    return redirectTo(req, '/login', { error: 'credentials', next });
   }
-  return back('sent=1');
+  return redirectTo(req, next === '/' ? '/choose-workspace' : next);
 }

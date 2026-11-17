@@ -17,7 +17,7 @@ export default async function NewWorkspace() {
         <h1>Créer ton espace coach</h1>
         <p className="sub">Ton espace regroupe tes athlètes, leurs séances et leurs retours. Tu pourras changer son nom plus tard.</p>
         <div className="card" style={{ marginTop: 18 }}><div className="card-body">
-          <WorkspaceForm zones={zones} defaultZone={zones.includes('Europe/Brussels') ? 'Europe/Brussels' : 'UTC'} />
+          <WorkspaceForm zones={zones} currentName={actor.displayName} defaultZone={zones.includes('Europe/Brussels') ? 'Europe/Brussels' : 'UTC'} />
         </div></div>
       </main>
     </>

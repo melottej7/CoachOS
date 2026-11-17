@@ -76,3 +76,9 @@ export async function commandAs<T>(userId: string, fn: (tx: Tx) => Promise<T>): 
     return fn(tx);
   });
 }
+
+/** Transaction sans identité (vérifications préalables à la création d’un compte). Aucune lecture RLS. */
+export async function systemTx<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
+  const db = await getDb();
+  return db.transaction(fn);
+}

@@ -1,12 +1,12 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-17, session 1 (tranche C, étapes 1 et 2 : connexion réelle, espace, invitation).
+Dernière mise à jour : 2026-11-17, session 1 (personnalisation de l’espace coach, D-022 ; guide d’introduction et questionnaire athlète, D-021).
 
 ## Résumé
 
 Tranches **A (publier et lire)** et **B (retour et revue)** démontrables en local sur données fictives. La boucle créer → publier → lire sur téléphone → envoyer un retour → traiter fonctionne de bout en bout pour les deux rôles. Les droits sont vérifiés en base (RLS du SQL de référence) et dans chaque commande.
 
-Tranche **C, étape 1** faite : l’application tourne sur le PostgreSQL de Supabase local avec la connexion réelle par lien magique (Supabase Auth, e-mails capturés par Mailpit). PGlite reste le moteur des tests rapides et le repli sans Docker. Tranche **C, étape 2** faite : un nouveau coach s’inscrit, crée son espace, ajoute un athlète et l’invite par e-mail ; l’athlète ouvre le lien, se connecte avec la bonne adresse et voit sa première séance publiée. Reste de la tranche C : premier réglage athlète (X07), nom d’affichage, reprise réseau lent et conflits sur ces écrans, isolation de deux portefeuilles pour un même athlète (C03-10).
+Tranche **C, étape 1** faite : l’application tourne sur le PostgreSQL de Supabase local avec une connexion réelle (Supabase Auth). **Depuis D-020 (instruction du fondateur), la connexion se fait par adresse et mot de passe** pour le coach comme pour l’athlète ; seul « Mot de passe oublié » envoie encore un e-mail (Mailpit en local). PGlite reste le moteur des tests rapides et le repli sans Docker. Tranche **C, étape 2** faite : un nouveau coach s’inscrit, crée son espace, ajoute un athlète et l’invite par e-mail ; l’athlète ouvre le lien, se connecte avec la bonne adresse et voit sa première séance publiée. Tranche **C, étape 3** faite : premier réglage athlète (X07) et profil (nom de compte, langue, fuseau), athlète présent dans deux espaces (C03-10). Une revue critique a ajouté des tests de concurrence réelle et de contrat, et corrigé le contrat OpenAPI. **La tranche C est terminée côté développement ; sa validation dépend de la recette du fondateur** (`docs/execution/GUIDE_RECETTE.md`).
 
 ## Lancer en local
 
@@ -28,13 +28,14 @@ npm run supabase:start   # base 54322, API 54321, e-mails de test http://127.0.0
 npm run supabase:env     # écrit apps/web/.env.local (local uniquement, ignoré par Git)
 npm run supabase:seed    # comptes Auth fictifs + données métier
 npm run dev              # http://localhost:3000/login
-npm run test:pg          # même suite boucle/droits sur Supabase. Attention : efface les autres données métier et recharge le jeu fictif
+npm run supabase:migrate # applique les nouvelles migrations à Supabase local
+npm run test:pg          # boucle/droits + concurrence sur Supabase. Refuse si la base contient d’autres comptes que le jeu fictif (D-019)
 npm run supabase:stop
 ```
 
 Sans `apps/web/.env.local`, l’application repasse en mode PGlite + `/demo`. Après un changement de `supabase/config.toml`, relancer `supabase:stop` puis `supabase:start`, puis redémarrer `npm run dev`.
 
-Comptes fictifs : `marine.roy@`, `camille.laurent@`, `noah.dubois@`, `hugo.petit@`, `lea.moreau@` suivis de `demo.coachos.test`. Le lien de connexion arrive dans Mailpit (http://127.0.0.1:54324). En développement, `/demo` reste un raccourci sans e-mail ; « Réinitialiser la démo » recharge le jeu fictif sans redémarrer.
+Comptes fictifs : `marine.roy@`, `camille.laurent@`, `noah.dubois@`, `hugo.petit@`, `lea.moreau@` suivis de `demo.coachos.test`, mot de passe `DEMO_PASSWORD` de `apps/web/server/db/fixtures.ts` (Supabase local uniquement). Les e-mails (invitation, mot de passe oublié) arrivent dans Mailpit (http://127.0.0.1:54324). En développement, `/demo` reste un raccourci sans e-mail ; « Réinitialiser la démo » recharge le jeu fictif sans redémarrer.
 
 Démonstration conseillée : `/demo` → Marine Roy → `+ Ajouter` un jour → enregistrer → « Publier pour Camille » ; puis `/demo` → Camille Laurent (fenêtre étroite ou téléphone) → Aujourd’hui / Programme → séance du jour → « Donner mon retour » ; puis Marine → Retours → « Ouvrir le retour » → « Marquer comme traité ».
 
@@ -50,9 +51,11 @@ Démonstration conseillée : `/demo` → Marine Roy → `+ Ajouter` un jour → 
 | C02-08 Pas de doublon d’espace | Fait : même clé → même espace, un seul rôle | test |
 | C03-01 Fiche athlète | Fait : fiche « invitée » affectée au propriétaire ; coach d’un autre espace et athlète refusés | tests + navigateur |
 | C03-02 Inviter par e-mail | Fait : lien à usage unique, 7 jours, jeton et adresse jamais stockés en clair, jeton hors des URL serveur | tests + base Supabase vérifiée |
-| C03-03 Accepter | Fait : adresse vérifiée égale requise, une seule relation, rechargement sans doublon | tests + navigateur (mobile) |
+| C03-03 Accepter | Fait : adresse égale à l’invitation requise, une seule relation, rechargement sans doublon ; création du compte athlète depuis l’invitation (D-020) | tests + navigateur (mobile) |
 | C03-04 Révoquer | Fait | test |
 | C03-05 Renvoyer | Fait : l’ancien lien échoue, le dernier fonctionne | test |
+| C03-09 Premier réglage | Fait : guide d’introduction avec avatar, puis questionnaire en trois étapes (langue, fuseau, sport, niveau, ancienneté, volume, objectif, disponibilités), aucune donnée de santé (D-021) | tests + navigateur |
+| C03-10 Deux portefeuilles | Fait : deux contextes indépendants, aucun croisement espace/dossier | tests |
 | C04-01 Semaine coach | Fait : 7 dates locales dans le fuseau de l’athlète | test changement d’heure (domain.test.ts) |
 | C04-04 Séance simple en brouillon | Fait | test + navigateur |
 | C05-01 Publier une séance | Fait, une seule version après double clic | test + navigateur (1 seule requête de publication) |
@@ -68,10 +71,11 @@ Démonstration conseillée : `/demo` → Marine Roy → `+ Ajouter` un jour → 
 | C09-04 Raison du signal / source | Fait (« Nouveau retour : … », page d’indisponibilité) | navigateur |
 | C09-06 Clore un cas | Fait via markFeedbackReviewed | test |
 | C01-08 Secrets hors build client | Vérifié pour la clé service Supabase | recherche dans `.next/static` : 0 fichier |
-| C02-01 Inscrire un coach | Partiel : compte vérifié par lien, profil `users` créé à la première connexion sans doublon. Création d’espace (X04) à faire | navigateur |
-| C02-02 Finaliser le lien Auth | Fait : lien réutilisé ou expiré → message et nouveau lien | navigateur |
-| C02-05 Quitter la session | Fait (session Supabase et cookie démo effacés, pages `no-store`). Retour navigateur non testé | navigateur |
-| C02-06 Réponse publique identique | Fait : même message neutre quelle que soit l’adresse | code |
+| C02-01 Inscrire un coach | Fait : `/signup` adresse + mot de passe → création d’espace, profil sans doublon. Adresse non confirmée (D-020) | navigateur |
+| C02-02 Finaliser le lien Auth | Fait pour la réinitialisation : lien réutilisé ou expiré → message et nouvelle demande | navigateur |
+| C02-05 Quitter la session | Fait : retour navigateur après déconnexion → `/login`, aucune donnée affichée | navigateur |
+| C02-07 Nom d’affichage | Fait : `PATCH /me`, rôle inchangé ; nom de compte distinct du nom de dossier choisi par le coach (D-018) | tests + navigateur |
+| C02-06 Réponse publique identique | Fait : « Mot de passe oublié » et échec de connexion neutres. Exception assumée : l’inscription signale une adresse déjà inscrite (D-020) | navigateur |
 | C02-09 Redirections | Fait : `next` externe ou ambigu écarté | tests domaine |
 | Autres C01 (CI, Sentry, page d’état, restauration) | Non commencés | — |
 
@@ -108,6 +112,33 @@ Tranche C, étape 2 (même session) :
 - Athlète, 375 px : lien d’invitation (e-mail « Invitation à rejoindre Nina Run Club ») → jeton retiré de la barre d’adresse → connexion par lien avec l’adresse de Zoé → retour sur `/invite` → « Rejoindre l’espace » → Aujourd’hui avec « Bienvenue dans Nina Run Club » et la séance publiée. Jeton effacé du navigateur après usage.
 - Base Supabase : 1 invitation, 0 adresse et 0 jeton en clair ; Zoé `active` et reliée ; audit `workspace.create, athlete.create, invitation.issue, workout.create, workout.publish, invitation.accept`.
 
+Revue critique et tranche C, étape 3 (même session) :
+
+- Concurrence réelle sur PostgreSQL (`concurrency.test.ts`) : 5 envois simultanés avec la même clé → 1 retour, réponses identiques (une fausse alerte : `jsonb` réordonne les clés) ; 2 premiers envois depuis deux appareils → 1 succès + 1 conflit 409 ; 2 publications simultanées → 1 seule version publiée. Garde-fou ajouté : une violation d’unicité 23505 devient un 409 lisible.
+- Contrat : 51 bornes corrigées dans `contracts/openapi.json` (D-007) ; `contract.test.ts` valide les réponses réelles et les erreurs de 10 routes contre le contrat. Preuve de sensibilité : le même test échoue sur l’ancien contrat (RPE 0 et 35 min refusés).
+- Navigateur : déconnexion puis retour → `/login?next=…`, aucune donnée. Profil athlète 375 px avec barre à trois onglets ; enregistrement → Aujourd’hui ; incohérence trouvée et corrigée (le coach voit le nom de dossier, pas le nom de compte).
+- Totaux : `npm test` **46 passés** (+3 réservés à PostgreSQL) ; `npm run test:pg` **19 passés** ; typecheck et build OK.
+
+Connexion par mot de passe (D-020, même session) :
+
+- `npm test` : **50 passés** (+3 réservés à PostgreSQL), dont `register.test.ts` : mauvaise adresse, mot de passe court, lien consommé, adresse déjà inscrite, lien expiré → aucun compte créé ; bonne adresse → un compte, un profil, une relation. `npm run test:pg` : 19 passés. Typecheck et build OK.
+- Navigateur sur Supabase local : `/signup` Paul → `/coach/new` avec le nom prérempli → espace → invitation d’Emma → déconnexion. Emma (375 px) : lien d’invitation → formulaire « Créer mon compte et rejoindre » → mauvaise adresse refusée sur le champ (0 compte créé, vérifié en base) → bonne adresse → « Bienvenue ! » dans l’espace de Paul, jeton effacé → déconnexion → mauvais mot de passe : « Adresse e-mail ou mot de passe incorrect », destination conservée → bon mot de passe → Aujourd’hui. Paul : « Mot de passe oublié » → e-mail « Réinitialiser ton mot de passe CoachOS » → nouveau mot de passe → « Mot de passe modifié ».
+- Comptes de test supprimés ensuite ; jeu fictif rechargé (5 comptes).
+
+Retour de recette du fondateur (même session, D-021) :
+
+- Recette du fondateur : parcours jugé « fluide et bien pensé » ; demandes : guide d’introduction avec avatar, présentation et questionnaire de profil pour l’athlète.
+- `npm test` : **55 passés** (+3 réservés à PostgreSQL), dont `athlete-profile.test.ts` (lecture coach affecté seulement, écriture athlète seulement, champ « injuries » refusé) et le contrat de `PUT athlete-profile`. `npm run test:pg` : 19 passés. Typecheck et build OK. Migration appliquée à Supabase local (RLS active, 1 politique).
+- Navigateur, 375 px : invitation → création du compte → guide « Allure » en 5 étapes → questionnaire (Entrée et « Suivant » ne soumettent plus avant la fin) → Aujourd’hui. Coach : profil sportif visible dans le dossier, guide coach depuis le menu « Guide ».
+- **Incident** : un lancement de `test:pg` a effacé les données de recette du fondateur (comptes conservés). Garde-fou corrigé et prouvé (D-019).
+
+Personnalisation de l’espace coach (même session, D-022) :
+
+- `npm test` : **64 passés** (+3 réservés à PostgreSQL), dont `workspace-profile.test.ts` (propriétaire seul en écriture, membres seuls en lecture, lien http et champ inconnu refusés, SVG/GIF/fichier vide ou trop lourd refusés, e-mail au nom du coach, aperçu sans donnée d’athlète, lien utilisé sans aperçu) et le contrat des quatre nouvelles opérations. Typecheck OK ; build OK avant les derniers ajustements de libellés.
+- `npm run test:pg` **refusé par le garde-fou** : la base contient l’espace « Pauletta » créé par le fondateur. Non forcé.
+- Navigateur : assistant en quatre étapes (présentation, spécialités, logo + couleur « Océan » avec aperçu, infos pratiques), lien http refusé avec message « Site web : adresse commençant par https:// », puis guide coach aux couleurs de l’espace. E-mail « Marine Roy t’invite à rejoindre Atelier Endurance » avec l’accroche ; page d’invitation (375 px, non connecté) avec logo, coach, ville et accroche ; Camille : logo et couleur en haut de ses écrans, écran « Ton coach ».
+- Incident technique : après un build de production lancé pendant le serveur de développement, celui-ci servait une version périmée d’un fichier (erreur 500 sur l’envoi du logo) ; corrigé en relançant le serveur. Éviter `npm run build` pendant `npm run dev`.
+
 Non prouvé à ce stade : lecteur d’écran et parcours clavier complet, vrai téléphone, concurrence réelle sous charge, retour navigateur après déconnexion, temps de publication 90 s et retour 30 s avec de vrais utilisateurs.
 
 ## Fichiers principaux
@@ -126,17 +157,29 @@ Non prouvé à ce stade : lecteur d’écran et parcours clavier complet, vrai t
 
 ## Écarts et dette connus
 
-- Contrat OpenAPI à corriger (bornes à 10, RPE min 1), voir D-007.
 - Pas encore : annulation de séance, report d’un cas (snooze), publication par lot multi-séances (X22 limité à une séance), filtre persistant de la file (C09-08), routes GET pour Expo, E2E automatisé, CI.
 - Top bar mobile encore chargée côté athlète. À revoir après observation.
-- Le profil créé à la première connexion prend la partie avant @ comme nom. Réglage du nom (X07, C02-07) à faire.
+- Le profil créé à la première connexion prend la partie avant @ comme nom ; le coach peut le corriger à la création d’espace ou dans `/profile`, l’athlète dans Profil.
+- Langue : le choix « English » est enregistré mais l’interface reste en français (V1).
+- Démo : l’espace « Atelier Endurance » porte maintenant une présentation, un logo de test et la couleur « Océan » ; une fiche « Aperçu Test » invitée y a été ajoutée pendant la vérification.
+- `npm run build` pendant `npm run dev` corrompt le cache du serveur de développement : relancer le serveur ensuite.
+- Un compte peut être coach et athlète du même espace s’il accepte sa propre invitation : cas non bloqué, à trancher.
 
 ## Prochaine action
 
-**Recette des deux rôles avec le fondateur, puis fin de la tranche C.**
+**Cible coach et élève (D-024).** Lire [16_COMPLEMENT_COACH_ELEVE.md](../16_COMPLEMENT_COACH_ELEVE.md), [COUVERTURE.md](COUVERTURE.md), puis la section « Lots de la cible coach et élève » de la roadmap.
 
-1. **Pour le fondateur (sans code).** Dérouler le parcours complet en local : inscription d’un coach, création d’espace, invitation, acceptation sur téléphone (ou fenêtre étroite), publication, retour, revue. Noter hésitations et blocages. Guide pas à pas donné en fin de session.
-2. **Développement.** Premier réglage athlète (X07, C03-09 : langue, fuseau, sport ; aucune donnée médicale) et nom d’affichage (C02-07) ; isolation d’un athlète présent dans deux espaces (C03-10) ; reprise réseau lent sur les nouveaux formulaires.
-3. **Avant toute donnée réelle (gate G1).** Fournisseur d’e-mails (Resend), `COACHOS_INVITE_HMAC_KEY` par environnement, décision sur l’inscription libre (`shouldCreateUser`), projet Supabase de staging distinct.
+Fait dans cette reprise :
+- Séance structurée (D-023) terminée : constructeur vérifié dans le navigateur (modèles « Échauffement », « Séries 3 × (5 × 300 m) », « Retour au calme »), total « au moins 49 min · 4,5 km », enregistrement, publication, lecture coach (blocs et séries encadrés) et athlète 375 px ; revue affichant la version observée en blocs ; erreurs de blocs libellées « Bloc 2.1 ».
+- Complément intégré : `docs/16_COMPLEMENT_COACH_ELEVE.md`, CLAUDE.md (relecture obligatoire), README, matrice `docs/execution/COUVERTURE.md`, 44 stories `CE-*` dans `backlog/stories.csv`, ordre des lots dans `docs/11_ROADMAP.md`, D-023 à D-025.
+- CE-C-02 : retour « Reportée », ressenti général 1 à 5, difficultés par catégorie (migration `20261118020000`, appliquée à Supabase local), revue coach. `npm test` : 70 passés (+3 PostgreSQL) ; typecheck OK.
+- Incidents : serveur de développement à relancer après modification de `packages/domain` (export non rechargé, erreur 500) ; ne pas lancer `npm run build` pendant `npm run dev`.
 
-- **En parallèle si utile.** Corriger `contracts/openapi.json` (D-007) ; E2E Playwright du parcours invitation → retour.
+À faire, dans l’ordre :
+1. **CE-C-01** visite interactive d’Allure sur les vrais écrans (surbrillance de l’élément, progression par action, bouton Allure pour relancer), puis supprimer les diapositives.
+2. **Lot G** : CE-G-01 à CE-G-08 (groupes sur `teams` étendu par migration additive, niveaux par sport `athlete_sport_levels`, vue d’ensemble, groupe filtré avec contexte conservé, fiche élève centrale, notes privées `coach_notes`, objectifs `goals`).
+3. Lot H, puis S, B, E, G2, P ; export FIT (CE-X-01) possible en parallèle.
+
+Rien n’est commité depuis 36c2337 : profil athlète et guide (D-021), personnalisation de l’espace (D-022), séance structurée (D-023), complément et matrice (D-024), retour enrichi (D-025).
+
+**Pour le fondateur** : accès Garmin Connect Developer Program (business), modèle de montre disponible pour l’essai, exemples anonymisés de vos anciens programmes (formats réels), accès au code ou captures de Foulée.

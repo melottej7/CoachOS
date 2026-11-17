@@ -5,6 +5,7 @@ import { requireActor } from '@/server/auth/session';
 import { athleteWorkout } from '@/server/repo/athlete';
 import { athleteContext, isUuid } from '@/server/repo/context';
 import { Notice, Pill } from '@/components/ui';
+import { StructureView } from '@/components/structure-view';
 
 export const metadata = { title: 'Séance' };
 
@@ -32,10 +33,17 @@ export default async function AthleteWorkoutPage({ params, searchParams }: { par
         <div><dt>Durée</dt><dd>{formatDuration(w.durationSeconds) ?? 'Libre'}</dd></div>
         {w.distanceM ? <div><dt>Distance</dt><dd>{formatDistance(w.distanceM)}</dd></div> : null}
       </dl>
-      <section style={{ marginTop: 20 }} aria-labelledby="consignes">
-        <h2 id="consignes">Consignes</h2>
-        <p className="prose" style={{ marginTop: 6 }}>{w.instructions || 'Aucune consigne supplémentaire.'}</p>
-      </section>
+      {w.intervals.length ? (
+        <section style={{ marginTop: 20 }} aria-label="Déroulé de la séance">
+          <StructureView blocks={w.intervals} sport={w.sport} />
+        </section>
+      ) : null}
+      {w.instructions || !w.intervals.length ? (
+        <section style={{ marginTop: 20 }} aria-labelledby="consignes">
+          <h2 id="consignes">Consignes</h2>
+          <p className="prose" style={{ marginTop: 6 }}>{w.instructions || 'Aucune consigne supplémentaire.'}</p>
+        </section>
+      ) : null}
       <section className="card" style={{ marginTop: 24 }} aria-labelledby="mon-retour">
         <div className="card-head"><h2 id="mon-retour">Mon retour</h2>{feedback ? <Pill tone="neutral">Envoyé</Pill> : null}</div>
         <div className="card-body stack">

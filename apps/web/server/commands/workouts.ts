@@ -1,4 +1,5 @@
 import {
+  structureTotals,
   createWorkoutSchema,
   parseWith,
   publishSchema,
@@ -28,7 +29,13 @@ async function requireAssignedCoach(tx: Tx, wid: string, aid: string) {
   if (!row?.ok || row.state === 'archived') throw notVisible();
 }
 
-async function insertRevision(tx: Tx, wid: string, aid: string, sid: string, n: number, data: WorkoutInput) {
+async function insertRevision(tx: Tx, wid: string, aid: string, sid: string, n: number, input: WorkoutInput) {
+  const t = structureTotals(input.intervals);
+  const data = {
+    ...input,
+    durationSeconds: input.durationSeconds ?? (t.seconds > 0 ? Math.min(86400, t.seconds) : null),
+    distanceM: input.distanceM ?? (t.meters > 0 ? Math.min(1_000_000, t.meters) : null),
+  };
   await tx.query(
     `insert into public.workout_revisions(workspace_id, athlete_id, workout_id, number, local_date, sort_order, time_zone,
        sport_code, title, instructions, duration_seconds, distance_m, intervals)

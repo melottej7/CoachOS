@@ -1,4 +1,4 @@
-import type { ResultState, Sport } from '@coachos/domain';
+import type { Block, ResultState, Sport } from '@coachos/domain';
 import { readAs } from '../db/client';
 import { readFeedback, type FeedbackView } from './coach';
 
@@ -18,13 +18,14 @@ export interface AthleteWorkout {
   durationSeconds: number | null;
   distanceM: number | null;
   canceled: boolean;
+  intervals: Block[];
   feedbackState: ResultState | null;
 }
 
 const publishedSql = `
   select x.*, res.state as result_state from (
     select distinct on (r.workout_id) r.workout_id, r.number, to_char(r.local_date, 'YYYY-MM-DD') as local_date, r.sort_order,
-           r.sport_code, r.title, r.instructions, r.duration_seconds, r.distance_m, r.canceled, r.workspace_id, r.athlete_id
+           r.sport_code, r.title, r.instructions, r.duration_seconds, r.distance_m, r.canceled, r.intervals, r.workspace_id, r.athlete_id
     from public.workout_revisions r
     where r.workspace_id = $1 and r.athlete_id = $2
     order by r.workout_id, r.number desc
@@ -33,7 +34,7 @@ const publishedSql = `
 
 type Row = {
   workout_id: string; number: number; local_date: string; sort_order: number; sport_code: Sport; title: string;
-  instructions: string; duration_seconds: number | null; distance_m: number | null; canceled: boolean; result_state: ResultState | null;
+  instructions: string; duration_seconds: number | null; distance_m: number | null; canceled: boolean; intervals: Block[] | null; result_state: ResultState | null;
 };
 
 const toWorkout = (x: Row): AthleteWorkout => ({
@@ -47,6 +48,7 @@ const toWorkout = (x: Row): AthleteWorkout => ({
   durationSeconds: x.duration_seconds,
   distanceM: x.distance_m,
   canceled: x.canceled,
+  intervals: Array.isArray(x.intervals) ? x.intervals : [],
   feedbackState: x.result_state,
 });
 

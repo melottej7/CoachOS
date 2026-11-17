@@ -131,3 +131,17 @@ async function insertWorkout(tx: Q, w: SeedWorkout, localDate: string) {
     );
   }
 }
+
+/**
+ * Garde-fou des tests sur PostgreSQL (D-019) : refuser d’effacer une base qui contient d’autres
+ * utilisateurs que le jeu fictif (par exemple les comptes créés pendant une recette), sauf
+ * COACHOS_TEST_PG_FORCE=1.
+ */
+export async function assertOnlyFixtureUsers(db: Db): Promise<void> {
+  if (process.env.COACHOS_TEST_PG_FORCE === '1') return;
+  const r = await db.query<{ n: number }>('select count(*)::int as n from public.users where not (id = any($1::uuid[]))', [PEOPLE.map((p) => p.id)]);
+  const n = r.rows[0]?.n ?? 0;
+  if (n > 0) {
+    throw new Error(`${n} compte(s) hors jeu fictif dans Supabase local : test:pg effacerait leurs données. Relancer avec COACHOS_TEST_PG_FORCE=1 pour confirmer.`);
+  }
+}

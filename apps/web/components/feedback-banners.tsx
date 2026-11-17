@@ -17,6 +17,23 @@ const FIELD_LABELS: Record<string, string> = {
   displayName: 'Nom de l’athlète',
   timeZone: 'Fuseau horaire',
   email: 'Adresse e-mail',
+  password: 'Mot de passe',
+  tagline: 'Accroche',
+  bio: 'Présentation',
+  approach: 'Approche d’entraînement',
+  experienceYears: 'Années d’expérience',
+  certifications: 'Diplômes et certifications',
+  city: 'Ville ou région',
+  websiteUrl: 'Site web',
+  socialUrl: 'Réseau social',
+  contactEmail: 'E-mail de contact',
+  mainGoal: 'Objectif principal',
+  nextEventName: 'Prochaine course',
+  nextEventDate: 'Date de la course',
+  sport: 'Sport',
+  level: 'Niveau',
+  experience: 'Ancienneté',
+  weeklySessions: 'Séances par semaine',
 };
 
 const FIELD_IDS: Record<string, string> = {
@@ -33,12 +50,31 @@ const FIELD_IDS: Record<string, string> = {
   displayName: 'displayName',
   timeZone: 'timeZone',
   email: 'email',
+  tagline: 'tagline',
+  bio: 'bio',
+  approach: 'approach',
+  experienceYears: 'years',
+  certifications: 'cert',
+  city: 'city',
+  websiteUrl: 'website',
+  socialUrl: 'social',
+  contactEmail: 'contact',
+  mainGoal: 'goal',
+  nextEventName: 'eventName',
+  nextEventDate: 'eventDate',
 };
 
 /**
  * Résumé d’erreurs placé avant le formulaire, focus à l’apparition (design system : ErrorSummary).
  * Réseau coupé : la saisie reste en place et l’action peut être rejouée avec la même clé.
  */
+/** « data.intervals.1.steps.0.measure.seconds » → « Bloc 2.1 ». */
+function blockLabel(path: string): string | null {
+  const m = /^data\.intervals\.(\d+)(?:\.steps\.(\d+))?(?:\.steps\.(\d+))?/.exec(path);
+  if (!m) return null;
+  return 'Bloc ' + [m[1], m[2], m[3]].filter((x) => x !== undefined).map((x) => Number(x) + 1).join('.');
+}
+
 export function ErrorSummary({ error, onRetry, retryLabel = 'Réessayer' }: { error: IntentError | null; onRetry?: () => void; retryLabel?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -78,7 +114,7 @@ export function ErrorSummary({ error, onRetry, retryLabel = 'Réessayer' }: { er
         <ul>
           {error.fields.map((f) => (
             <li key={f.path + f.rule}>
-              <a href={`#${FIELD_IDS[f.path] ?? ''}`}>{FIELD_LABELS[f.path] ?? f.path}</a> : {f.rule}
+              <a href={`#${FIELD_IDS[f.path.split('.')[0]!] ?? FIELD_IDS[f.path] ?? ''}`}>{FIELD_LABELS[f.path] ?? blockLabel(f.path) ?? FIELD_LABELS[f.path.split('.')[0]!] ?? f.path}</a> : {f.rule}
             </li>
           ))}
         </ul>

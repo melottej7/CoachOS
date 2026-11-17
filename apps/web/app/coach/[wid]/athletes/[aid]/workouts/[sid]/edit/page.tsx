@@ -21,7 +21,7 @@ export default async function EditWorkout({ params }: { params: Promise<{ wid: s
       <section className="card"><div className="card-body">
         <WorkoutForm wid={wid} aid={aid} athleteName={w.athlete.displayName} timeZone={r.timeZone} cancelHref={detail}
           edit={{ sid, expectedRevision: r.number, published: w.published !== null }}
-          initial={{ title: r.title, localDate: r.localDate, sport: r.sport, minutes: r.durationSeconds ? String(Math.round(r.durationSeconds / 60)) : '', instructions: r.instructions }} />
+          initial={{ title: r.title, localDate: r.localDate, sport: r.sport, minutes: r.durationSeconds ? String(Math.round(r.durationSeconds / 60)) : '', instructions: r.instructions, intervals: r.intervals }} />
       </div></section>
     </>
   );

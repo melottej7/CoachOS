@@ -1,0 +1,131 @@
+import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import Ajv2020 from 'ajv/dist/2020.js';
+import addFormats from 'ajv-formats';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { openDatabase, setDb } from './db/client';
+import { ATHLETES, TIME_ZONE, USERS, WORKSPACE_A } from './db/fixtures';
+import { repoRoot } from './db/migrate';
+import { SEED_WORKOUTS } from './db/seed';
+import { setMailer } from './email/send';
+import { AppError } from './errors';
+import { errorPayload } from './http';
+import { markFeedbackReviewed, saveFeedback } from './commands/feedback';
+import { acceptInvitation, createAthlete, createWorkspace, issueInvitation, revokeInvitation } from './commands/invitations';
+import { createWorkout, publishWorkouts, updateWorkout } from './commands/workouts';
+import { saveAthleteProfile } from './commands/athlete-profile';
+import { deleteWorkspaceLogo, previewInvitation, saveWorkspaceProfile, setWorkspaceLogo } from './commands/workspace-profile';
+import { todayIn } from '@coachos/domain';
+
+// Test de contrat : chaque réponse réelle des commandes est validée contre contracts/openapi.json
+// (statut attendu et schéma de réponse, propriétés inconnues interdites).
+
+const spec = JSON.parse(fs.readFileSync(path.join(repoRoot(), 'contracts', 'openapi.json'), 'utf8'));
+const ajv = new Ajv2020({ strict: false, allErrors: true });
+addFormats(ajv);
+ajv.addSchema(spec, 'openapi');
+
+const ptr = (...parts: string[]) => parts.map((p) => encodeURIComponent(p.replace(/~/g, '~0').replace(/\//g, '~1'))).join('/');
+
+function check(route: string, method: string, status: number, body: unknown) {
+  const responses = spec.paths[route]?.[method]?.responses;
+  expect(responses, `${method.toUpperCase()} ${route} absent du contrat`).toBeTruthy();
+  expect(Object.keys(responses), `statut ${status} non prévu`).toContain(String(status));
+  const validate = ajv.getSchema(`openapi#/${ptr('paths', route, method, 'responses', String(status), 'content', 'application/json', 'schema')}`)!;
+  const ok = validate(body);
+  expect(ok, JSON.stringify(validate.errors)).toBe(true);
+}
+
+const meta = (actorId: string) => ({ actorId, idempotencyKey: randomUUID(), requestId: randomUUID() });
+const W = '/workspaces/{wid}/athletes/{aid}/workouts';
+let lastMail = '';
+
+beforeAll(async () => {
+  setDb(await openDatabase());
+  setMailer(async (m) => void (lastMail = m.text));
+});
+
+describe('réponses conformes au contrat OpenAPI', () => {
+  it('séances : créer, modifier, publier (durée réelle de 35 min incluse)', async () => {
+    const data = { localDate: todayIn(TIME_ZONE), timeZone: TIME_ZONE, sport: 'running', title: 'Contrat', durationSeconds: 2100, intervals: [] };
+    const m = { ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille };
+    const created = await createWorkout(m, { data });
+    check(W, 'post', created.status, created.body);
+    const id = (created.body as { id: string }).id;
+    const updated = await updateWorkout({ ...m, idempotencyKey: randomUUID(), workoutId: id }, { expectedRevision: 1, data });
+    check(`${W}/{sid}`, 'patch', updated.status, updated.body);
+    const pub = await publishWorkouts({ ...m, idempotencyKey: randomUUID() }, { changes: [{ id, revision: 2 }] });
+    check('/workspaces/{wid}/athletes/{aid}/publications', 'post', pub.status, pub.body);
+  });
+
+  it('retour et revue (RPE 0 et commentaire)', async () => {
+    const m = { ...meta(USERS.camille), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille, workoutId: SEED_WORKOUTS.camilleToday };
+    const fb = await saveFeedback(m, { publishedRevision: 1, state: 'completed', durationSeconds: 2100, rpe: 0, comment: 'ok' });
+    check(`${W}/{sid}/feedback`, 'put', fb.status, fb.body);
+    const rv = await markFeedbackReviewed({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille, workoutId: SEED_WORKOUTS.camilleToday }, { expectedRevision: 1 });
+    check(`${W}/{sid}/feedback/review`, 'post', rv.status, rv.body);
+  });
+
+  it('espace, fiche, invitation, révocation, acceptation', async () => {
+    const ws = await createWorkspace(meta(USERS.marine), { name: 'Contrat', timeZone: TIME_ZONE });
+    check('/workspaces', 'post', ws.status, ws.body);
+    const a = await createAthlete({ ...meta(USERS.marine), workspaceId: WORKSPACE_A }, { displayName: 'Contrat', timeZone: TIME_ZONE });
+    check('/workspaces/{wid}/athletes', 'post', a.status, a.body);
+    const aid = (a.body as { id: string }).id;
+    const inv = await issueInvitation({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: aid, appOrigin: 'http://localhost:3000' }, { email: 'lea.moreau@demo.coachos.test' });
+    check('/workspaces/{wid}/athletes/{aid}/invite', 'post', inv.status, inv.body);
+    const rv = await revokeInvitation({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, invitationId: (inv.body as { invitationId: string }).invitationId });
+    check('/workspaces/{wid}/invitations/{iid}', 'delete', rv.status, rv.body);
+    await issueInvitation({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: aid, appOrigin: 'http://localhost:3000' }, { email: 'lea.moreau@demo.coachos.test' });
+    const token = /#token=([A-Za-z0-9_-]+)/.exec(lastMail)![1]!;
+    const acc = await acceptInvitation(meta(USERS.lea), { token });
+    check('/invitations/accept', 'post', acc.status, acc.body);
+  });
+
+  it('profil sportif de l’athlète (minimal puis complet)', async () => {
+    const m = { ...meta(USERS.noah), workspaceId: WORKSPACE_A };
+    const minimal = await saveAthleteProfile(m, { sport: 'cycling', level: 'beginner', experience: 'lt1', weeklySessions: '0to1' });
+    check('/workspaces/{wid}/athlete-profile', 'put', minimal.status, minimal.body);
+    const full = await saveAthleteProfile({ ...m, idempotencyKey: randomUUID() }, {
+      sport: 'cycling', level: 'intermediate', experience: '3to5', weeklySessions: '4to5', weeklyHours: '6to10',
+      availableDays: [1, 3, 6], mainGoal: 'Gravel de 100 km', nextEventName: 'Gravel Ardennes', nextEventDate: '2027-05-02',
+    });
+    check('/workspaces/{wid}/athlete-profile', 'put', full.status, full.body);
+  });
+
+  it('présentation d’espace, logo et aperçu d’invitation', async () => {
+    const m = { ...meta(USERS.marine), workspaceId: WORKSPACE_A };
+    const minimal = await saveWorkspaceProfile(m, { name: 'Atelier Endurance' });
+    check('/workspaces/{wid}/profile', 'put', minimal.status, minimal.body);
+    const full = await saveWorkspaceProfile({ ...m, idempotencyKey: randomUUID() }, {
+      name: 'Atelier Endurance', tagline: 'Running et trail', bio: 'Bio', approach: 'Approche', experienceYears: 8, certifications: ['BPJEPS'],
+      sports: ['running'], audiences: ['beginner'], goals: ['marathon'], city: 'Namur', languages: ['fr'], websiteUrl: 'https://exemple.test',
+      socialUrl: 'https://social.exemple.test/coach', contactEmail: 'coach@exemple.test', accent: 'forest',
+    });
+    check('/workspaces/{wid}/profile', 'put', full.status, full.body);
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13]);
+    const up = await setWorkspaceLogo(m, png);
+    check('/workspaces/{wid}/logo', 'put', up.status, up.body);
+    const del = await deleteWorkspaceLogo(m);
+    check('/workspaces/{wid}/logo', 'delete', del.status, del.body);
+    const a = await createAthlete({ ...meta(USERS.marine), workspaceId: WORKSPACE_A }, { displayName: 'Aperçu', timeZone: TIME_ZONE });
+    await issueInvitation({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: (a.body as { id: string }).id, appOrigin: 'http://localhost:3000' }, { email: 'apercu@demo.coachos.test' });
+    const token = /#token=([A-Za-z0-9_-]+)/.exec(lastMail)![1]!;
+    check('/invitations/preview', 'post', 200, { workspace: await previewInvitation(token) });
+  });
+
+  it('erreurs : corps errorBody et statut prévus par route', async () => {
+    const cases: [string, string, Promise<unknown>][] = [
+      [`${W}`, 'post', createWorkout({ ...meta(USERS.hugo), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille }, { data: { title: '' } })],
+      [`${W}`, 'post', createWorkout({ ...meta(USERS.hugo), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille }, { data: { localDate: '2026-11-17', timeZone: TIME_ZONE, sport: 'running', title: 'x', intervals: [] } })],
+      [`${W}/{sid}/feedback`, 'put', saveFeedback({ ...meta(USERS.camille), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille, workoutId: SEED_WORKOUTS.camilleLong }, { publishedRevision: 1, state: 'completed' })],
+    ];
+    for (const [route, method, p] of cases) {
+      const err = await p.then(() => null, (e: unknown) => e);
+      expect(err).toBeInstanceOf(AppError);
+      const e = err as AppError;
+      check(route, method, e.status, errorPayload(e, randomUUID()));
+    }
+  });
+});

@@ -1,4 +1,4 @@
-import { workoutStatus, type ResultState, type Sport, type WorkoutStatus } from '@coachos/domain';
+import { workoutStatus, type Block, type Difficulty, type ResultState, type Sport, type WorkoutStatus } from '@coachos/domain';
 import { readAs, type Tx } from '../db/client';
 
 // Lectures du coach, toutes sous RLS (affectation active obligatoire).
@@ -83,14 +83,15 @@ export interface RevisionView {
   durationSeconds: number | null;
   distanceM: number | null;
   canceled: boolean;
+  intervals: Block[];
 }
 
 const revisionColumns = `number, to_char(local_date, 'YYYY-MM-DD') as local_date, time_zone, sport_code, title, instructions,
-  duration_seconds, distance_m, canceled`;
+  duration_seconds, distance_m, canceled, intervals`;
 
 type RevisionRow = {
   number: number; local_date: string; time_zone: string; sport_code: Sport; title: string; instructions: string;
-  duration_seconds: number | null; distance_m: number | null; canceled: boolean;
+  duration_seconds: number | null; distance_m: number | null; canceled: boolean; intervals: Block[] | null;
 };
 
 export const toRevision = (x: RevisionRow): RevisionView => ({
@@ -103,6 +104,7 @@ export const toRevision = (x: RevisionRow): RevisionView => ({
   durationSeconds: x.duration_seconds,
   distanceM: x.distance_m,
   canceled: x.canceled,
+  intervals: Array.isArray(x.intervals) ? x.intervals : [],
 });
 
 export interface FeedbackView {
@@ -116,6 +118,8 @@ export interface FeedbackView {
   comment: string | null;
   reviewedAt: string | null;
   createdAt: string;
+  overallFeeling: number | null;
+  difficulties: Difficulty[];
 }
 
 export interface CoachWorkoutDetail {
@@ -172,9 +176,10 @@ export async function readFeedback(
   const r = await tx.query<{
     id: string; revision: number; workout_revision: number; state: ResultState; duration_seconds: number | null;
     distance_m: number | null; rpe: number | null; comment: string | null; reviewed_at: Date | null; created_at: Date;
+    overall_feeling: number | null; difficulties: Difficulty[] | null;
   }>(
     `select f.id, f.revision, res.workout_revision, res.state, res.duration_seconds, res.distance_m, f.rpe, f.comment,
-            f.reviewed_at, f.created_at
+            f.reviewed_at, f.created_at, f.overall_feeling, f.difficulties
      from public.workout_results res
      join public.feedbacks f on f.workspace_id = res.workspace_id and f.athlete_id = res.athlete_id and f.result_id = res.id
      where res.workspace_id = $1 and res.athlete_id = $2 and res.workout_id = $3`,
@@ -193,6 +198,8 @@ export async function readFeedback(
     comment: x.comment,
     reviewedAt: x.reviewed_at?.toISOString() ?? null,
     createdAt: x.created_at.toISOString(),
+    overallFeeling: x.overall_feeling,
+    difficulties: x.difficulties ?? [],
   };
 }
 

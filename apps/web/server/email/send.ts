@@ -51,25 +51,28 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
-export function invitationEmail(to: string, workspaceName: string, link: string, days: number): EmailMessage {
-  const subject = `Invitation à rejoindre ${workspaceName} sur CoachOS`;
+export function invitationEmail(to: string, workspaceName: string, link: string, days: number, coachName: string | null = null, tagline: string | null = null): EmailMessage {
+  const subject = coachName ? `${coachName} t’invite à rejoindre ${workspaceName} sur CoachOS` : `Invitation à rejoindre ${workspaceName} sur CoachOS`;
+  const who = coachName ? `${coachName} t’invite` : 'Ton coach t’invite';
   const text = [
     'Bonjour,',
     '',
-    `Ton coach t’invite à rejoindre l’espace « ${workspaceName} » sur CoachOS pour retrouver tes séances et lui envoyer tes retours.`,
+    `${who} à rejoindre l’espace « ${workspaceName} » sur CoachOS pour retrouver tes séances et lui envoyer tes retours.`,
+    ...(tagline ? ['', `« ${tagline} »`] : []),
     '',
     `Rejoindre l’espace : ${link}`,
     '',
-    `Ce lien est personnel, valable ${days} jours et utilisable une seule fois. Connecte-toi avec cette adresse e-mail pour l’accepter.`,
+    `Ce lien est personnel, valable ${days} jours et utilisable une seule fois. Tu y choisiras ton mot de passe (ou tu te connecteras si tu as déjà un compte avec cette adresse).`,
     'Si tu ne connais pas ce coach, ignore simplement cet e-mail.',
   ].join('\n');
   const html = `<!doctype html><html lang="fr"><body style="margin:0;padding:24px;background:#f2f5f4;font-family:Inter,system-ui,sans-serif;color:#162e37">
 <table role="presentation" width="100%" style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #d8e2df;border-radius:10px"><tr><td style="padding:24px">
 <p style="margin:0 0 16px;font-size:20px;font-weight:800">CoachOS</p>
 <p style="margin:0 0 16px;font-size:16px;line-height:24px">Bonjour,</p>
-<p style="margin:0 0 20px;font-size:16px;line-height:24px">Ton coach t’invite à rejoindre l’espace <strong>${esc(workspaceName)}</strong> sur CoachOS pour retrouver tes séances et lui envoyer tes retours.</p>
+<p style="margin:0 0 20px;font-size:16px;line-height:24px">${esc(who)} à rejoindre l’espace <strong>${esc(workspaceName)}</strong> sur CoachOS pour retrouver tes séances et lui envoyer tes retours.</p>
+${tagline ? `<p style="margin:0 0 20px;font-size:15px;line-height:22px;font-style:italic;color:#50646a">« ${esc(tagline)} »</p>` : ''}
 <p style="margin:0 0 24px"><a href="${esc(link)}" style="display:inline-block;background:#0a6452;color:#fff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:8px">Rejoindre l’espace</a></p>
-<p style="margin:0 0 8px;font-size:13px;line-height:18px;color:#50646a">Ce lien est personnel, valable ${days} jours et utilisable une seule fois. Connecte-toi avec cette adresse e-mail pour l’accepter.</p>
+<p style="margin:0 0 8px;font-size:13px;line-height:18px;color:#50646a">Ce lien est personnel, valable ${days} jours et utilisable une seule fois. Tu y choisiras ton mot de passe (ou tu te connecteras si tu as déjà un compte avec cette adresse).</p>
 <p style="margin:0;font-size:13px;line-height:18px;color:#50646a">Si tu ne connais pas ce coach, ignore simplement cet e-mail.</p>
 </td></tr></table></body></html>`;
   return { to, subject, text, html };

@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { formatDistance, formatDuration, formatLongDate, formatShortDate, weekStart, RESULT_STATE_LABELS, SPORT_LABELS } from '@coachos/domain';
+import { DIFFICULTY_LABELS, FEELING_LABELS, formatDistance, formatDuration, formatLongDate, formatShortDate, weekStart, RESULT_STATE_LABELS, SPORT_LABELS } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachWorkout, openReviews, reviewItem, revisionByNumber } from '@/server/repo/coach';
 import { MarkReviewedButton } from '@/components/review-button';
 import { Notice, Pill } from '@/components/ui';
+import { StructureView } from '@/components/structure-view';
 
 export const metadata = { title: 'Retour' };
 
@@ -67,7 +68,8 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
                   <div><dt>Durée</dt><dd>{formatDuration(observed.durationSeconds) ?? 'Non précisée'}</dd></div>
                   {observed.distanceM ? <div><dt>Distance</dt><dd>{formatDistance(observed.distanceM)}</dd></div> : null}
                 </dl>
-                <p className="prose">{observed.instructions || 'Aucune consigne.'}</p>
+                <StructureView blocks={observed.intervals} sport={observed.sport} />
+                {observed.instructions ? <p className="prose">{observed.instructions}</p> : null}
               </>
             ) : <p>Version observée indisponible.</p>}
             {current && current.number !== fb.observedRevision ? (
@@ -83,6 +85,8 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
               <div><dt>Durée réalisée</dt><dd>{formatDuration(fb.durationSeconds) ?? 'Non renseignée'}</dd></div>
               {fb.distanceM ? <div><dt>Distance</dt><dd>{formatDistance(fb.distanceM)}</dd></div> : null}
               <div><dt>Effort ressenti</dt><dd>{fb.rpe !== null ? `${fb.rpe}/10` : 'Non renseigné'}</dd></div>
+              <div><dt>Ressenti général</dt><dd>{fb.overallFeeling ? FEELING_LABELS[fb.overallFeeling as 1 | 2 | 3 | 4 | 5] : 'Non renseigné'}</dd></div>
+              {fb.difficulties.length ? <div><dt>Difficultés</dt><dd>{fb.difficulties.map((d) => DIFFICULTY_LABELS[d]).join(', ')}</dd></div> : null}
             </dl>
             <div>
               <h3>Commentaire</h3>

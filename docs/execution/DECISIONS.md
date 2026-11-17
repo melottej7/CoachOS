@@ -47,7 +47,7 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
 
 - **Constat.** `contracts/openapi.json` borne de nombreux entiers à `maximum: 10` (durationSeconds, distanceM, revisions, sortOrder) et `rpe.minimum: 1`, `title.maxLength: 2000`, `sortOrder.minimum: 1`. Cela contredit le PRD (RPE 0 à 10, C06-04) et le SQL (durée ≤ 86400, titre ≤ 120, sort_order ≥ 0, commentaire ≤ 1000). Il s’agit visiblement d’un défaut de génération.
 - **Décision.** L’implémentation suit le PRD pour le comportement et le SQL pour les bornes (`packages/domain/src/workout.ts`, `feedback.ts`). Le corps d’erreur respecte `errorBody` (pas de propriété supplémentaire).
-- **À faire.** Corriger `contracts/openapi.json` (bornes des entiers et chaînes) et ajouter un test de contrat qui valide les réponses réelles contre le schéma.
+- **Résolu le 2026-11-17.** 51 bornes corrigées dans `contracts/openapi.json` : versions et révisions ≥ 1 sans maximum, durée 1–86400 s, distance 1–1 000 000 m, RPE 0–10, ordre 0–10, rang 0–3, répétitions 1–100, décalage de modèle 0–365 j, pourcentage 1–100, compteurs ≥ 0, quota d’athlètes ≥ 1 ; titre de séance 120, consignes 5000, commentaire de retour 1000. Les chaînes génériques 1–2000 restent permissives. `apps/web/server/contract.test.ts` valide les réponses réelles et les erreurs contre le contrat.
 
 ## D-008 · Ouverture du retour · 2026-11-17
 
@@ -91,6 +91,8 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
 
 ## D-015 · Connexion par lien magique Supabase · 2026-11-17
 
+> **Remplacée par D-020** (instruction du fondateur, 2026-11-17). Le rappel `/auth/callback`, le proxy de session, `safeNext` et la création de profil à la première connexion restent en vigueur.
+
 - **Décision.** `/login` (X02) envoie un lien via `signInWithOtp` (flux PKCE de `@supabase/ssr`), `/auth/callback` (X03) échange le code puis redirige vers `next` filtré par `safeNext` (C02-09). Message de succès neutre (C02-06). `proxy.ts` rafraîchit la session et transmet le chemin demandé ; `requireActor()` renvoie vers `/login?next=…`. Première connexion : profil `public.users` créé sans doublon (`on conflict do nothing`). Déconnexion par POST same-origin.
 - **Configuration locale.** `site_url` et redirections autorisées sur `localhost:3000`, limite d’e-mails relevée à 60/h, modèle d’e-mail en français (`supabase/templates/magic_link.html`). Comptes fictifs créés par l’API d’administration avec des UUID fixes (`npm run supabase:seed`).
 - **Identité de démo.** Conservée en développement comme raccourci (D-003). Une session Supabase est toujours prioritaire.
@@ -108,3 +110,73 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
 
 - **Décision.** `shouldCreateUser: true` : toute adresse qui reçoit un lien crée un compte ; sans espace ni invitation, le compte arrive sur « Aucun espace » avec « Créer un espace coach » (X04). Le propriétaire seul crée des fiches athlètes.
 - **Réexamen.** Avant le pilote : inscription libre ou sur liste d’accès, limite de création d’espaces par compte.
+
+## D-018 · Nom de compte et nom de dossier · 2026-11-17
+
+- **Problème.** Deux noms coexistent : `users.display_name` (le compte, réglé par la personne) et `athletes.display_name` (le dossier, choisi par le coach). Le premier libellé laissait croire que le coach voyait le nom réglé par l’athlète.
+- **Décision.** Le coach voit et garde le nom de dossier ; l’athlète règle son nom de compte, affiché dans sa barre du haut. Les libellés le disent. Le fuseau de la relation se règle par `PATCH /athlete-settings` sans redater les séances existantes. Le choix du sport prévu par C03-09 attend une colonne dédiée (écart de schéma noté).
+- **Réexamen.** Arrivée de la messagerie (S08) : choisir quel nom s’affiche dans le fil de chaque côté.
+
+## D-019 · Tests sur PostgreSQL séquentiels · 2026-11-17
+
+- **Décision.** `npm run test:pg` exécute boucle/droits et concurrence l’un après l’autre (`--no-file-parallelism`) : les deux rechargent le même jeu fictif.
+- **Incident du 2026-11-17.** Un lancement de `test:pg` a effacé les données de recette du fondateur (espace « Paul Endurance », dossier d’Emma, séance et retour ; les comptes Paul et Emma ont survécu). Cause : le premier garde-fou bloquait la préparation, mais le nettoyage final (`afterAll`) s’exécutait quand même.
+- **Correction.** `assertOnlyFixtureUsers` refuse toute base contenant un utilisateur hors jeu fictif (sauf `COACHOS_TEST_PG_FORCE=1`) et le nettoyage final ne s’exécute que si la préparation a été acceptée. Preuve : avec un utilisateur témoin présent, les deux fichiers refusent et le témoin reste en base.
+- **Réexamen.** Isoler les tests PostgreSQL dans une base dédiée (second projet Supabase local ou base clonée) pour ne plus jamais partager la base de démonstration.
+
+## D-020 · ADR · Connexion par adresse et mot de passe · 2026-11-17
+
+- **Contexte.** Instruction du fondateur : coach et athlète se connectent avec un compte et un mot de passe, sans lien de connexion. Changement de portée d’authentification (docs/12 : ADR obligatoire).
+- **Options étudiées.** (1) Garder le lien magique ; (2) mot de passe seul ; (3) mot de passe avec confirmation d’adresse par e-mail à l’inscription. 
+- **Décision.** Option 2, avec deux garde-fous :
+  - **Coach** : `/signup` (nom, adresse, mot de passe) → session immédiate → création d’espace. L’adresse n’est pas confirmée en local (`enable_confirmations = false`).
+  - **Athlète** : le compte se crée sur `/invite` (« Créer mon compte et rejoindre »). Le serveur vérifie d’abord, sans effet de bord, que le lien est valable **et** que l’adresse saisie correspond à l’HMAC de l’invitation ; il crée alors le compte avec l’adresse marquée vérifiée (le lien a été reçu à cette adresse), ouvre la session puis accepte l’invitation. Mauvaise adresse, lien expiré, révoqué ou consommé : aucun compte créé. Adresse déjà inscrite : « J’ai déjà un compte » (connexion puis acceptation).
+  - **Mot de passe oublié** : seul e-mail restant (`resetPasswordForEmail`, modèle français), réponse identique pour une adresse connue ou inconnue (C02-06), nouveau mot de passe sur `/reset-password`.
+  - Politique : 8 à 72 caractères, sans règle de composition ; message d’échec de connexion unique ; limites de tentatives de Supabase Auth (30 / 5 min / IP).
+- **Coûts et risques.** Mots de passe faibles ou réutilisés ; adresse coach non vérifiée (faute de frappe, adresse d’autrui) ; l’inscription révèle qu’une adresse a déjà un compte (« Un compte existe déjà ») ; route `/auth/invite-register` hors contrat OpenAPI (l’inscription relève de Supabase Auth, la réponse reprend `acceptInvitation`).
+- **Preuve d’acceptation.** `register.test.ts` (4 cas sans création de compte sur refus) ; parcours navigateur sur Supabase local : inscription coach → espace → invitation → mauvaise adresse refusée (0 compte créé, vérifié en base) → compte athlète créé et espace rejoint → mauvais mot de passe refusé → connexion → mot de passe oublié → nouveau mot de passe.
+- **Réexamen.** Avant toute donnée réelle : confirmation d’adresse coach (option 3) ou vérification au premier envoi d’invitation, protection contre les mots de passe divulgués (Supabase hébergé), MFA éventuelle pour les coachs, fournisseur d’e-mails pour la réinitialisation.
+
+## D-021 · Guide d’introduction et profil sportif de l’athlète · 2026-11-17
+
+- **Contexte.** Retour du fondateur après recette : parcours jugé fluide, mais il manque une présentation avec un petit avatar, et l’athlète arrive directement sur sa séance sans présentation ni questionnaire de profil.
+- **Décision.**
+  - Avatar original « Allure » (SVG, couleurs du design system, clair et sombre) et guide en cinq étapes, sous forme de page (pas de surcouche) : fonctionne au clavier, sur téléphone, avec aperçus des vrais écrans. Athlète : après l’invitation (`/athlete/[wid]/welcome?first=1`), puis depuis Profil. Coach : après la création d’espace (`/coach/[wid]/welcome?first=1`), puis depuis le menu « Guide ».
+  - Questionnaire athlète en trois étapes (Toi, Ta pratique, Tes objectifs) : sport, niveau, ancienneté, séances et volume hebdomadaires, objectif, prochaine course, jours disponibles. Puis une page unique dans l’onglet Profil. Visible par le coach affecté dans le dossier.
+  - Nouvelle table `athlete_profiles` (migration `20261118000000`), une ligne par relation, RLS lecture coach affecté ou athlète ; écriture par commande serveur `PUT /workspaces/{wid}/athlete-profile` (ajoutée au contrat OpenAPI avec le schéma `athleteProfile`).
+- **Limite assumée.** Aucune donnée de santé (blessure, antécédent, poids) : règle D11 et architecture. Le schéma refuse toute propriété inconnue.
+- **Bugs trouvés en vérification et corrigés.** Le bouton « Suivant » de l’étape 2 envoyait le formulaire (bouton réutilisé en bouton d’envoi pendant le clic) ; la touche Entrée envoyait aussi avant la fin. Message de réponse manquante affiché trop haut sur téléphone ; espacements et espaces insécables.
+- **Réexamen.** Après observation : longueur du questionnaire, nom et style de l’avatar (choix réversibles), passage éventuel des objectifs déclarés vers la table `goals` gérée par le coach.
+
+## D-022 · Personnalisation de l’espace coach · 2026-11-17
+
+- **Contexte.** Demande du fondateur : pouvoir personnaliser l’espace coach avec plus de détails dès sa création. Choix du fondateur : présentation, spécialités, identité visuelle et infos pratiques.
+- **Décision.**
+  - Création en deux temps : l’essentiel (nom du coach, nom de l’espace, fuseau), puis un assistant de quatre étapes facultatives (`/coach/[wid]/settings?first=1`), puis le guide coach. Tout reste modifiable dans le nouveau menu **Paramètres** (X32), y compris le nom de l’espace.
+  - Données : table `workspace_profiles` (migration `20261118010000`) avec listes fermées (sports, publics, objectifs, langues), liens https uniquement, e-mail de contact facultatif ; RLS lecture par les coachs et athlètes de l’espace ; écriture `PUT /workspaces/{wid}/profile` réservée au propriétaire.
+  - Logo ou photo : PNG, JPEG ou WebP, 512 Kio au plus, type vérifié par signature binaire (SVG refusé : risque de script), stocké en base (`workspace_logos`) et servi par `/media/workspaces/{wid}/logo` avec `nosniff` et une CSP stricte. Lien public par identifiant d’espace : l’image est destinée à être montrée.
+  - Couleur d’espace : six palettes fixes (pas de couleur libre), contraste calculé ≥ 5,68:1 en clair et en sombre ; appliquée aux écrans du coach et de ses athlètes.
+  - Visible par les athlètes : écran « Ton coach », logo et nom en haut de leurs écrans, première étape du guide ; par une personne invitée : aperçu sur `/invite` via `POST /invitations/preview` (jeton valable requis, aucune donnée d’athlète) ; e-mail d’invitation au nom du coach avec l’accroche.
+- **Contrat.** Ajout de `saveWorkspaceProfile`, `setWorkspaceLogo`, `deleteWorkspaceLogo`, `previewInvitation` et des schémas `workspaceProfile`, `workspacePublic`.
+- **Limites.** Pas de limitation de débit sur l’aperçu d’invitation (à couvrir avec la limitation générale de l’API) ; logo en base plutôt que dans Supabase Storage.
+- **Réexamen.** Avant hébergement : logo vers Supabase Storage ou un CDN avec redimensionnement ; limitation de débit ; page publique du coach (X52, V3) seulement sur décision.
+
+## D-023 · Séance structurée par blocs · 2026-11-17
+
+- **Contexte.** Retour du fondateur : la création de séance (titre, durée, consignes) est trop limitée ; il faut pouvoir écrire chaque bloc avec durée ou distance, zone, répétitions, pour tous les types de séances.
+- **Décision.** `workout_revisions.intervals` (jsonb, sans migration) porte une suite de blocs : étape (phase échauffement / effort / récupération / retour au calme / repos / autre ; mesure durée, distance ou libre ; intensité sans cible, zone Z1–Z5, allure /km ou /100 m, puissance W ou % FTP, FC bpm ou % FC max, effort 1–10 ; cadence et note facultatives ; sport par étape pour les enchaînements) ou répétition (2 à 50 fois), imbricable sur un niveau pour les séries ; 30 blocs et 80 étapes au plus. Modèles rapides par sport, totaux calculés (« ≈ » si estimé par l’allure, « au moins » si une partie dépend de l’athlète) ; le serveur déduit durée et distance des blocs si elles ne sont pas saisies. Contrat : `workoutBlock`, `workoutStep`, `measure`, `intensity` remplacent `interval`.
+- **Pourquoi ce format.** Il se traduit en étapes de séance FIT (voir COUVERTURE.md) pour l’export et la Training API Garmin (lot X), sans réécriture.
+- **Limites.** Cibles relatives aux seuils de l’élève (allure seuil, FTP, FC max) à ajouter (CE-B-03) ; le cadre « Durée » de la fiche athlète affiche la durée sans préciser « au moins ».
+- **Réexamen.** Premier export FIT décodé et essai sur montre (CE-X-01, CE-X-06).
+
+## D-024 · Complément produit coach et élève prioritaire · 2026-11-17
+
+- **Contexte.** Instruction du fondateur ([16_COMPLEMENT_COACH_ELEVE.md](../16_COMPLEMENT_COACH_ELEVE.md)) : cible d’une application complète pour le coach et ses élèves (groupes et niveaux, dossier, accueil et tâches, bibliothèque, bilan, programmes supervisés, statistiques, activités et Garmin).
+- **Décision.** Le complément prévaut sur l’ordre des sprints 07 à 30 lorsqu’ils divergent. Ordre des lots : C (fin), G, H, S, B, E, G2, P, X ; l’export FIT (X1) peut avancer en parallèle. Stories `CE-*`, matrice de couverture tenue à jour, CLAUDE.md impose sa relecture. Les contraintes de sécurité (RLS, droits contrôlés au serveur, publication explicite), l’exclusion des données Strava de l’IA et le report du chantier commercial restent en vigueur.
+- **Réexamen.** À chaque recette du fondateur ou réponse d’un fournisseur (Garmin, Strava).
+
+## D-025 · Retour enrichi sans donnée de santé · 2026-11-17
+
+- **Contexte.** Le complément (§7) demande les états réalisé, partiel, reporté, non réalisé, un ressenti général et une difficulté particulière.
+- **Décision.** Migration additive `20261118020000` : état `postponed`, `feedbacks.overall_feeling` (1 à 5) et `feedbacks.difficulties` (catégories fermées : fatigue, météo, terrain, matériel, temps, motivation, autre). Pas de champ libre « difficulté » : une saisie libre attirerait des informations de santé (D11). Un report, comme une séance manquée, ne porte ni durée ni distance. Contrat `feedback` mis à jour.
+- **Réexamen.** Décision de traitement des données de santé (jalon propre) ; rapprochement avec les activités importées (lot X).

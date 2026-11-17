@@ -2,7 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { SPORTS, SPORT_LABELS, type Sport } from '@coachos/domain';
+import { SPORTS, SPORT_LABELS, type Block, type Sport } from '@coachos/domain';
+import { fromEditor, toEditor, WorkoutBuilder, type EBlock } from './workout-builder';
 import { ErrorSummary } from './feedback-banners';
 import { fieldError, useIntent } from './use-intent';
 
@@ -12,6 +13,7 @@ export interface WorkoutFormValues {
   sport: Sport;
   minutes: string;
   instructions: string;
+  intervals?: Block[];
 }
 
 interface Props {
@@ -28,6 +30,7 @@ interface Props {
 export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, cancelHref }: Props) {
   const router = useRouter();
   const [values, setValues] = useState(initial);
+  const [blocks, setBlocks] = useState<EBlock[]>(() => toEditor(initial.intervals ?? []));
   const { run, pending, error } = useIntent<{ id: string; workingRevision: number }>();
   const set = (k: keyof WorkoutFormValues) => (e: { target: { value: string } }) => setValues((v) => ({ ...v, [k]: e.target.value }));
 
@@ -41,8 +44,9 @@ export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, ca
       sport: values.sport,
       title: values.title,
       instructions: values.instructions,
-      durationSeconds: minutes === null || Number.isNaN(minutes) ? null : Math.round(minutes * 60),
-      intervals: [],
+      // Avec des blocs, le serveur calcule durée et distance à partir de la structure.
+      durationSeconds: blocks.length || minutes === null || Number.isNaN(minutes) ? null : Math.round(minutes * 60),
+      intervals: fromEditor(blocks),
     };
     const base = `/api/v1/workspaces/${wid}/athletes/${aid}/workouts`;
     const result = edit
@@ -86,14 +90,15 @@ export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, ca
           </select>
         </div>
       </div>
-      <div className="field">
+      <WorkoutBuilder sport={values.sport} value={blocks} onChange={setBlocks} />
+      {blocks.length ? null : <div className="field">
         <label htmlFor="duration">Durée en minutes <span className="hint">Facultatif</span></label>
         <input id="duration" type="number" inputMode="numeric" min={1} max={1440} value={values.minutes} onChange={set('minutes')}
           aria-invalid={!!err('data.durationSeconds')} />
         {err('data.durationSeconds') ? <span className="field-error">{err('data.durationSeconds')}</span> : null}
-      </div>
+      </div>}
       <div className="field">
-        <label htmlFor="instructions">Consignes <span className="hint">Ce que l’athlète lira sur son téléphone</span></label>
+        <label htmlFor="instructions">Consignes générales <span className="hint">Facultatif · ce que l’athlète lira en plus des blocs</span></label>
         <textarea id="instructions" maxLength={5000} value={values.instructions} onChange={set('instructions')} />
       </div>
       <div className="actions">

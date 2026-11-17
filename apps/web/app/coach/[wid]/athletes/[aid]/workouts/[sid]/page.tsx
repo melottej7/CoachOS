@@ -5,6 +5,7 @@ import { requireActor } from '@/server/auth/session';
 import { coachWorkout, type RevisionView } from '@/server/repo/coach';
 import { PublishButton } from '@/components/publish-button';
 import { Notice, Pill, StatusBadge } from '@/components/ui';
+import { StructureView } from '@/components/structure-view';
 
 export const metadata = { title: 'Séance' };
 
@@ -22,10 +23,13 @@ function Prescription({ r }: { r: RevisionView }) {
         <div><dt>Durée</dt><dd>{formatDuration(r.durationSeconds) ?? 'Non précisée'}</dd></div>
         {r.distanceM ? <div><dt>Distance</dt><dd>{formatDistance(r.distanceM)}</dd></div> : null}
       </dl>
-      <div>
-        <h3>Consignes</h3>
-        <p className="prose">{r.instructions || 'Aucune consigne supplémentaire.'}</p>
-      </div>
+      <StructureView blocks={r.intervals} sport={r.sport} />
+      {r.instructions || !r.intervals.length ? (
+        <div>
+          <h3>Consignes</h3>
+          <p className="prose">{r.instructions || 'Aucune consigne supplémentaire.'}</p>
+        </div>
+      ) : null}
     </div>
   );
 }

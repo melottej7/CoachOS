@@ -28,6 +28,8 @@ Version 1.1, 17 novembre 2026. Package de référence pour construire CoachOS au
 | 13 | [Modèle économique](docs/13_BUSINESS_MODEL.md) | Hypothèses de prix et de coûts, à reprendre après validation |
 | 14 | [Go to market](docs/14_GO_TO_MARKET.md) | Cohortes produit et commercialisation différée |
 | 15 | [Migration Foulée](docs/15_MIGRATION_FOULEE.md) | Réutilisation et migration si elles sont utiles |
+| 16 | [Complément coach et élève](docs/16_COMPLEMENT_COACH_ELEVE.md) | Cible produit du fondateur (17 novembre 2026), prioritaire sur les anciennes priorités |
+| — | [Couverture de la cible](docs/execution/COUVERTURE.md) | État constaté de chaque exigence et lot de livraison |
  
 Contrats dans [contracts](contracts/), SQL cible dans [database](database/) et backlog importable dans [backlog](backlog/). Les versions imprimables de 01 et 02 se trouvent dans [lecture](lecture/).
 

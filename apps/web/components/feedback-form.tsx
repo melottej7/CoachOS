@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { RESULT_STATES, RESULT_STATE_LABELS, type ResultState } from '@coachos/domain';
+import { DIFFICULTIES, DIFFICULTY_LABELS, FEELING_LABELS, RESULT_STATES, RESULT_STATE_LABELS, type Difficulty, type ResultState } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
 import { fieldError, useIntent } from './use-intent';
 
@@ -13,7 +13,7 @@ interface Props {
   publishedRevision: number;
   plannedMinutes: number | null;
   workspaceName: string;
-  existing: { revision: number; state: ResultState; durationSeconds: number | null; rpe: number | null; comment: string | null } | null;
+  existing: { revision: number; state: ResultState; durationSeconds: number | null; rpe: number | null; comment: string | null; overallFeeling: number | null; difficulties: Difficulty[] } | null;
 }
 
 /**
@@ -26,6 +26,8 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
   const [minutes, setMinutes] = useState(existing?.durationSeconds ? String(Math.round(existing.durationSeconds / 60)) : '');
   const [rpe, setRpe] = useState(existing?.rpe === null || existing?.rpe === undefined ? '' : String(existing.rpe));
   const [comment, setComment] = useState(existing?.comment ?? '');
+  const [feeling, setFeeling] = useState<number | null>(existing?.overallFeeling ?? null);
+  const [difficulties, setDifficulties] = useState<Difficulty[]>(existing?.difficulties ?? []);
   const [missingState, setMissingState] = useState(false);
   const { run, pending, error } = useIntent<{ item: { id: string; revision: number } }>();
 
@@ -41,10 +43,12 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
       publishedRevision,
       expectedRevision: existing?.revision ?? null,
       state,
-      durationSeconds: state === 'missed' || m === null || Number.isNaN(m) ? null : Math.round(m * 60),
+      durationSeconds: state === 'missed' || state === 'postponed' || m === null || Number.isNaN(m) ? null : Math.round(m * 60),
       distanceM: null,
       rpe: rpe === '' ? null : Number(rpe),
       comment,
+      overallFeeling: feeling,
+      difficulties,
     };
     const done = await run('PUT', `/api/v1/workspaces/${wid}/athletes/${aid}/workouts/${sid}/feedback`, body);
     if (done) {
@@ -77,7 +81,7 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
         ))}
       </fieldset>
 
-      {state !== 'missed' ? (
+      {state !== 'missed' && state !== 'postponed' ? (
         <div className="field">
           <label htmlFor="duration">
             Durée réalisée en minutes <span className="hint">Facultatif{plannedMinutes ? ` · prévu ${plannedMinutes} min` : ''}</span>
@@ -102,6 +106,26 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
           <input type="radio" id="rpe-none" name="rpe" value="" checked={rpe === ''} onChange={() => setRpe('')} />
           Je préfère ne pas noter
         </label>
+      </fieldset>
+
+      <fieldset className="choice">
+        <legend>Ressenti général <span className="hint">Facultatif</span></legend>
+        <div className="chips">
+          {([1, 2, 3, 4, 5] as const).map((v) => (
+            <label key={v}><input type="radio" name="feeling" checked={feeling === v} onChange={() => setFeeling(v)} /> {FEELING_LABELS[v]}</label>
+          ))}
+          {feeling !== null ? <button type="button" className="link-btn" onClick={() => setFeeling(null)}>Effacer</button> : null}
+        </div>
+      </fieldset>
+
+      <fieldset className="choice">
+        <legend>Une difficulté particulière ? <span className="hint">Facultatif</span></legend>
+        <div className="chips">
+          {DIFFICULTIES.map((d) => (
+            <label key={d}><input type="checkbox" checked={difficulties.includes(d)}
+              onChange={() => setDifficulties((cur) => (cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d]))} /> {DIFFICULTY_LABELS[d]}</label>
+          ))}
+        </div>
       </fieldset>
 
       <div className="field">

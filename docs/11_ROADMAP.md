@@ -244,3 +244,21 @@ Les lots D04 Strava, migration réelle, données relatives à la santé, clubs e
 | E · Assistance | Attendre le socle observé. Comparer préparation manuelle et résumé avant d’étendre Coach DNA. | S11, S12, S13, S19 et S20 selon preuve. |
 
 Les dépendances Sxx du CSV décrivent le lot de référence. Pour une tranche, ne prendre que les prérequis réels de chaque story. Les vérifications de droits restent des dépendances strictes avant données réelles. Reporter commercial, intégrations et migration quand ils disputent du temps à un problème de fluidité du parcours.
+
+## Lots de la cible coach et élève
+
+Instruction du fondateur du 17 novembre 2026 ([16_COMPLEMENT_COACH_ELEVE.md](16_COMPLEMENT_COACH_ELEVE.md)), prioritaire sur l’ordre des sprints 07 à 30 quand ils divergent (D-024). Stories `CE-<lot>-<n>` dans `backlog/stories.csv`, état constaté dans [execution/COUVERTURE.md](execution/COUVERTURE.md).
+
+| Ordre | Lot | Contenu | Démonstration |
+|---|---|---|---|
+| 1 | C · Fin de tranche C | Visite interactive d’Allure, retour reporté, ressenti et difficulté | Un nouveau coach et un nouvel élève suivent la visite sur les vrais écrans |
+| 2 | G · Groupes et dossiers | Groupes, appartenances multiples, niveaux par sport confirmés, vue d’ensemble, groupe filtré, fiche élève, notes privées, objectifs | Scénario 1 du complément |
+| 3 | H · Accueil, tâches, agenda | Accueil priorisé, tâches humaines et automatiques, rendez-vous, messagerie | Scénarios 2 et 3 |
+| 4 | S · Statistiques de base | Volumes, régularité, prévu / réalisé, côté élève et coach | Scénario 8 sur données déclarées |
+| 5 | B · Bibliothèque et bilan | Bibliothèque versionnée, semaines types, bilan questionnaire et entretien, import historique | Scénarios 4 et 5 |
+| 6 | E · Espace élève | Historique, objectifs, échanges, progression | Scénario 7 (partie déclarée) |
+| 7 | G2 · Planning de groupe | Base commune, adaptations, destinataires et exceptions | Préparation d’une semaine pour un groupe |
+| 8 | P · Programmes supervisés | Versions de programme, génération depuis bilan et bibliothèque, régénération partielle | Scénario 6 |
+| 9 | X · Activités et Garmin | Export FIT (sans dépendance), import de fichiers, rapprochement, puis API Garmin selon accès | Scénarios 9 et 10 |
+
+Le lot X1 (export FIT) peut avancer en parallèle dès que le format de séance est stable (fait, D-023). Les lots dépendant d’un fournisseur avancent sur leurs parties indépendantes pendant l’attente d’accès. Le chantier commercial reste postérieur à la validation de l’usage.

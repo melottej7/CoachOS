@@ -226,81 +226,7 @@
           },
           "revision": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 10
-          }
-        }
-      },
-      "interval": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "label",
-          "repetitions"
-        ],
-        "properties": {
-          "label": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 2000
-          },
-          "durationSeconds": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 10
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "distanceM": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 10
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "target": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 10
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "targetUnit": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "s",
-                  "m",
-                  "w",
-                  "bpm",
-                  "rpe"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "repetitions": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 10
+            "minimum": 1
           }
         }
       },
@@ -327,7 +253,7 @@
           },
           "sortOrder": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 0,
             "maximum": 10
           },
           "sport": {
@@ -344,14 +270,14 @@
           "title": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 2000
+            "maxLength": 120
           },
           "instructions": {
             "anyOf": [
               {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": 2000
+                "maxLength": 5000
               },
               {
                 "type": "null"
@@ -363,7 +289,7 @@
               {
                 "type": "integer",
                 "minimum": 1,
-                "maximum": 10
+                "maximum": 86400
               },
               {
                 "type": "null"
@@ -375,7 +301,7 @@
               {
                 "type": "integer",
                 "minimum": 1,
-                "maximum": 10
+                "maximum": 1000000
               },
               {
                 "type": "null"
@@ -386,8 +312,9 @@
             "type": "array",
             "maxItems": 30,
             "items": {
-              "$ref": "#/components/schemas/interval"
-            }
+              "$ref": "#/components/schemas/workoutBlock"
+            },
+            "description": "Structure de la séance, 80 étapes au plus en tout"
           }
         }
       },
@@ -410,15 +337,13 @@
           },
           "visibleRevision": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 10
+            "minimum": 1
           },
           "publishedRevision": {
             "anyOf": [
               {
                 "type": "integer",
-                "minimum": 1,
-                "maximum": 10
+                "minimum": 1
               },
               {
                 "type": "null"
@@ -444,8 +369,7 @@
           },
           "revision": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 10
+            "minimum": 1
           }
         }
       },
@@ -465,19 +389,18 @@
           },
           "revision": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 10
+            "minimum": 1
           },
           "observedWorkoutRevision": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 10
+            "minimum": 1
           },
           "state": {
             "type": "string",
             "enum": [
               "completed",
               "partial",
+              "postponed",
               "missed"
             ]
           },
@@ -486,7 +409,7 @@
               {
                 "type": "integer",
                 "minimum": 1,
-                "maximum": 10
+                "maximum": 86400
               },
               {
                 "type": "null"
@@ -498,7 +421,7 @@
               {
                 "type": "integer",
                 "minimum": 1,
-                "maximum": 10
+                "maximum": 1000000
               },
               {
                 "type": "null"
@@ -509,7 +432,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "minimum": 1,
+                "minimum": 0,
                 "maximum": 10
               },
               {
@@ -522,12 +445,41 @@
               {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": 2000
+                "maxLength": 1000
               },
               {
                 "type": "null"
               }
             ]
+          },
+          "overallFeeling": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "difficulties": {
+            "type": "array",
+            "maxItems": 7,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "fatigue",
+                "weather",
+                "terrain",
+                "gear",
+                "time",
+                "motivation",
+                "other"
+              ]
+            }
           }
         }
       },
@@ -541,8 +493,8 @@
         "properties": {
           "offsetDays": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 10
+            "minimum": 0,
+            "maximum": 365
           },
           "workout": {
             "$ref": "#/components/schemas/workoutInput"
@@ -578,8 +530,7 @@
           },
           "revision": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 10
+            "minimum": 1
           },
           "entries": {
             "type": "array",
@@ -678,8 +629,8 @@
           },
           "rank": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 10
+            "minimum": 0,
+            "maximum": 3
           },
           "state": {
             "type": "string",
@@ -736,15 +687,13 @@
           },
           "revision": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 10
+            "minimum": 1
           },
           "dnaVersion": {
             "anyOf": [
               {
                 "type": "integer",
-                "minimum": 1,
-                "maximum": 10
+                "minimum": 1
               },
               {
                 "type": "null"
@@ -812,8 +761,7 @@
           },
           "threshold": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 10
+            "minimum": 0
           },
           "effect": {
             "type": "string",
@@ -836,8 +784,7 @@
         "properties": {
           "schemaVersion": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 10
+            "minimum": 1
           },
           "philosophy": {
             "type": "string",
@@ -855,7 +802,7 @@
           "maxChangePercent": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 10
+            "maximum": 100
           },
           "allowInternalQueue": {
             "type": "boolean"
@@ -880,8 +827,7 @@
         "properties": {
           "version": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 10
+            "minimum": 1
           },
           "state": {
             "type": "string",
@@ -910,8 +856,7 @@
           },
           "totalMinor": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 10
+            "minimum": 0
           },
           "currency": {
             "type": "string",
@@ -960,8 +905,7 @@
           },
           "evidenceCount": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 10
+            "minimum": 0
           }
         }
       },
@@ -1101,6 +1045,795 @@
             "maxLength": 2000
           }
         }
+      },
+      "athleteProfile": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sport",
+          "level",
+          "experience",
+          "weeklySessions",
+          "weeklyHours",
+          "availableDays",
+          "mainGoal",
+          "nextEventName",
+          "nextEventDate",
+          "revision",
+          "updatedAt"
+        ],
+        "properties": {
+          "sport": {
+            "type": "string",
+            "enum": [
+              "running",
+              "trail",
+              "cycling",
+              "swimming",
+              "triathlon",
+              "duathlon"
+            ]
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced",
+              "competitive"
+            ]
+          },
+          "experience": {
+            "type": "string",
+            "enum": [
+              "lt1",
+              "1to3",
+              "3to5",
+              "gt5"
+            ]
+          },
+          "weeklySessions": {
+            "type": "string",
+            "enum": [
+              "0to1",
+              "2to3",
+              "4to5",
+              "6plus"
+            ]
+          },
+          "weeklyHours": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "lt2",
+                  "2to4",
+                  "4to6",
+                  "6to10",
+                  "gt10"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "availableDays": {
+            "type": "array",
+            "maxItems": 7,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 7
+            }
+          },
+          "mainGoal": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nextEventName": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nextEventDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "workspaceProfile": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tagline",
+          "bio",
+          "approach",
+          "experienceYears",
+          "certifications",
+          "sports",
+          "audiences",
+          "goals",
+          "city",
+          "languages",
+          "websiteUrl",
+          "socialUrl",
+          "contactEmail",
+          "accent",
+          "revision",
+          "updatedAt"
+        ],
+        "properties": {
+          "tagline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1500
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "approach": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "experienceYears": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 60
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "certifications": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            }
+          },
+          "sports": {
+            "type": "array",
+            "maxItems": 6,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "running",
+                "trail",
+                "cycling",
+                "swimming",
+                "triathlon",
+                "duathlon"
+              ]
+            }
+          },
+          "audiences": {
+            "type": "array",
+            "maxItems": 4,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "beginner",
+                "intermediate",
+                "advanced",
+                "competitive"
+              ]
+            }
+          },
+          "goals": {
+            "type": "array",
+            "maxItems": 10,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "5k10k",
+                "half",
+                "marathon",
+                "trail",
+                "ultra",
+                "tri_short",
+                "tri_long",
+                "bike",
+                "swim",
+                "comeback"
+              ]
+            }
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "languages": {
+            "type": "array",
+            "maxItems": 6,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "fr",
+                "en",
+                "nl",
+                "de",
+                "es",
+                "it"
+              ]
+            }
+          },
+          "websiteUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "pattern": "^https://"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "socialUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "pattern": "^https://"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contactEmail": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email",
+                "maxLength": 254
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "accent": {
+            "type": "string",
+            "enum": [
+              "emerald",
+              "ocean",
+              "sunset",
+              "berry",
+              "slate",
+              "forest"
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "workspacePublic": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "coachName",
+          "profile",
+          "logoVersion"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "coachName": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/workspaceProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "logoVersion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "measure": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "seconds"
+            ],
+            "properties": {
+              "kind": {
+                "const": "time"
+              },
+              "seconds": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 86400
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "meters"
+            ],
+            "properties": {
+              "kind": {
+                "const": "distance"
+              },
+              "meters": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "open"
+              }
+            }
+          }
+        ]
+      },
+      "intensity": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "none"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "zone"
+            ],
+            "properties": {
+              "kind": {
+                "const": "zone"
+              },
+              "zone": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "unit",
+              "min"
+            ],
+            "properties": {
+              "kind": {
+                "const": "pace"
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "per_km",
+                  "per_100m"
+                ]
+              },
+              "min": {
+                "type": "integer",
+                "minimum": 30,
+                "maximum": 1800
+              },
+              "max": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 30,
+                    "maximum": 1800
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "unit",
+              "min"
+            ],
+            "properties": {
+              "kind": {
+                "const": "power"
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "w",
+                  "pct_ftp"
+                ]
+              },
+              "min": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2500
+              },
+              "max": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2500
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "unit",
+              "min"
+            ],
+            "properties": {
+              "kind": {
+                "const": "hr"
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "bpm",
+                  "pct_max"
+                ]
+              },
+              "min": {
+                "type": "integer",
+                "minimum": 30,
+                "maximum": 250
+              },
+              "max": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 30,
+                    "maximum": 250
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "min"
+            ],
+            "properties": {
+              "kind": {
+                "const": "rpe"
+              },
+              "min": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10
+              },
+              "max": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "workoutStep": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "phase",
+          "measure"
+        ],
+        "properties": {
+          "type": {
+            "const": "step"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "warmup",
+              "work",
+              "recovery",
+              "cooldown",
+              "rest",
+              "other"
+            ]
+          },
+          "sport": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "running",
+                  "trail",
+                  "cycling",
+                  "swimming",
+                  "triathlon",
+                  "duathlon"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "measure": {
+            "$ref": "#/components/schemas/measure"
+          },
+          "intensity": {
+            "$ref": "#/components/schemas/intensity"
+          },
+          "cadence": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "min"
+                ],
+                "properties": {
+                  "min": {
+                    "type": "integer",
+                    "minimum": 20,
+                    "maximum": 250
+                  },
+                  "max": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 20,
+                        "maximum": 250
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "workoutRepeatInner": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "times",
+          "steps"
+        ],
+        "properties": {
+          "type": {
+            "const": "repeat"
+          },
+          "times": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 50
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/workoutStep"
+            }
+          }
+        }
+      },
+      "workoutBlock": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/workoutStep"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type",
+              "times",
+              "steps"
+            ],
+            "properties": {
+              "type": {
+                "const": "repeat"
+              },
+              "times": {
+                "type": "integer",
+                "minimum": 2,
+                "maximum": 50
+              },
+              "steps": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 20,
+                "items": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/workoutStep"
+                    },
+                    {
+                      "$ref": "#/components/schemas/workoutRepeatInner"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "description": "Bloc de séance (D-023) : étape ou répétition, séries sur un niveau"
       }
     }
   },
@@ -4608,8 +5341,7 @@
                     },
                     "workingRevision": {
                       "type": "integer",
-                      "minimum": 1,
-                      "maximum": 10
+                      "minimum": 1
                     }
                   }
                 }
@@ -4943,8 +5675,7 @@
                     },
                     "workingRevision": {
                       "type": "integer",
-                      "minimum": 1,
-                      "maximum": 10
+                      "minimum": 1
                     }
                   }
                 }
@@ -5092,8 +5823,7 @@
                 "properties": {
                   "expectedRevision": {
                     "type": "integer",
-                    "minimum": 1,
-                    "maximum": 10
+                    "minimum": 1
                   },
                   "data": {
                     "$ref": "#/components/schemas/workoutInput"
@@ -5322,8 +6052,7 @@
                     },
                     "publishedRevision": {
                       "type": "integer",
-                      "minimum": 1,
-                      "maximum": 10
+                      "minimum": 1
                     }
                   }
                 }
@@ -5471,8 +6200,7 @@
                 "properties": {
                   "expectedRevision": {
                     "type": "integer",
-                    "minimum": 1,
-                    "maximum": 10
+                    "minimum": 1
                   },
                   "reason": {
                     "type": "string",
@@ -5662,15 +6390,13 @@
                 "properties": {
                   "publishedRevision": {
                     "type": "integer",
-                    "minimum": 1,
-                    "maximum": 10
+                    "minimum": 1
                   },
                   "expectedRevision": {
                     "anyOf": [
                       {
                         "type": "integer",
-                        "minimum": 1,
-                        "maximum": 10
+                        "minimum": 1
                       },
                       {
                         "type": "null"
@@ -5682,6 +6408,7 @@
                     "enum": [
                       "completed",
                       "partial",
+                      "postponed",
                       "missed"
                     ]
                   },
@@ -5690,7 +6417,7 @@
                       {
                         "type": "integer",
                         "minimum": 1,
-                        "maximum": 10
+                        "maximum": 86400
                       },
                       {
                         "type": "null"
@@ -5702,7 +6429,7 @@
                       {
                         "type": "integer",
                         "minimum": 1,
-                        "maximum": 10
+                        "maximum": 1000000
                       },
                       {
                         "type": "null"
@@ -5713,7 +6440,7 @@
                     "anyOf": [
                       {
                         "type": "integer",
-                        "minimum": 1,
+                        "minimum": 0,
                         "maximum": 10
                       },
                       {
@@ -5726,12 +6453,41 @@
                       {
                         "type": "string",
                         "minLength": 1,
-                        "maxLength": 2000
+                        "maxLength": 1000
                       },
                       {
                         "type": "null"
                       }
                     ]
+                  },
+                  "overallFeeling": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "difficulties": {
+                    "type": "array",
+                    "maxItems": 7,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "fatigue",
+                        "weather",
+                        "terrain",
+                        "gear",
+                        "time",
+                        "motivation",
+                        "other"
+                      ]
+                    }
                   }
                 }
               }
@@ -6076,8 +6832,7 @@
                     },
                     "revision": {
                       "type": "integer",
-                      "minimum": 1,
-                      "maximum": 10
+                      "minimum": 1
                     }
                   }
                 }
@@ -6266,8 +7021,7 @@
                     },
                     "revision": {
                       "type": "integer",
-                      "minimum": 1,
-                      "maximum": 10
+                      "minimum": 1
                     }
                   }
                 }
@@ -6405,8 +7159,7 @@
                 "properties": {
                   "expectedRevision": {
                     "type": "integer",
-                    "minimum": 1,
-                    "maximum": 10
+                    "minimum": 1
                   },
                   "title": {
                     "anyOf": [
@@ -6632,8 +7385,7 @@
                   },
                   "templateRevision": {
                     "type": "integer",
-                    "minimum": 1,
-                    "maximum": 10
+                    "minimum": 1
                   },
                   "startOn": {
                     "type": "string",
@@ -9010,8 +9762,7 @@
                 "properties": {
                   "expectedRevision": {
                     "type": "integer",
-                    "minimum": 1,
-                    "maximum": 10
+                    "minimum": 1
                   },
                   "decision": {
                     "type": "string",
@@ -9516,8 +10267,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "minimum": 1,
-              "maximum": 10
+              "minimum": 1
             }
           },
           {
@@ -9543,8 +10293,7 @@
                     "anyOf": [
                       {
                         "type": "integer",
-                        "minimum": 1,
-                        "maximum": 10
+                        "minimum": 1
                       },
                       {
                         "type": "null"
@@ -9603,13 +10352,11 @@
                     },
                     "activeAthletes": {
                       "type": "integer",
-                      "minimum": 1,
-                      "maximum": 10
+                      "minimum": 0
                     },
                     "limit": {
                       "type": "integer",
-                      "minimum": 1,
-                      "maximum": 10
+                      "minimum": 1
                     },
                     "graceUntil": {
                       "anyOf": [
@@ -12418,8 +13165,7 @@
                 "properties": {
                   "expectedRevision": {
                     "type": "integer",
-                    "minimum": 1,
-                    "maximum": 10
+                    "minimum": 1
                   }
                 }
               }
@@ -13004,6 +13750,1035 @@
                     "minLength": 1,
                     "maxLength": 2000
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/athlete-profile": {
+      "put": {
+        "operationId": "saveAthleteProfile",
+        "summary": "Profil sportif déclaré par l’athlète, sans donnée de santé. Lu par le coach affecté.",
+        "tags": [
+          "roster"
+        ],
+        "x-release": "MVP",
+        "x-role": "A",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "sport",
+                  "level",
+                  "experience",
+                  "weeklySessions"
+                ],
+                "properties": {
+                  "sport": {
+                    "type": "string",
+                    "enum": [
+                      "running",
+                      "trail",
+                      "cycling",
+                      "swimming",
+                      "triathlon",
+                      "duathlon"
+                    ]
+                  },
+                  "level": {
+                    "type": "string",
+                    "enum": [
+                      "beginner",
+                      "intermediate",
+                      "advanced",
+                      "competitive"
+                    ]
+                  },
+                  "experience": {
+                    "type": "string",
+                    "enum": [
+                      "lt1",
+                      "1to3",
+                      "3to5",
+                      "gt5"
+                    ]
+                  },
+                  "weeklySessions": {
+                    "type": "string",
+                    "enum": [
+                      "0to1",
+                      "2to3",
+                      "4to5",
+                      "6plus"
+                    ]
+                  },
+                  "weeklyHours": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "lt2",
+                          "2to4",
+                          "4to6",
+                          "6to10",
+                          "gt10"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "availableDays": {
+                    "type": "array",
+                    "maxItems": 7,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 7
+                    }
+                  },
+                  "mainGoal": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 300
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "nextEventName": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "nextEventDate": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "item"
+                  ],
+                  "properties": {
+                    "item": {
+                      "$ref": "#/components/schemas/athleteProfile"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/profile": {
+      "put": {
+        "operationId": "saveWorkspaceProfile",
+        "summary": "Nom et présentation de l’espace, visibles par ses athlètes et les personnes invitées",
+        "tags": [
+          "workspace"
+        ],
+        "x-release": "MVP",
+        "x-role": "O",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "tagline": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "bio": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "approach": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "experienceYears": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 60
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "certifications": {
+                    "type": "array",
+                    "maxItems": 10,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 120
+                    }
+                  },
+                  "sports": {
+                    "type": "array",
+                    "maxItems": 6,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "running",
+                        "trail",
+                        "cycling",
+                        "swimming",
+                        "triathlon",
+                        "duathlon"
+                      ]
+                    }
+                  },
+                  "audiences": {
+                    "type": "array",
+                    "maxItems": 4,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "beginner",
+                        "intermediate",
+                        "advanced",
+                        "competitive"
+                      ]
+                    }
+                  },
+                  "goals": {
+                    "type": "array",
+                    "maxItems": 10,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "5k10k",
+                        "half",
+                        "marathon",
+                        "trail",
+                        "ultra",
+                        "tri_short",
+                        "tri_long",
+                        "bike",
+                        "swim",
+                        "comeback"
+                      ]
+                    }
+                  },
+                  "city": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "languages": {
+                    "type": "array",
+                    "maxItems": 6,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "fr",
+                        "en",
+                        "nl",
+                        "de",
+                        "es",
+                        "it"
+                      ]
+                    }
+                  },
+                  "websiteUrl": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200,
+                        "pattern": "^https://"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "socialUrl": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200,
+                        "pattern": "^https://"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "contactEmail": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 254
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "accent": {
+                    "type": "string",
+                    "enum": [
+                      "emerald",
+                      "ocean",
+                      "sunset",
+                      "berry",
+                      "slate",
+                      "forest"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "name",
+                    "item"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 120
+                    },
+                    "item": {
+                      "$ref": "#/components/schemas/workspaceProfile"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/logo": {
+      "put": {
+        "operationId": "setWorkspaceLogo",
+        "summary": "Logo ou photo : PNG, JPEG ou WebP, 512 Kio au plus, type vérifié par signature",
+        "tags": [
+          "workspace"
+        ],
+        "x-release": "MVP",
+        "x-role": "O",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "logoVersion"
+                  ],
+                  "properties": {
+                    "logoVersion": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteWorkspaceLogo",
+        "summary": "Retirer le logo",
+        "tags": [
+          "workspace"
+        ],
+        "x-release": "MVP",
+        "x-role": "O",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "logoVersion"
+                  ],
+                  "properties": {
+                    "logoVersion": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invitations/preview": {
+      "post": {
+        "operationId": "previewInvitation",
+        "summary": "Présentation de l’espace pour un jeton d’invitation valable, avant la création du compte. Aucune donnée d’athlète.",
+        "tags": [
+          "workspace"
+        ],
+        "x-release": "MVP",
+        "x-role": "P",
+        "x-requests-per-minute": 20,
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "token"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 200
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "workspace"
+                  ],
+                  "properties": {
+                    "workspace": {
+                      "$ref": "#/components/schemas/workspacePublic"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }

@@ -454,3 +454,7 @@ P0 = boucle core ou blocage opérationnel. P1 = gain ou qualité avant ouverture
 | C30-09 | Clore les expérimentations | P2 | S24 + S27 + S28 + S29 + C30-01 | 0.5 | Chaque fonctionnalité pilote a une décision, un responsable et une date |
 | C30-10 | Préparer le prochain cycle | P2 | S24 + S27 + S28 + S29 + C30-01 | 0.5 | Les hypothèses et contraintes actualisées sont approuvées avant planification |
 
+
+## Cible coach et élève (stories CE)
+
+Ajoutées le 17 novembre 2026 à partir de [16_COMPLEMENT_COACH_ELEVE.md](16_COMPLEMENT_COACH_ELEVE.md). Identifiants stables `CE-<lot>-<n>` (lots C, G, G2, H, S, B, E, P, X), critères d’acceptation dans `backlog/stories.csv`, ordre dans [11_ROADMAP.md](11_ROADMAP.md#lots-de-la-cible-coach-et-élève), état dans [execution/COUVERTURE.md](execution/COUVERTURE.md).

@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { openDatabase, setDb, type Db } from './db/client';
 import { postgresDb } from './db/driver';
 import { repoRoot } from './db/migrate';
-import { clearData, seed } from './db/seed';
+import { assertOnlyFixtureUsers, clearData, seed } from './db/seed';
 import { ATHLETES, TIME_ZONE, USERS, WORKSPACE_A } from './db/fixtures';
 import { SEED_WORKOUTS } from './db/seed';
 import { AppError } from './errors';
@@ -18,6 +18,7 @@ import { athleteSchedule, athleteWorkout } from './repo/athlete';
 // athlète affecté (Camille) et athlète tiers (Léa, autre espace).
 
 let db: Db;
+let prepared = false;
 // Par défaut : PGlite en mémoire. COACHOS_TEST_PG=1 : même suite sur le PostgreSQL de Supabase local
 // (recharge le jeu fictif ; relancer `npm run supabase:seed` n’est pas nécessaire ensuite).
 const onPostgres = process.env.COACHOS_TEST_PG === '1';
@@ -50,6 +51,8 @@ beforeAll(async () => {
     if (!/@(127\.0\.0\.1|localhost):/.test(url)) throw new Error('COACHOS_TEST_PG vise uniquement Supabase local');
     const { supabaseAuthUsers } = await import('./supabase/admin');
     db = postgresDb(url);
+    await assertOnlyFixtureUsers(db);
+    prepared = true;
     await clearData(db, { deleteAuthUsers: false });
     await seed(db, { ensureAuthUsers: supabaseAuthUsers });
   } else {
@@ -59,6 +62,11 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+    if (!prepared) {
+      // Garde-fou refusé ou base PGlite : ne rien effacer.
+      if (onPostgres) await db?.close();
+      return;
+    }
   if (onPostgres) {
     // Laisser la base de démonstration propre après la suite.
     const { supabaseAuthUsers } = await import('./supabase/admin');
@@ -188,6 +196,15 @@ describe('tranche B · retour et revue', () => {
     expect(await openReviewCount(USERS.marine, WORKSPACE_A)).toBe(before - 1);
     const audits = await db.query<{ n: number }>(`select count(*)::int as n from public.audit_logs where action = 'feedback.reviewed'`);
     expect(audits.rows[0]!.n).toBe(1);
+  });
+
+  it('reporté, ressenti et difficultés persistent ; une catégorie inconnue est refusée (CE-C-02)', async () => {
+    const sid2 = SEED_WORKOUTS.noahToday;
+    const m = { ...meta(USERS.noah), athleteId: ATHLETES.noah, workoutId: sid2 };
+    const r = await saveFeedback(m, { publishedRevision: 1, state: 'postponed', overallFeeling: 2, difficulties: ['weather', 'time', 'weather'] });
+    expect(r.body).toMatchObject({ item: { state: 'postponed', overallFeeling: 2, difficulties: ['weather', 'time'] } });
+    expect(await codeOf(saveFeedback({ ...m, idempotencyKey: randomUUID() }, { publishedRevision: 1, expectedRevision: 1, state: 'postponed', durationSeconds: 600 }))).toBe('INVALID_FIELDS');
+    expect(await codeOf(saveFeedback({ ...m, idempotencyKey: randomUUID() }, { publishedRevision: 1, expectedRevision: 1, state: 'completed', difficulties: ['blessure'] }))).toBe('INVALID_FIELDS');
   });
 
   it('une correction de l’athlète rouvre le cas et périme la revue en cours', async () => {

@@ -1,12 +1,23 @@
 import { z } from 'zod';
 
-export const RESULT_STATES = ['completed', 'partial', 'missed'] as const;
+export const RESULT_STATES = ['completed', 'partial', 'postponed', 'missed'] as const;
 export type ResultState = (typeof RESULT_STATES)[number];
 
 export const RESULT_STATE_LABELS: Record<ResultState, string> = {
   completed: 'Réalisée',
   partial: 'Partiellement réalisée',
+  postponed: 'Reportée',
   missed: 'Non réalisée',
+};
+
+/** Ressenti général (1 à 5). */
+export const FEELING_LABELS: Record<1 | 2 | 3 | 4 | 5, string> = { 1: 'Épuisé·e', 2: 'Fatigué·e', 3: 'Correct', 4: 'Bien', 5: 'Excellent' };
+
+/** Difficultés particulières : catégories fermées, non médicales (D11, D-025). */
+export const DIFFICULTIES = ['fatigue', 'weather', 'terrain', 'gear', 'time', 'motivation', 'other'] as const;
+export type Difficulty = (typeof DIFFICULTIES)[number];
+export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
+  fatigue: 'Fatigue', weather: 'Météo', terrain: 'Terrain, parcours', gear: 'Matériel', time: 'Manque de temps', motivation: 'Motivation', other: 'Autre',
 };
 
 /**
@@ -29,14 +40,16 @@ export const saveFeedbackSchema = z
         const t = v?.trim() ?? '';
         return t === '' ? null : t;
       }),
+    overallFeeling: z.number().int().min(1).max(5).nullish().transform((v) => v ?? null),
+    difficulties: z.array(z.enum(DIFFICULTIES)).max(7).default([]).transform((a) => [...new Set(a)]),
   })
   .strict()
   .superRefine((value, ctx) => {
-    if (value.state === 'missed' && (value.durationSeconds !== null || value.distanceM !== null)) {
+    if ((value.state === 'missed' || value.state === 'postponed') && (value.durationSeconds !== null || value.distanceM !== null)) {
       ctx.addIssue({
         code: 'custom',
         path: ['durationSeconds'],
-        message: 'Une séance non réalisée ne porte ni durée ni distance',
+        message: 'Une séance non réalisée ou reportée ne porte ni durée ni distance',
       });
     }
   });

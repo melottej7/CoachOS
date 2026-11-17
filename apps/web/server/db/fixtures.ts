@@ -21,6 +21,12 @@ export const ATHLETES = {
 
 export const TIME_ZONE = 'Europe/Brussels';
 
+/**
+ * Mot de passe commun des comptes fictifs, pour Supabase LOCAL uniquement (npm run supabase:seed).
+ * Jamais utilisé hors développement ; aucun lien avec un compte réel.
+ */
+export const DEMO_PASSWORD = 'coachos-demo-2026';
+
 /** Comptes fictifs. Le domaine .test n’existe pas : en local, Mailpit capture tous les e-mails. */
 export const PEOPLE: { id: string; name: string; email: string }[] = [
   { id: USERS.marine, name: 'Marine Roy', email: 'marine.roy@demo.coachos.test' },
