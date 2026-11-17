@@ -1,8 +1,18 @@
-import type { PGlite, Transaction } from '@electric-sql/pglite';
 import { addDays, todayIn } from '@coachos/domain';
-import { ATHLETES, TIME_ZONE, USERS, WORKSPACE_A, WORKSPACE_B } from './fixtures';
+import type { Db, Tx } from './driver';
+import { ATHLETES, PEOPLE, TIME_ZONE, USERS, WORKSPACE_A, WORKSPACE_B } from './fixtures';
 
-type Q = Pick<Transaction, 'query'>;
+type Q = Tx;
+
+/** Crée les comptes d’authentification fictifs (auth.users) avant les données métier. */
+export type EnsureAuthUsers = (people: typeof PEOPLE) => Promise<void>;
+
+/** PGlite : auth.users est une table locale (shim). Supabase : voir scripts/supabase-seed.ts. */
+export const pgliteAuthUsers = (db: Db): EnsureAuthUsers => async (people) => {
+  for (const p of people) {
+    await db.query('insert into auth.users(id, email) values ($1, $2) on conflict (id) do nothing', [p.id, p.email]);
+  }
+};
 
 interface SeedWorkout {
   id: string;
@@ -37,16 +47,19 @@ const workouts: SeedWorkout[] = [
 ];
 
 /** Vide les données (pas le schéma). TRUNCATE ne déclenche pas les triggers d’immutabilité par ligne. */
-export async function clearData(db: PGlite): Promise<void> {
+export async function clearData(db: Db, opts: { deleteAuthUsers: boolean } = { deleteAuthUsers: true }): Promise<void> {
   const tables = await db.query<{ t: string }>(
     `select format('%I.%I', schemaname, tablename) as t from pg_tables
      where schemaname = 'public' and tablename <> 'sports'`,
   );
-  await db.exec(`truncate ${tables.rows.map((r) => r.t).join(', ')} cascade; delete from auth.users;`);
+  await db.exec(`truncate ${tables.rows.map((r) => r.t).join(', ')} cascade`);
+  // Sur Supabase, les comptes auth sont gérés par l’API d’administration (scripts/supabase-seed.ts).
+  if (opts.deleteAuthUsers) await db.exec('delete from auth.users');
 }
 
-export async function seed(db: PGlite, now: Date = new Date()): Promise<void> {
-  const today = todayIn(TIME_ZONE, now);
+export async function seed(db: Db, opts: { now?: Date; ensureAuthUsers: EnsureAuthUsers }): Promise<void> {
+  const today = todayIn(TIME_ZONE, opts.now ?? new Date());
+  await opts.ensureAuthUsers(PEOPLE);
   await db.transaction(async (tx) => {
     await insertBase(tx);
     for (const w of workouts) await insertWorkout(tx, w, addDays(today, w.offset));
@@ -70,16 +83,8 @@ export async function seed(db: PGlite, now: Date = new Date()): Promise<void> {
 }
 
 async function insertBase(tx: Q) {
-  const people: [string, string][] = [
-    [USERS.marine, 'Marine Roy'],
-    [USERS.camille, 'Camille Laurent'],
-    [USERS.noah, 'Noah Dubois'],
-    [USERS.hugo, 'Hugo Petit'],
-    [USERS.lea, 'Léa Moreau'],
-  ];
-  for (const [id, name] of people) {
-    await tx.query('insert into auth.users(id, email) values ($1, $2)', [id, `${id.slice(-4)}@demo.coachos.test`]);
-    await tx.query('insert into public.users(id, display_name) values ($1, $2)', [id, name]);
+  for (const p of PEOPLE) {
+    await tx.query('insert into public.users(id, display_name) values ($1, $2)', [p.id, p.name]);
   }
   await tx.query('insert into public.workspaces(id, name, time_zone) values ($1, $2, $3), ($4, $5, $3)', [
     WORKSPACE_A, 'Atelier Endurance', TIME_ZONE, WORKSPACE_B, 'Club Trail Ardennes',

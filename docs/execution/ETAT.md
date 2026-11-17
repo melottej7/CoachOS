@@ -1,14 +1,16 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-17, session 1.
+Dernière mise à jour : 2026-11-17, session 1 (tranche C, étape 1 : connexion réelle sur Supabase local).
 
 ## Résumé
 
-Tranches **A (publier et lire)** et **B (retour et revue)** démontrables en local sur données fictives. La boucle créer → publier → lire sur téléphone → envoyer un retour → traiter fonctionne de bout en bout pour les deux rôles. Les droits sont vérifiés en base (RLS du SQL de référence) et dans chaque commande. Prochaine tranche : C (invitation, authentification réelle et reprise).
+Tranches **A (publier et lire)** et **B (retour et revue)** démontrables en local sur données fictives. La boucle créer → publier → lire sur téléphone → envoyer un retour → traiter fonctionne de bout en bout pour les deux rôles. Les droits sont vérifiés en base (RLS du SQL de référence) et dans chaque commande.
+
+Tranche **C, étape 1** faite : l’application tourne sur le PostgreSQL de Supabase local avec la connexion réelle par lien magique (Supabase Auth, e-mails capturés par Mailpit). PGlite reste le moteur des tests rapides et le repli sans Docker. Reste de la tranche C : création d’espace (X04), invitation et affectation athlète (C03-02 à C03-05), reprise et cas d’erreur.
 
 ## Lancer en local
 
-Prérequis : Node ≥ 22.12 (testé avec 24.14.1). Aucun Docker ni compte externe.
+Prérequis : Node ≥ 22.12 (testé avec 24.14.1). L’application et les tests n’exigent ni Docker ni compte externe ; Docker Desktop sert seulement à Supabase local.
 
 ```bash
 npm install
@@ -19,7 +21,20 @@ npm run build
 npm run db:reset     # serveur arrêté : recrée .data/pglite
 ```
 
-Avec le serveur lancé, « Réinitialiser la démo » sur `/demo` recharge le jeu fictif sans redémarrer.
+Mode Supabase (connexion réelle). Docker Desktop doit être ouvert, baleine immobile :
+
+```bash
+npm run supabase:start   # base 54322, API 54321, e-mails de test http://127.0.0.1:54324
+npm run supabase:env     # écrit apps/web/.env.local (local uniquement, ignoré par Git)
+npm run supabase:seed    # comptes Auth fictifs + données métier
+npm run dev              # http://localhost:3000/login
+npm run test:pg          # même suite boucle/droits sur le PostgreSQL de Supabase (recharge le jeu fictif)
+npm run supabase:stop
+```
+
+Sans `apps/web/.env.local`, l’application repasse en mode PGlite + `/demo`. Après un changement de `supabase/config.toml`, relancer `supabase:stop` puis `supabase:start`, puis redémarrer `npm run dev`.
+
+Comptes fictifs : `marine.roy@`, `camille.laurent@`, `noah.dubois@`, `hugo.petit@`, `lea.moreau@` suivis de `demo.coachos.test`. Le lien de connexion arrive dans Mailpit (http://127.0.0.1:54324). En développement, `/demo` reste un raccourci sans e-mail ; « Réinitialiser la démo » recharge le jeu fictif sans redémarrer.
 
 Démonstration conseillée : `/demo` → Marine Roy → `+ Ajouter` un jour → enregistrer → « Publier pour Camille » ; puis `/demo` → Camille Laurent (fenêtre étroite ou téléphone) → Aujourd’hui / Programme → séance du jour → « Donner mon retour » ; puis Marine → Retours → « Ouvrir le retour » → « Marquer comme traité ».
 
@@ -45,7 +60,13 @@ Démonstration conseillée : `/demo` → Marine Roy → `+ Ajouter` un jour → 
 | C09-01 Compter les retours à revoir | Fait (badge Retours) | test + navigateur (2 → 1) |
 | C09-04 Raison du signal / source | Fait (« Nouveau retour : … », page d’indisponibilité) | navigateur |
 | C09-06 Clore un cas | Fait via markFeedbackReviewed | test |
-| Autres C01 (CI, Sentry, secrets, page d’état, restauration) | Non commencés | — |
+| C01-08 Secrets hors build client | Vérifié pour la clé service Supabase | recherche dans `.next/static` : 0 fichier |
+| C02-01 Inscrire un coach | Partiel : compte vérifié par lien, profil `users` créé à la première connexion sans doublon. Création d’espace (X04) à faire | navigateur |
+| C02-02 Finaliser le lien Auth | Fait : lien réutilisé ou expiré → message et nouveau lien | navigateur |
+| C02-05 Quitter la session | Fait (session Supabase et cookie démo effacés, pages `no-store`). Retour navigateur non testé | navigateur |
+| C02-06 Réponse publique identique | Fait : même message neutre quelle que soit l’adresse | code |
+| C02-09 Redirections | Fait : `next` externe ou ambigu écarté | tests domaine |
+| Autres C01 (CI, Sentry, page d’état, restauration) | Non commencés | — |
 
 ## Preuves obtenues (session 1)
 
@@ -64,13 +85,24 @@ Parcours dans le navigateur intégré (thème sombre système) :
 - Revue : file triée, détail Prévu (version 1 vue par Camille) / Déclaré, « Marquer comme traité » → « Traité le … », badge 2 → 1, « Retour suivant » proposé.
 - Isolation : Hugo (espace B) sur une URL de l’espace A → 404 uniforme (coach et athlète), et `createWorkout` par fetch → 404 `RESOURCE_NOT_VISIBLE`.
 
-Non prouvé à ce stade : lecteur d’écran et parcours clavier complet, vrai téléphone, vrai PostgreSQL/Supabase, concurrence réelle (PGlite sérialise), temps de publication 90 s et retour 30 s avec de vrais utilisateurs.
+Tranche C, étape 1 (même session, Supabase local) :
+
+- `npx supabase start` : migration `20261117000000_coachos.sql` appliquée sur PostgreSQL 17 ; 44 tables publiques, 0 sans RLS, 27 politiques, 7 fonctions `private`.
+- `npm run supabase:seed` : 5 comptes Auth (UUID fixes via l’API d’administration), 4 athlètes, 6 séances, 1 retour.
+- `npm test` : **28 tests passés** (PGlite). `npm run test:pg` : **16 tests boucle/droits passés sur le PostgreSQL de Supabase**.
+- `npm run typecheck`, `npm run build` : OK (proxy de session actif, routes privées dynamiques). Clé service absente de `.next/static`.
+- Navigateur, coach : `/login` → adresse de Marine → « Vérifie ta boîte » → lien lu dans Mailpit → planning de Marine (données Supabase) → publication de « Montées régulières » OK → « Se déconnecter » → `/coach/…/review` redirige vers `/login?next=…` → réutilisation du même lien → « Ce lien n’est plus valable ».
+- Navigateur, athlète 375 px : `/athlete/…/today` sans session → `/login?next=…` → e-mail **en français** « Ton lien de connexion CoachOS » → lien → arrivée directe sur Aujourd’hui ; Programme montre la séance publiée par Marine.
+
+Non prouvé à ce stade : lecteur d’écran et parcours clavier complet, vrai téléphone, concurrence réelle sous charge, retour navigateur après déconnexion, temps de publication 90 s et retour 30 s avec de vrais utilisateurs.
 
 ## Fichiers principaux
 
 - `supabase/migrations/20261117000000_coachos.sql` : copie exacte de `database/001_coachos.sql`.
 - `packages/domain/src/` : dates locales, schémas séance et retour, statut brouillon/publié.
-- `apps/web/server/db/` : client PGlite, shim auth local, migrations, jeu fictif.
+- `apps/web/server/db/` : deux moteurs (`driver.ts` PostgreSQL, PGlite), shim auth local, migrations PGlite, jeu fictif.
+- `apps/web/server/supabase/`, `apps/web/proxy.ts`, `apps/web/app/login`, `apps/web/app/auth/*` : session Supabase, lien magique, rappel PKCE, déconnexion.
+- `supabase/config.toml`, `supabase/templates/magic_link.html` : configuration locale et e-mail en français.
 - `apps/web/server/commands/` : créer, modifier, publier, envoyer un retour, traiter (idempotence, audit).
 - `apps/web/server/repo/` : lectures sous RLS (coach, athlète, contexte).
 - `apps/web/app/api/v1/…` : routes du contrat. `apps/web/app/coach/[wid]/…` et `apps/web/app/athlete/[wid]/…` : écrans X10 à X21, X40 à X43.
@@ -81,11 +113,16 @@ Non prouvé à ce stade : lecteur d’écran et parcours clavier complet, vrai t
 - Contrat OpenAPI à corriger (bornes à 10, RPE min 1), voir D-007.
 - Pas encore : annulation de séance, report d’un cas (snooze), publication par lot multi-séances (X22 limité à une séance), filtre persistant de la file (C09-08), routes GET pour Expo, E2E automatisé, CI.
 - Top bar mobile encore chargée côté athlète. À revoir après observation.
+- Nouveau compte sans espace : arrive sur « Aucun espace ». Création d’espace (X04) et invitation à faire.
+- Le profil créé à la première connexion prend la partie avant @ comme nom. Réglage du nom (X07, C02-07) à faire.
 
 ## Prochaine action
 
-**Tranche C, étape 1 : authentification réelle.** Remplacer `/demo` par `/login` (lien magique Supabase Auth) et `/auth/callback`, garder `requireActor()` comme unique point d’entrée et supprimer `/api/dev/*` hors développement.
+**Tranche C, étape 2 : créer un espace et inviter un athlète.**
 
-- **Prérequis stricts.** Supabase CLI + Docker Desktop installés sur le poste (décision du fondateur : installation système). Jamais de projet Supabase de production.
-- **Si le prérequis tarde.** Sans bloquer, (1) corriger `contracts/openapi.json` et ajouter un test de contrat sur les réponses (D-007), (2) écrire un E2E Playwright de la boucle à deux rôles (desktop 1440 + mobile 390), (3) ajouter C03-02 à C03-05 (création de fiche et invitation) sur PGlite avec un fournisseur d’email simulé.
-- **Pour le fondateur.** Organiser une première observation (1 coach, 1 athlète) sur `/demo` : publication et retour sur la même séance, chronométrés.
+- Créer un espace coach (X04, C02-03, C02-04, C02-08) : nom et fuseau, espace + rôle propriétaire dans une transaction, clé d’idempotence.
+- Créer une fiche athlète et l’inviter (C03-01 à C03-05) : jeton à usage unique haché, e-mail via Supabase local (Mailpit), acceptation `/invite` qui vérifie l’adresse, conflit et lien expiré.
+- Démontrer : un nouveau coach s’inscrit, crée son espace, invite une adresse ; l’athlète ouvre le lien, se connecte et voit sa première séance publiée.
+- **Prérequis.** Supabase local démarré (`npm run supabase:start`). Aucun accès de production.
+- **En parallèle si utile.** Corriger `contracts/openapi.json` (D-007) ; E2E Playwright de la boucle à deux rôles.
+- **Pour le fondateur.** Tester la connexion réelle en suivant le guide pas à pas donné en fin de session ; organiser une première observation (1 coach, 1 athlète).

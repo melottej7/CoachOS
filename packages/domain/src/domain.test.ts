@@ -10,6 +10,7 @@ import {
   weekStart,
   workoutInputSchema,
   workoutStatus,
+  safeNext,
 } from './index';
 
 describe('dates locales', () => {
@@ -78,5 +79,16 @@ describe('retour athlète', () => {
   it('commentaire vide normalisé en null', () => {
     const r = parseWith(saveFeedbackSchema, { publishedRevision: 1, state: 'partial', comment: '  ' });
     expect(r.ok && r.value.comment).toBeNull();
+  });
+});
+
+describe('redirection après connexion (C02-09)', () => {
+  it('garde un chemin local', () => {
+    expect(safeNext('/coach/abc/review?from=calendar')).toBe('/coach/abc/review?from=calendar');
+  });
+  it('écarte toute destination externe ou ambiguë', () => {
+    for (const bad of ['https://evil.example', '//evil.example', '/\\evil.example', 'evil', '/a\\b', '/a\nb', null, '']) {
+      expect(safeNext(bad as string | null)).toBe('/');
+    }
   });
 });

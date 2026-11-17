@@ -1,8 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import type { PGlite } from '@electric-sql/pglite';
+import path from 'node:path';
 import { addDays, todayIn } from '@coachos/domain';
-import { beforeAll, describe, expect, it } from 'vitest';
-import { openDatabase, setDb } from './db/client';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { openDatabase, setDb, type Db } from './db/client';
+import { postgresDb } from './db/driver';
+import { repoRoot } from './db/migrate';
+import { clearData, seed } from './db/seed';
 import { ATHLETES, TIME_ZONE, USERS, WORKSPACE_A } from './db/fixtures';
 import { SEED_WORKOUTS } from './db/seed';
 import { AppError } from './errors';
@@ -14,7 +17,10 @@ import { athleteSchedule, athleteWorkout } from './repo/athlete';
 // Boucle à deux rôles et cas d’autorisation : coach A, coach B (autre espace),
 // athlète affecté (Camille) et athlète tiers (Léa, autre espace).
 
-let db: PGlite;
+let db: Db;
+// Par défaut : PGlite en mémoire. COACHOS_TEST_PG=1 : même suite sur le PostgreSQL de Supabase local
+// (recharge le jeu fictif ; relancer `npm run supabase:seed` n’est pas nécessaire ensuite).
+const onPostgres = process.env.COACHOS_TEST_PG === '1';
 const today = todayIn(TIME_ZONE);
 const meta = (actorId: string, extra: Record<string, string> = {}) => ({
   actorId,
@@ -38,8 +44,28 @@ async function codeOf(p: Promise<unknown>) {
 }
 
 beforeAll(async () => {
-  db = await openDatabase(); // mémoire
+  if (onPostgres) {
+    process.loadEnvFile(path.join(repoRoot(), 'apps', 'web', '.env.local'));
+    const url = process.env.DATABASE_URL ?? '';
+    if (!/@(127\.0\.0\.1|localhost):/.test(url)) throw new Error('COACHOS_TEST_PG vise uniquement Supabase local');
+    const { supabaseAuthUsers } = await import('./supabase/admin');
+    db = postgresDb(url);
+    await clearData(db, { deleteAuthUsers: false });
+    await seed(db, { ensureAuthUsers: supabaseAuthUsers });
+  } else {
+    db = await openDatabase(); // mémoire
+  }
   setDb(db);
+});
+
+afterAll(async () => {
+  if (onPostgres) {
+    // Laisser la base de démonstration propre après la suite.
+    const { supabaseAuthUsers } = await import('./supabase/admin');
+    await clearData(db, { deleteAuthUsers: false });
+    await seed(db, { ensureAuthUsers: supabaseAuthUsers });
+    await db.close();
+  }
 });
 
 describe('tranche A · publier et lire', () => {

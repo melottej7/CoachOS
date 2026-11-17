@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { demoAuthEnabled } from '@/server/auth/session';
-import { getDb } from '@/server/db/client';
-import { clearData, seed } from '@/server/db/seed';
+import { getDb, usingPostgres } from '@/server/db/client';
+import { clearData, pgliteAuthUsers, seed } from '@/server/db/seed';
+import { supabaseAuthUsers } from '@/server/supabase/admin';
 
 /** Réinitialise le jeu fictif dans le processus courant (développement uniquement). */
 export async function POST(req: NextRequest) {
@@ -9,7 +10,8 @@ export async function POST(req: NextRequest) {
   const origin = req.headers.get('origin');
   if (!origin || new URL(origin).host !== req.headers.get('host')) return new NextResponse(null, { status: 403 });
   const db = await getDb();
-  await clearData(db);
-  await seed(db);
+  const pgMode = usingPostgres();
+  await clearData(db, { deleteAuthUsers: !pgMode });
+  await seed(db, { ensureAuthUsers: pgMode ? supabaseAuthUsers : pgliteAuthUsers(db) });
   return NextResponse.redirect(new URL('/demo?reset=1', req.url), 303);
 }

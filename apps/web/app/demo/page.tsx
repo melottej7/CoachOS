@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { demoAuthEnabled, getActor } from '@/server/auth/session';
 import { DEMO_IDENTITIES } from '@/server/db/fixtures';
+import { supabaseConfigured } from '@/server/supabase/server';
 import { Brand, initials } from '@/components/ui';
 
 export const metadata = { title: 'Démonstration' };
@@ -14,6 +15,7 @@ export default async function Demo({ searchParams }: { searchParams: Promise<{ r
   if (!demoAuthEnabled()) notFound();
   const actor = await getActor();
   const { reset } = await searchParams;
+  const real = supabaseConfigured();
   return (
     <>
       <header className="top"><Brand href="/demo" /><div className="top-meta"><span className="demo-tag">Données fictives</span></div></header>
@@ -29,7 +31,13 @@ export default async function Demo({ searchParams }: { searchParams: Promise<{ r
           </div>
         </div>
         {reset ? <p className="banner ok" role="status" style={{ marginBottom: 16 }}>Données de démonstration réinitialisées.</p> : null}
-        {actor ? <p className="muted" style={{ marginBottom: 12 }}>Identité actuelle : {actor.displayName}.</p> : null}
+        {actor ? <p className="muted" style={{ marginBottom: 12 }}>Identité actuelle : {actor.displayName}{actor.source === 'supabase' ? ' (connexion réelle)' : ' (démo)'}.</p> : null}
+        {real ? (
+          <p className="banner" style={{ marginBottom: 16 }}>
+            Connexion réelle disponible : <a href="/login">se connecter par e-mail</a> avec l’une des adresses ci-dessous.
+            Un clic sur une carte ouvre l’identité directement, sans e-mail (raccourci de développement).
+          </p>
+        ) : null}
         <div className="demo-grid">
           {DEMO_IDENTITIES.map((i) => (
             <form key={i.userId} action="/api/dev/identity" method="post">
@@ -38,6 +46,7 @@ export default async function Demo({ searchParams }: { searchParams: Promise<{ r
                 <span className="actions"><span className="avatar" aria-hidden="true">{initials(i.name)}</span><strong>{i.name}</strong></span>
                 <span>{i.role === 'coach' ? 'Coach' : 'Athlète'} · {i.workspace}</span>
                 <small>{i.description}</small>
+                {real ? <small>{i.email}</small> : null}
               </button>
             </form>
           ))}

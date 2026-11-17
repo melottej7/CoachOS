@@ -1,19 +1,25 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { PGlite, type Transaction } from '@electric-sql/pglite';
+import { PGlite } from '@electric-sql/pglite';
+import { postgresDb, type Db, type Tx } from './driver';
 import { migrate, repoRoot } from './migrate';
-import { seed } from './seed';
+import { pgliteAuthUsers, seed } from './seed';
 
-export type Tx = Transaction;
+export type { Db, Tx };
 
-/** Ouvre une base PGlite (fichier ou mémoire), applique les migrations et charge le jeu fictif si vide. */
-export async function openDatabase(dataDir?: string): Promise<PGlite> {
+/**
+ * Deux moteurs (DECISIONS D-002, D-014) :
+ * - DATABASE_URL défini : PostgreSQL de Supabase local, migrations appliquées par le CLI Supabase ;
+ * - sinon : PGlite en fichier (.data/pglite) ou en mémoire pour les tests, migrations appliquées ici.
+ */
+export async function openDatabase(dataDir?: string): Promise<Db> {
   if (dataDir) fs.mkdirSync(path.dirname(dataDir), { recursive: true });
-  const db = dataDir ? new PGlite(dataDir) : new PGlite();
-  await db.waitReady;
-  await migrate(db);
+  const lite = dataDir ? new PGlite(dataDir) : new PGlite();
+  await lite.waitReady;
+  await migrate(lite);
+  const db = lite as unknown as Db;
   const users = await db.query<{ n: number }>('select count(*)::int as n from public.users');
-  if ((users.rows[0]?.n ?? 0) === 0) await seed(db);
+  if ((users.rows[0]?.n ?? 0) === 0) await seed(db, { ensureAuthUsers: pgliteAuthUsers(db) });
   return db;
 }
 
@@ -21,23 +27,28 @@ export function defaultDataDir(): string {
   return process.env.COACHOS_PGLITE_DIR ?? path.join(repoRoot(), '.data', 'pglite');
 }
 
-const globalForDb = globalThis as unknown as { __coachosDb?: Promise<PGlite> };
+export const usingPostgres = () => Boolean(process.env.DATABASE_URL);
+
+const globalForDb = globalThis as unknown as { __coachosDb?: Promise<Db> };
 
 /** Une seule instance par processus, y compris lors du rechargement à chaud de Next. */
-export function getDb(): Promise<PGlite> {
-  globalForDb.__coachosDb ??= openDatabase(defaultDataDir()).catch((error: unknown) => {
+export function getDb(): Promise<Db> {
+  globalForDb.__coachosDb ??= (
+    usingPostgres() ? Promise.resolve(postgresDb(process.env.DATABASE_URL!)) : openDatabase(defaultDataDir())
+  ).catch((error: unknown) => {
     globalForDb.__coachosDb = undefined;
     throw error;
   });
   return globalForDb.__coachosDb;
 }
 
-/** Pour les tests : injecter une base en mémoire. */
-export function setDb(db: PGlite): void {
+/** Pour les tests : injecter une base. */
+export function setDb(db: Db): void {
   globalForDb.__coachosDb = Promise.resolve(db);
 }
 
 async function setActor(tx: Tx, userId: string) {
+  // Même réglage que Supabase : auth.uid() lit request.jwt.claim.sub.
   await tx.query(`select set_config('request.jwt.claim.sub', $1, true)`, [userId]);
 }
 

@@ -9,18 +9,24 @@
     "start": "next start --port 3000",
     "typecheck": "tsc --noEmit -p .",
     "lint": "tsc --noEmit -p .",
-    "db:reset": "tsx scripts/db-reset.ts"
+    "db:reset": "tsx scripts/db-reset.ts",
+    "supabase:env": "tsx scripts/supabase-env.ts",
+    "supabase:seed": "tsx scripts/supabase-seed.ts"
   },
   "dependencies": {
     "@coachos/domain": "0.1.0",
     "@electric-sql/pglite": "0.5.16",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.0",
     "next": "16.4.6",
+    "pg": "^8.23.1",
     "react": "19.2.9",
     "react-dom": "19.2.9",
     "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/node": "24.10.15",
+    "@types/pg": "^8.23.1",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
     "tsx": "4.21.1",

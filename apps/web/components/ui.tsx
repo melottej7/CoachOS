@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { WORKOUT_STATUS_LABELS, type WorkoutStatus } from '@coachos/domain';
+import { demoAuthEnabled } from '@/server/auth/session';
 
 export function Brand({ href = '/' }: { href?: string }) {
   return (
@@ -43,8 +44,15 @@ export function TopBar({ home, children }: { home: string; children?: React.Reac
       <Brand href={home} />
       <div className="top-meta">
         {children}
-        <span className="demo-tag">Données fictives</span>
-        <Link href="/demo">Changer d’identité</Link>
+        {demoAuthEnabled() ? (
+          <>
+            <span className="demo-tag">Données fictives</span>
+            <Link href="/demo">Changer d’identité</Link>
+          </>
+        ) : null}
+        <form action="/auth/signout" method="post">
+          <button type="submit" className="link-btn">Se déconnecter</button>
+        </form>
       </div>
     </header>
   );
