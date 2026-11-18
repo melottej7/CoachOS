@@ -11,3 +11,5 @@ export * from './workspace-profile';
 export * from './sports';
 export * from './structure';
 export * from './presets';
+export * from './references';
+export * from './portfolio';

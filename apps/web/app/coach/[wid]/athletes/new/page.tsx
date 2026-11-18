@@ -22,7 +22,7 @@ export default async function NewAthlete({ params, searchParams }: { params: Pro
       {first ? <p className="banner ok" role="status" style={{ marginBottom: 16 }}>Ton espace « {ctx.workspace.name} » est prêt. Ajoute ton premier athlète.</p> : null}
       <div className="head"><div><div className="kicker">{ctx.workspace.name}</div><h1>Ajouter un athlète</h1>
         <p className="sub">L’athlète reçoit un lien personnel par e-mail, valable 7 jours. Il rejoint ton espace en se connectant avec cette adresse.</p></div></div>
-      <section className="card"><div className="card-body">
+      <section className="card" data-tour="athlete-form"><div className="card-body">
         <AthleteForm wid={wid} zones={Intl.supportedValuesOf('timeZone')} defaultZone={ctx.workspace.timeZone} />
       </div></section>
     </>

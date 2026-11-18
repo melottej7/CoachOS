@@ -156,6 +156,22 @@ describe('tranche B · retour et revue', () => {
     expect(seen?.feedback).toMatchObject({ state: 'completed', durationSeconds: 2100, rpe: 5, revision: 1 });
   });
 
+  it('séance faite autrement : ce qui a changé, sport, répétitions et distance (CE-E-05)', async () => {
+    const other = SEED_WORKOUTS.camilleYesterday;
+    const m = () => ({ ...meta(USERS.camille), workoutId: other });
+    const prev = (await athleteWorkout(USERS.camille, WORKSPACE_A, ATHLETES.camille, other))?.feedback?.revision ?? null;
+    const base = { ...fb, expectedRevision: prev };
+    // Non réalisée : rien à décrire ; catégorie inconnue refusée.
+    expect(await codeOf(saveFeedback(m(), { ...base, state: 'missed', durationSeconds: null, changes: ['shorter'] }))).toBe('INVALID_FIELDS');
+    expect(await codeOf(saveFeedback(m(), { ...base, changes: ['injury'] }))).toBe('INVALID_FIELDS');
+    const r = await saveFeedback(m(), {
+      ...base, state: 'partial', distanceM: 6200, changes: ['fewer_reps', 'other_sport', 'fewer_reps'], actualSport: 'cycling', repeatsDone: [3],
+    });
+    expect(r.body).toMatchObject({ item: { revision: (prev ?? 0) + 1, changes: ['fewer_reps', 'other_sport'], actualSport: 'cycling', repeatsDone: [3], distanceM: 6200 } });
+    const seen = await athleteWorkout(USERS.camille, WORKSPACE_A, ATHLETES.camille, other);
+    expect(seen?.feedback).toMatchObject({ state: 'partial', changes: ['fewer_reps', 'other_sport'], actualSport: 'cycling', repeatsDone: [3] });
+  });
+
   it('un second premier envoi depuis un autre appareil reçoit un conflit', async () => {
     expect(await codeOf(saveFeedback({ ...meta(USERS.camille), workoutId: sid }, fb))).toBe('CONFLICT_OR_QUOTA');
   });

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { requireActor } from '@/server/auth/session';
 import { coachWorkout } from '@/server/repo/coach';
 import { WorkoutForm } from '@/components/workout-form';
+import { readAthleteReferences } from '@/server/commands/athlete-references';
 
 export const metadata = { title: 'Modifier la séance' };
 
@@ -19,7 +20,7 @@ export default async function EditWorkout({ params }: { params: Promise<{ wid: s
       <Link className="back" href={detail}>← Retour à la séance</Link>
       <div className="head"><div><div className="kicker">{w.athlete.displayName} · version {r.number}</div><h1>Modifier la séance</h1></div></div>
       <section className="card"><div className="card-body">
-        <WorkoutForm wid={wid} aid={aid} athleteName={w.athlete.displayName} timeZone={r.timeZone} cancelHref={detail}
+        <WorkoutForm refs={await readAthleteReferences(actor.userId, wid, aid)} wid={wid} aid={aid} athleteName={w.athlete.displayName} timeZone={r.timeZone} cancelHref={detail}
           edit={{ sid, expectedRevision: r.number, published: w.published !== null }}
           initial={{ title: r.title, localDate: r.localDate, sport: r.sport, minutes: r.durationSeconds ? String(Math.round(r.durationSeconds / 60)) : '', instructions: r.instructions, intervals: r.intervals }} />
       </div></section>

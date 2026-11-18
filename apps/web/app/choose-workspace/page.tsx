@@ -7,7 +7,7 @@ import { TopBar } from '@/components/ui';
 export const metadata = { title: 'Choisir un espace' };
 
 const ROLE: Record<WorkspaceSummary['role'], string> = { owner: 'Coach propriétaire', coach: 'Coach', athlete: 'Athlète' };
-const home = (w: WorkspaceSummary) => (w.role === 'athlete' ? `/athlete/${w.id}/today` : `/coach/${w.id}/calendar`);
+const home = (w: WorkspaceSummary) => (w.role === 'athlete' ? `/athlete/${w.id}/today` : `/coach/${w.id}/planning`);
 
 /** X05 : relation et rôle. Une seule relation : ouverture directe. */
 export default async function ChooseWorkspace() {

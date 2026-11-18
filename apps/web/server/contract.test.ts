@@ -15,6 +15,9 @@ import { markFeedbackReviewed, saveFeedback } from './commands/feedback';
 import { acceptInvitation, createAthlete, createWorkspace, issueInvitation, revokeInvitation } from './commands/invitations';
 import { createWorkout, publishWorkouts, updateWorkout } from './commands/workouts';
 import { saveAthleteProfile } from './commands/athlete-profile';
+import { saveAthleteReferences } from './commands/athlete-references';
+import { confirmLevel, createGoal, createNote, createTeam, deleteNote, setTeamMember, updateGoal, updateTeam } from './commands/portfolio';
+import { createAppointment, createTask, snoozeAutoTask, updateAppointment, updateTask } from './commands/tasks';
 import { deleteWorkspaceLogo, previewInvitation, saveWorkspaceProfile, setWorkspaceLogo } from './commands/workspace-profile';
 import { todayIn } from '@coachos/domain';
 
@@ -63,7 +66,11 @@ describe('réponses conformes au contrat OpenAPI', () => {
     const m = { ...meta(USERS.camille), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille, workoutId: SEED_WORKOUTS.camilleToday };
     const fb = await saveFeedback(m, { publishedRevision: 1, state: 'completed', durationSeconds: 2100, rpe: 0, comment: 'ok' });
     check(`${W}/{sid}/feedback`, 'put', fb.status, fb.body);
-    const rv = await markFeedbackReviewed({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille, workoutId: SEED_WORKOUTS.camilleToday }, { expectedRevision: 1 });
+    const autrement = await saveFeedback({ ...m, idempotencyKey: randomUUID() }, {
+      publishedRevision: 1, expectedRevision: 1, state: 'partial', distanceM: 5000, changes: ['shorter', 'other_route'], actualSport: null, repeatsDone: [],
+    });
+    check(`${W}/{sid}/feedback`, 'put', autrement.status, autrement.body);
+    const rv = await markFeedbackReviewed({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille, workoutId: SEED_WORKOUTS.camilleToday }, { expectedRevision: 2 });
     check(`${W}/{sid}/feedback/review`, 'post', rv.status, rv.body);
   });
 
@@ -92,6 +99,45 @@ describe('réponses conformes au contrat OpenAPI', () => {
       availableDays: [1, 3, 6], mainGoal: 'Gravel de 100 km', nextEventName: 'Gravel Ardennes', nextEventDate: '2027-05-02',
     });
     check('/workspaces/{wid}/athlete-profile', 'put', full.status, full.body);
+  });
+
+  it('repères d’entraînement fixés par le coach', async () => {
+    const r = await saveAthleteReferences({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: ATHLETES.noah }, { vmaKmh: 14.5 });
+    check('/workspaces/{wid}/athletes/{aid}/references', 'put', r.status, r.body);
+  });
+
+  it('lots G et H : groupes, niveau, objectif, note, tâche, suivi, rendez-vous', async () => {
+    const m = () => ({ ...meta(USERS.marine), workspaceId: WORKSPACE_A });
+    const id = (r: { body: unknown }) => (r.body as { id?: string; item?: { id: string } }).id ?? (r.body as { item: { id: string } }).item.id;
+    const team = await createTeam(m(), { name: 'Contrat · groupe' });
+    check('/workspaces/{wid}/teams', 'post', team.status, team.body);
+    const tid = id(team);
+    const up = await updateTeam({ ...m(), teamId: tid }, { sortOrder: 2 });
+    check('/workspaces/{wid}/teams/{tid}', 'patch', up.status, up.body);
+    const add = await setTeamMember({ ...m(), teamId: tid, athleteId: ATHLETES.noah }, true);
+    check('/workspaces/{wid}/teams/{tid}/athletes/{aid}', 'put', add.status, add.body);
+    const rm = await setTeamMember({ ...m(), teamId: tid, athleteId: ATHLETES.noah }, false);
+    check('/workspaces/{wid}/teams/{tid}/athletes/{aid}', 'delete', rm.status, rm.body);
+    const lvl = await confirmLevel({ ...m(), athleteId: ATHLETES.noah }, { sport: 'cycling', level: 'beginner' });
+    check('/workspaces/{wid}/athletes/{aid}/levels', 'put', lvl.status, lvl.body);
+    const goal = await createGoal({ ...m(), athleteId: ATHLETES.noah }, { title: 'Gravel 100 km', sport: 'cycling', targetDate: null });
+    check('/workspaces/{wid}/athletes/{aid}/goals', 'post', goal.status, goal.body);
+    const goalUp = await updateGoal({ ...m(), athleteId: ATHLETES.noah, goalId: id(goal) }, { state: 'canceled' });
+    check('/workspaces/{wid}/athletes/{aid}/goals/{gid}', 'patch', goalUp.status, goalUp.body);
+    const note = await createNote({ ...m(), athleteId: ATHLETES.noah }, { body: 'Note de contrat' });
+    check('/workspaces/{wid}/athletes/{aid}/notes', 'post', note.status, note.body);
+    const del = await deleteNote({ ...m(), athleteId: ATHLETES.noah, noteId: id(note) });
+    check('/workspaces/{wid}/athletes/{aid}/notes/{nid}', 'delete', del.status, del.body);
+    const task = await createTask(m(), { title: 'Préparer le bloc de décembre', kind: 'program', athleteId: ATHLETES.noah, dueOn: '2026-12-01', priority: 2, link: `/coach/${WORKSPACE_A}/calendar` });
+    check('/workspaces/{wid}/tasks', 'post', task.status, task.body);
+    const taskUp = await updateTask({ ...m(), taskId: id(task) }, { expectedRevision: 1, status: 'in_progress' });
+    check('/workspaces/{wid}/tasks/{tid}', 'patch', taskUp.status, taskUp.body);
+    const snooze = await snoozeAutoTask({ ...m(), sourceRef: ATHLETES.noah }, { rule: 'no_upcoming', until: '2026-12-01' });
+    check('/workspaces/{wid}/auto-tasks/{ref}', 'put', snooze.status, snooze.body);
+    const appt = await createAppointment(m(), { athleteId: ATHLETES.noah, title: 'Appel', kind: 'call', startsLocal: '2026-12-02T12:00', timeZone: TIME_ZONE, durationMin: 20 });
+    check('/workspaces/{wid}/appointments', 'post', appt.status, appt.body);
+    const apptUp = await updateAppointment({ ...m(), appointmentId: id(appt) }, { expectedRevision: 1, status: 'canceled' });
+    check('/workspaces/{wid}/appointments/{pid}', 'patch', apptUp.status, apptUp.body);
   });
 
   it('présentation d’espace, logo et aperçu d’invitation', async () => {

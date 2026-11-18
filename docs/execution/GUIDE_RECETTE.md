@@ -24,9 +24,9 @@ Pour simuler un téléphone, réduis la fenêtre de Safari à sa largeur minimal
 2. Remplis **Ton nom**, une adresse inventée comme **paul.coach@demo.coachos.test** et ton mot de passe de test, puis **Créer mon compte**.
 3. Tu arrives sur « Créer ton espace coach » : donne un **Nom de l’espace** (par exemple « Paul Endurance »), garde le fuseau, puis **Créer mon espace**.
 4. **Personnalise ton espace** en 4 étapes facultatives : présentation (accroche, parcours, approche, diplômes), spécialités (sports, publics, objectifs), identité visuelle (logo ou photo, couleur de l’espace) et infos pratiques (ville, langues, site, contact). Note ce qui manque ou ce qui est de trop. Tu pourras tout modifier ensuite dans **Paramètres**.
-5. L’avatar **Allure** te présente CoachOS en 5 étapes. Lis-les (ou **Passer la présentation**), puis **Ajouter mon premier athlète**. Tu pourras revoir ce guide depuis le menu **Guide**.
+5. Tu arrives sur ton Planning et le **guide CoachOS** démarre la visite : il assombrit l’écran et éclaire le bouton dont il parle. Clique **Suivant**, puis, quand il te le demande, touche **+ Ajouter un athlète** : la visite te suit sur la page suivante. Tu peux la quitter avec **Passer** et la relancer à tout moment en cliquant sur le guide, en bas à droite. Note si chaque bulle montre clairement l’élément dont elle parle.
 6. Sur « Ajouter un athlète » : nom **Emma Test**, adresse **emma@demo.coachos.test**, puis **Créer et inviter**. Note si le message de confirmation est clair.
-7. Clique sur **Ouvrir le planning**, puis sur **+ Ajouter** à la date d’aujourd’hui.
+7. Clique sur **Séances** dans le menu de gauche, puis sur **+ Ajouter** à la date d’aujourd’hui. (Le **Planning** est désormais ta page d’accueil de coach : tâches à faire et agenda de la semaine.)
 8. Crée une séance simple (titre, durée, consignes), puis **Enregistrer le brouillon**.
 9. Lis l’écran : comprends-tu que la séance est un **brouillon invisible** pour Emma ? Clique sur **Publier pour Emma**.
 10. Chronomètre si possible les étapes 7 à 9 : l’objectif est **moins de 90 secondes**.
@@ -38,8 +38,8 @@ Pour simuler un téléphone, réduis la fenêtre de Safari à sa largeur minimal
 2. Dans la boîte de test, ouvre l’e-mail **« … t’invite à rejoindre Paul Endurance sur CoachOS »** et clique sur **Rejoindre l’espace**. La page montre la présentation de ton espace (logo, accroche) avant la création du compte.
 3. Remplis **Ton nom**, l’adresse **emma@demo.coachos.test** et ton mot de passe de test, puis **Créer mon compte et rejoindre**.
    - Essai facultatif : tape d’abord une autre adresse. L’application doit refuser, sans créer de compte.
-4. L’avatar **Allure** présente l’application en 5 étapes, puis **Remplir mon profil**.
-5. Le questionnaire « Faisons connaissance » compte 3 étapes : **Toi** (nom, langue, fuseau), **Ta pratique** (sport, niveau, ancienneté, séances par semaine), **Tes objectifs** (objectif, prochaine course, jours disponibles). Note s’il te paraît trop long ou s’il manque une question. Termine avec **Terminer et voir ma séance**.
+4. Le questionnaire « Faisons connaissance » compte 3 étapes : **Toi** (nom, langue, fuseau), **Ta pratique** (sport, niveau, ancienneté, séances par semaine), **Tes objectifs** (objectif, prochaine course, jours disponibles). Note s’il te paraît trop long ou s’il manque une question. Termine avec **Terminer et voir ma séance**.
+5. Le **guide CoachOS** démarre la visite sur l’écran Aujourd’hui : il éclaire la séance du jour, te demande de toucher **Voir la séance** et te suit jusqu’au déroulé et au bouton de retour, puis montre **Programme** et **Profil**. Note si c’est clair et pas trop long.
 6. Ouvre la séance, puis **Donner mon retour**. Choisis « Réalisée », un effort, écris un court commentaire et **Envoyer le retour**. Objectif : **moins de 30 secondes**.
 7. Clique sur **Se déconnecter**.
 

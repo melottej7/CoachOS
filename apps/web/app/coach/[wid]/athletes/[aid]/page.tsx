@@ -1,15 +1,24 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireActor } from '@/server/auth/session';
-import { DAY_LABELS, EXPERIENCE_LABELS, formatLongDate, LEVEL_LABELS, SPORT_LABELS, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS_LABELS } from '@coachos/domain';
+import {
+  APPOINTMENT_KIND_LABELS, APPOINTMENT_STATUS_LABELS, DAY_LABELS, EXPERIENCE_LABELS, formatLongDate, formatShortDate, formatWeekday, GOAL_STATE_LABELS,
+  LEVEL_LABELS, RESULT_STATE_LABELS, SPORT_LABELS, todayIn, urgencyLabel, utcToLocal, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS_LABELS,
+  type ResultState, type Sport,
+} from '@coachos/domain';
 import { readAthleteProfile } from '@/server/commands/athlete-profile';
+import { readAthleteReferences } from '@/server/commands/athlete-references';
 import { latestInvitation } from '@/server/commands/invitations';
-import { listAssignedAthletes } from '@/server/repo/coach';
 import { coachContext } from '@/server/repo/context';
-import { Notice, Pill } from '@/components/ui';
+import { athleteFile } from '@/server/repo/portfolio';
+import { ReferencesForm } from '@/components/references-form';
 import { ResendInvitation, RevokeInvitation } from '@/components/roster-forms';
+import {
+  ActionButton, AppointmentForm, AppointmentReport, GoalForm, LevelConfirm, NoteForm, TaskActions, TaskForm, TeamMembership,
+} from '@/components/portfolio-forms';
+import { Notice, Pill } from '@/components/ui';
 
-export const metadata = { title: 'Athlète' };
+export const metadata = { title: 'Fiche élève' };
 
 const NOTICES: Record<string, string> = {
   created: 'Fiche créée. Envoie l’invitation quand tu as l’adresse e-mail.',
@@ -18,61 +27,209 @@ const NOTICES: Record<string, string> = {
 };
 
 const fmt = (iso: string, tz: string) => new Intl.DateTimeFormat('fr-BE', { dateStyle: 'long', timeZone: tz }).format(new Date(iso));
+/** Retour vers la liste avec groupe, filtres et regroupement conservés (CE-G-04). */
+const safeFrom = (from: string | undefined, wid: string) => (from && from.startsWith(`/coach/${wid}/`) && !from.includes('//') ? from : `/coach/${wid}/athletes`);
 
-/** X14 (version minimale) : état du dossier et de l’invitation. */
-export default async function AthletePage({ params, searchParams }: { params: Promise<{ wid: string; aid: string }>; searchParams: Promise<{ notice?: string }> }) {
+/** CE-G-06 : fiche élève centrale. */
+export default async function AthletePage({ params, searchParams }: { params: Promise<{ wid: string; aid: string }>; searchParams: Promise<{ notice?: string; from?: string }> }) {
   const { wid, aid } = await params;
-  const { notice } = await searchParams;
+  const { notice, from } = await searchParams;
   const actor = await requireActor();
   const ctx = await coachContext(actor.userId, wid);
-  const athlete = ctx ? (await listAssignedAthletes(actor.userId, wid)).find((a) => a.id === aid) : undefined;
-  if (!ctx || !athlete) notFound();
-  const inv = athlete.state === 'invited' ? await latestInvitation(actor.userId, wid, aid) : null;
-  const profile = athlete.state === 'active' ? await readAthleteProfile(actor.userId, wid, aid) : null;
+  if (!ctx) notFound();
   const tz = ctx.workspace.timeZone;
-  const first = athlete.displayName.split(' ')[0];
+  const file = await athleteFile(actor.userId, wid, aid, tz);
+  const a = file.entry;
+  if (!a) notFound();
+  const today = todayIn(tz);
+  const inv = a.state === 'invited' ? await latestInvitation(actor.userId, wid, aid) : null;
+  const profile = a.state === 'active' ? await readAthleteProfile(actor.userId, wid, aid) : null;
+  const refs = await readAthleteReferences(actor.userId, wid, aid);
+  const first = a.name.split(' ')[0] ?? a.name;
+  const base = `/coach/${wid}`;
+  const back = safeFrom(from, wid);
+  const u = urgencyLabel(a.urgency);
+  // Sports à confirmer : celui du profil, plus ceux déjà confirmés.
+  const sports = [...new Set([...(a.sport ? [a.sport] : []), ...a.levels.map((l) => l.sport)])] as Sport[];
+
   return (
     <>
-      <Link className="back" href={`/coach/${wid}/athletes`}>← Athlètes</Link>
+      <Link className="back" href={back}>← {back.includes('/planning') ? 'Planning' : 'Élèves'}</Link>
       <Notice message={notice ? NOTICES[notice] ?? null : null} />
       <div className="head">
         <div>
-          <div className="kicker">Dossier · {athlete.timeZone}</div>
-          <h1>{athlete.displayName}</h1>
-          <p className="sub">{athlete.state === 'active' ? <Pill>A rejoint l’espace</Pill> : <Pill tone="neutral">Invité·e, pas encore connecté·e</Pill>}</p>
+          <div className="kicker">Fiche élève · {a.timeZone.replace(/_/g, ' ')}</div>
+          <h1>{a.name}</h1>
+          <p className="sub">
+            {a.state === 'active' ? <Pill>A rejoint l’espace</Pill> : <Pill tone="neutral">Invité·e, pas encore connecté·e</Pill>}{' '}
+            <Pill tone={u === 'Urgent' ? 'attn' : u === 'À suivre' ? '' : 'neutral'}>{u}</Pill>
+          </p>
         </div>
-        <Link className="btn primary" href={`/coach/${wid}/calendar?athlete=${aid}`}>Ouvrir le planning</Link>
+        <Link className="btn primary" href={`${base}/calendar?athlete=${aid}`}>Préparer ses séances</Link>
       </div>
 
-      {athlete.state === 'active' ? (
+      <section className="card" aria-labelledby="groups-title">
+        <div className="card-head"><h2 id="groups-title">Groupes</h2></div>
+        <div className="card-body"><TeamMembership wid={wid} aid={aid} teams={a.teams} all={file.allTeams} /></div>
+      </section>
+
+      <section className="card" aria-labelledby="todo-title" id="todo">
+        <div className="card-head">
+          <h2 id="todo-title">À faire pour {first}</h2>
+          <TaskForm wid={wid} athletes={[{ id: a.id, name: a.name }]} teams={[]} athleteId={a.id} today={today} />
+        </div>
+        {a.todo.length ? (
+          <ul className="task-list">
+            {a.todo.map((t) => (
+              <li key={t.key} className={`task prio-${t.priority}`}>
+                <div className="task-main">
+                  <p className="task-title">{t.title}</p>
+                  <p className="task-meta"><span className="task-why">{t.reason}</span>{t.dueOn ? ` · ${t.dueOn < today ? 'en retard, ' : ''}${formatWeekday(t.dueOn).toLowerCase()} ${formatShortDate(t.dueOn)}` : ''}
+                    {t.source === 'auto' ? <> {' '}<Pill tone="neutral">Suivi automatique</Pill></> : null}</p>
+                </div>
+                <TaskActions wid={wid} source={t.source} id={t.id} rule={t.rule} sourceRef={t.ref} revision={t.revision} today={today} link={t.link?.startsWith(`${base}/athletes/${aid}`) ? null : t.link} />
+              </li>
+            ))}
+          </ul>
+        ) : <p className="empty">Rien à faire pour {first} pour l’instant.</p>}
+        {file.closedTasks ? <p className="muted foot-note">{file.closedTasks} tâche{file.closedTasks > 1 ? 's' : ''} terminée{file.closedTasks > 1 ? 's' : ''} ou annulée{file.closedTasks > 1 ? 's' : ''}.</p> : null}
+      </section>
+
+      <div className="split">
+        <section className="card" aria-labelledby="levels-title" id="levels">
+          <div className="card-head"><h2 id="levels-title">Niveau par sport</h2></div>
+          <div className="card-body stack">
+            {sports.length ? sports.map((s) => {
+              const c = a.levels.find((l) => l.sport === s)?.level ?? null;
+              const declared = a.sport === s ? a.declaredLevel : null;
+              return (
+                <div key={s} className="level-line">
+                  <LevelConfirm wid={wid} aid={aid} sport={s} declared={declared} confirmed={c} />
+                  <p className="muted">{c ? `Confirmé : ${LEVEL_LABELS[c].label}.` : 'Pas encore confirmé.'}{declared ? ` Déclaré par ${first} : ${LEVEL_LABELS[declared].label}.` : ''}</p>
+                </div>
+              );
+            }) : <p className="muted">Le niveau s’affichera quand {first} aura rempli son profil sportif.</p>}
+          </div>
+        </section>
+
+        <section className="card" aria-labelledby="goals-title">
+          <div className="card-head"><h2 id="goals-title">Objectifs</h2><GoalForm wid={wid} aid={aid} sport={a.sport} /></div>
+          <div className="card-body">
+            {file.goals.length ? (
+              <ul className="plain stack">
+                {file.goals.map((g) => (
+                  <li key={g.id} className={`goal goal-${g.state}`}>
+                    <strong>{g.title}</strong> · {SPORT_LABELS[g.sport]}{g.targetDate ? ` · ${formatLongDate(g.targetDate).toLowerCase()}` : ''} <Pill tone={g.state === 'planned' ? '' : 'neutral'}>{GOAL_STATE_LABELS[g.state]}</Pill>
+                    {g.state === 'planned' ? (
+                      <span className="actions inline">
+                        <ActionButton method="PATCH" url={`/api/v1/workspaces/${wid}/athletes/${aid}/goals/${g.id}`} body={{ state: 'achieved' }} className="link-btn">Atteint</ActionButton>
+                        <ActionButton method="PATCH" url={`/api/v1/workspaces/${wid}/athletes/${aid}/goals/${g.id}`} body={{ state: 'canceled' }} className="link-btn" confirm="Marquer cet objectif comme abandonné ?">Abandonné</ActionButton>
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            ) : <p className="muted">Aucun objectif enregistré. {profile?.mainGoal ? `${first} a écrit : « ${profile.mainGoal} »` : ''}</p>}
+            <p className="muted foot-note">Les objectifs sont visibles par {first}.</p>
+          </div>
+        </section>
+      </div>
+
+      <div className="split">
+        <section className="card" aria-labelledby="next-title">
+          <div className="card-head"><h2 id="next-title">Prochaines séances</h2><Link className="link-btn" href={`${base}/calendar?athlete=${aid}`}>Planifier</Link></div>
+          {file.upcoming.length ? (
+            <ul className="plain list-rows">
+              {file.upcoming.map((w) => (
+                <li key={w.id}><Link href={`${base}/athletes/${aid}/workouts/${w.id}`}>{formatWeekday(w.localDate)} {formatShortDate(w.localDate)} · {w.title}</Link> {w.published ? null : <Pill tone="neutral">Brouillon</Pill>}</li>
+              ))}
+            </ul>
+          ) : <p className="empty">Aucune séance sur les 14 prochains jours.</p>}
+        </section>
+
+        <section className="card" aria-labelledby="fb-title">
+          <div className="card-head"><h2 id="fb-title">Derniers retours</h2></div>
+          {file.recentFeedback.length ? (
+            <ul className="plain list-rows">
+              {file.recentFeedback.map((f) => (
+                <li key={f.workoutId}><Link href={`${base}/athletes/${aid}/workouts/${f.workoutId}`}>{formatShortDate(f.localDate)} · {f.title}</Link> · {RESULT_STATE_LABELS[f.state as ResultState]} {f.reviewed ? <Pill tone="neutral">Traité</Pill> : <Pill tone="attn">À traiter</Pill>}</li>
+              ))}
+            </ul>
+          ) : <p className="empty">Aucun retour pour l’instant.</p>}
+        </section>
+      </div>
+
+      <section className="card" aria-labelledby="rdv-title" id="rdv">
+        <div className="card-head"><h2 id="rdv-title">Rendez-vous</h2><AppointmentForm wid={wid} athletes={[{ id: a.id, name: a.name, timeZone: a.timeZone }]} athleteId={a.id} timeZone={a.timeZone} today={today} /></div>
+        {file.appointments.length ? (
+          <ul className="plain list-rows">
+            {file.appointments.map((p) => {
+              const local = utcToLocal(new Date(p.startsAt), p.timeZone);
+              return (
+                <li key={p.id} className="appt">
+                  <p><strong>{formatWeekday(local.date)} {formatShortDate(local.date)} à {local.time}</strong> ({p.timeZone.replace(/_/g, ' ')}) · {p.title} · {APPOINTMENT_KIND_LABELS[p.kind]}, {p.durationMin} min <Pill tone={p.status === 'planned' ? '' : 'neutral'}>{APPOINTMENT_STATUS_LABELS[p.status]}</Pill></p>
+                  {p.videoUrl && p.status === 'planned' ? <p><a href={p.videoUrl} target="_blank" rel="noopener noreferrer">Lien de visio</a></p> : null}
+                  {p.prepNotes ? <p className="muted">Préparation : {p.prepNotes}</p> : null}
+                  {p.report ? <p className="prose">Compte rendu : {p.report}</p> : null}
+                  {p.status !== 'canceled' ? (
+                    <span className="actions inline">
+                      <AppointmentReport wid={wid} id={p.id} revision={p.revision} report={p.report} />
+                      {p.status === 'planned' ? <ActionButton method="PATCH" url={`/api/v1/workspaces/${wid}/appointments/${p.id}`} body={{ expectedRevision: p.revision, status: 'canceled' }} className="link-btn" confirm="Annuler ce rendez-vous ?">Annuler</ActionButton> : null}
+                    </span>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        ) : <p className="empty">Aucun rendez-vous. Planifie un appel ou une visio pour faire le point avec {first}.</p>}
+      </section>
+
+      <section className="card" aria-labelledby="refs-title">
+        <div className="card-head"><h2 id="refs-title">Repères d’entraînement</h2><Pill tone="neutral">Fixés par toi</Pill></div>
+        <div className="card-body"><ReferencesForm wid={wid} aid={aid} first={first} vmaKmh={refs.vmaKmh} /></div>
+      </section>
+
+      {a.state === 'active' ? (
         <section className="card" aria-labelledby="profile-title">
           <div className="card-head"><h2 id="profile-title">Profil sportif</h2><Pill tone="neutral">Déclaré par {first}</Pill></div>
           {profile ? (
             <div className="card-body stack">
               <dl className="details">
                 <div><dt>Sport</dt><dd>{SPORT_LABELS[profile.sport]}</dd></div>
-                <div><dt>Niveau</dt><dd>{LEVEL_LABELS[profile.level].label}</dd></div>
+                <div><dt>Niveau déclaré</dt><dd>{LEVEL_LABELS[profile.level].label}</dd></div>
                 <div><dt>Pratique depuis</dt><dd>{EXPERIENCE_LABELS[profile.experience]}</dd></div>
                 <div><dt>Séances / semaine</dt><dd>{WEEKLY_SESSIONS_LABELS[profile.weeklySessions]}</dd></div>
                 <div><dt>Volume / semaine</dt><dd>{profile.weeklyHours ? WEEKLY_HOURS_LABELS[profile.weeklyHours] : 'Non précisé'}</dd></div>
                 <div><dt>Jours disponibles</dt><dd>{profile.availableDays.length ? profile.availableDays.map((d) => DAY_LABELS[d - 1]).join(' ') : 'Non précisés'}</dd></div>
               </dl>
-              <div>
-                <h3>Objectif</h3>
-                <p className="prose">{profile.mainGoal ?? 'Non précisé.'}</p>
-              </div>
+              <div><h3>Objectif déclaré</h3><p className="prose">{profile.mainGoal ?? 'Non précisé.'}</p></div>
               {profile.nextEventName || profile.nextEventDate ? (
                 <p><strong>Prochaine course :</strong> {profile.nextEventName ?? 'Sans nom'}{profile.nextEventDate ? `, ${formatLongDate(profile.nextEventDate).toLowerCase()}` : ''}</p>
               ) : null}
               <p className="muted">Mis à jour le {fmt(profile.updatedAt, tz)}. Ce profil ne contient aucune donnée de santé.</p>
             </div>
-          ) : (
-            <p className="empty">{first} n’a pas encore rempli son profil sportif.</p>
-          )}
+          ) : <p className="empty">{first} n’a pas encore rempli son profil sportif.</p>}
         </section>
       ) : null}
 
-      {athlete.state === 'invited' ? (
+      <section className="card" aria-labelledby="notes-title" id="notes">
+        <div className="card-head"><h2 id="notes-title">Notes privées</h2><Pill tone="neutral">Visibles par toi seul·e</Pill></div>
+        <div className="card-body stack">
+          {file.notes.length ? (
+            <ul className="plain stack">
+              {file.notes.map((n) => (
+                <li key={n.id} className="note">
+                  <p className="prose">{n.body}</p>
+                  <p className="muted">{fmt(n.createdAt, tz)} · <ActionButton method="DELETE" url={`/api/v1/workspaces/${wid}/athletes/${aid}/notes/${n.id}`} className="link-btn" confirm="Effacer cette note ? Elle ne pourra pas être récupérée.">Effacer</ActionButton></p>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <NoteForm wid={wid} aid={aid} />
+        </div>
+      </section>
+
+      {a.state === 'invited' ? (
         <section className="card" aria-labelledby="inv-title">
           <div className="card-head"><h2 id="inv-title">Invitation</h2></div>
           <div className="card-body stack">

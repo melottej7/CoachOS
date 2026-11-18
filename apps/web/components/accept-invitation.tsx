@@ -61,7 +61,7 @@ export function AcceptInvitation({ signedInAs, loginEnabled }: { signedInAs: str
     const done = await run('POST', '/api/v1/invitations/accept', { token });
     if (done) {
       forget();
-      router.push(`/athlete/${done.workspaceId}/welcome?first=1`);
+      router.push(`/athlete/${done.workspaceId}/setup?first=1`);
     }
   }
 
@@ -124,7 +124,7 @@ function SignedOutChoice({ token }: { token: string }) {
     });
     if (done) {
       forget();
-      router.push(`/athlete/${done.workspaceId}/welcome?first=1`);
+      router.push(`/athlete/${done.workspaceId}/setup?first=1`);
       router.refresh();
     }
   }

@@ -30,17 +30,17 @@ export const PRESETS: Preset[] = [
   { id: 'endurance', label: 'Endurance 45 min', sports: ALL, blocks: () => [step('work', min(45), z(2))] },
   {
     id: 'short-intervals', label: 'Fractionné court 10 × 400 m', sports: RUN,
-    blocks: () => [{ type: 'repeat', times: 10, steps: [step('work', m(400), z(5)), step('recovery', m(200), z(1), { note: 'trot' })] }],
+    blocks: () => [{ type: 'repeat', times: 10, steps: [step('work', m(400), z(6)), step('recovery', m(200), z(1), { note: 'trot' })] }],
   },
   {
     id: 'long-intervals', label: 'Fractionné long 4 × 1000 m', sports: RUN,
-    blocks: () => [{ type: 'repeat', times: 4, steps: [step('work', m(1000), z(4)), step('recovery', min(2), z(1))] }],
+    blocks: () => [{ type: 'repeat', times: 4, steps: [step('work', m(1000), z(5)), step('recovery', min(2), z(1))] }],
   },
   {
     id: 'sets', label: 'Séries 3 × (5 × 300 m)', sports: RUN,
     blocks: () => [{
       type: 'repeat', times: 3,
-      steps: [{ type: 'repeat', times: 5, steps: [step('work', m(300), z(5)), step('recovery', sec(60), z(1))] }, step('rest', min(3), { kind: 'none' }, { note: 'entre les séries' })],
+      steps: [{ type: 'repeat', times: 5, steps: [step('work', m(300), z(7)), step('recovery', sec(60), z(1))] }, step('rest', min(3), { kind: 'none' }, { note: 'entre les séries' })],
     }],
   },
   { id: 'tempo', label: 'Tempo 20 min', sports: RUN, blocks: () => [step('work', min(20), z(3))] },

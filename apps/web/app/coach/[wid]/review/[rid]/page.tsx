@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { DIFFICULTY_LABELS, FEELING_LABELS, formatDistance, formatDuration, formatLongDate, formatShortDate, weekStart, RESULT_STATE_LABELS, SPORT_LABELS } from '@coachos/domain';
+import { CHANGE_LABELS, describeBlock, DIFFICULTY_LABELS, FEELING_LABELS, formatDistance, formatPace, formatDuration, formatLongDate, formatShortDate, weekStart, RESULT_STATE_LABELS, SPORT_LABELS } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachWorkout, openReviews, reviewItem, revisionByNumber } from '@/server/repo/coach';
 import { MarkReviewedButton } from '@/components/review-button';
 import { Notice, Pill } from '@/components/ui';
 import { StructureView } from '@/components/structure-view';
+import { readAthleteReferences } from '@/server/commands/athlete-references';
+
 
 export const metadata = { title: 'Retour' };
 
@@ -22,7 +24,7 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
   const queueHref = `${base}/review`;
   const calendarHref = w ? `${base}/calendar?athlete=${item.athleteId}&week=${weekStart(w.working.localDate)}` : queueHref;
   const backHref = from === 'calendar' ? calendarHref : queueHref;
-  const backLabel = from === 'calendar' ? `← Planning de ${item.athleteName}` : '← Retours';
+  const backLabel = from === 'calendar' ? `← Séances de ${item.athleteName}` : '← Retours';
 
   if (!w || !w.feedback) {
     // C09-04 : expliquer l’indisponibilité plutôt qu’un écran vide.
@@ -35,6 +37,7 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
     );
   }
   const fb = w.feedback;
+  const refs = await readAthleteReferences(actor.userId, wid, item.athleteId);
   const observed = await revisionByNumber(actor.userId, wid, item.athleteId, w.id, fb.observedRevision);
   const current = w.published;
   const next = (await openReviews(actor.userId, wid)).find((r) => r.id !== rid);
@@ -68,7 +71,7 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
                   <div><dt>Durée</dt><dd>{formatDuration(observed.durationSeconds) ?? 'Non précisée'}</dd></div>
                   {observed.distanceM ? <div><dt>Distance</dt><dd>{formatDistance(observed.distanceM)}</dd></div> : null}
                 </dl>
-                <StructureView blocks={observed.intervals} sport={observed.sport} />
+                <StructureView blocks={observed.intervals} sport={observed.sport} refs={refs} />
                 {observed.instructions ? <p className="prose">{observed.instructions}</p> : null}
               </>
             ) : <p>Version observée indisponible.</p>}
@@ -84,10 +87,27 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
               <div><dt>Réalisation</dt><dd>{RESULT_STATE_LABELS[fb.state]}</dd></div>
               <div><dt>Durée réalisée</dt><dd>{formatDuration(fb.durationSeconds) ?? 'Non renseignée'}</dd></div>
               {fb.distanceM ? <div><dt>Distance</dt><dd>{formatDistance(fb.distanceM)}</dd></div> : null}
+              {fb.distanceM && fb.durationSeconds ? <div><dt>Allure moyenne</dt><dd>{formatPace(Math.round(fb.durationSeconds / (fb.distanceM / 1000)))}</dd></div> : null}
               <div><dt>Effort ressenti</dt><dd>{fb.rpe !== null ? `${fb.rpe}/10` : 'Non renseigné'}</dd></div>
               <div><dt>Ressenti général</dt><dd>{fb.overallFeeling ? FEELING_LABELS[fb.overallFeeling as 1 | 2 | 3 | 4 | 5] : 'Non renseigné'}</dd></div>
               {fb.difficulties.length ? <div><dt>Difficultés</dt><dd>{fb.difficulties.map((d) => DIFFICULTY_LABELS[d]).join(', ')}</dd></div> : null}
             </dl>
+            {fb.changes.length || fb.actualSport || fb.repeatsDone.length ? (
+              <div className="changed-view">
+                <h3>Ce qui a changé</h3>
+                {fb.changes.length ? <p>{fb.changes.map((c) => CHANGE_LABELS[c]).join(' · ')}</p> : null}
+                {fb.actualSport ? <p>Sport pratiqué : <strong>{SPORT_LABELS[fb.actualSport]}</strong></p> : null}
+                {fb.repeatsDone.length && observed ? (
+                  <ul className="reps-done">
+                    {observed.intervals.filter((b) => b.type === 'repeat').map((r, i) => {
+                      const doneN = fb.repeatsDone[i];
+                      if (doneN === undefined || r.type !== 'repeat') return null;
+                      return <li key={i}><span>{describeBlock(r, observed.sport)}</span> <strong className={doneN < r.times ? 'short' : ''}>{doneN} sur {r.times}</strong></li>;
+                    })}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
             <div>
               <h3>Commentaire</h3>
               <p className="prose">{fb.comment ?? 'Pas de commentaire.'}</p>

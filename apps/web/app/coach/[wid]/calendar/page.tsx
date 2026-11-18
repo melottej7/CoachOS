@@ -5,7 +5,7 @@ import { coachWeek, listAssignedAthletes, openReviews } from '@/server/repo/coac
 import { AthleteSelect } from '@/components/nav-link';
 import { StatusBadge, initials } from '@/components/ui';
 
-export const metadata = { title: 'Planning' };
+export const metadata = { title: 'Séances' };
 
 /** X18 : semaine de l’athlète sélectionné, dans son fuseau. Brouillon et publié distincts. */
 export default async function Calendar({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<{ athlete?: string; week?: string }> }) {
@@ -16,9 +16,9 @@ export default async function Calendar({ params, searchParams }: { params: Promi
   if (roster.length === 0) {
     return (
       <>
-        <h1>Planning</h1>
+        <h1>Séances</h1>
         <p className="sub">Aucun athlète pour l’instant. Commence par en ajouter un : tu pourras ensuite préparer et publier ses séances.</p>
-        <p style={{ marginTop: 16 }}><Link className="btn primary" href={`/coach/${wid}/athletes/new`}>+ Ajouter un athlète</Link></p>
+        <p style={{ marginTop: 16 }}><Link className="btn primary" href={`/coach/${wid}/athletes/new`} data-tour="add-athlete">+ Ajouter un athlète</Link></p>
       </>
     );
   }
@@ -30,6 +30,7 @@ export default async function Calendar({ params, searchParams }: { params: Promi
   const reviews = await openReviews(actor.userId, wid, athlete.id);
   const base = `/coach/${wid}`;
   const weekHref = (m: string) => `${base}/calendar?athlete=${athlete.id}&week=${m}`;
+  const tourDay = days.includes(today) ? today : days[0];
   const newHref = (d: string) => `${base}/athletes/${athlete.id}/workouts/new?date=${d}`;
   const first = athlete.displayName.split(' ')[0];
 
@@ -38,7 +39,7 @@ export default async function Calendar({ params, searchParams }: { params: Promi
       <div className="head">
         <div>
           <div className="kicker">{formatWeekRange(monday)} · {athlete.timeZone}</div>
-          <h1>Planning</h1>
+          <h1>Séances</h1>
           <p className="sub">Préparer les séances de {athlete.displayName}, puis publier ce qui doit être lu.</p>
         </div>
         <Link className="btn primary" href={newHref(today >= days[0]! && today <= days[6]! ? today : days[0]!)}>+ Nouvelle séance</Link>
@@ -73,7 +74,7 @@ export default async function Calendar({ params, searchParams }: { params: Promi
                     ))}
                   </ul>
                 ) : null}
-                <Link className="link-btn add" href={newHref(d)} aria-label={`Ajouter une séance le ${formatShortDate(d)}`}>+ Ajouter</Link>
+                <Link className="link-btn add" href={newHref(d)} aria-label={`Ajouter une séance le ${formatShortDate(d)}`} data-tour={d === tourDay ? 'day-add' : undefined}>+ Ajouter</Link>
               </li>
             );
           })}

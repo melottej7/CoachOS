@@ -13,9 +13,15 @@ export const PHASE_LABELS: Record<Phase, string> = {
   warmup: 'Échauffement', work: 'Effort', recovery: 'Récupération', cooldown: 'Retour au calme', rest: 'Repos', other: 'Autre',
 };
 
-export const ZONE_LABELS: Record<1 | 2 | 3 | 4 | 5, string> = {
-  1: 'Z1 (très facile)', 2: 'Z2 (endurance)', 3: 'Z3 (tempo)', 4: 'Z4 (seuil)', 5: 'Z5 (VMA)',
+/** Échelle de référence à 7 zones du fondateur (D-029, reprise de Foulée). */
+export const ZONES = [1, 2, 3, 4, 5, 6, 7] as const;
+export type Zone = (typeof ZONES)[number];
+export const ZONE_NAMES: Record<Zone, string> = {
+  1: 'récupération', 2: 'endurance fondamentale', 3: 'tempo', 4: 'seuil', 5: 'VMA longue', 6: 'VMA moyenne', 7: 'VMA courte',
 };
+export const ZONE_LABELS: Record<Zone, string> = Object.fromEntries(
+  ZONES.map((z) => [z, `Z${z} (${ZONE_NAMES[z]})`]),
+) as Record<Zone, string>;
 
 const int = (min: number, max: number) => z.number().int().min(min).max(max);
 
@@ -32,7 +38,7 @@ const range = <S extends z.ZodNumber>(n: S) =>
 export const intensitySchema = z
   .discriminatedUnion('kind', [
     z.object({ kind: z.literal('none') }).strict(),
-    z.object({ kind: z.literal('zone'), zone: int(1, 5) }).strict(),
+    z.object({ kind: z.literal('zone'), zone: int(1, 7) }).strict(),
     z.object({ kind: z.literal('pace'), unit: z.enum(['per_km', 'per_100m']), ...range(int(30, 1800)).shape }).strict(),
     z.object({ kind: z.literal('power'), unit: z.enum(['w', 'pct_ftp']), ...range(int(1, 2500)).shape }).strict(),
     z.object({ kind: z.literal('hr'), unit: z.enum(['bpm', 'pct_max']), ...range(int(30, 250)).shape }).strict(),
@@ -87,10 +93,41 @@ export function countSteps(blocks: Block[]): number {
 
 export interface Totals {
   seconds: number;
+  /** Distance prescrite (blocs en distance). */
   meters: number;
-  /** Vrai si une partie du temps est estimée (distance + allure) ou inconnue (bloc libre, distance sans allure). */
+  /** Distance prescrite + distance estimée des blocs en durée dont la vitesse est connue (allure, ou zone + VMA). */
+  totalMeters: number;
+  /** Vrai si une partie du temps est estimée (distance + allure ou zone). */
   estimated: boolean;
+  /** Vrai si une partie du temps est inconnue (bloc libre, distance sans vitesse connue). */
   unknownTime: boolean;
+  /** Vrai si une partie de la distance vient d’une estimation. */
+  distanceEstimated: boolean;
+  /** Vrai si une partie de la distance est inconnue (durée sans vitesse connue, bloc libre). */
+  unknownDistance: boolean;
+}
+
+/** Repères de l’athlète servant aux estimations (CE-B-03, D-029). */
+export interface References {
+  /** Vitesse maximale aérobie, km/h (course à pied). */
+  vmaKmh: number | null;
+}
+
+/** Plages cibles de l’échelle à 7 zones, en % de VMA (choix du fondateur, D-029). */
+export const ZONE_TARGET_PCT: Record<Zone, readonly [number, number]> = {
+  1: [60, 65], 2: [65, 70], 3: [72, 78], 4: [85, 90], 5: [90, 95], 6: [95, 100], 7: [100, 110],
+};
+const VMA_SPORTS: ReadonlySet<Sport> = new Set(['running', 'trail']);
+
+/** Allure cible d’une zone en secondes par km : [la plus lente, la plus rapide]. */
+export function zonePace(zone: Zone, vmaKmh: number): [number, number] {
+  const [lo, hi] = ZONE_TARGET_PCT[zone];
+  return [Math.round(3600 / ((vmaKmh * lo) / 100)), Math.round(3600 / ((vmaKmh * hi) / 100))];
+}
+
+/** Les zones se traduisent en allure pour la course seulement (VMA). */
+export function usesVma(sport: Sport | null | undefined): boolean {
+  return Boolean(sport && VMA_SPORTS.has(sport));
 }
 
 function paceSeconds(i: Intensity): { perMeter: number } | null {
@@ -99,26 +136,67 @@ function paceSeconds(i: Intensity): { perMeter: number } | null {
   return { perMeter: i.unit === 'per_km' ? avg / 1000 : avg / 100 };
 }
 
-/** Durée et distance totales d’une structure, répétitions comprises. */
-export function structureTotals(blocks: Block[]): Totals {
-  const t: Totals = { seconds: 0, meters: 0, estimated: false, unknownTime: false };
+/** Vitesse en m/s d’une étape : allure donnée, ou zone convertie avec la VMA. */
+function speedOf(step: Step, sessionSport: Sport | undefined, refs: References | undefined): number | null {
+  const p = paceSeconds(step.intensity);
+  if (p) return 1 / p.perMeter;
+  const sport = step.sport ?? sessionSport;
+  if (step.intensity.kind === 'zone' && refs?.vmaKmh && usesVma(sport)) {
+    const [lo, hi] = ZONE_TARGET_PCT[step.intensity.zone as Zone];
+    return (refs.vmaKmh * ((lo + hi) / 2)) / 100 / 3.6;
+  }
+  return null;
+}
+
+/** Estimation d’une étape : allure cible (s/km, course), durée ou distance déduite. */
+export function stepEstimate(step: Step, sessionSport?: Sport, refs?: References): { pace: [number, number] | null; seconds: number | null; meters: number | null } {
+  const sport = step.sport ?? sessionSport;
+  let pace: [number, number] | null = null;
+  if (step.intensity.kind === 'pace' && step.intensity.unit === 'per_km') pace = [step.intensity.min, step.intensity.max ?? step.intensity.min];
+  else if (step.intensity.kind === 'zone' && refs?.vmaKmh && usesVma(sport)) pace = zonePace(step.intensity.zone as Zone, refs.vmaKmh);
+  const v = speedOf(step, sessionSport, refs);
+  return {
+    pace,
+    seconds: v && step.measure.kind === 'distance' ? Math.round(step.measure.meters / v) : null,
+    meters: v && step.measure.kind === 'time' ? Math.round((step.measure.seconds * v) / 10) * 10 : null,
+  };
+}
+
+/**
+ * Durée et distance totales d’une structure, répétitions comprises.
+ * Sans repères, seules les allures données servent à estimer ; avec la VMA, les zones aussi (course).
+ */
+export function structureTotals(blocks: Block[], opts: { sport?: Sport; refs?: References } = {}): Totals {
+  const t: Totals = { seconds: 0, meters: 0, totalMeters: 0, estimated: false, unknownTime: false, distanceEstimated: false, unknownDistance: false };
+  let estMeters = 0;
   const add = (b: Block, factor: number) => {
     if (b.type === 'repeat') {
       for (const s of b.steps) add(s, factor * b.times);
       return;
     }
-    if (b.measure.kind === 'time') t.seconds += b.measure.seconds * factor;
-    else if (b.measure.kind === 'distance') {
+    const v = speedOf(b, opts.sport, opts.refs);
+    if (b.measure.kind === 'time') {
+      t.seconds += b.measure.seconds * factor;
+      // Repos sans cible : à l’arrêt, aucune distance.
+      if (b.phase === 'rest' && b.intensity.kind === 'none') return;
+      if (v) {
+        estMeters += b.measure.seconds * v * factor;
+        t.distanceEstimated = true;
+      } else t.unknownDistance = true;
+    } else if (b.measure.kind === 'distance') {
       t.meters += b.measure.meters * factor;
-      const p = paceSeconds(b.intensity);
-      if (p) {
-        t.seconds += Math.round(b.measure.meters * p.perMeter) * factor;
+      if (v) {
+        t.seconds += Math.round(b.measure.meters / v) * factor;
         t.estimated = true;
       } else t.unknownTime = true;
-    } else t.unknownTime = true;
+    } else {
+      t.unknownTime = true;
+      t.unknownDistance = true;
+    }
   };
   for (const b of blocks) add(b, 1);
   t.seconds = Math.round(t.seconds);
+  t.totalMeters = t.meters + Math.round(estMeters / 10) * 10;
   return t;
 }
 
@@ -129,7 +207,7 @@ export function formatClock(seconds: number): string {
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
   if (h) return `${h} h ${String(m).padStart(2, '0')}`;
-  if (m && s) return `${m} min ${String(s).padStart(2, '0')}`;
+  if (m && s) return `${m} min ${s} s`;
   if (m) return `${m} min`;
   return `${s} s`;
 }
@@ -151,7 +229,7 @@ export function describeMeasure(m: Measure): string {
 export function describeIntensity(i: Intensity): string | null {
   switch (i.kind) {
     case 'none': return null;
-    case 'zone': return ZONE_LABELS[i.zone as 1 | 2 | 3 | 4 | 5];
+    case 'zone': return ZONE_LABELS[i.zone as Zone];
     case 'pace': return `${rng(i.min, i.max, pace)} ${i.unit === 'per_km' ? '/km' : '/100 m'}`;
     case 'power': return i.unit === 'w' ? `${rng(i.min, i.max)} W` : `${rng(i.min, i.max)} % FTP`;
     case 'hr': return i.unit === 'bpm' ? `${rng(i.min, i.max)} bpm` : `${rng(i.min, i.max)} % FC max`;
@@ -178,7 +256,18 @@ export function describeBlock(b: Block, sessionSport?: Sport): string {
 /** Total lisible : « ≈ 52 min · 8,4 km », « au moins 49 min » si une partie dépend de l’athlète. */
 export function describeTotals(t: Totals): string {
   const parts: string[] = [];
-  if (t.seconds) parts.push(`${t.unknownTime ? 'au moins ' : t.estimated ? '≈ ' : ''}${formatClock(t.seconds)}`);
-  if (t.meters) parts.push(formatMeters(t.meters));
+  if (t.seconds) parts.push(`${t.unknownTime ? 'au moins ' : t.estimated ? 'environ ' : ''}${formatClock(t.seconds)}`);
+  if (t.totalMeters) parts.push(`${t.unknownDistance ? 'au moins ' : t.distanceEstimated ? 'environ ' : ''}${formatKm(t.totalMeters)}`);
   return parts.length ? parts.join(' · ') : 'durée libre';
+}
+
+/** Distance arrondie pour un total : 6,2 km, 800 m. */
+export function formatKm(m: number): string {
+  if (m < 1000) return `${Math.round(m / 10) * 10} m`;
+  return `${(m / 1000).toLocaleString('fr-BE', { maximumFractionDigits: 1 })} km`;
+}
+
+/** Allure « 5:43 /km ». */
+export function formatPace(secPerKm: number): string {
+  return `${Math.floor(secPerKm / 60)}:${String(secPerKm % 60).padStart(2, '0')} /km`;
 }

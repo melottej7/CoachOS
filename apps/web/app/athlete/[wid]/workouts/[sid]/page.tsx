@@ -6,6 +6,8 @@ import { athleteWorkout } from '@/server/repo/athlete';
 import { athleteContext, isUuid } from '@/server/repo/context';
 import { Notice, Pill } from '@/components/ui';
 import { StructureView } from '@/components/structure-view';
+import { readAthleteReferences } from '@/server/commands/athlete-references';
+
 
 export const metadata = { title: 'Séance' };
 
@@ -19,6 +21,7 @@ export default async function AthleteWorkoutPage({ params, searchParams }: { par
   const found = await athleteWorkout(actor.userId, wid, ctx.athlete.id, sid);
   if (!found) notFound();
   const { workout: w, feedback } = found;
+  const refs = await readAthleteReferences(actor.userId, wid, ctx.athlete.id);
   const today = todayIn(ctx.athlete.timeZone);
   const open = canGiveFeedback(w.localDate, today, w.canceled);
   const base = `/athlete/${wid}`;
@@ -29,13 +32,16 @@ export default async function AthleteWorkoutPage({ params, searchParams }: { par
       <div className="kicker">{formatLongDate(w.localDate)}</div>
       <h1>{w.title}</h1>
       <p className="sub"><Pill>{SPORT_LABELS[w.sport]}</Pill> {w.canceled ? <Pill tone="attn">Annulée</Pill> : null}</p>
-      <dl className="details" style={{ marginTop: 16 }}>
-        <div><dt>Durée</dt><dd>{formatDuration(w.durationSeconds) ?? 'Libre'}</dd></div>
-        {w.distanceM ? <div><dt>Distance</dt><dd>{formatDistance(w.distanceM)}</dd></div> : null}
-      </dl>
+      {/* Avec un déroulé, durée et distance (estimées) sont données par la ligne « Déroulé ». */}
+      {w.intervals.length ? null : (
+        <dl className="details" style={{ marginTop: 16 }} data-tour="workout-details">
+          <div><dt>Durée</dt><dd>{formatDuration(w.durationSeconds) ?? 'Libre'}</dd></div>
+          {w.distanceM ? <div><dt>Distance</dt><dd>{formatDistance(w.distanceM)}</dd></div> : null}
+        </dl>
+      )}
       {w.intervals.length ? (
         <section style={{ marginTop: 20 }} aria-label="Déroulé de la séance">
-          <StructureView blocks={w.intervals} sport={w.sport} />
+          <StructureView blocks={w.intervals} sport={w.sport} refs={refs} />
         </section>
       ) : null}
       {w.instructions || !w.intervals.length ? (
@@ -44,7 +50,7 @@ export default async function AthleteWorkoutPage({ params, searchParams }: { par
           <p className="prose" style={{ marginTop: 6 }}>{w.instructions || 'Aucune consigne supplémentaire.'}</p>
         </section>
       ) : null}
-      <section className="card" style={{ marginTop: 24 }} aria-labelledby="mon-retour">
+      <section className="card" style={{ marginTop: 24 }} aria-labelledby="mon-retour" data-tour="feedback-cta">
         <div className="card-head"><h2 id="mon-retour">Mon retour</h2>{feedback ? <Pill tone="neutral">Envoyé</Pill> : null}</div>
         <div className="card-body stack">
           {feedback ? (

@@ -2,7 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { DIFFICULTIES, DIFFICULTY_LABELS, FEELING_LABELS, RESULT_STATES, RESULT_STATE_LABELS, type Difficulty, type ResultState } from '@coachos/domain';
+import {
+  CHANGES, CHANGE_LABELS, describeBlock, DIFFICULTIES, DIFFICULTY_LABELS, FEELING_LABELS, RESULT_STATES, RESULT_STATE_LABELS, SPORTS, SPORT_LABELS,
+  type Block, type Change, type Difficulty, type ResultState, type Sport,
+} from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
 import { fieldError, useIntent } from './use-intent';
 
@@ -13,14 +16,20 @@ interface Props {
   publishedRevision: number;
   plannedMinutes: number | null;
   workspaceName: string;
-  existing: { revision: number; state: ResultState; durationSeconds: number | null; rpe: number | null; comment: string | null; overallFeeling: number | null; difficulties: Difficulty[] } | null;
+  /** Déroulé prévu : sert à demander les répétitions faites par série. */
+  intervals: Block[];
+  sport: Sport;
+  existing: {
+    revision: number; state: ResultState; durationSeconds: number | null; distanceM: number | null; rpe: number | null; comment: string | null;
+    overallFeeling: number | null; difficulties: Difficulty[]; changes: Change[]; actualSport: Sport | null; repeatsDone: number[];
+  } | null;
 }
 
 /**
  * X43 : retour en quelques gestes, à une main. Seul l’état est requis.
  * La saisie reste en mémoire si le réseau coupe ; « Réessayer » rejoue avec la même clé.
  */
-export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes, workspaceName, existing }: Props) {
+export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes, workspaceName, intervals, sport, existing }: Props) {
   const router = useRouter();
   const [state, setState] = useState<ResultState | ''>(existing?.state ?? '');
   const [minutes, setMinutes] = useState(existing?.durationSeconds ? String(Math.round(existing.durationSeconds / 60)) : '');
@@ -28,6 +37,11 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
   const [comment, setComment] = useState(existing?.comment ?? '');
   const [feeling, setFeeling] = useState<number | null>(existing?.overallFeeling ?? null);
   const [difficulties, setDifficulties] = useState<Difficulty[]>(existing?.difficulties ?? []);
+  const [km, setKm] = useState(existing?.distanceM ? String(existing.distanceM / 1000).replace('.', ',') : '');
+  const [changes, setChanges] = useState<Change[]>(existing?.changes ?? []);
+  const [actualSport, setActualSport] = useState<Sport | ''>(existing?.actualSport ?? '');
+  const repeats = intervals.filter((b): b is Extract<Block, { type: 'repeat' }> => b.type === 'repeat');
+  const [repsText, setRepsText] = useState<string[]>(() => repeats.map((_, i) => (existing?.repeatsDone[i] === undefined ? '' : String(existing.repeatsDone[i]))));
   const [missingState, setMissingState] = useState(false);
   const { run, pending, error } = useIntent<{ item: { id: string; revision: number } }>();
 
@@ -39,19 +53,28 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
       return;
     }
     const m = minutes.trim() === '' ? null : Number(minutes);
+    const done = state === 'completed' || state === 'partial';
+    const dist = km.trim() === '' ? null : Number(km.replace(',', '.'));
+    // Répétitions : si une série est renseignée, les autres valent le prévu.
+    const repeatsDone = done && repsText.some((t) => t.trim() !== '')
+      ? repeats.map((r, i) => (repsText[i]!.trim() === '' ? r.times : Math.max(0, Math.min(50, Math.round(Number(repsText[i]) || 0)))))
+      : [];
     const body = {
       publishedRevision,
       expectedRevision: existing?.revision ?? null,
       state,
       durationSeconds: state === 'missed' || state === 'postponed' || m === null || Number.isNaN(m) ? null : Math.round(m * 60),
-      distanceM: null,
+      distanceM: done && dist !== null && !Number.isNaN(dist) && dist > 0 ? Math.round(dist * 1000) : null,
       rpe: rpe === '' ? null : Number(rpe),
       comment,
       overallFeeling: feeling,
       difficulties,
+      changes: done ? changes : [],
+      actualSport: done && changes.includes('other_sport') && actualSport ? actualSport : null,
+      repeatsDone,
     };
-    const done = await run('PUT', `/api/v1/workspaces/${wid}/athletes/${aid}/workouts/${sid}/feedback`, body);
-    if (done) {
+    const sent = await run('PUT', `/api/v1/workspaces/${wid}/athletes/${aid}/workouts/${sid}/feedback`, body);
+    if (sent) {
       router.push(`/athlete/${wid}/workouts/${sid}?notice=sent`);
       router.refresh();
     }
@@ -81,15 +104,60 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
         ))}
       </fieldset>
 
-      {state !== 'missed' && state !== 'postponed' ? (
-        <div className="field">
-          <label htmlFor="duration">
-            Durée réalisée en minutes <span className="hint">Facultatif{plannedMinutes ? ` · prévu ${plannedMinutes} min` : ''}</span>
-          </label>
-          <input id="duration" type="number" inputMode="numeric" min={1} max={1440} value={minutes} onChange={(e) => setMinutes(e.target.value)}
-            aria-invalid={!!err('durationSeconds')} />
-          {err('durationSeconds') ? <span className="field-error">{err('durationSeconds')}</span> : null}
-        </div>
+      {state === 'completed' || state === 'partial' ? (
+        <>
+          <div className="form-row">
+            <div className="field">
+              <label htmlFor="duration">
+                Durée réalisée en minutes <span className="hint">Facultatif{plannedMinutes ? ` · prévu ${plannedMinutes} min` : ''}</span>
+              </label>
+              <input id="duration" type="number" inputMode="numeric" min={1} max={1440} value={minutes} onChange={(e) => setMinutes(e.target.value)}
+                aria-invalid={!!err('durationSeconds')} />
+              {err('durationSeconds') ? <span className="field-error">{err('durationSeconds')}</span> : null}
+            </div>
+            <div className="field">
+              <label htmlFor="distance">Distance réalisée en km <span className="hint">Facultatif</span></label>
+              <input id="distance" inputMode="decimal" placeholder="8,5" value={km} onChange={(e) => setKm(e.target.value)} aria-invalid={!!err('distanceM')} />
+              {err('distanceM') ? <span className="field-error">{err('distanceM')}</span> : null}
+            </div>
+          </div>
+
+          <details className="changed" open={state === 'partial' || changes.length > 0 || repsText.some((t) => t !== '')}>
+            <summary>{state === 'partial' ? 'Qu’est-ce qui a changé ?' : 'Ma séance était différente du prévu'} <span className="hint">Facultatif · aide ton coach à ajuster</span></summary>
+            <fieldset className="choice">
+              <legend className="visually-hidden">Ce qui a changé</legend>
+              <div className="chips">
+                {CHANGES.map((c) => (
+                  <label key={c}><input type="checkbox" checked={changes.includes(c)}
+                    onChange={() => setChanges((cur) => (cur.includes(c) ? cur.filter((x) => x !== c) : [...cur, c]))} /> {CHANGE_LABELS[c]}</label>
+                ))}
+              </div>
+            </fieldset>
+            {changes.includes('other_sport') ? (
+              <div className="field">
+                <label htmlFor="actual-sport">Sport pratiqué à la place</label>
+                <select id="actual-sport" className="select" value={actualSport} onChange={(e) => setActualSport(e.target.value as Sport | '')}>
+                  <option value="">Choisir…</option>
+                  {SPORTS.filter((x) => x !== sport).map((x) => <option key={x} value={x}>{SPORT_LABELS[x]}</option>)}
+                </select>
+              </div>
+            ) : null}
+            {repeats.length ? (
+              <fieldset className="choice">
+                <legend>Répétitions faites <span className="hint">Laisse vide si tout a été fait</span></legend>
+                {repeats.map((r, i) => (
+                  <div className="reps-row" key={i}>
+                    <label htmlFor={`reps-${i}`}>{describeBlock(r, sport)}</label>
+                    <span className="b-inline">
+                      <input id={`reps-${i}`} className="num" type="number" inputMode="numeric" min={0} max={r.times} placeholder={String(r.times)} value={repsText[i]}
+                        onChange={(e) => setRepsText((cur) => cur.map((t, j) => (j === i ? e.target.value : t)))} /> sur {r.times}
+                    </span>
+                  </div>
+                ))}
+              </fieldset>
+            ) : null}
+          </details>
+        </>
       ) : null}
 
       <fieldset className="choice">

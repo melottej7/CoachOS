@@ -25,7 +25,7 @@ export default async function AthleteSetup({ params, searchParams }: { params: P
       <div className="kicker">{ctx.workspace.name}</div>
       <h1>{wizard ? 'Faisons connaissance' : 'Profil'}</h1>
       {!wizard ? (
-        <p className="sub">Ton compte, ta pratique et tes objectifs. <Link href={`/athlete/${wid}/coach`}>Voir la présentation de ton coach</Link> · <Link href={`/athlete/${wid}/welcome`}>Revoir le guide</Link></p>
+        <p className="sub">Ton compte, ta pratique et tes objectifs. <Link href={`/athlete/${wid}/coach`}>Voir la présentation de ton coach</Link> · <Link href={`/athlete/${wid}/today?tour=start`}>Revoir la visite guidée</Link></p>
       ) : null}
       <div className="card" style={{ marginTop: 18 }}><div className="card-body">
         <AthleteOnboarding
@@ -33,7 +33,7 @@ export default async function AthleteSetup({ params, searchParams }: { params: P
           coachSpace={ctx.workspace.name}
           zones={Intl.supportedValuesOf('timeZone')}
           mode={wizard ? 'wizard' : 'single'}
-          after={wizard ? `/athlete/${wid}/today?notice=joined` : `/athlete/${wid}/setup?notice=saved`}
+          after={wizard ? `/athlete/${wid}/today?notice=joined&tour=start` : `/athlete/${wid}/setup?notice=saved`}
           initial={{
             displayName: me.displayName,
             locale: me.locale,

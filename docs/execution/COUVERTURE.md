@@ -8,26 +8,26 @@ Légende : **Fait** (action complète, persistance et effet côté autre rôle v
 
 | § | Exigence | État constaté | Écrans, routes, données | Lot | Type |
 |---|---|---|---|---|---|
-| 2 | Groupes : créer, renommer, réordonner, archiver | Prévu | Tables `teams`, `team_athletes` (SQL de référence, RLS lecture coach) sans écran ni commande | G | I |
-| 2 | Appartenance à plusieurs groupes | Prévu | `team_athletes` (clé groupe + athlète) le permet | G | I |
-| 2 | Niveau par sport confirmé par le coach, distinct du groupe et de l’objectif | Partiel | Niveau unique déclaré par l’athlète dans `athlete_profiles` (D-021) ; aucune confirmation coach | G | I |
-| 2 | Vue d’ensemble des groupes : effectif, retours à traiter, couverture des programmes | À ajouter | — | G | I |
-| 2 | Groupe ouvert : recherche, filtres sport / niveau / objectif / statut, contexte conservé au retour | À ajouter | Liste Athlètes X12 minimale sans filtres | G | I |
+| 2 | Groupes : créer, renommer, réordonner, archiver | Fait | D-032 : `teams.sort_order`, `archived_at` ; commandes propriétaire ; page Élèves | G | I |
+| 2 | Appartenance à plusieurs groupes | Fait | Ajout et retrait depuis la fiche élève (coach affecté) ; séances publiées inchangées | G | I |
+| 2 | Niveau par sport confirmé par le coach, distinct du groupe et de l’objectif | Fait | `athlete_sport_levels` (auteur, date) ; le niveau déclaré reste une proposition | G | I |
+| 2 | Vue d’ensemble des groupes : effectif, retours à traiter, couverture des programmes | Fait | Cartes de groupes : effectif, retours à traiter, élèves sans séance publiée sur 7 jours | G | I |
+| 2 | Groupe ouvert : recherche, filtres sport / niveau / objectif / statut, contexte conservé au retour | Partiel | Regroupement par groupe, niveau ou urgence ; recherche ; filtres sport, niveau, statut ; contexte conservé (`from`). Filtre par objectif à ajouter | G | I |
 | 2 | Planning par groupe, base commune puis adaptations, destinataires et exceptions avant publication | À ajouter | Publication par séance et par athlète seulement (`publishBatch`) | G2 | I |
-| 3 | Fiche élève : profil sportif, groupes, niveaux, objectifs, échéances | Partiel | X14 `/coach/[wid]/athletes/[aid]` : profil déclaré, invitation ; `goals` sans écran | G | I |
+| 3 | Fiche élève : profil sportif, groupes, niveaux, objectifs, échéances | Fait | Fiche centrale : groupes, niveaux, objectifs (visibles par l’élève), repères, profil | G | I |
 | 3 | Disponibilités, contraintes, matériel, préférences, questionnaire, synthèse d’entretien | Partiel | Disponibilités et objectif texte dans `athlete_profiles` ; reste à ajouter (bilan, lot B) | B | I |
-| 3 | Programme actuel, prochaines séances, historique prévu / réalisé, retours | Partiel | Planning semaine X18, retours X10/X11 ; pas d’historique consolidé dans la fiche | G | I |
-| 3 | Statistiques sur période, rendez-vous, messages, tâches liés au dossier | Prévu | Messagerie (`conversations`, `messages`) sans écran ; reste à ajouter | H, S | I |
-| 3 | Notes privées du coach distinctes | Prévu | Table `coach_notes` (RLS auteur affecté) sans écran | G | I |
+| 3 | Programme actuel, prochaines séances, historique prévu / réalisé, retours | Partiel | Fiche : séances des 14 prochains jours, 5 derniers retours ; historique consolidé et statistiques (lot S) à ajouter | G | I |
+| 3 | Statistiques sur période, rendez-vous, messages, tâches liés au dossier | Partiel | Rendez-vous et tâches dans la fiche (D-032) ; messagerie et statistiques à ajouter | H, S | I |
+| 3 | Notes privées du coach distinctes | Fait | Créer, effacer ; visibles par l’auteur affecté seulement (prouvé en base) | G | I |
 | 3 | Source, période, fraîcheur des mesures | À ajouter | Aucune mesure importée à ce jour | X | I/D |
-| 4 | Accueil coach priorisé (attention, prochaine action, échéance) | À ajouter | Arrivée actuelle sur Planning | H | I |
-| 4 | Tâches humaines : types, statuts, priorité, échéance, créneau, récurrence, lien direct | À ajouter | `review_items` couvre seulement les retours | H | I |
-| 4 | Tâches automatiques dédoublonnées, réévaluées, closes à la résolution, règles configurables | Partiel | `review_items` : un cas par retour, rouvert à la correction (D-009) | H | I |
-| 4 | Rendez-vous : fuseau, début, durée, lien visio, préparation, compte rendu | À ajouter | — | H | I |
+| 4 | Accueil coach priorisé (attention, prochaine action, échéance) | Fait | Onglet Planning du coach : en retard, aujourd’hui, semaine, plus tard ; motif, échéance, priorité, lien d’action ; filtres élève, groupe, type, priorité | H | I |
+| 4 | Tâches humaines : types, statuts, priorité, échéance, créneau, récurrence, lien direct | Partiel | `coach_tasks` : types, 6 statuts avec transitions, priorité, échéance, lien, notes, révision. Créneau, estimation et récurrence à ajouter | H | I |
+| 4 | Tâches automatiques dédoublonnées, réévaluées, closes à la résolution, règles configurables | Partiel | 6 règles calculées depuis l’état réel (uniques, closes à la résolution), report « plus tard ». Délais réglables par le coach (CE-H-04) à ajouter | H | I |
+| 4 | Rendez-vous : fuseau, début, durée, lien visio, préparation, compte rendu | Fait | `appointments` ; agenda de la semaine ; fiche élève ; heure locale (heure d’été prise en compte) | H | I |
 | 5 | Bibliothèque : séances, semaines types, blocs, programmes ; versions, classement, recherche | Prévu | Table `templates` (workout / week) sans écran | B | I |
 | 5 | Séance structurée : échauffement, étapes, répétitions, récupération, cibles | **Fait** | Constructeur (D-023) `components/workout-builder.tsx`, `packages/domain/src/structure.ts`, `intervals` jsonb, contrat `workoutBlock` ; lecture coach, revue, athlète | — | I |
-| 5 | Cibles relatives au profil de l’élève | Partiel | Zones Z1–Z5, % FTP, % FC max ; seuils propres à l’élève (allure seuil, FTP, FC max) à ajouter | B | I |
-| 5 | Import de l’historique du coach avec prévisualisation, unités, doublons | Prévu | Tables `imports`, `import_rows` (SQL) ; formats réels du fondateur à obtenir | B | F |
+| 5 | Cibles relatives au profil de l’élève | Partiel | 7 zones (D-029), VMA de l’élève fixée par le coach : allures par zone, kilomètres et durées estimés ; % FTP, % FC max ; FTP, CSS, FC seuil propres à l’élève à ajouter | B | I |
+| 5 | Import de la base de chaque coach (et bibliothèque CoachOS commune) | Prévu | Tables `imports`, `import_rows` (SQL) ; fonction pour tout coach (D-026), exemples du fondateur pour la tester | B | I |
 | 5 | Copie vers brouillon indépendant, versions retraçables | Partiel | Révisions immuables des séances ; copie depuis la bibliothèque à faire | B | I |
 | 6 | Bilan structuré : questionnaire en ligne (sauvegarde, reprise, complétude) et entretien | Partiel | Questionnaire d’arrivée (D-021) sans renvoi, reprise ni confirmation coach | B | I |
 | 6 | Génération supervisée d’un programme depuis bilan et bibliothèque | Prévu | `coach_dna`, `ai_suggestions`, `jobs` (SQL), docs 08 et 09 ; aucun appel IA | P | I/D |
@@ -43,9 +43,10 @@ Légende : **Fait** (action complète, persistance et effet côté autre rôle v
 | 8 | Séances sortantes : modèle structuré compatible Garmin | Partiel | Modèle D-023 conçu pour se traduire en étapes FIT (voir correspondance ci-dessous) | X | I |
 | 8 | Export FIT de séance, procédure vérifiée | À ajouter | — | X | I, puis essai sur montre (F) |
 | 8 | Publication vers Garmin Connect (Training API), mise à jour, annulation | À ajouter | Accès Garmin Connect Developer Program non obtenu | X | D |
-| 9 | Navigation : accueil, groupes / élèves, calendrier, bibliothèque, échanges, méthode | Partiel | Planning, Retours, Athlètes, Paramètres, Guide | H | I |
-| 9 | Élève : Aujourd’hui, Programme, Progression, Échanges | Partiel | Aujourd’hui, Programme, Profil | E, S | I |
-| — | Visite interactive d’Allure sur les vrais écrans (retour du fondateur) | À ajouter | Guide en diapositives actuel (D-021) | C | I |
+| 9 | Navigation : accueil, groupes / élèves, calendrier, bibliothèque, échanges, méthode | Partiel | Planning (accueil du coach), Séances, Retours, Élèves, Paramètres ; bibliothèque, échanges, méthode à ajouter | H | I |
+| 9 | Élève : Aujourd’hui, Programme, Progression, Échanges | Partiel | Aujourd’hui, Programme (semaine et mois, D-031), Profil ; retour « faite autrement » (CE-E-05, première version) | E, S | I |
+| — | Visite interactive d’Allure sur les vrais écrans (retour du fondateur, modèle Foulée) | Fait | CE-C-01, D-028 : élève, coach, coach sans élève ; projecteur, progression par action, relance | C | I |
+| — | Idées éprouvées dans Foulée : retour rapide, notation texte, graphique de séance, séance faite autrement, propositions de semaine, faisabilité | À ajouter | Voir [AUDIT_FOULEE.md](AUDIT_FOULEE.md) ; stories CE-C-03, CE-B-09, CE-E-04, CE-E-05, CE-P-05 à 07 | C, B, E, P | I |
 
 ## Ce qui est déjà acquis et sert la cible
 
@@ -68,9 +69,10 @@ Pour éviter les incompatibilités ultérieures, chaque lot ajoute ses tables pa
 
 | Dépendance | Bloque | Action |
 |---|---|---|
-| Accès Garmin Connect Developer Program (Training et Activity API) | Publication vers Garmin Connect, activités entrantes Garmin | Fondateur : demande d’accès business ; en attendant, export FIT et import de fichiers |
-| Montre Garmin disponible pour l’essai | Déclarer le transfert opérationnel | Fondateur : préciser le modèle disponible |
-| Formats réels des anciens programmes | Import historique (lot B) | Fondateur : fournir des exemples anonymisés |
+| Accès Garmin Connect Developer Program (Training et Activity API) | Publication vers Garmin Connect, activités entrantes Garmin | Reporté jusqu’à la constitution de l’entreprise (D-026) ; en attendant, export FIT et import de fichiers |
+| Montre Garmin disponible pour l’essai | Déclarer le transfert opérationnel | Garmin Fenix 8 du fondateur (D-026) |
+| Formats réels des programmes de coachs | Import de la base de chaque coach (CE-B-06, CE-B-07) | Fondateur : exemples anonymisés pour concevoir et tester l’import |
 | Conditions Strava (affichage tiers, IA) | Toute donnée Strava | Revue juridique avant tout développement (D04) |
 | Fournisseur IA et budget | Génération supervisée (lot P) | Décision après bibliothèque et bilan |
-| Code Foulée | Visite interactive et composants réutilisables | Fondateur : accès au dépôt ou captures |
+| Code Foulée | Portage des modules purs (notation, graphique, rapprochement) | Dossier et captures reçus, audit fait ([AUDIT_FOULEE.md](AUDIT_FOULEE.md)) ; accès au dépôt `foul-e` encore utile |
+| Décision données de santé | Douleur, aptitude, bilan de semaine (présents dans Foulée) | Fondateur : garder l’exclusion ou ouvrir le jalon santé |

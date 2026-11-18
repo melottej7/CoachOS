@@ -5,6 +5,7 @@ import { athleteContext } from '@/server/repo/context';
 import { CoachLogo } from '@/components/coach-card';
 import { NavLink } from '@/components/nav-link';
 import { TopBar } from '@/components/ui';
+import { TourHost } from '@/components/tour-host';
 
 /** Espace athlète, conçu pour le téléphone. Relation et fuseau visibles. */
 export default async function AthleteLayout({ children, params }: { children: React.ReactNode; params: Promise<{ wid: string }> }) {
@@ -26,11 +27,12 @@ export default async function AthleteLayout({ children, params }: { children: Re
       </TopBar>
       <div className="athlete-zone" data-accent={ws?.profile?.accent ?? 'emerald'}>
         <nav className="tabbar" aria-label="Espace athlète">
-          <NavLink href={`${base}/today`} match={`${base}/today`}>Aujourd’hui</NavLink>
-          <NavLink href={`${base}/schedule`} match={`${base}/schedule`}>Programme</NavLink>
-          <NavLink href={`${base}/setup`} match={`${base}/setup`}>Profil</NavLink>
+          <NavLink href={`${base}/today`} match={`${base}/today`} tour="tab-today">Aujourd’hui</NavLink>
+          <NavLink href={`${base}/schedule`} match={`${base}/schedule`} tour="tab-schedule">Programme</NavLink>
+          <NavLink href={`${base}/setup`} match={`${base}/setup`} tour="tab-profile">Profil</NavLink>
         </nav>
         <main id="contenu">{children}</main>
+        <TourHost space="athlete" wid={wid} />
       </div>
     </>
   );

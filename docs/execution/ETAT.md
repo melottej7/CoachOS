@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-17, session 1 (personnalisation de l’espace coach, D-022 ; guide d’introduction et questionnaire athlète, D-021).
+Dernière mise à jour : 2026-11-19 (lots G et H : Planning du coach, groupes, fiche élève, tâches et rendez-vous, D-032 ; retours de recette, D-031 ; 7 zones et VMA, D-029 ; constructeur par glisser-déposer et guide CoachOS, D-030 ; visite interactive, D-028).
 
 ## Résumé
 
@@ -167,19 +167,26 @@ Non prouvé à ce stade : lecteur d’écran et parcours clavier complet, vrai t
 
 ## Prochaine action
 
-**Cible coach et élève (D-024).** Lire [16_COMPLEMENT_COACH_ELEVE.md](../16_COMPLEMENT_COACH_ELEVE.md), [COUVERTURE.md](COUVERTURE.md), puis la section « Lots de la cible coach et élève » de la roadmap.
+**Cible coach et élève (D-024).** Lire [16_COMPLEMENT_COACH_ELEVE.md](../16_COMPLEMENT_COACH_ELEVE.md), [COUVERTURE.md](COUVERTURE.md), [AUDIT_FOULEE.md](AUDIT_FOULEE.md), puis la section « Lots de la cible coach et élève » de la roadmap.
 
-Fait dans cette reprise :
-- Séance structurée (D-023) terminée : constructeur vérifié dans le navigateur (modèles « Échauffement », « Séries 3 × (5 × 300 m) », « Retour au calme »), total « au moins 49 min · 4,5 km », enregistrement, publication, lecture coach (blocs et séries encadrés) et athlète 375 px ; revue affichant la version observée en blocs ; erreurs de blocs libellées « Bloc 2.1 ».
-- Complément intégré : `docs/16_COMPLEMENT_COACH_ELEVE.md`, CLAUDE.md (relecture obligatoire), README, matrice `docs/execution/COUVERTURE.md`, 44 stories `CE-*` dans `backlog/stories.csv`, ordre des lots dans `docs/11_ROADMAP.md`, D-023 à D-025.
-- CE-C-02 : retour « Reportée », ressenti général 1 à 5, difficultés par catégorie (migration `20261118020000`, appliquée à Supabase local), revue coach. `npm test` : 70 passés (+3 PostgreSQL) ; typecheck OK.
-- Incidents : serveur de développement à relancer après modification de `packages/domain` (export non rechargé, erreur 500) ; ne pas lancer `npm run build` pendant `npm run dev`.
+Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
+- D-026 (Garmin différé, essai sur Fenix 8, base de chaque coach) et D-027 (audit de Foulée, reprise par les idées) ; stories ajoutées (CE-C-03, CE-B-09, CE-E-04, CE-E-05, CE-P-05 à 07…).
+- **CE-C-01, visite interactive d’Allure (D-028)**. Preuves navigateur : élève à 375 px (accueil → carte du jour en projecteur, cas « repos » avec texte adapté, étapes de séance sautées sans affichage parasite, « Précédent » sans boucle, Programme, Profil, bouton Allure, « Terminer ») ; coach (Planning, choix de l’élève, clic réel sur « + Ajouter » qui ouvre la création et poursuit la visite sur le constructeur, modèles, enregistrement, Retours, Élèves, Paramètres) ; coach sans élève (simulé sans écrire en base : clic sur « + Ajouter un athlète » puis formulaire). `npm test` : **73 passés** (+3 PostgreSQL), dont `tours.test.ts` (pages reconnues, chaque élément visé présent dans les écrans) ; typecheck OK.
+- Petit correctif : « 19 nov.. » (double point) sur Aujourd’hui.
+- **D-029** 7 zones (échelle du fondateur) ; VMA fixée par le coach dans la fiche élève (table `athlete_references`, migration `20261118030000` appliquée à Supabase local) ; allures par zone, kilomètres et durées estimés dans le constructeur, la lecture coach et athlète et la revue. Preuves : VMA 15 km/h saisie pour Camille (tableau Z1 6:40 à 6:09 /km … Z7 4:00 à 3:38 /km) ; « Séries courtes » lue « environ 1 h 08 · environ 10,8 km » côté coach et athlète (375 px).
+- **D-030** constructeur : glisser-déposer réel vérifié (réordonner dans une série, faire entrer l’échauffement dans une répétition), flèches clavier avec focus conservé et annonce, menu « ⋯ » ; répétitions encadrées ; numéro unique ; pas de débordement à 375 px. Guide renommé « guide CoachOS », personnage en pied qui montre l’élément ; écran « La suite de la visite se passe sur la page « Planning ». Je t’y emmène ? » puis reprise vérifiée.
+- `npm test` : **83 passés** (+3 PostgreSQL), dont `athlete-references.test.ts` (coach affecté seul en écriture, athlète en lecture, autre espace refusé, bornes), `block-tree.test.ts` (déplacements et limites du schéma), estimation et 7 zones dans `structure.test.ts`, contrat de `PUT …/references`. Typecheck OK. `test:pg` non lancé (garde-fou : données de recette du fondateur).
 
-À faire, dans l’ordre :
-1. **CE-C-01** visite interactive d’Allure sur les vrais écrans (surbrillance de l’élément, progression par action, bouton Allure pour relancer), puis supprimer les diapositives.
-2. **Lot G** : CE-G-01 à CE-G-08 (groupes sur `teams` étendu par migration additive, niveaux par sport `athlete_sport_levels`, vue d’ensemble, groupe filtré avec contexte conservé, fiche élève centrale, notes privées `coach_notes`, objectifs `goals`).
+- **D-031** (recette du fondateur) : « 20 min 01 » corrigé à la saisie ; allure de l’élève derrière la zone ; retour « séance faite autrement » (ce qui a changé, sport, répétitions par série, distance ; migration `20261118040000` appliquée) affiché dans la revue avec allure moyenne ; Programme élève en vue mois (vérifiée à 375 px). `npm test` : **85 passés** (+3 PostgreSQL). Le serveur de développement tourne dans un onglet du Terminal (l’aperçu s’arrête en fin de tour).
+
+- **D-032, lots G et H** (19 novembre) : migration additive `20261118050000` (groupes ordonnés et archivables, niveaux confirmés, tâches, suivis automatiques, rendez-vous) appliquée à Supabase local ; 13 opérations au contrat (dont 5 déjà prévues) ; `npm test` : **101 passés** (+3 PostgreSQL), dont `portfolio.test.ts` (propriétaire seul pour les groupes, autre espace refusé, notes invisibles pour l’élève, transitions et conflit de tâche, suivis uniques reportables et clos à la résolution, rendez-vous à l’heure locale, rendez-vous et tâches invisibles pour l’élève) et `portfolio.test.ts` du domaine (classement, urgence, fuseaux). Navigateur (Marine) : Planning avec tâches classées et motif ; tâche créée puis terminée ; visio avec Camille vendredi 18 h 30 visible dans l’agenda avec « Rejoindre » ; deux groupes créés, Camille ajoutée aux deux depuis sa fiche ; groupe filtré + regroupement par niveau → fiche → retour au même contexte ; 375 px sans débordement ; visite guidée qui part du Planning puis suit vers Séances.
+
+Non prouvé : visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
+
+À faire, dans l’ordre (D-032) :
+1. Recette des lots G et H par le fondateur (Planning, Élèves, fiche).
+2. Messagerie coach élève (CE-H-07, CE-E-02), statistiques (lot S), objectif et avancement (CE-G-08, CE-E-03), import FIT/TCX (CE-X-02/03). CE-C-03 retour rapide depuis Aujourd’hui.
+3. **Lot G** (détail) : CE-G-01 à CE-G-08 (groupes sur `teams` étendu par migration additive, niveaux par sport `athlete_sport_levels`, vue d’ensemble, groupe filtré avec contexte conservé, fiche élève centrale, notes privées `coach_notes`, objectifs `goals`).
 3. Lot H, puis S, B, E, G2, P ; export FIT (CE-X-01) possible en parallèle.
 
-Rien n’est commité depuis 36c2337 : profil athlète et guide (D-021), personnalisation de l’espace (D-022), séance structurée (D-023), complément et matrice (D-024), retour enrichi (D-025).
-
-**Pour le fondateur** : accès Garmin Connect Developer Program (business), modèle de montre disponible pour l’essai, exemples anonymisés de vos anciens programmes (formats réels), accès au code ou captures de Foulée.
+**Pour le fondateur** : décision sur les données de santé, droit d’usage écrit de la bibliothèque et de la méthodologie Foulée, accès au dépôt `foul-e`, exemples anonymisés de vos anciens programmes. Accès Garmin reporté (D-026).

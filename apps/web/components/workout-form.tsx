@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { SPORTS, SPORT_LABELS, type Block, type Sport } from '@coachos/domain';
+import { SPORTS, SPORT_LABELS, type Block, type References, type Sport } from '@coachos/domain';
 import { fromEditor, toEditor, WorkoutBuilder, type EBlock } from './workout-builder';
 import { ErrorSummary } from './feedback-banners';
 import { fieldError, useIntent } from './use-intent';
@@ -25,9 +25,11 @@ interface Props {
   /** Absent : création. Présent : nouvelle révision sur cette séance. */
   edit?: { sid: string; expectedRevision: number; published: boolean };
   cancelHref: string;
+  /** Repères de l’athlète (VMA) : allures des zones et kilomètres estimés. */
+  refs?: References;
 }
 
-export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, cancelHref }: Props) {
+export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, cancelHref, refs }: Props) {
   const router = useRouter();
   const [values, setValues] = useState(initial);
   const [blocks, setBlocks] = useState<EBlock[]>(() => toEditor(initial.intervals ?? []));
@@ -90,7 +92,7 @@ export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, ca
           </select>
         </div>
       </div>
-      <WorkoutBuilder sport={values.sport} value={blocks} onChange={setBlocks} />
+      <WorkoutBuilder sport={values.sport} value={blocks} onChange={setBlocks} refs={refs} athleteFirst={athleteName.split(' ')[0] ?? athleteName} vmaHref={`/coach/${wid}/athletes/${aid}#refs-title`} />
       {blocks.length ? null : <div className="field">
         <label htmlFor="duration">Durée en minutes <span className="hint">Facultatif</span></label>
         <input id="duration" type="number" inputMode="numeric" min={1} max={1440} value={values.minutes} onChange={set('minutes')}
@@ -102,7 +104,7 @@ export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, ca
         <textarea id="instructions" maxLength={5000} value={values.instructions} onChange={set('instructions')} />
       </div>
       <div className="actions">
-        <button className="btn primary" type="submit" disabled={pending} aria-disabled={pending}>
+        <button className="btn primary" type="submit" disabled={pending} aria-disabled={pending} data-tour="save-draft">
           {pending ? 'Enregistrement…' : 'Enregistrer le brouillon'}
         </button>
         <a className="btn" href={cancelHref}>Annuler</a>

@@ -42,7 +42,7 @@ export default async function Settings({ params, searchParams }: { params: Promi
         <CoachSpaceForm
           wid={wid}
           mode={wizard ? 'wizard' : 'single'}
-          after={wizard ? `/coach/${wid}/welcome?first=1` : `/coach/${wid}/settings?notice=saved`}
+          after={wizard ? `/coach/${wid}/planning?tour=start` : `/coach/${wid}/settings?notice=saved`}
           initial={{
             name: ws.name, coachName: ws.coachName, logoVersion: ws.logoVersion,
             tagline: p?.tagline ?? '', bio: p?.bio ?? '', approach: p?.approach ?? '',

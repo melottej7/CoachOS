@@ -4,6 +4,7 @@ import { isLocalDate, todayIn, weekStart, type Sport } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { listAssignedAthletes } from '@/server/repo/coach';
 import { WorkoutForm } from '@/components/workout-form';
+import { readAthleteReferences } from '@/server/commands/athlete-references';
 
 export const metadata = { title: 'Nouvelle séance' };
 
@@ -21,7 +22,7 @@ export default async function NewWorkout({ params, searchParams }: { params: Pro
       <Link className="back" href={back}>← Planning de {athlete.displayName}</Link>
       <div className="head"><div><div className="kicker">{athlete.displayName}</div><h1>Nouvelle séance</h1></div></div>
       <section className="card"><div className="card-body">
-        <WorkoutForm wid={wid} aid={aid} athleteName={athlete.displayName} timeZone={athlete.timeZone} cancelHref={back}
+        <WorkoutForm refs={await readAthleteReferences(actor.userId, wid, aid)} wid={wid} aid={aid} athleteName={athlete.displayName} timeZone={athlete.timeZone} cancelHref={back}
           initial={{ title: '', localDate, sport: 'running' satisfies Sport, minutes: '45', instructions: '' }} />
       </div></section>
     </>

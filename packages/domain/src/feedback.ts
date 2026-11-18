@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SPORTS } from './sports';
 
 export const RESULT_STATES = ['completed', 'partial', 'postponed', 'missed'] as const;
 export type ResultState = (typeof RESULT_STATES)[number];
@@ -18,6 +19,14 @@ export const DIFFICULTIES = ['fatigue', 'weather', 'terrain', 'gear', 'time', 'm
 export type Difficulty = (typeof DIFFICULTIES)[number];
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   fatigue: 'Fatigue', weather: 'Météo', terrain: 'Terrain, parcours', gear: 'Matériel', time: 'Manque de temps', motivation: 'Motivation', other: 'Autre',
+};
+
+/** Ce qui a changé par rapport au prévu (CE-E-05, D-031). Catégories fermées, non médicales. */
+export const CHANGES = ['shorter', 'fewer_reps', 'easier', 'harder', 'other_route', 'other_sport', 'stopped'] as const;
+export type Change = (typeof CHANGES)[number];
+export const CHANGE_LABELS: Record<Change, string> = {
+  shorter: 'Plus courte', fewer_reps: 'Moins de répétitions', easier: 'Moins intense', harder: 'Plus intense',
+  other_route: 'Autre parcours', other_sport: 'Autre sport', stopped: 'Arrêtée en cours',
 };
 
 /**
@@ -42,6 +51,10 @@ export const saveFeedbackSchema = z
       }),
     overallFeeling: z.number().int().min(1).max(5).nullish().transform((v) => v ?? null),
     difficulties: z.array(z.enum(DIFFICULTIES)).max(7).default([]).transform((a) => [...new Set(a)]),
+    changes: z.array(z.enum(CHANGES)).max(7).default([]).transform((a) => [...new Set(a)]),
+    actualSport: z.enum(SPORTS).nullish().transform((v) => v ?? null),
+    /** Répétitions faites, une valeur par série principale du déroulé, dans l’ordre. */
+    repeatsDone: z.array(z.number().int().min(0, { message: '0 au moins' }).max(50, { message: '50 au plus' })).max(30).default([]),
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -51,6 +64,9 @@ export const saveFeedbackSchema = z
         path: ['durationSeconds'],
         message: 'Une séance non réalisée ou reportée ne porte ni durée ni distance',
       });
+    }
+    if ((value.state === 'missed' || value.state === 'postponed') && (value.changes.length || value.actualSport !== null || value.repeatsDone.length)) {
+      ctx.addIssue({ code: 'custom', path: ['changes'], message: 'Une séance non réalisée ou reportée ne décrit pas ce qui a changé' });
     }
   });
 

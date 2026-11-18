@@ -1,4 +1,4 @@
-﻿id,release,sprint,epic,feature,story,priorite,dependances,jours,critere_acceptation
+id,release,sprint,epic,feature,story,priorite,dependances,jours,critere_acceptation
 C01-01,MVP,01,Fondations,Environnement reproductible,Créer le monorepo TypeScript,P0,G0,2,Un clone installe les versions du lockfile et compile web et paquets sans configuration privée
 C01-02,MVP,01,Fondations,Environnement reproductible,Isoler les environnements,P0,C01-01,1,Preview ne dispose d’aucun secret de production
 C01-03,MVP,01,Fondations,Environnement reproductible,Initialiser Supabase local,P0,C01-01,1,Un reset charge un jeu de données synthétique à deux espaces
@@ -301,6 +301,7 @@ C30-09,V3,30,Release,Préparer le cycle suivant,Clore les expérimentations,P2,S
 C30-10,V3,30,Release,Préparer le cycle suivant,Préparer le prochain cycle,P2,S24 + S27 + S28 + S29 + C30-01,0.5,Les hypothèses et contraintes actualisées sont approuvées avant planification
 CE-C-01,CIBLE,L-C,Visite et retours,Fin tranche C,Visite interactive d’Allure sur les vrais écrans,P0,—,1.5,"L’avatar met en évidence l’élément réel, avance quand l’action est faite et se relance depuis un bouton"
 CE-C-02,CIBLE,L-C,Visite et retours,Fin tranche C,"Retour « reporté », ressenti général et difficulté",P0,C06-02,1,"Les nouveaux états et champs persistent, restent facultatifs et apparaissent dans la revue"
+CE-C-03,CIBLE,L-C,Visite et retours,Fin tranche C,Retour rapide depuis Aujourd’hui,P0,CE-C-02,1,Fait / en partie / pas fait puis ressenti en deux gestes depuis l’accueil ; ressenti comparé à l’intention de la séance ; détail facultatif (source : Foulée)
 CE-G-01,CIBLE,L-G,Portefeuille,Groupes et dossiers,"Créer, renommer, réordonner et archiver un groupe",P0,—,1,"Le nom est unique dans l’espace, l’ordre persiste et un groupe archivé disparaît des listes actives"
 CE-G-02,CIBLE,L-G,Portefeuille,Groupes et dossiers,"Ajouter ou retirer des élèves d’un groupe, appartenances multiples",P0,CE-G-01,1,Un élève peut appartenir à deux groupes ; le retrait ne touche aucune séance publiée
 CE-G-03,CIBLE,L-G,Portefeuille,Groupes et dossiers,Vue d’ensemble des groupes,P0,CE-G-02,1,"Chaque groupe affiche effectif, retours à traiter et élèves sans séance publiée sur les 7 prochains jours"
@@ -319,6 +320,8 @@ CE-H-04,CIBLE,L-H,Accueil coach,"Accueil, tâches et agenda",Règles de relance 
 CE-H-05,CIBLE,L-H,Accueil coach,"Accueil, tâches et agenda",Rendez-vous et visioconférence,P0,CE-H-02,1,"Fuseau, début, durée, lien, préparation et compte rendu, retrouvés dans la fiche élève"
 CE-H-06,CIBLE,L-H,Accueil coach,"Accueil, tâches et agenda",Tâches récurrentes,P2,CE-H-02,0.75,La récurrence crée l’occurrence suivante à la clôture
 CE-H-07,CIBLE,L-H,Accueil coach,"Accueil, tâches et agenda",Messagerie coach élève,P0,—,2,"Fil privé, envoi, lecture, reprise ; un message reçu crée ou rouvre la tâche de réponse"
+CE-H-08,CIBLE,L-H,Accueil coach,"Accueil, tâches et agenda",Réponse rapide sous un retour,P1,CE-H-07,0.5,« Bravo » ou phrase toute faite en un geste ; jamais d’encouragement automatique ; la tâche de réponse se clôt
+CE-H-09,CIBLE,L-H,Accueil coach,"Accueil, tâches et agenda",Messages vocaux du coach,P2,CE-H-07,1,"Vocal de 3 minutes au plus, stockage privé, lien d’écoute temporaire"
 CE-S-01,CIBLE,L-S,Progression,Statistiques de base,Statistiques élève : régularité et volumes,P0,—,1.5,"Séances faites, durée et distance par semaine et par mois, observations manquantes signalées"
 CE-S-02,CIBLE,L-S,Progression,Statistiques de base,Prévu et réalisé,P0,CE-S-01,1,Comparaison par semaine avec séances sources accessibles
 CE-S-03,CIBLE,L-S,Progression,Statistiques de base,Période personnalisée et définitions,P1,CE-S-01,1,"Chaque graphique indique période, unités, définition et provenance ; « données insuffisantes » si trompeur"
@@ -328,18 +331,27 @@ CE-B-02,CIBLE,L-B,Méthode,Bibliothèque et bilan,Semaines types et blocs de pr�
 CE-B-03,CIBLE,L-B,Méthode,Bibliothèque et bilan,Cibles relatives au profil,P1,CE-B-01,1,"Seuils de l’élève (allure seuil, FTP, FC max) convertissent les zones à l’affichage"
 CE-B-04,CIBLE,L-B,Méthode,Bibliothèque et bilan,Bilan structuré par questionnaire,P0,—,1.5,"Envoi, sauvegarde, reprise, statut de complétude, confirmation par le coach"
 CE-B-05,CIBLE,L-B,Méthode,Bibliothèque et bilan,Bilan par entretien,P0,"CE-B-04,CE-H-05",1,Le coach complète le même bilan pendant ou après l’appel ; les sources restent distinguées
-CE-B-06,CIBLE,L-B,Méthode,Bibliothèque et bilan,Import de l’historique du coach,P1,CE-B-01,2,"Prévisualisation, unités, doublons et validation avant insertion ; prescription ancienne, modèle et réalisé distincts"
+CE-B-06,CIBLE,L-B,Méthode,Bibliothèque et bilan,Import de la base de coaching de tout coach,P1,CE-B-01,2,"Formats courants, prévisualisation, unités, doublons et validation ; données d’élèves retirées ; contenu propre à l’espace du coach"
+CE-B-07,CIBLE,L-B,Méthode,Bibliothèque et bilan,Proposer l’import de sa base à l’inscription du coach,P1,CE-B-06,1,"Après la création d’espace, le coach peut importer sa base ou passer ; l’état de l’import reste visible dans la bibliothèque"
+CE-B-08,CIBLE,L-B,Méthode,Bibliothèque et bilan,Bibliothèque CoachOS commune,P1,CE-B-01,1.5,"Modèles fournis par l’application, provenance distincte de ceux du coach ; copie vers la bibliothèque du coach avant modification"
+CE-B-09,CIBLE,L-B,Méthode,Bibliothèque et bilan,Saisie rapide d’une séance en notation texte,P0,—,1.5,« 15' Z1 + 8×(400m Z5 + R200m) + 10' Z1 » devient des blocs et inversement ; erreurs signalées au fil de la saisie ; multisport (source : Foulée)
 CE-E-01,CIBLE,L-E,Élève,Espace élève et retours,Historique et objectifs côté élève,P0,—,1,"L’élève consulte ses séances passées, ses retours et ses objectifs"
 CE-E-02,CIBLE,L-E,Élève,Espace élève et retours,Échanges côté élève,P0,CE-H-07,1,L’élève écrit à son coach depuis la séance ou l’onglet Échanges
 CE-E-03,CIBLE,L-E,Élève,Espace élève et retours,Progression côté élève,P0,CE-S-01,1,"Onglet Progression avec volumes, régularité et prévu / réalisé"
+CE-E-04,CIBLE,L-E,Élève,Espace élève et retours,Graphique de la séance,P0,—,1,"Barres par bloc selon l’intensité, table équivalente et texte des zones ; coach et élève"
+CE-E-05,CIBLE,L-E,Élève,Espace élève et retours,Séance faite autrement,P0,CE-C-02,1,"Séance modifiée, autre sortie ou autre sport ; durée, distance, répétitions réelles et allure par rapport au prévu ; le réalisé remplace le prévu dans les calculs"
+CE-E-06,CIBLE,L-E,Élève,Espace élève et retours,Application installable et notifications,P1,—,1.5,"Installation sur téléphone, rappels du matin et du soir, préférences par niveau"
 CE-P-01,CIBLE,L-P,Méthode,Programmes supervisés,Programme et versions,P0,CE-B-01,1.5,Un programme regroupe des semaines ; chaque publication est une version retraçable
 CE-P-02,CIBLE,L-P,Méthode,Programmes supervisés,Génération supervisée depuis bilan et bibliothèque,P1,"CE-P-01,CE-B-04",3,"Brouillon structuré, références et règles utilisées, informations manquantes explicites"
 CE-P-03,CIBLE,L-P,Méthode,Programmes supervisés,Régénération partielle et différences,P1,CE-P-02,2,"Séance, semaine ou programme régénérés seuls ; séances passées et réalisées protégées"
 CE-P-04,CIBLE,L-P,Méthode,Programmes supervisés,Règles candidates et essais de qualité,P2,CE-P-02,2,Préférence durable et exception distinguées ; jeux d’essai et coûts suivis
+CE-P-05,CIBLE,L-P,Méthode,Programmes supervisés,Propositions d’adaptation d’une semaine,P1,CE-P-01,1.5,"Récupération, alléger, endurance seule, reprise : différences et conséquence probable avant application en brouillon (source : Foulée)"
+CE-P-06,CIBLE,L-P,Méthode,Programmes supervisés,Verrous et restauration de version,P1,CE-P-01,1,Séance ou semaine verrouillée ignorée par toute régénération ; restauration d’une version antérieure
+CE-P-07,CIBLE,L-P,Méthode,Programmes supervisés,Faisabilité de l’objectif,P1,CE-B-04,1.5,"Quatre statuts, critères et solutions chiffrées ; message proposé à l’élève, jamais envoyé seul"
 CE-X-01,CIBLE,L-X,Intégrations,Activités et Garmin,Export FIT d’une séance structurée,P0,—,1.5,"Fichier décodable avec étapes, répétitions et cibles ; endurance libre et intervalles validés"
 CE-X-02,CIBLE,L-X,Intégrations,Activités et Garmin,Import manuel FIT et TCX,P1,—,2,"Provenance et version conservées ; mesures préremplies, ressenti éditable séparément"
 CE-X-03,CIBLE,L-X,Intégrations,Activités et Garmin,Rapprochement activité et séance,P1,CE-X-02,1.5,"Plusieurs activités par séance, correction possible, aucun double comptage"
-CE-X-04,CIBLE,L-X,Intégrations,Activités et Garmin,Garmin Activity API,P2,Accès Garmin,2,"Autorisation, dernière synchronisation, erreurs, reprise, déconnexion et suppressions"
-CE-X-05,CIBLE,L-X,Intégrations,Activités et Garmin,Garmin Training API,P2,"Accès Garmin,CE-X-01",2,"Publication, mise à jour, déplacement et annulation ; statut fondé sur les confirmations reçues"
-CE-X-06,CIBLE,L-X,Intégrations,Activités et Garmin,Essai sur une montre réelle,P1,CE-X-01,0.5,Procédure suivie et résultat consigné avant de déclarer le transfert opérationnel
+CE-X-04,CIBLE,L-X,Intégrations,Activités et Garmin,Garmin Activity API,P2,"Accès Garmin (entreprise, D-026)",2,"Autorisation, dernière synchronisation, erreurs, reprise, déconnexion et suppressions"
+CE-X-05,CIBLE,L-X,Intégrations,Activités et Garmin,Garmin Training API,P2,"Accès Garmin (entreprise, D-026),CE-X-01",2,"Publication, mise à jour, déplacement et annulation ; statut fondé sur les confirmations reçues"
+CE-X-06,CIBLE,L-X,Intégrations,Activités et Garmin,Essai sur une montre réelle,P1,CE-X-01,0.5,Procédure de transfert du fichier FIT vérifiée sur la Garmin Fenix 8 du fondateur ; résultat consigné avant de déclarer le transfert opérationnel
 CE-X-07,CIBLE,L-X,Intégrations,Activités et Garmin,Examen Strava,P2,D04,0.5,"Décision écrite sur affichage, rétention et IA avant tout développement"

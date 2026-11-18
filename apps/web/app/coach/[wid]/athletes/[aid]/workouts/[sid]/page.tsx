@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { formatDistance, formatDuration, formatLongDate, weekStart, RESULT_STATE_LABELS, SPORT_LABELS } from '@coachos/domain';
+import { formatDistance, formatDuration, formatLongDate, weekStart, RESULT_STATE_LABELS, SPORT_LABELS, type References } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachWorkout, type RevisionView } from '@/server/repo/coach';
 import { PublishButton } from '@/components/publish-button';
 import { Notice, Pill, StatusBadge } from '@/components/ui';
 import { StructureView } from '@/components/structure-view';
+import { readAthleteReferences } from '@/server/commands/athlete-references';
+
 
 export const metadata = { title: 'Séance' };
 
@@ -14,16 +16,16 @@ const NOTICES: Record<string, string> = {
   published: 'Séance publiée. L’athlète la voit maintenant dans Aujourd’hui et Programme.',
 };
 
-function Prescription({ r }: { r: RevisionView }) {
+function Prescription({ r, refs }: { r: RevisionView; refs: References }) {
   return (
     <div className="stack">
       <dl className="details">
         <div><dt>Date</dt><dd>{formatLongDate(r.localDate)}</dd></div>
         <div><dt>Sport</dt><dd>{SPORT_LABELS[r.sport]}</dd></div>
-        <div><dt>Durée</dt><dd>{formatDuration(r.durationSeconds) ?? 'Non précisée'}</dd></div>
-        {r.distanceM ? <div><dt>Distance</dt><dd>{formatDistance(r.distanceM)}</dd></div> : null}
+        {r.intervals.length ? null : <div><dt>Durée</dt><dd>{formatDuration(r.durationSeconds) ?? 'Non précisée'}</dd></div>}
+        {r.distanceM && !r.intervals.length ? <div><dt>Distance</dt><dd>{formatDistance(r.distanceM)}</dd></div> : null}
       </dl>
-      <StructureView blocks={r.intervals} sport={r.sport} />
+      <StructureView blocks={r.intervals} sport={r.sport} refs={refs} />
       {r.instructions || !r.intervals.length ? (
         <div>
           <h3>Consignes</h3>
@@ -37,6 +39,7 @@ function Prescription({ r }: { r: RevisionView }) {
 /** X21 + confirmation X22 pour une séance : version de travail, version publiée, publication explicite. */
 export default async function CoachWorkout({ params, searchParams }: { params: Promise<{ wid: string; aid: string; sid: string }>; searchParams: Promise<{ notice?: string }> }) {
   const { wid, aid, sid } = await params;
+  const refs = await readAthleteReferences((await requireActor()).userId, wid, aid);
   const { notice } = await searchParams;
   const actor = await requireActor();
   const w = await coachWorkout(actor.userId, wid, aid, sid);
@@ -61,12 +64,12 @@ export default async function CoachWorkout({ params, searchParams }: { params: P
       <div className={w.status === 'changed' ? 'compare' : undefined}>
         <section className="card" aria-labelledby="working-title">
           <div className="card-head"><h2 id="working-title">{w.status === 'changed' ? `Brouillon · version ${w.working.number}` : `Version ${w.working.number}`}</h2></div>
-          <div className="card-body"><Prescription r={w.working} /></div>
+          <div className="card-body"><Prescription r={w.working} refs={refs} /></div>
         </section>
         {w.status === 'changed' && w.published ? (
           <section className="card" aria-labelledby="published-title" style={{ marginTop: 0 }}>
             <div className="card-head"><h2 id="published-title">Publiée · version {w.published.number}</h2><Pill tone="neutral">Lue par {first}</Pill></div>
-            <div className="card-body"><Prescription r={w.published} /></div>
+            <div className="card-body"><Prescription r={w.published} refs={refs} /></div>
           </section>
         ) : null}
       </div>
