@@ -65,7 +65,10 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
             <Pill tone={u === 'Urgent' ? 'attn' : u === 'À suivre' ? '' : 'neutral'}>{u}</Pill>
           </p>
         </div>
-        <Link className="btn primary" href={`${base}/calendar?athlete=${aid}`}>Préparer ses séances</Link>
+        <span className="actions">
+          <Link className="btn" href={`${base}/messages/${aid}`}>Écrire à {first}</Link>
+          <Link className="btn primary" href={`${base}/calendar?athlete=${aid}`}>Préparer ses séances</Link>
+        </span>
       </div>
 
       <section className="card" aria-labelledby="groups-title">

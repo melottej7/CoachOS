@@ -115,7 +115,7 @@ export const updateTaskSchema = z
 
 // ---------- Suivis automatiques (CE-H-03) ----------
 
-export const AUTO_RULES = ['feedback_review', 'no_upcoming', 'invite_pending', 'profile_missing', 'level_unconfirmed', 'vma_missing'] as const;
+export const AUTO_RULES = ['feedback_review', 'no_upcoming', 'invite_pending', 'profile_missing', 'level_unconfirmed', 'vma_missing', 'message_reply'] as const;
 export type AutoRule = (typeof AUTO_RULES)[number];
 /** Libellé, type, priorité et motif expliqué de chaque règle. */
 export const AUTO_RULE_INFO: Record<AutoRule, { title: string; kind: TaskKind; priority: Priority; reason: string }> = {
@@ -124,6 +124,7 @@ export const AUTO_RULE_INFO: Record<AutoRule, { title: string; kind: TaskKind; p
   invite_pending: { title: 'Relancer l’invitation', kind: 'message', priority: 1, reason: 'Invité·e, pas encore connecté·e' },
   profile_missing: { title: 'Relancer le questionnaire', kind: 'questionnaire', priority: 1, reason: 'Profil sportif pas encore rempli' },
   level_unconfirmed: { title: 'Confirmer le niveau', kind: 'check', priority: 1, reason: 'Niveau déclaré, pas encore confirmé par toi' },
+  message_reply: { title: 'Répondre au message', kind: 'message', priority: 2, reason: 'Message reçu, pas encore de réponse' },
   vma_missing: { title: 'Renseigner la VMA', kind: 'check', priority: 0, reason: 'Information à vérifier : sans VMA, pas d’allure ni de kilomètres estimés' },
 };
 export const snoozeSchema = z.object({ rule: z.enum(AUTO_RULES), until: optionalDate }).strict();

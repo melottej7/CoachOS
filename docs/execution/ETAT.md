@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-19 (lots G et H : Planning du coach, groupes, fiche élève, tâches et rendez-vous, D-032 ; retours de recette, D-031 ; 7 zones et VMA, D-029 ; constructeur par glisser-déposer et guide CoachOS, D-030 ; visite interactive, D-028).
+Dernière mise à jour : 2026-11-19 (messagerie, groupes et vocaux, D-033 ; lots G et H : Planning du coach, groupes, fiche élève, tâches et rendez-vous, D-032 ; retours de recette, D-031 ; 7 zones et VMA, D-029 ; constructeur par glisser-déposer et guide CoachOS, D-030 ; visite interactive, D-028).
 
 ## Résumé
 
@@ -181,7 +181,9 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
 
 - **D-032, lots G et H** (19 novembre) : migration additive `20261118050000` (groupes ordonnés et archivables, niveaux confirmés, tâches, suivis automatiques, rendez-vous) appliquée à Supabase local ; 13 opérations au contrat (dont 5 déjà prévues) ; `npm test` : **101 passés** (+3 PostgreSQL), dont `portfolio.test.ts` (propriétaire seul pour les groupes, autre espace refusé, notes invisibles pour l’élève, transitions et conflit de tâche, suivis uniques reportables et clos à la résolution, rendez-vous à l’heure locale, rendez-vous et tâches invisibles pour l’élève) et `portfolio.test.ts` du domaine (classement, urgence, fuseaux). Navigateur (Marine) : Planning avec tâches classées et motif ; tâche créée puis terminée ; visio avec Camille vendredi 18 h 30 visible dans l’agenda avec « Rejoindre » ; deux groupes créés, Camille ajoutée aux deux depuis sa fiche ; groupe filtré + regroupement par niveau → fiche → retour au même contexte ; 375 px sans débordement ; visite guidée qui part du Planning puis suit vers Séances.
 
-Non prouvé : visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
+- **D-033, messagerie** : fil privé par élève, fil par groupe, vocaux, suivi « Répondre au message », réponses rapides ; migration `20261119000000` appliquée à Supabase local. `npm test` : **108 passés** (+3 PostgreSQL), dont `messages.test.ts` (fil unique, tiers refusés, non-lus, suivi ouvert puis fermé par la réponse, vocal : format, durée, écoute réservée ; groupe : membres seulement, noms signés, retrait = plus d’accès) et le contrat des 7 opérations. Navigateur : Camille (375 px) écrit à son coach et envoie un vrai fichier WebM de 2 s (enregistré à partir d’un son de synthèse) ; Marine voit « Messages 2 » et « Répondre au message · Camille » dans son Planning, lit le vocal (1,7 s, sans erreur), répond par Cmd + Entrée : pastille et suivi disparaissent ; fil de groupe avec avertissement ; « Bravo ! 👏 » envoyé depuis un retour. Affichage façon Messenger vérifié (ordinateur et 375 px : bulles regroupées, vocal lu dans la bulle, Entrée envoie, barre du bas à 4 onglets sans débordement) ; non-lus corrigés (arrondi à la milliseconde). `npm test` : **109 passés**. Branche `feat/CE-G-H-planning-coach`.
+
+Non prouvé : enregistrement au micro réel (autorisation du micro non automatisable ici) ; visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
 
 À faire, dans l’ordre (D-032) :
 1. Recette des lots G et H par le fondateur (Planning, Élèves, fiche).

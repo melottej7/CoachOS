@@ -1,5 +1,5 @@
 import {
-  addDays, AUTO_RULE_INFO, rankTasks, todayIn, urgencyScore, usesVma, utcToLocal,
+  addDays, AUTO_RULE_INFO, excerpt, rankTasks, todayIn, urgencyScore, usesVma, utcToLocal,
   type AppointmentKind, type AppointmentStatus, type AutoRule, type GoalState, type Level, type LocalDate, type Sport, type TaskKind, type TaskStatus,
 } from '@coachos/domain';
 import { readAs, type Tx } from '../db/client';
@@ -113,6 +113,13 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
          on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id and r.number = w.published_revision
        where w.workspace_id = $1 and w.athlete_id = any($2::uuid[]) and w.published_revision is not null and not r.canceled and r.local_date >= $3::date
        order by r.local_date`, [today]);
+  const lastFromAthlete = await q<{ athlete_id: string; conversation_id: string; created_at: Date; body: string }>(
+    `select c.athlete_id, c.id as conversation_id, lm.created_at, lm.body
+     from public.conversations c
+     join public.athletes a on a.workspace_id = c.workspace_id and a.id = c.athlete_id
+     join lateral (select m.created_at, m.body, m.sender_id from public.messages m
+                   where m.workspace_id = c.workspace_id and m.conversation_id = c.id order by m.created_at desc, m.id desc limit 1) lm on true
+     where c.workspace_id = $1 and c.athlete_id = any($2::uuid[]) and lm.sender_id = a.user_id`);
   const snooze = await snoozed(tx, wid);
   const tasks = await manualTasks(tx, wid, true);
   const by = <T extends { athlete_id: string }>(rows: T[]) => {
@@ -120,7 +127,7 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
     for (const x of rows) m.set(x.athlete_id, [...(m.get(x.athlete_id) ?? []), x]);
     return m;
   };
-  const teamsBy = by(teams), profileBy = by(profiles), levelsBy = by(levels), refsBy = by(refs), reviewsBy = by(reviews), workoutsBy = by(workouts);
+  const teamsBy = by(teams), profileBy = by(profiles), levelsBy = by(levels), refsBy = by(refs), reviewsBy = by(reviews), workoutsBy = by(workouts), msgBy = by(lastFromAthlete);
   const localDay = (d: Date) => todayIn(tz, d);
 
   const roster: RosterEntry[] = athletes.map((a) => {
@@ -141,6 +148,7 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
         kind: info.kind, priority: info.priority, dueOn, status: 'todo', revision: null, athlete: athleteRef, team: null, link, notes: null,
       });
     };
+    for (const m of msgBy.get(a.id) ?? []) push('message_reply', m.conversation_id, addDays(localDay(m.created_at), 1), `${base}/messages/${a.id}`, `« ${excerpt(m.body, 60)} »`);
     for (const rv of reviewsBy.get(a.id) ?? []) push('feedback_review', rv.id, addDays(localDay(rv.created_at), 2), `${base}/review/${rv.id}`, rv.title);
     if (a.state === 'invited') push('invite_pending', a.id, addDays(localDay(a.created_at), 3), `${base}/athletes/${a.id}`);
     if (a.state === 'active') {
@@ -193,6 +201,25 @@ export async function home(userId: string, wid: string, tz: string, monday: Loca
   return readAs(userId, async (tx) => {
     const { roster, tasks } = await loadRoster(tx, wid, today, tz);
     const auto = roster.flatMap((a) => a.todo.filter((t) => t.source === 'auto'));
+    const snooze = await snoozed(tx, wid);
+    const teamMsgs = await tx.query<{ team_id: string; name: string; created_at: Date; body: string }>(
+      `select t.id as team_id, t.name, lm.created_at, lm.body from public.teams t
+       join lateral (select created_at, body, sender_role from public.team_messages m
+                     where m.workspace_id = t.workspace_id and m.team_id = t.id order by created_at desc, id desc limit 1) lm on true
+       where t.workspace_id = $1 and t.archived_at is null and lm.sender_role = 'athlete'`,
+      [wid],
+    );
+    for (const m of teamMsgs.rows) {
+      const until = snooze.get(`message_reply:${m.team_id}`);
+      if (until && until > today) continue;
+      const info = AUTO_RULE_INFO.message_reply;
+      auto.push({
+        key: `auto:message_reply:${m.team_id}`, source: 'auto', id: null, rule: 'message_reply', ref: m.team_id, title: 'Répondre au groupe',
+        reason: `Message dans le groupe · « ${excerpt(m.body, 60)} »`, kind: info.kind, priority: info.priority,
+        dueOn: addDays(todayIn(tz, m.created_at), 1), status: 'todo', revision: null, athlete: null, team: { id: m.team_id, name: m.name },
+        link: `/coach/${wid}/messages/groupe/${m.team_id}`, notes: null,
+      });
+    }
     const all = rankTasks([...auto, ...tasks], today);
     const sunday = addDays(monday, 6);
     const appts = await tx.query<ApptRow & { display_name: string }>(

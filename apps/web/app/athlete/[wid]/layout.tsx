@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { requireActor } from '@/server/auth/session';
 import { readWorkspacePublic } from '@/server/commands/workspace-profile';
 import { athleteContext } from '@/server/repo/context';
+import { athleteInbox } from '@/server/repo/messages';
 import { CoachLogo } from '@/components/coach-card';
 import { NavLink } from '@/components/nav-link';
 import { TopBar } from '@/components/ui';
@@ -15,6 +16,7 @@ export default async function AthleteLayout({ children, params }: { children: Re
   if (!ctx) notFound();
   const base = `/athlete/${wid}`;
   const ws = await readWorkspacePublic(actor.userId, wid);
+  const unread = (await athleteInbox(actor.userId, wid, ctx.athlete.id)).reduce((n, e) => n + e.unread, 0);
   return (
     <>
       <TopBar home={`${base}/today`}>
@@ -29,6 +31,9 @@ export default async function AthleteLayout({ children, params }: { children: Re
         <nav className="tabbar" aria-label="Espace athlète">
           <NavLink href={`${base}/today`} match={`${base}/today`} tour="tab-today">Aujourd’hui</NavLink>
           <NavLink href={`${base}/schedule`} match={`${base}/schedule`} tour="tab-schedule">Programme</NavLink>
+          <NavLink href={`${base}/messages`} match={`${base}/messages`} tour="tab-messages">
+            Échanges {unread ? <span className="count" aria-label={`${unread} non lu${unread > 1 ? 's' : ''}`}>{unread}</span> : null}
+          </NavLink>
           <NavLink href={`${base}/setup`} match={`${base}/setup`} tour="tab-profile">Profil</NavLink>
         </nav>
         <main id="contenu">{children}</main>

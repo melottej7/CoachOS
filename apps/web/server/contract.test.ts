@@ -18,6 +18,7 @@ import { saveAthleteProfile } from './commands/athlete-profile';
 import { saveAthleteReferences } from './commands/athlete-references';
 import { confirmLevel, createGoal, createNote, createTeam, deleteNote, setTeamMember, updateGoal, updateTeam } from './commands/portfolio';
 import { createAppointment, createTask, snoozeAutoTask, updateAppointment, updateTask } from './commands/tasks';
+import { openConversation, saveReceipt, saveTeamReceipt, sendMessage, sendTeamMessage, sendTeamVoice, sendVoice } from './commands/messages';
 import { deleteWorkspaceLogo, previewInvitation, saveWorkspaceProfile, setWorkspaceLogo } from './commands/workspace-profile';
 import { todayIn } from '@coachos/domain';
 
@@ -138,6 +139,27 @@ describe('réponses conformes au contrat OpenAPI', () => {
     check('/workspaces/{wid}/appointments', 'post', appt.status, appt.body);
     const apptUp = await updateAppointment({ ...m(), appointmentId: id(appt) }, { expectedRevision: 1, status: 'canceled' });
     check('/workspaces/{wid}/appointments/{pid}', 'patch', apptUp.status, apptUp.body);
+  });
+
+  it('messagerie : fil privé, groupe, lecture et vocaux', async () => {
+    const m = (u: string) => ({ ...meta(u), workspaceId: WORKSPACE_A });
+    const open = await openConversation({ ...m(USERS.noah), athleteId: ATHLETES.noah });
+    check('/workspaces/{wid}/athletes/{aid}/conversations', 'post', open.status, open.body);
+    const cid = (open.body as { id: string }).id;
+    const sent = await sendMessage({ ...m(USERS.noah), conversationId: cid }, { body: 'Bonjour coach' });
+    check('/workspaces/{wid}/conversations/{cid}/messages', 'post', sent.status, sent.body);
+    const rec = await saveReceipt({ ...m(USERS.marine), conversationId: cid }, { messageId: (sent.body as { item: { id: string } }).item.id });
+    check('/workspaces/{wid}/conversations/{cid}/receipt', 'put', rec.status, rec.body);
+    const audio = new Uint8Array([0x1a, 0x45, 0xdf, 0xa3, ...Array.from({ length: 30 }, () => 1)]);
+    const v = await sendVoice({ ...m(USERS.marine), conversationId: cid, seconds: 5 }, audio);
+    check('/workspaces/{wid}/conversations/{cid}/voice', 'post', v.status, v.body);
+    const team = (await createTeam(m(USERS.marine), { name: 'Contrat · messages' })).body as { id: string };
+    const tm = await sendTeamMessage({ ...m(USERS.marine), teamId: team.id }, { body: 'Bienvenue au groupe' });
+    check('/workspaces/{wid}/teams/{tid}/messages', 'post', tm.status, tm.body);
+    const tr = await saveTeamReceipt({ ...m(USERS.marine), teamId: team.id }, { messageId: (tm.body as { item: { id: string } }).item.id });
+    check('/workspaces/{wid}/teams/{tid}/receipt', 'put', tr.status, tr.body);
+    const tv = await sendTeamVoice({ ...m(USERS.marine), teamId: team.id, seconds: 3 }, audio);
+    check('/workspaces/{wid}/teams/{tid}/voice', 'post', tv.status, tv.body);
   });
 
   it('présentation d’espace, logo et aperçu d’invitation', async () => {

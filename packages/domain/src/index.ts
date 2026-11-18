@@ -13,3 +13,4 @@ export * from './structure';
 export * from './presets';
 export * from './references';
 export * from './portfolio';
+export * from './messages';

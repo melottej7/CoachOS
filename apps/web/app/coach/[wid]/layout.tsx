@@ -3,6 +3,7 @@ import { requireActor } from '@/server/auth/session';
 import { readWorkspacePublic } from '@/server/commands/workspace-profile';
 import { openReviewCount } from '@/server/repo/coach';
 import { coachContext } from '@/server/repo/context';
+import { coachInbox } from '@/server/repo/messages';
 import { NavLink } from '@/components/nav-link';
 import { TopBar, initials } from '@/components/ui';
 import { TourHost } from '@/components/tour-host';
@@ -14,6 +15,7 @@ export default async function CoachLayout({ children, params }: { children: Reac
   const ctx = await coachContext(actor.userId, wid);
   if (!ctx) notFound();
   const pending = await openReviewCount(actor.userId, wid);
+  const unread = (await coachInbox(actor.userId, wid)).reduce((n, e) => n + e.unread, 0);
   const ws = await readWorkspacePublic(actor.userId, wid);
   const base = `/coach/${wid}`;
   return (
@@ -32,6 +34,9 @@ export default async function CoachLayout({ children, params }: { children: Reac
             <NavLink className="nav-link" href={`${base}/calendar`} match={`${base}/calendar`} tour="nav-calendar">Séances</NavLink>
             <NavLink className="nav-link" href={`${base}/review`} match={`${base}/review`} tour="nav-review">
               Retours {pending ? <span className="count" aria-label={`${pending} à traiter`}>{pending}</span> : null}
+            </NavLink>
+            <NavLink className="nav-link" href={`${base}/messages`} match={`${base}/messages`} tour="nav-messages">
+              Messages {unread ? <span className="count" aria-label={`${unread} non lu${unread > 1 ? 's' : ''}`}>{unread}</span> : null}
             </NavLink>
             <NavLink className="nav-link" href={`${base}/athletes`} match={`${base}/athletes`} tour="nav-athletes">Élèves</NavLink>
             <NavLink className="nav-link" href={`${base}/settings`} match={`${base}/settings`} tour="nav-settings">Paramètres</NavLink>
