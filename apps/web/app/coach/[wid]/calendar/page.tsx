@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import { SessionsTabs, toPlanCount } from '@/components/sessions-tabs';
+import { coachContext } from '@/server/repo/context';
+import { portfolio } from '@/server/repo/portfolio';
 import { addDays, formatDuration, formatShortDate, formatWeekRange, formatWeekday, dayOfMonth, isLocalDate, todayIn, weekDates, weekStart, RESULT_STATE_LABELS, WORKOUT_STATUS_LABELS } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachWeek, listAssignedAthletes, openReviews } from '@/server/repo/coach';
@@ -33,6 +36,8 @@ export default async function Calendar({ params, searchParams }: { params: Promi
   const tourDay = days.includes(today) ? today : days[0];
   const newHref = (d: string) => `${base}/athletes/${athlete.id}/workouts/new?date=${d}`;
   const first = athlete.displayName.split(' ')[0];
+  const ctxTz = (await coachContext(actor.userId, wid))?.workspace.timeZone ?? athlete.timeZone;
+  const toPlan = toPlanCount((await portfolio(actor.userId, wid, ctxTz)).roster);
 
   return (
     <>
@@ -44,6 +49,7 @@ export default async function Calendar({ params, searchParams }: { params: Promi
         </div>
         <Link className="btn primary" href={newHref(today >= days[0]! && today <= days[6]! ? today : days[0]!)}>+ Nouvelle séance</Link>
       </div>
+      <SessionsTabs wid={wid} current="week" toPlan={toPlan} />
 
       <section className="card" aria-labelledby="week-title">
         <div className="card-head">

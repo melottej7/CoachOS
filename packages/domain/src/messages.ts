@@ -8,6 +8,8 @@ export const sendMessageSchema = z
       .string({ message: 'Message : texte attendu' })
       .transform((v) => v.trim())
       .pipe(z.string().min(1, { message: 'Écris un message avant d’envoyer' }).max(2000, { message: 'Message : 2000 caractères au plus' })),
+    /** Séance dont parle le message (D-036). */
+    workoutId: z.uuid().nullish().transform((v) => v ?? null),
   })
   .strict();
 

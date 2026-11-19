@@ -1,7 +1,8 @@
 import {
-  describeIntensity, describeMeasure, formatClock, formatKm, formatPace, PHASE_LABELS, SPORT_LABELS, stepEstimate, structureTotals,
+  describeIntensity, describeMeasure, formatClock, formatKm, formatPace, PHASE_LABELS, sessionProfile, SPORT_LABELS, stepEstimate, structureTotals,
   type Block, type References, type Sport, type Step,
 } from '@coachos/domain';
+import { SessionChart } from './session-chart';
 
 /**
  * Lecture d’une séance structurée (D-023, D-029), pour l’athlète comme pour le coach :
@@ -18,6 +19,7 @@ export function StructureView({ blocks, sport, refs }: { blocks: Block[]; sport:
         {t.seconds ? <>{' · '}<span>{t.unknownTime ? 'au moins ' : t.estimated ? 'environ ' : ''}<strong>{formatClock(t.seconds)}</strong></span></> : null}
         {t.totalMeters ? <>{' · '}<span>{t.unknownDistance ? 'au moins ' : t.distanceEstimated ? 'environ ' : ''}<strong>{formatKm(t.totalMeters)}</strong></span></> : null}
       </p>
+      <SessionChart bars={sessionProfile(blocks, sport, refs)} />
       <BlockRows blocks={blocks} sport={sport} refs={refs} />
       {t.unknownDistance && !refs?.vmaKmh && (sport === 'running' || sport === 'trail') ? (
         <p className="muted sv-foot">Distance estimée seulement pour les blocs avec une allure : la VMA n’est pas encore renseignée.</p>

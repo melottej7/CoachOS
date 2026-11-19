@@ -1,5 +1,5 @@
 import {
-  canTransition, createAppointmentSchema, createTaskSchema, isTimeZone, localToUtc, parseWith, snoozeSchema, updateAppointmentSchema,
+  appointmentAnnouncement, canTransition, createAppointmentSchema, formatLongDate, utcToLocal, createTaskSchema, isTimeZone, localToUtc, parseWith, snoozeSchema, updateAppointmentSchema,
   updateTaskSchema, TASK_STATUS_LABELS,
   type AppointmentKind, type AppointmentStatus, type AutoRule, type CreateTaskInput, type TaskKind, type TaskStatus,
 } from '@coachos/domain';
@@ -7,6 +7,7 @@ import { commandAs } from '../db/client';
 import { AppError, conflict, invalid, notVisible } from '../errors';
 import { audit, idempotent, type StoredResponse } from './idempotency';
 import { requireAssigned, requireCoach } from './portfolio';
+import { announceAppointment } from './messages';
 
 // Lot H (D-032) : tâches humaines, report des suivis automatiques, rendez-vous.
 
@@ -134,9 +135,15 @@ export const toAppt = (a: ApptRow): AppointmentItem => ({
 });
 export type { ApptRow };
 
+/** Texte de l’annonce, à l’heure locale du rendez-vous. */
+function announce(a: AppointmentItem, canceled = false): string {
+  const l = utcToLocal(new Date(a.startsAt), a.timeZone);
+  return appointmentAnnouncement(a.kind, a.title, formatLongDate(l.date).toLowerCase(), l.time, a.durationMin, canceled);
+}
+
 /** createAppointment · C : rendez-vous avec un élève affecté, à l’heure locale du fuseau choisi. */
 export async function createAppointment(meta: Meta, body: unknown): Promise<StoredResponse> {
-  const v = parse<{ athleteId: string; title: string; kind: AppointmentKind; startsLocal: string; timeZone: string; durationMin: number; videoUrl: string | null; prepNotes: string | null }>(createAppointmentSchema, body);
+  const v = parse<{ athleteId: string; title: string; kind: AppointmentKind; startsLocal: string; timeZone: string; durationMin: number; videoUrl: string | null; prepNotes: string | null; notify: boolean }>(createAppointmentSchema, body);
   if (!isTimeZone(v.timeZone)) throw invalid([{ path: 'timeZone', rule: 'Fuseau inconnu' }]);
   const wid = meta.workspaceId;
   return commandAs(meta.actorId, async (tx) => {
@@ -147,15 +154,18 @@ export async function createAppointment(meta: Meta, body: unknown): Promise<Stor
          values ($1, $2, auth.uid(), $3, $4, $5, $6, $7, $8, $9) returning ${apptCols}`,
         [wid, v.athleteId, v.title, v.kind, localToUtc(v.startsLocal, v.timeZone).toISOString(), v.durationMin, v.timeZone, v.videoUrl, v.prepNotes],
       );
-      await audit(tx, wid, meta.actorId, 'appointment.create', r.rows[0]!.id, meta.requestId);
-      return { status: 201, body: { item: toAppt(r.rows[0]!) } };
+      const item = toAppt(r.rows[0]!);
+      let messageId: string | null = null;
+      if (v.notify) messageId = await announceAppointment(tx, wid, v.athleteId, announce(item), item.id);
+      await audit(tx, wid, meta.actorId, 'appointment.create', item.id, meta.requestId);
+      return { status: 201, body: { item, messageId } };
     });
   });
 }
 
 /** updateAppointment · C : fait, annulé, préparation et compte rendu ; révision attendue. */
 export async function updateAppointment(meta: Meta & { appointmentId: string }, body: unknown): Promise<StoredResponse> {
-  const v = parse<{ expectedRevision: number; status?: AppointmentStatus; prepNotes?: string | null; report?: string | null }>(updateAppointmentSchema, body);
+  const v = parse<{ expectedRevision: number; notify: boolean; status?: AppointmentStatus; prepNotes?: string | null; report?: string | null }>(updateAppointmentSchema, body);
   const wid = meta.workspaceId;
   return commandAs(meta.actorId, async (tx) => {
     const cur = await tx.query<{ athlete_id: string; revision: number }>(
@@ -176,8 +186,11 @@ export async function updateAppointment(meta: Meta & { appointmentId: string }, 
          where workspace_id = $1 and id = $2 returning ${apptCols}`,
         [wid, meta.appointmentId, v.status ?? null, v.prepNotes !== undefined, v.prepNotes ?? null, v.report !== undefined, v.report ?? null],
       );
+      const item = toAppt(r.rows[0]!);
+      let messageId: string | null = null;
+      if (v.notify && v.status === 'canceled') messageId = await announceAppointment(tx, wid, a.athlete_id, announce(item, true), item.id);
       await audit(tx, wid, meta.actorId, 'appointment.update', meta.appointmentId, meta.requestId);
-      return { status: 200, body: { item: toAppt(r.rows[0]!) } };
+      return { status: 200, body: { item, messageId } };
     });
   });
 }

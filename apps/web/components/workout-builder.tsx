@@ -3,9 +3,11 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import {
   describeBlock, describeTotals, formatClock, formatKm, formatPace, PHASES, PHASE_LABELS, presetsFor, SPORTS, SPORT_LABELS, stepEstimate,
-  structureTotals, usesVma, ZONE_NAMES, ZONES,
+  sessionProfile, structureTotals, usesVma, ZONE_NAMES, ZONES,
   type Block, type Intensity, type Measure, type Phase, type References, type Sport, type Step, type Zone,
 } from '@coachos/domain';
+import { SessionChart } from './session-chart';
+import { QuickNotation } from './quick-notation';
 import { canDrop, find, lift, moveBlock, shift, type DropTarget } from './block-tree';
 
 // Constructeur de séance (D-023) : blocs éditables, répétitions et séries, modèles rapides, total en direct.
@@ -17,8 +19,15 @@ export type EBlock = EStep | ERepeat;
 let seq = 0;
 const key = () => `b${Date.now().toString(36)}${(seq++).toString(36)}`;
 
-export function toEditor(blocks: Block[]): EBlock[] {
-  return blocks.map((b) => (b.type === 'step' ? { ...b, _k: key() } : { type: 'repeat', times: b.times, steps: toEditor(b.steps), _k: key() }));
+/**
+ * Blocs éditables. Avec `stable`, les clés suivent la position (« i0 », « i1.0 ») : identiques au rendu serveur
+ * et dans le navigateur (sinon écart d’hydratation). Les blocs ajoutés ensuite reçoivent une clé aléatoire.
+ */
+export function toEditor(blocks: Block[], stable?: string): EBlock[] {
+  return blocks.map((b, i) => {
+    const k = stable === undefined ? key() : `${stable}${i}`;
+    return b.type === 'step' ? { ...b, _k: k } : { type: 'repeat', times: b.times, steps: toEditor(b.steps, stable === undefined ? undefined : `${k}.`), _k: k };
+  });
 }
 export function fromEditor(blocks: EBlock[]): Block[] {
   return blocks.map((b) => {
@@ -490,9 +499,12 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
           {presets.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
         </select>
       </div>
+      <QuickNotation sport={sport} blocks={blocks} refs={refs}
+        onApply={(bs, mode) => onChange(mode === 'replace' ? toEditor(bs) : [...value, ...toEditor(bs)])} />
       {value.length ? (
         <div className="b-summary" aria-live="polite">
           <p className="b-total"><strong>Total :</strong> {describeTotals(totals)}</p>
+          <SessionChart bars={sessionProfile(blocks, sport, refs)} />
           {runSport && !refs?.vmaKmh ? (
             <p className="muted">Sans VMA, les kilomètres ne sont estimés que pour les blocs avec une allure.
               {vmaHref ? <> <a href={vmaHref}>Renseigner la VMA{athleteFirst ? ` de ${athleteFirst}` : ''}</a></> : null}</p>

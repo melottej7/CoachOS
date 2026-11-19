@@ -6,6 +6,7 @@ import { coachWorkout, type RevisionView } from '@/server/repo/coach';
 import { PublishButton } from '@/components/publish-button';
 import { Notice, Pill, StatusBadge } from '@/components/ui';
 import { StructureView } from '@/components/structure-view';
+import { SaveToLibrary } from '@/components/save-to-library';
 import { readAthleteReferences } from '@/server/commands/athlete-references';
 
 
@@ -58,7 +59,11 @@ export default async function CoachWorkout({ params, searchParams }: { params: P
           <h1>{w.working.title}</h1>
           <p className="sub"><StatusBadge status={w.status} /> {w.status === 'draft' ? `Invisible pour ${first}.` : w.status === 'published' ? `${first} lit cette version.` : `${first} lit encore la version ${w.published?.number}.`}</p>
         </div>
-        <div className="actions"><Link className="btn" href={`${base}/athletes/${aid}/workouts/${sid}/edit`}>Modifier</Link></div>
+        <div className="actions">
+          <Link className="btn" href={`${base}/messages/${aid}?seance=${sid}`}>💬 En parler à {w.athlete.displayName.split(' ')[0]}</Link>
+          <SaveToLibrary wid={wid} aid={aid} sid={sid} />
+          <Link className="btn" href={`${base}/athletes/${aid}/workouts/${sid}/edit`}>Modifier</Link>
+        </div>
       </div>
 
       <div className={w.status === 'changed' ? 'compare' : undefined}>

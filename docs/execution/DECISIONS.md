@@ -260,3 +260,98 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
 - **Correctif.** Accusé de lecture : l’instant lu est désormais pris par la base (microseconde) et non arrondi à la milliseconde par le serveur ; sinon le dernier message lu restait compté comme non lu (test de non-régression).
 - **Non fait.** Notifications (e-mail, push) ; transcription des vocaux ; pièces jointes ; recherche dans les messages ; suppression ou modification d’un message.
 - **Réexamen.** Retour du fondateur sur la confidentialité des fils de groupe (prénoms visibles) ; besoin de notifications.
+
+## D-034 · Rendez-vous planifiés depuis la conversation et la fiche · 2026-11-19
+
+- **Contexte.** Demande du fondateur : « pouvoir créer et organiser un rendez-vous ou un appel vidéo facilement à partir de la conversation et/ou de la fiche client ».
+- **Décision.**
+  - Planification rapide, ouverte par « 📅 Planifier » dans l’en-tête de la conversation, dans la fiche élève et depuis le Planning : visio, appel ou rencontre ; jour (Aujourd’hui, Demain, Après-demain ou date) et heure (08:00, 12:00, 18:00, 19:00 ou autre) en un toucher, à l’heure de l’élève ; durée 15 à 60 min ; préparation facultative réservée au coach.
+  - Lien de visio créé d’office (Jitsi Meet, salle au nom aléatoire, sans compte ni donnée personnelle), remplaçable par un lien Zoom, Meet ou Teams.
+  - Case « Prévenir [prénom] dans la conversation » cochée par défaut et visible : l’annonce est un message explicite du coach (CLAUDE.md). Le message porte une carte (`messages.appointment_id`, migration `20261119010000`) : type, objet, date et heures dans le fuseau du lecteur, « Rejoindre l’appel », « Ajouter à mon agenda » (fichier .ics généré dans le navigateur). L’élève lit la carte par son message ; préparation et compte rendu restent invisibles pour lui (prouvé). L’annulation depuis la fiche annonce « ❌ … annulé » et barre la carte.
+- **Non fait.** Proposer plusieurs créneaux à l’élève et le laisser choisir ; rappel avant l’appel ; rendez-vous de groupe.
+
+## D-035 · Bibliothèque de séances et programmes à préparer · 2026-11-19
+
+- **Contexte.** Demande du fondateur : « dans Séances, une bibliothèque de séances, la possibilité d’en créer de nouvelles, et la liste des personnes avec des programmes en attente de création » (CE-B-01, début de CE-B-08).
+- **Décision.**
+  - « Séances » a trois sous-onglets : Semaine (planning d’un élève), Bibliothèque, À préparer (pastille du nombre d’élèves).
+  - Bibliothèque sur la table de référence `templates` (kind = `workout`, visible par son auteur) ; charge utile `{ category, workout }`, la séance n’ayant ni date, ni élève, ni fuseau. **Écart de contrat** : `createTemplate` et `updateTemplate` prennent ce format au lieu des « entrées datées », réservées aux semaines types (CE-B-02) ; ajout de `addStarterLibrary` et `templateFromWorkout`.
+  - Créer et modifier avec le même constructeur par blocs ; dupliquer, archiver ; recherche, filtre par sport et par catégorie (11 catégories). « Utiliser pour un élève » ouvre une nouvelle séance pré-remplie pour l’élève et la date choisis ; la séance de la bibliothèque ne change jamais. « 📚 Ajouter à la bibliothèque » depuis une séance existante. Séances de départ : les modèles rapides complets, ajoutés une seule fois.
+  - À préparer : élèves actifs sans séance publiée sur les 7 prochains jours, avec « Préparer » et « Depuis la bibliothèque » ; puis les programmes en place.
+- **Non fait.** Bibliothèque CoachOS commune distincte (CE-B-08), semaines types (CE-B-02), import d’une base de coaching (CE-B-06), saisie rapide en notation texte (CE-B-09).
+
+## D-036 · Messages à propos d’une séance et retours dans la conversation · 2026-11-19
+
+- **Contexte.** Le fondateur ne retrouvait pas l’échange sur le retour d’Emma : la réponse ne disait pas de quelle séance il s’agissait, et l’échange était dans l’espace Paupiette alors qu’il regardait Pauletta (compte de recette à la fois coach et élève dans deux espaces).
+- **Décision.** Un message peut citer la séance dont il parle (`messages.workout_id`, migration `20261119020000`, même élève par clé étrangère ; l’élève ne cite qu’une séance publiée). « 💬 En parler à … » sur la page d’une séance (coach et élève) ouvre la conversation avec la séance citée (retirable) ; la réponse rapide sous un retour cite la séance. Le fil affiche « ↪ À propos de : titre · date » avec lien vers la séance (page coach ou élève), et intercale les retours de séance de l’élève en cartes (état, effort, commentaire). L’en-tête des conversations indique l’espace.
+- **Correctif lié.** Un message écrit par un coach de l’espace ne crée plus « Répondre au message », même si la même personne est l’élève de la fiche ; « Relancer le questionnaire » a un bouton « Relancer [prénom] » (message explicite avec lien, suivi mis de côté 3 jours).
+
+## D-037 · Suivi de l’entraînement et onglet Progression · 2026-11-19
+
+- **Contexte.** Demandes du fondateur : « plus de données venant des entraînements, un état des lieux de l’objectif, de l’avancement du programme » (CE-E-03, CE-G-08, lot S, CE-S-01 à 04).
+- **Décision.**
+  - Un seul calcul (`summarize`, domaine) et un seul panneau (`StatsPanel`) pour l’élève et pour le coach, sur 4, 8 ou 12 semaines (8 par défaut), semaines du lundi au dimanche dans le fuseau de l’élève.
+  - Sources : séances **publiées** (jamais les brouillons, prouvé) et retours déclarés par l’élève. Aucune donnée Strava ni dérivée ; rien n’est envoyé à l’IA.
+  - Indicateurs : régularité (séances faites ÷ séances passées, avec « sans retour »), volume réalisé sur prévu, distance réalisée (déclarée) sur prévue, effort ressenti moyen, série de semaines avec au moins une séance faite. Donnée absente : « — », jamais un zéro inventé. Définitions affichées sous le graphique.
+  - Graphique : une colonne par semaine, type jauge (fond clair = prévu, plein = réalisé, une seule teinte, légende), bulle au survol et au clavier gardée dans le cadre, tableau équivalent. Sur téléphone, le graphique défile et s’ouvre sur les semaines récentes.
+  - Droits : `athleteStats` vérifie coach affecté ou élève lui-même (`private.assigned` ou `private.own_athlete`) ; coach d’un autre espace, autre élève : rien (prouvé).
+  - Élève : 5 onglets à icône (Aujourd’hui, Programme, Progression, Échanges, Profil) ; Progression montre l’objectif suivi (compte à rebours J-x) puis le panneau. Coach : section « Suivi de l’entraînement » dans la fiche élève, la période gardée avec le contexte de retour.
+- **Non fait.** Allure moyenne et charge (CE-S-03) ; comparaison entre élèves et statistiques du portefeuille ; historique séance par séance ; données de montre (import FIT/TCX).
+
+## D-038 · « Planifier l’appel de bienvenue » une fois le questionnaire reçu · 2026-11-19
+
+- **Contexte.** Demande du fondateur : « lorsqu’un élève est ajouté, planification d’un appel ou d’un rendez-vous côté coach une fois que le questionnaire est reçu ».
+- **Décision.** Nouveau suivi automatique `onboarding_call` (migration `20261119030000`, contrat `snoozeAutoTask`) : élève actif, questionnaire rempli, aucun rendez-vous prévu ou fait. Échéance : 2 jours après le questionnaire, priorité haute. Le suivi porte « 📅 Planifier l’appel », qui ouvre la planification rapide de D-034 dans la tâche, objet « Appel de bienvenue avec [prénom] », à l’heure de l’élève. Il se ferme dès qu’un rendez-vous est créé et revient si ce rendez-vous est annulé (prouvé). « Plus tard » propose aussi « Pas besoin d’appel » (mise en attente de 10 ans, réversible en base).
+- **Non fait.** Proposer des créneaux à l’élève ; rappel automatique.
+
+## D-039 · Retour rapide depuis Aujourd’hui (CE-C-03) · 2026-11-19
+
+- **Contexte.** Idée éprouvée dans Foulée (audit, D-027) : plus de retours avec moins d’effort ; ressenti comparé à l’intention de la séance.
+- **Décision.**
+  - Sur Aujourd’hui, sous la séance du jour : « Ta séance d’aujourd’hui ? » Faite / En partie / Pas faite. « Pas faite » envoie aussitôt ; sinon, second geste : ressenti en 5 choix (Très facile à Très dur, enregistré sur l’échelle d’effort 2, 4, 6, 8, 10) ou « Envoyer sans ressenti ». La séance d’hier sans retour reste proposée de la même façon.
+  - Intention portée par la séance, sans nouveau champ : déduite de l’intensité la plus haute des blocs de travail (zones 1–2 facile, 3–4 modérée, 5–7 difficile ; ou effort prescrit). Affichée « Visé par ton coach : séance difficile » et les choix conformes sont soulignés. Après l’envoi : « Ressenti conforme à l’objectif », « Plus facile que prévu » ou « Plus dur que prévu : ton coach le verra ».
+  - Le retour rapide est un retour ordinaire (même commande, même clé d’idempotence, même revue côté coach) ; « Compléter ou modifier » ouvre le formulaire complet pré-rempli.
+- **Preuve.** Test du domaine (intention, écart, corps valide pour le schéma ; ressenti retiré pour une séance pas faite). Navigateur à 375 px : Camille, « Faite » puis « Dur » sur « Séries courtes » (visé : difficile) → « Retour envoyé · Réalisée · Ressenti conforme à l’objectif ».
+- **Non fait.** Intention choisie explicitement par le coach (champ dédié) ; rappel du retour non envoyé (notification).
+
+## D-040 · Graphique de la séance (CE-E-04) · 2026-11-19
+
+- **Contexte.** Idée éprouvée dans Foulée (capture 04) : voir d’un coup d’œil la forme d’une séance.
+- **Décision.**
+  - Une barre par étape, dans l’ordre réel, répétitions dépliées (`sessionProfile`, domaine) : largeur = durée (estimée avec l’allure ou la zone et la VMA ; sinon supposée pour le dessin seulement et signalée), hauteur = intensité de 1 à 7 (zone ; effort ; % FC max ; % FTP ; allure rapportée à la VMA ; à défaut, supposée d’après la phase et dessinée plus pâle).
+  - Une seule teinte, plus soutenue quand c’est plus intense (la hauteur porte déjà l’information) ; récupération en gris ; repères Z3 et Z5 en pointillés ; axe en minutes. Jamais la couleur seule : détail écrit de chaque étape (« Effort · 300 m · Z5 », « série 1 sur 3 · répétition 2 sur 5 ») au toucher, au survol ou aux flèches du clavier, boutons précédent / suivant, et tableau équivalent.
+  - Affiché pour l’élève et le coach (page de séance, revue) et en direct dans le constructeur.
+- **Correctif lié.** Le constructeur créait des clés de blocs différentes au rendu serveur et dans le navigateur (avertissement d’hydratation) : clés stables par position au premier affichage.
+- **Preuve.** Tests du domaine (dépliage, durée estimée avec VMA, durée supposée sans VMA, niveaux depuis effort, FC, puissance et allure). Navigateur : Camille à 375 px (35 barres, détail au toucher, flèches du clavier) ; Marine sur ordinateur (page de séance et constructeur).
+- **Non fait.** Superposer le réalisé (données de montre) ; graphique par sport en multisport.
+
+## D-041 · Saisie rapide en notation texte (CE-B-09) · 2026-11-19
+
+- **Contexte.** Idée éprouvée dans Foulée : le coach écrit une séance en quelques secondes, comme sur papier.
+- **Décision.**
+  - « ✍️ Saisie rapide en texte » dans le constructeur (séance et bibliothèque). Le champ s’ouvre avec la séance en cours écrite en texte ; on modifie ou on écrit, l’aperçu (« ✓ 3 blocs · environ 1 h 09 ») ou les erreurs s’affichent au fil de la saisie ; « Remplacer le déroulé » ou « Ajouter à la fin ». Rien n’est enregistré avant « Enregistrer » ; le constructeur par blocs reste la voie principale.
+  - Notation (`parseNotation` / `toNotation`, domaine) : durées `15'` `1'30` `45"` `1h30`, distances `400m` `1,5km`, bloc libre `libre` ; intensités `Z1`…`Z7`, `@4'30-4'15/km`, `@1'45/100m`, `RPE7`, `95%FTP`, `250W`, `150bpm`, `85%FC` ; répétitions `8×(…)` sur deux niveaux au plus ; `R200m` = récupération, mots « échauffement », « calme », « repos » ; sport en multisport (`vélo 1h Z2 + course 20' Z3`) ; note entre « ».
+  - Phases déduites quand elles ne sont pas écrites : en tête, l’étape moins intense que la suite est l’échauffement ; en fin, le retour au calme ; dans une répétition, l’effort. Le texte produit n’écrit une phase que si elle ne se déduit pas (aller-retour exact, prouvé).
+  - Aucune devinette : tout mot non compris est signalé (« « vite » non compris… une note s’écrit entre « » ») et bloque l’application.
+- **Limites.** La cadence ne s’écrit pas en texte (conservée seulement par le constructeur) ; pas de zones de puissance ou de FC nommées (Z s’applique aux zones CoachOS).
+- **Preuve.** 4 tests du domaine (séance type, toutes les intensités et le multisport, erreurs, aller-retour de 6 séances). Navigateur (Marine) : « Séries courtes » s’ouvre en texte ; « tranquille » signalé ; « 20' Z2 + 6×(1000m Z4 + R2') + 10' Z1 » remplace le déroulé (3 blocs, graphique à 14 barres), quitté sans enregistrer.
+
+## D-042 · Séance de groupe : base commune, adaptations, exceptions, publication (lot G2) · 2026-11-19
+
+- **Contexte.** Complément du 17 novembre (planning par groupe, base commune puis adaptations, destinataires et exceptions avant publication), stories CE-G2-01 et CE-G2-02.
+- **Décision.**
+  - Nouvel onglet « Groupes » dans Séances : pour chaque groupe, « 📅 Nouvelle séance pour le groupe » ; liste des séances de groupe récentes et à venir avec « x sur n publiées ». Depuis la bibliothèque : ⋯ → « Pour le groupe … ».
+  - Création : titre, sport, date, déroulé (constructeur ou saisie rapide), consignes, puis **liste exacte des destinataires** (membres du groupe que le coach suit, cochés par défaut, invités signalés) et résumé « 2 brouillons le vendredi 20 novembre : Camille, Noah ». Un brouillon **indépendant** par élève, à la date locale et au fuseau de chacun (`group_sessions` + `workouts.group_session_id`, migration `20261119040000`). Rien n’est publié.
+  - Page de la séance de groupe : chaque élève et l’état de sa séance (Brouillon, Adaptée, Publiée, Modifiée depuis la publication). « Adapter » ouvre la séance de cet élève seul et revient à la séance de groupe après l’enregistrement ; la base des autres ne change pas.
+  - Publication explicite : cases par élève, puis rappel avant l’envoi (« Publier pour 1 élève : Noah · dont 1 adaptée · Exceptions : Camille (non cochée) », membres du groupe sans séance compris). Atomique : si une séance a changé depuis l’aperçu, rien n’est publié (409). La publication réutilise celle d’une séance (`publishInTx`, même historique de publications).
+  - Droits : coach actif de l’espace ; chaque élève doit être suivi par lui, membre du groupe et non archivé ; la base commune n’est lisible que par les coachs de l’espace, jamais par les élèves. Contrat : `createGroupSession`, `publishGroupSession`.
+- **Preuve.** `group-sessions.test.ts` (4 cas : destinataires exacts et rien de visible avant publication ; élève hors groupe, autre espace et élève refusés ; adaptation conservée, révision périmée → rien publié, exception non publiée ; séance étrangère refusée) et contrat des 2 opérations. Navigateur (Marine, démonstration) : séance « Piste du mardi » pour Camille et Noah saisie en texte ; Noah adapté puis retour automatique ; Camille décochée → « Exceptions : Camille » ; publication de Noah seul.
+- **Semaine du groupe (CE-G2-03).** Depuis Séances → Groupes → « Semaine du groupe » : une ligne par élève, une colonne par jour, chaque séance avec son état (Brouillon, Publiée, Modifiée non republiée, Réalisée, Manquée, Annulée), 👥 pour les séances de groupe ; résumé « 6 publiées · 2 à publier · sans séance : … » ; semaines précédente et suivante ; « 📅 Séance pour le groupe ». Test : contenu et refus pour un autre espace.
+- **Non fait.** Modifier la base et répercuter sur les brouillons non adaptés ; annoncer la séance de groupe dans le fil du groupe.
+
+## D-043 · Régularité dans la liste des élèves et par groupe · 2026-11-19
+
+- **Contexte.** Lot S (statistiques du coach sur le portefeuille) : repérer d’un coup d’œil qui décroche.
+- **Décision.** Chaque élève actif de la liste Élèves affiche sa régularité des 4 dernières semaines (jauge + « 67 % · 2 séances faites sur 3 · effort moyen 6/10 », jamais la couleur seule) ; chaque carte de groupe affiche la régularité du groupe (séances faites ÷ prévues, tous membres) ; nouveau filtre « Régularité sous 50 % » (au moins 2 séances passées). Mêmes règles que le suivi de l’entraînement (D-037) : séances publiées, non annulées, passées ; faite = réalisée ou en partie.
+- **Preuve.** Test : pour chaque élève actif, la régularité de la liste est identique au suivi calculé sur 28 jours. Navigateur (Marine) : Camille 67 %, Noah 0 %, groupes 67 % et 50 %.
+- **Non fait.** Classement par régularité ; évolution d’une période à l’autre.

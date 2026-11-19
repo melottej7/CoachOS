@@ -31,6 +31,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     { path: `${A}/workouts/:id`, targets: ['structure', 'workout-details'], optional: true, text: 'Voici le déroulé, bloc par bloc : durée ou distance, et l’intensité à viser.', textFor: { 'workout-details': 'Ici, la durée prévue, puis les consignes de ton coach juste en dessous.' } },
     { path: `${A}/workouts/:id`, targets: ['feedback-cta'], optional: true, text: 'Après ta séance, donne ton retour ici. Il faut moins de trente secondes, et ton coach le lit.', mood: 'wink' },
     { path: 'any', targets: ['tab-schedule'], text: 'Programme : toute ta semaine, et les semaines suivantes dès que ton coach les publie.' },
+    { path: 'any', targets: ['tab-progress'], text: 'Progression : ton objectif, ta régularité et ton volume d’entraînement, semaine après semaine.' },
     { path: 'any', targets: ['tab-messages'], text: 'Échanges : écris à ton coach ou envoie-lui un vocal. Tu y retrouves aussi tes groupes.' },
     { path: 'any', targets: ['tab-profile'], text: 'Profil : tes réglages, ton profil sportif et la présentation de ton coach.' },
     { path: 'any', targets: ['guide-help'], text: 'Je reste ici, en bas de l’écran. Touche-moi pour revoir la visite. Bonne séance !', mood: 'cheer' },

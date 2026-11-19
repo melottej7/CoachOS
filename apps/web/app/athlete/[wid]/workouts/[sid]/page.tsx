@@ -67,6 +67,7 @@ export default async function AthleteWorkoutPage({ params, searchParams }: { par
           {open ? (
             <div className="actions">
               <Link className={`btn ${feedback ? '' : 'primary'}`} href={`${base}/workouts/${sid}/feedback`}>{feedback ? 'Corriger mon retour' : 'Donner mon retour'}</Link>
+              <Link className="btn" href={`${base}/messages/coach?seance=${sid}`}>💬 En parler à mon coach</Link>
             </div>
           ) : !feedback ? (
             <p className="muted">{w.canceled ? 'Séance annulée : pas de retour attendu.' : 'Tu pourras donner ton retour à partir du jour de la séance.'}</p>

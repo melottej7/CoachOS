@@ -8,7 +8,11 @@ import { apptCols, toAppt, type AppointmentItem, type ApptRow } from '../command
 // Lectures des lots G et H (D-032), toutes sous RLS : un coach ne voit que ses élèves affectés.
 
 export interface TeamRef { id: string; name: string }
-export interface TeamSummary extends TeamRef { sortOrder: number; archived: boolean; members: number; openReviews: number; withoutUpcoming: number }
+export interface TeamSummary extends TeamRef {
+  sortOrder: number; archived: boolean; members: number; openReviews: number; withoutUpcoming: number;
+  /** Régularité du groupe sur 4 semaines : séances faites / prévues, tous membres confondus (D-043). */
+  regularity: number | null;
+}
 
 /** Une tâche à faire, humaine ou calculée (suivi automatique), avec son motif. */
 export interface HomeTask {
@@ -24,7 +28,8 @@ export interface HomeTask {
   dueOn: string | null;
   status: TaskStatus;
   revision: number | null;
-  athlete: { id: string; name: string } | null;
+  /** Fuseau connu pour les suivis automatiques (planification d’un appel). */
+  athlete: { id: string; name: string; timeZone?: string } | null;
   team: TeamRef | null;
   link: string | null;
   notes: string | null;
@@ -41,6 +46,8 @@ export interface RosterEntry {
   levels: { sport: Sport; level: Level }[];
   vmaKmh: number | null;
   openReviews: number;
+  /** Régularité des 4 dernières semaines (séances publiées passées, D-043) : faites / prévues, effort moyen déclaré. */
+  regularity: { due: number; done: number; pct: number | null; avgRpe: number | null };
   nextWorkout: string | null;
   upcoming7: number;
   todo: HomeTask[];
@@ -96,7 +103,7 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
   const teams = await q<{ athlete_id: string; id: string; name: string }>(
       `select ta.athlete_id, t.id, t.name from public.team_athletes ta join public.teams t on t.workspace_id = ta.workspace_id and t.id = ta.team_id
        where ta.workspace_id = $1 and ta.athlete_id = any($2::uuid[]) and t.archived_at is null order by t.sort_order, t.name`);
-  const profiles = await q<{ athlete_id: string; sport_code: Sport; level: Level }>(`select athlete_id, sport_code, level from public.athlete_profiles where workspace_id = $1 and athlete_id = any($2::uuid[])`);
+  const profiles = await q<{ athlete_id: string; sport_code: Sport; level: Level; updated_at: Date }>(`select athlete_id, sport_code, level, updated_at from public.athlete_profiles where workspace_id = $1 and athlete_id = any($2::uuid[])`);
   const levels = await q<{ athlete_id: string; sport_code: Sport; level: Level }>(`select athlete_id, sport_code, level from public.athlete_sport_levels where workspace_id = $1 and athlete_id = any($2::uuid[]) order by sport_code`);
   const refs = await q<{ athlete_id: string; vma_kmh: string | null }>(`select athlete_id, vma_kmh from public.athlete_references where workspace_id = $1 and athlete_id = any($2::uuid[])`);
   const reviews = await q<{ id: string; athlete_id: string; created_at: Date; title: string | null }>(
@@ -119,7 +126,24 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
      join public.athletes a on a.workspace_id = c.workspace_id and a.id = c.athlete_id
      join lateral (select m.created_at, m.body, m.sender_id from public.messages m
                    where m.workspace_id = c.workspace_id and m.conversation_id = c.id order by m.created_at desc, m.id desc limit 1) lm on true
-     where c.workspace_id = $1 and c.athlete_id = any($2::uuid[]) and lm.sender_id = a.user_id`);
+     where c.workspace_id = $1 and c.athlete_id = any($2::uuid[]) and lm.sender_id = a.user_id
+       -- Écrit par un coach de l’espace (même s’il est aussi l’élève de cette fiche) : rien à répondre.
+       and not exists (select 1 from public.memberships mb where mb.workspace_id = c.workspace_id and mb.user_id = lm.sender_id and mb.active)`);
+  // Régularité sur 28 jours (D-043) : mêmes règles que le suivi de l’entraînement (publiées, non annulées, passées).
+  const reg = await q<{ athlete_id: string; due: number; done: number; rpe: string | null }>(
+    `select w.athlete_id, count(*)::int as due, count(*) filter (where res.state in ('completed','partial'))::int as done,
+            round(avg(f.rpe) filter (where res.state in ('completed','partial')), 1)::text as rpe
+     from public.workouts w
+     join public.workout_revisions r on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id and r.number = w.published_revision
+     left join public.workout_results res on res.workspace_id = w.workspace_id and res.athlete_id = w.athlete_id and res.workout_id = w.id
+     left join public.feedbacks f on f.workspace_id = res.workspace_id and f.athlete_id = res.athlete_id and f.result_id = res.id
+     where w.workspace_id = $1 and w.athlete_id = any($2::uuid[]) and w.published_revision is not null and not r.canceled
+       and r.local_date between $3::date and $4::date
+     group by w.athlete_id`, [addDays(today, -27), today]);
+  const regBy = new Map(reg.map((x) => [x.athlete_id, x]));
+  // Élèves ayant déjà un rendez-vous (prévu ou fait) : l’appel de bienvenue n’est plus à planifier.
+  const met = new Set((await q<{ athlete_id: string }>(
+    `select distinct athlete_id from public.appointments where workspace_id = $1 and athlete_id = any($2::uuid[]) and status <> 'canceled'`)).map((x) => x.athlete_id));
   const snooze = await snoozed(tx, wid);
   const tasks = await manualTasks(tx, wid, true);
   const by = <T extends { athlete_id: string }>(rows: T[]) => {
@@ -137,7 +161,7 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
     const vmaKmh = vmaRaw === null ? null : Number(vmaRaw);
     const upcoming = (workoutsBy.get(a.id) ?? []).map((w) => w.local_date);
     const upcoming7 = upcoming.filter((d) => d <= end).length;
-    const athleteRef = { id: a.id, name: a.display_name };
+    const athleteRef = { id: a.id, name: a.display_name, timeZone: a.time_zone };
     const auto: HomeTask[] = [];
     const push = (rule: AutoRule, ref: string, dueOn: string | null, link: string, detail?: string | null) => {
       const until = snooze.get(`${rule}:${ref}`);
@@ -150,10 +174,11 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
     };
     for (const m of msgBy.get(a.id) ?? []) push('message_reply', m.conversation_id, addDays(localDay(m.created_at), 1), `${base}/messages/${a.id}`, `« ${excerpt(m.body, 60)} »`);
     for (const rv of reviewsBy.get(a.id) ?? []) push('feedback_review', rv.id, addDays(localDay(rv.created_at), 2), `${base}/review/${rv.id}`, rv.title);
-    if (a.state === 'invited') push('invite_pending', a.id, addDays(localDay(a.created_at), 3), `${base}/athletes/${a.id}`);
+    if (a.state === 'invited') push('invite_pending', a.id, addDays(localDay(a.created_at), 3), `${base}/athletes/${a.id}#inv-title`);
     if (a.state === 'active') {
       if (!upcoming7) push('no_upcoming', a.id, today, `${base}/calendar?athlete=${a.id}`);
-      if (!profile) push('profile_missing', a.id, null, `${base}/athletes/${a.id}`);
+      if (!profile) push('profile_missing', a.id, null, `${base}/athletes/${a.id}#profile-title`);
+      if (profile && !met.has(a.id)) push('onboarding_call', a.id, addDays(localDay(profile.updated_at), 2), `${base}/athletes/${a.id}#rdv`);
       if (profile && !confirmed.some((l) => l.sport === profile.sport_code)) push('level_unconfirmed', a.id, null, `${base}/athletes/${a.id}#levels`);
       if (profile && usesVma(profile.sport_code) && vmaKmh === null) push('vma_missing', a.id, null, `${base}/athletes/${a.id}#refs-title`);
     }
@@ -163,7 +188,12 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
       id: a.id, name: a.display_name, timeZone: a.time_zone, state: a.state,
       teams: (teamsBy.get(a.id) ?? []).map((t) => ({ id: t.id, name: t.name })),
       sport: profile?.sport_code ?? null, declaredLevel: profile?.level ?? null, levels: confirmed, vmaKmh,
-      openReviews: (reviewsBy.get(a.id) ?? []).length, nextWorkout: upcoming[0] ?? null, upcoming7, todo,
+      openReviews: (reviewsBy.get(a.id) ?? []).length,
+      regularity: (() => {
+        const x = regBy.get(a.id);
+        return x ? { due: x.due, done: x.done, pct: x.due ? Math.round((x.done / x.due) * 100) : null, avgRpe: x.rpe === null ? null : Number(x.rpe) } : { due: 0, done: 0, pct: null, avgRpe: null };
+      })(),
+      nextWorkout: upcoming[0] ?? null, upcoming7, todo,
       urgency: urgencyScore(todo, today),
     };
   });
@@ -186,6 +216,10 @@ export async function portfolio(userId: string, wid: string, tz: string): Promis
       return {
         id: x.id, name: x.name, sortOrder: x.sort_order, archived: x.archived_at !== null, members: members.length,
         openReviews: members.reduce((n, a) => n + a.openReviews, 0), withoutUpcoming: members.filter((a) => a.state === 'active' && !a.upcoming7).length,
+        regularity: (() => {
+          const due = members.reduce((n, a) => n + a.regularity.due, 0);
+          return due ? Math.round((members.reduce((n, a) => n + a.regularity.done, 0) / due) * 100) : null;
+        })(),
       };
     });
     return { today, roster, teams };

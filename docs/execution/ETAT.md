@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-19 (messagerie, groupes et vocaux, D-033 ; lots G et H : Planning du coach, groupes, fiche élève, tâches et rendez-vous, D-032 ; retours de recette, D-031 ; 7 zones et VMA, D-029 ; constructeur par glisser-déposer et guide CoachOS, D-030 ; visite interactive, D-028).
+Dernière mise à jour : 2026-11-19 (régularité dans la liste des élèves, D-043 ; séance de groupe, D-042 ; saisie rapide en texte, D-041 ; graphique de la séance, D-040 ; retour rapide depuis Aujourd’hui, D-039 ; suivi de l’entraînement et onglet Progression, D-037 ; appel de bienvenue, D-038 ; bibliothèque et messages liés aux séances, D-035, D-036 ; rendez-vous depuis la conversation, D-034 ; messagerie, D-033 ; lots G et H : Planning du coach, groupes, fiche élève, tâches et rendez-vous, D-032 ; retours de recette, D-031 ; 7 zones et VMA, D-029 ; constructeur par glisser-déposer et guide CoachOS, D-030 ; visite interactive, D-028).
 
 ## Résumé
 
@@ -183,11 +183,27 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
 
 - **D-033, messagerie** : fil privé par élève, fil par groupe, vocaux, suivi « Répondre au message », réponses rapides ; migration `20261119000000` appliquée à Supabase local. `npm test` : **108 passés** (+3 PostgreSQL), dont `messages.test.ts` (fil unique, tiers refusés, non-lus, suivi ouvert puis fermé par la réponse, vocal : format, durée, écoute réservée ; groupe : membres seulement, noms signés, retrait = plus d’accès) et le contrat des 7 opérations. Navigateur : Camille (375 px) écrit à son coach et envoie un vrai fichier WebM de 2 s (enregistré à partir d’un son de synthèse) ; Marine voit « Messages 2 » et « Répondre au message · Camille » dans son Planning, lit le vocal (1,7 s, sans erreur), répond par Cmd + Entrée : pastille et suivi disparaissent ; fil de groupe avec avertissement ; « Bravo ! 👏 » envoyé depuis un retour. Affichage façon Messenger vérifié (ordinateur et 375 px : bulles regroupées, vocal lu dans la bulle, Entrée envoie, barre du bas à 4 onglets sans débordement) ; non-lus corrigés (arrondi à la milliseconde). `npm test` : **109 passés**. Branche `feat/CE-G-H-planning-coach`.
 
+- **D-034** rendez-vous depuis la conversation et la fiche : planification rapide (types, jours, heures, durées en un toucher ; lien de visio Jitsi créé d’office ; « Prévenir » coché) ; carte dans la conversation avec « Rejoindre l’appel » et « Ajouter à mon agenda » ; migration `20261119010000` appliquée. `npm test` : **110 passés**. Navigateur : Marine planifie depuis la conversation, la carte apparaît chez elle et chez Camille (375 px).
+
+- **D-035, D-036** : Séances avec sous-onglets Semaine, Bibliothèque, À préparer ; bibliothèque (créer, modifier, dupliquer, archiver, séances de départ, utiliser pour un élève, ajouter depuis une séance) ; messages liés à une séance et retours intercalés dans la conversation ; nom de l’espace dans l’en-tête des conversations ; bouton « Relancer » du questionnaire ; plus de faux « Répondre » quand le coach est aussi l’élève. Migration `20261119020000` appliquée. `npm test` : **115 passés**. Navigateur vérifié (Marine : séances de départ, « Utiliser pour un élève » pré-remplit 3 blocs, À préparer liste Noah, message cité et carte de retour de Camille).
+
+- **D-037, D-038** : onglet Progression de l’élève (objectif avec J-x, régularité, volume, distance, effort, série, colonnes par semaine, tableau, définitions ; barre à 5 onglets à icône) ; « Suivi de l’entraînement » dans la fiche élève ; suivi « Planifier l’appel de bienvenue » après le questionnaire, avec planification dans la tâche. Migration `20261119030000` appliquée. `npm test` : **122 passés** (+3 PostgreSQL), dont `stats.test.ts` (droits, brouillons exclus) et le cycle du suivi (ouvert, clos par un rendez-vous, rouvert à l’annulation, « Pas besoin d’appel »). Navigateur : Camille à 375 px (Progression, bulle dans le cadre, semaine en cours visible) ; Marine : fiche de Camille sur 12 semaines, suivi de Noah avec planification dépliée dans la tâche. Données de démonstration : questionnaire de Noah rempli pour la vérification.
+
+- **D-039** : retour rapide en deux gestes sur Aujourd’hui (séance du jour et d’hier sans retour), intention déduite des zones, écart de ressenti affiché. Vérifié à 375 px (Camille, données de démonstration).
+
+- **D-040** : graphique de la séance (élève, coach, constructeur) ; clés stables du constructeur (plus d’écart d’hydratation).
+
+- **D-041** : saisie rapide d’une séance en notation texte dans le constructeur, aperçu et erreurs au fil de la saisie, aller-retour exact.
+
+- **D-042, lot G2** : séance de groupe (onglet Séances → Groupes) : base commune, destinataires exacts, un brouillon par élève, adaptation individuelle, exceptions rappelées, publication atomique ; semaine du groupe. Migration `20261119040000` appliquée. Données de démonstration : Noah ajouté au « Groupe du mardi », séance « Piste du mardi » publiée pour Noah seul.
+
+- **D-043** : régularité sur 4 semaines par élève et par groupe dans Élèves, filtre « Régularité sous 50 % ». `npm test` : **139 passés** (+3 PostgreSQL).
+
 Non prouvé : enregistrement au micro réel (autorisation du micro non automatisable ici) ; visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
 
 À faire, dans l’ordre (D-032) :
 1. Recette des lots G et H par le fondateur (Planning, Élèves, fiche).
-2. Messagerie coach élève (CE-H-07, CE-E-02), statistiques (lot S), objectif et avancement (CE-G-08, CE-E-03), import FIT/TCX (CE-X-02/03). CE-C-03 retour rapide depuis Aujourd’hui.
+2. Recette par le fondateur des nouveautés de la nuit (Progression, appel de bienvenue, retour rapide, graphique de séance, saisie en texte, séances de groupe, régularité). Puis import FIT/TCX (CE-X-02/03), export FIT (CE-X-01), délais réglables des suivis (CE-H-04), répercuter une modification de la base d’une séance de groupe.
 3. **Lot G** (détail) : CE-G-01 à CE-G-08 (groupes sur `teams` étendu par migration additive, niveaux par sport `athlete_sport_levels`, vue d’ensemble, groupe filtré avec contexte conservé, fiche élève centrale, notes privées `coach_notes`, objectifs `goals`).
 3. Lot H, puis S, B, E, G2, P ; export FIT (CE-X-01) possible en parallèle.
 

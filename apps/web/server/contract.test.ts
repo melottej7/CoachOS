@@ -18,6 +18,8 @@ import { saveAthleteProfile } from './commands/athlete-profile';
 import { saveAthleteReferences } from './commands/athlete-references';
 import { confirmLevel, createGoal, createNote, createTeam, deleteNote, setTeamMember, updateGoal, updateTeam } from './commands/portfolio';
 import { createAppointment, createTask, snoozeAutoTask, updateAppointment, updateTask } from './commands/tasks';
+import { addStarterLibrary, createTemplate, templateFromWorkout, updateTemplate } from './commands/library';
+import { createGroupSession, publishGroupSession } from './commands/group-sessions';
 import { openConversation, saveReceipt, saveTeamReceipt, sendMessage, sendTeamMessage, sendTeamVoice, sendVoice } from './commands/messages';
 import { deleteWorkspaceLogo, previewInvitation, saveWorkspaceProfile, setWorkspaceLogo } from './commands/workspace-profile';
 import { todayIn } from '@coachos/domain';
@@ -160,6 +162,29 @@ describe('réponses conformes au contrat OpenAPI', () => {
     check('/workspaces/{wid}/teams/{tid}/receipt', 'put', tr.status, tr.body);
     const tv = await sendTeamVoice({ ...m(USERS.marine), teamId: team.id, seconds: 3 }, audio);
     check('/workspaces/{wid}/teams/{tid}/voice', 'post', tv.status, tv.body);
+  });
+
+  it('bibliothèque de séances', async () => {
+    const m = () => ({ ...meta(USERS.marine), workspaceId: WORKSPACE_A });
+    const c = await createTemplate(m(), { category: 'tempo', workout: { sport: 'running', title: 'Tempo 3 × 10 min', intervals: [] } });
+    check('/workspaces/{wid}/templates', 'post', c.status, c.body);
+    const u = await updateTemplate({ ...m(), templateId: (c.body as { id: string }).id }, { expectedRevision: 1, category: 'threshold' });
+    check('/workspaces/{wid}/templates/{tid}', 'patch', u.status, u.body);
+    const st = await addStarterLibrary(m());
+    check('/workspaces/{wid}/templates/starter', 'post', st.status, st.body);
+    const fw = await templateFromWorkout({ ...m(), athleteId: ATHLETES.camille, workoutId: SEED_WORKOUTS.camilleLong }, { category: 'long' });
+    check('/workspaces/{wid}/athletes/{aid}/workouts/{sid}/template', 'post', fw.status, fw.body);
+  });
+
+  it('séance de groupe : brouillons puis publication', async () => {
+    const m = () => ({ ...meta(USERS.marine), workspaceId: WORKSPACE_A });
+    const tid = (await createTeam(m(), { name: 'Contrat · séance de groupe' })).body as { id: string };
+    await setTeamMember({ ...m(), teamId: tid.id, athleteId: ATHLETES.camille }, true);
+    const c = await createGroupSession(m(), { teamId: tid.id, localDate: todayIn(TIME_ZONE), workout: { sport: 'running', title: 'Groupe · 6 × 1000 m', intervals: [] }, athleteIds: [ATHLETES.camille] });
+    check('/workspaces/{wid}/group-sessions', 'post', c.status, c.body);
+    const b = c.body as { id: string; items: { athleteId: string; workoutId: string }[] };
+    const p = await publishGroupSession({ ...m(), groupSessionId: b.id }, { items: [{ ...b.items[0]!, revision: 1 }] });
+    check('/workspaces/{wid}/group-sessions/{gid}/publish', 'post', p.status, p.body);
   });
 
   it('présentation d’espace, logo et aperçu d’invitation', async () => {

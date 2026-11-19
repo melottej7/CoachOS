@@ -1,0 +1,38 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { requireActor } from '@/server/auth/session';
+import { coachContext } from '@/server/repo/context';
+import { listLibrary } from '@/server/repo/library';
+import { portfolio } from '@/server/repo/portfolio';
+import { LibraryBrowser, StarterButton } from '@/components/library-browser';
+import { SessionsTabs, toPlanCount } from '@/components/sessions-tabs';
+
+export const metadata = { title: 'Bibliothèque' };
+
+/** CE-B-01 : bibliothèque de séances du coach. */
+export default async function Library({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<{ pour?: string }> }) {
+  const { wid } = await params;
+  const { pour } = await searchParams;
+  const actor = await requireActor();
+  const ctx = await coachContext(actor.userId, wid);
+  if (!ctx) notFound();
+  const [items, p] = [await listLibrary(actor.userId, wid), await portfolio(actor.userId, wid, ctx.workspace.timeZone)];
+  const athletes = p.roster.map((a) => ({ id: a.id, name: a.name, timeZone: a.timeZone }));
+  return (
+    <>
+      <div className="head">
+        <div><div className="kicker">Séances</div><h1>Bibliothèque</h1>
+          <p className="sub">Tes séances prêtes à l’emploi : crée-les une fois, utilise-les pour n’importe quel élève.</p></div>
+        <span className="actions">
+          {!items.length ? <StarterButton wid={wid} /> : null}
+          <Link className="btn primary" href={`/coach/${wid}/library/new`}>+ Nouvelle séance</Link>
+        </span>
+      </div>
+      <SessionsTabs wid={wid} current="library" toPlan={toPlanCount(p.roster)} />
+      <section className="card">
+        <LibraryBrowser wid={wid} athletes={athletes} preselect={pour} teams={p.teams.filter((t) => !t.archived && t.members > 0).map((t) => ({ id: t.id, name: t.name }))} items={items.map((i) => ({ id: i.id, revision: i.revision, category: i.category, workout: i.workout }))} />
+        {!items.length ? <p className="muted foot-note">Pour démarrer, ajoute les séances de départ (fractionné, tempo, côtes, sortie longue, vélo, natation…) puis adapte-les. Tu peux aussi ajouter une séance déjà créée depuis sa page : « 📚 Ajouter à la bibliothèque ».</p> : null}
+      </section>
+    </>
+  );
+}

@@ -20,6 +20,55 @@ export interface UiMessage {
   day: string;
   time: string;
   at: number;
+  appointment?: UiAppointment | null;
+  /** Séance dont parle le message (D-036). */
+  workout?: { label: string; href: string | null } | null;
+  /** Retour de séance intercalé dans la conversation. */
+  event?: { title: string; href: string | null; state: string; rpe: number | null; comment: string | null; reviewed: boolean } | null;
+}
+
+export interface UiAppointment {
+  id: string; title: string; kind: 'video' | 'call' | 'in_person'; status: 'planned' | 'done' | 'canceled'; videoUrl: string | null;
+  durationMin: number; dateLabel: string; time: string; endTime: string; startsAt: string; past: boolean;
+}
+
+const KIND = { video: { icon: '🎥', label: 'Appel vidéo' }, call: { icon: '📞', label: 'Appel' }, in_person: { icon: '🤝', label: 'Rendez-vous' } } as const;
+
+/** Fichier agenda (.ics) généré dans le navigateur : rien n’est envoyé à un service tiers. */
+function icsHref(a: UiAppointment): string {
+  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const start = new Date(a.startsAt);
+  const end = new Date(start.getTime() + a.durationMin * 60_000);
+  const lines = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//CoachOS//FR', 'BEGIN:VEVENT', `UID:${a.id}@coachos`, `DTSTAMP:${fmt(start)}`,
+    `DTSTART:${fmt(start)}`, `DTEND:${fmt(end)}`, `SUMMARY:${a.title.replace(/[,;\\]/g, ' ')}`,
+    ...(a.videoUrl ? [`URL:${a.videoUrl}`, `LOCATION:${a.videoUrl}`] : []), 'END:VEVENT', 'END:VCALENDAR',
+  ];
+  return `data:text/calendar;charset=utf-8,${encodeURIComponent(lines.join('\r\n'))}`;
+}
+
+/** Carte de rendez-vous dans la conversation : quoi, quand, rejoindre, ajouter à l’agenda. */
+function AppointmentBubble({ a }: { a: UiAppointment }) {
+  const k = KIND[a.kind];
+  const live = a.status === 'planned' && !a.past;
+  return (
+    <div className={`appt-card${a.status === 'canceled' ? ' canceled' : ''}`}>
+      <div className="appt-card-top">
+        <span className="appt-card-icon" aria-hidden="true">{k.icon}</span>
+        <div>
+          <p className="appt-card-kind">{k.label}{a.status === 'canceled' ? ' · annulé' : a.status === 'done' ? ' · fait' : a.past ? ' · passé' : ''}</p>
+          <p className="appt-card-title">{a.title}</p>
+        </div>
+      </div>
+      <p className="appt-card-when">{a.dateLabel}<br />{a.time} – {a.endTime} · {a.durationMin} min</p>
+      {live ? (
+        <div className="appt-card-actions">
+          {a.kind === 'video' && a.videoUrl ? <a className="appt-btn primary" href={a.videoUrl} target="_blank" rel="noopener noreferrer">Rejoindre l’appel</a> : null}
+          <a className="appt-btn" href={icsHref(a)} download="rendez-vous-coachos.ics">Ajouter à mon agenda</a>
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 type Target = { kind: 'direct'; athleteId: string; conversationId: string | null } | { kind: 'team'; teamId: string };
@@ -79,9 +128,32 @@ function VoicePlayer({ src, seconds, label }: { src: string; seconds: number; la
   );
 }
 
+/** Texte de message avec adresses web cliquables (http et https seulement). */
+function Linkified({ text }: { text: string }) {
+  const parts = text.split(/(https?:\/\/[^\s<>"]+)/g);
+  return (
+    <>
+      {parts.map((p, i) => {
+        if (!/^https?:\/\//.test(p)) return p;
+        const url = p.replace(/[.,;:!?)»]+$/, '');
+        const rest = p.slice(url.length);
+        // Pages de CoachOS (espace élève ou coach) : même onglet ; sites extérieurs : nouvel onglet.
+        const internal = /^https?:\/\/[^/]+\/(athlete|coach)\//.test(url);
+        return (
+          <span key={i}>
+            <a className="chat-link" href={url} {...(internal ? {} : { target: '_blank', rel: 'noopener noreferrer' })}>{url}</a>{rest}
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
 /** Fil façon messagerie instantanée : bulles regroupées, avatar de l’autre, heure entre deux échanges espacés. */
-export function Thread({ wid, target, messages, showNames, emptyText, otherName }: {
+export function Thread({ wid, target, messages, showNames, emptyText, otherName, about }: {
   wid: string; target: Target; messages: UiMessage[]; showNames: boolean; emptyText: string; otherName?: string;
+  /** Séance dont on veut parler (ouverte depuis la page de la séance). */
+  about?: { workoutId: string; label: string } | null;
 }) {
   const router = useRouter();
   const list = useRef<HTMLDivElement>(null);
@@ -103,7 +175,7 @@ export function Thread({ wid, target, messages, showNames, emptyText, otherName 
     return () => clearInterval(t);
   }, [router]);
 
-  const sameAuthor = (a?: UiMessage, b?: UiMessage) => Boolean(a && b && a.mine === b.mine && a.senderName === b.senderName && Math.abs(b.at - a.at) < GROUP_GAP && a.day === b.day);
+  const sameAuthor = (a?: UiMessage, b?: UiMessage) => Boolean(a && b && !a.event && !b.event && !b.workout && a.mine === b.mine && a.senderName === b.senderName && Math.abs(b.at - a.at) < GROUP_GAP && a.day === b.day);
 
   return (
     <div className="chat">
@@ -114,19 +186,38 @@ export function Thread({ wid, target, messages, showNames, emptyText, otherName 
           const stamp = !prev || prev.day !== m.day || m.at - prev.at > STAMP_GAP;
           const first = stamp || !sameAuthor(prev, m);
           const lastOfGroup = !next || !sameAuthor(m, next) || next.day !== m.day || next.at - m.at > STAMP_GAP;
+          if (m.event) {
+            const e = m.event;
+            return (
+              <div key={m.id}>
+                {stamp ? <p className="chat-stamp">{m.day} · {m.time}</p> : null}
+                <div className="chat-event">
+                  <p className="chat-event-head"><span aria-hidden="true">📝</span> Retour de séance</p>
+                  <p className="chat-event-title">{e.href ? <a href={e.href}>{e.title}</a> : e.title}</p>
+                  <p className="chat-event-meta">{e.state}{e.rpe !== null ? ` · effort ${e.rpe}/10` : ''}{e.reviewed ? ' · traité' : ''}</p>
+                  {e.comment ? <p className="chat-event-quote">« {e.comment} »</p> : null}
+                </div>
+              </div>
+            );
+          }
           return (
             <div key={m.id}>
               {stamp ? <p className="chat-stamp">{m.day} · {m.time}</p> : null}
+              {m.workout ? (
+                <p className={`chat-ref${m.mine ? ' mine' : ''}`}>
+                  <span aria-hidden="true">↪</span> À propos de : {m.workout.href ? <a href={m.workout.href}>{m.workout.label}</a> : m.workout.label}
+                </p>
+              ) : null}
               {first && showNames && !m.mine ? <p className="chat-name">{m.senderName}{m.fromCoach ? ' · coach' : ''}</p> : null}
               <div className={`chat-row${m.mine ? ' mine' : ''}${first ? ' first' : ''}${lastOfGroup ? ' last' : ''}`}>
                 {!m.mine ? (
                   <span className={`chat-avatar${m.fromCoach ? ' coach' : ''}`} aria-hidden="true">{lastOfGroup ? initialsOf(showNames ? m.senderName : otherName ?? m.senderName) : ''}</span>
                 ) : null}
-                <div className={`chat-bubble${m.voiceId ? ' voice' : ''}`} title={`${m.day} · ${m.time}`}>
-                  {m.voiceId ? (
+                <div className={`chat-bubble${m.voiceId ? ' voice' : ''}${m.appointment ? ' card' : ''}`} title={`${m.day} · ${m.time}`}>
+                  {m.appointment ? <AppointmentBubble a={m.appointment} /> : m.voiceId ? (
                     <VoicePlayer src={`/media/workspaces/${wid}/voice/${m.voiceId}`} seconds={m.voiceDurationS ?? 0}
                       label={`message vocal de ${m.mine ? 'toi' : m.senderName}, ${formatVoiceDuration(m.voiceDurationS ?? 0)}`} />
-                  ) : m.body}
+                  ) : <Linkified text={m.body} />}
                   <span className="visually-hidden"> · {m.mine ? 'envoyé' : `de ${m.senderName}`} à {m.time}</span>
                 </div>
               </div>
@@ -134,16 +225,17 @@ export function Thread({ wid, target, messages, showNames, emptyText, otherName 
           );
         }) : <p className="chat-empty">{emptyText}</p>}
       </div>
-      <Composer wid={wid} target={target} />
+      <Composer wid={wid} target={target} about={about ?? null} />
     </div>
   );
 }
 
 /** Barre d’écriture : micro, champ en pastille, envoi. Entrée envoie, Maj + Entrée passe à la ligne. */
-function Composer({ wid, target }: { wid: string; target: Target }) {
+function Composer({ wid, target, about }: { wid: string; target: Target; about: { workoutId: string; label: string } | null }) {
   const router = useRouter();
   const { run, pending, error, setError } = useIntent<{ item: { id: string } }>();
   const [text, setText] = useState('');
+  const [context, setContext] = useState(about);
   const [opening, setOpening] = useState(false);
   const [recording, setRecording] = useState(false);
   const area = useRef<HTMLTextAreaElement>(null);
@@ -162,13 +254,17 @@ function Composer({ wid, target }: { wid: string; target: Target }) {
     const cid = await ensureConversation(wid, target);
     setOpening(false);
     if (target.kind === 'direct' && !cid) { setError({ ok: false, kind: 'network' }); return; }
-    const ok = await run('POST', sendUrl(wid, target, cid, 'messages'), { body: text });
-    if (ok) { setText(''); router.refresh(); area.current?.focus(); }
+    const ok = await run('POST', sendUrl(wid, target, cid, 'messages'), { body: text, workoutId: context?.workoutId ?? null });
+    if (ok) { setText(''); setContext(null); router.refresh(); area.current?.focus(); }
   }
 
   return (
     <div className="chat-composer">
       {error ? <p className="field-error" role="alert">{error.kind === 'error' ? error.fields[0]?.rule ?? error.message : 'Connexion perdue. Ton message est conservé : réessaie.'}</p> : null}
+      {context ? (
+        <p className="chat-context"><span aria-hidden="true">↪</span> À propos de : <strong>{context.label}</strong>
+          <button type="button" className="chat-context-x" onClick={() => setContext(null)} aria-label="Ne plus citer cette séance">✕</button></p>
+      ) : null}
       <div className="chat-bar">
         <VoiceRecorder wid={wid} target={target} onActive={setRecording} />
         {!recording ? (
@@ -297,7 +393,7 @@ function VoiceRecorder({ wid, target, onActive }: { wid: string; target: Target;
 }
 
 /** Réponse rapide sous un retour (CE-H-08) : envoyée seulement sur le geste du coach. */
-export function QuickReply({ wid, athleteId, first }: { wid: string; athleteId: string; first: string }) {
+export function QuickReply({ wid, athleteId, first, workoutId }: { wid: string; athleteId: string; first: string; workoutId?: string }) {
   const [sent, setSent] = useState<string | null>(null);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -308,7 +404,7 @@ export function QuickReply({ wid, athleteId, first }: { wid: string; athleteId: 
     setBusy(true);
     setError(null);
     const cid = await ensureConversation(wid, { kind: 'direct', athleteId, conversationId: null });
-    const r = cid ? await mutate('POST', `${base(wid)}/conversations/${cid}/messages`, { body }, newKey()) : null;
+    const r = cid ? await mutate('POST', `${base(wid)}/conversations/${cid}/messages`, { body, workoutId: workoutId ?? null }, newKey()) : null;
     setBusy(false);
     if (r?.ok) { setSent(body); setText(''); } else setError('Envoi impossible. Réessaie.');
   }

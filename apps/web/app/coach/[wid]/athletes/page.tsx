@@ -24,6 +24,18 @@ const levelOf = (a: RosterEntry): { level: Level | null; confirmed: boolean } =>
 };
 
 /** Lot G : groupes et élèves, regroupés par groupe, niveau ou urgence, avec recherche et filtres (CE-G-03, CE-G-04). */
+/** Régularité des 4 dernières semaines (D-043) : jauge + chiffres, jamais la couleur seule. */
+function Regularity({ r }: { r: { due: number; done: number; pct: number | null; avgRpe: number | null } }) {
+  if (r.pct === null) return <p className="reg muted">Régularité : pas encore de séance passée sur 4 semaines</p>;
+  return (
+    <p className={`reg${r.pct < 50 ? ' low' : ''}`}>
+      <span className="reg-meter" aria-hidden="true"><span style={{ width: `${r.pct}%` }} /></span>
+      Régularité {r.pct} % · {r.done} séance{r.done > 1 ? 's' : ''} faite{r.done > 1 ? 's' : ''} sur {r.due} en 4 semaines
+      {r.avgRpe !== null ? ` · effort moyen ${String(r.avgRpe).replace('.', ',')}/10` : ''}
+    </p>
+  );
+}
+
 export default async function Roster({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<Search> }) {
   const { wid } = await params;
   const sp = await searchParams;
@@ -46,7 +58,8 @@ export default async function Roster({ params, searchParams }: { params: Promise
     (!sp.sport || a.sport === sp.sport) &&
     (!sp.team || a.teams.some((t) => t.id === sp.team)) &&
     (!sp.level || levelOf(a).level === sp.level) &&
-    (!sp.status || (sp.status === 'invited' ? a.state === 'invited' : sp.status === 'active' ? a.state === 'active' : a.urgency > 0)),
+    (!sp.status || (sp.status === 'invited' ? a.state === 'invited' : sp.status === 'active' ? a.state === 'active'
+      : sp.status === 'irregular' ? a.regularity.pct !== null && a.regularity.due >= 2 && a.regularity.pct < 50 : a.urgency > 0)),
   );
   const filtered = Boolean(q || sp.sport || sp.team || sp.level || sp.status);
   const activeTeams = teams.filter((t) => !t.archived);
@@ -89,6 +102,7 @@ export default async function Roster({ params, searchParams }: { params: Promise
                     <span>{t.members} élève{t.members > 1 ? 's' : ''}</span>
                     <span className={t.openReviews ? 'attn' : ''}>{t.openReviews} retour{t.openReviews > 1 ? 's' : ''} à traiter</span>
                     <span className={t.withoutUpcoming ? 'attn' : ''}>{t.withoutUpcoming} sans séance sur 7 jours</span>
+                    <span className={t.regularity !== null && t.regularity < 50 ? 'attn' : ''}>{t.regularity === null ? 'Régularité : pas encore de données' : `Régularité ${t.regularity} % sur 4 semaines`}</span>
                   </Link>
                   {owner ? (
                     <div className="team-tools">
@@ -137,7 +151,7 @@ export default async function Roster({ params, searchParams }: { params: Promise
           </select>
           <label className="visually-hidden" htmlFor="status">Statut</label>
           <select id="status" name="status" className="select small" defaultValue={sp.status ?? ''}>
-            <option value="">Tous les statuts</option><option value="attention">Demande une action</option><option value="active">Actif</option><option value="invited">Invité·e</option>
+            <option value="">Tous les statuts</option><option value="attention">Demande une action</option><option value="active">Actif</option><option value="invited">Invité·e</option><option value="irregular">Régularité sous 50 %</option>
           </select>
           <button className="btn small" type="submit">Filtrer</button>
           {filtered ? <Link className="link-btn" href={href({ q: '', sport: '', level: '', status: '' })}>Effacer</Link> : null}
@@ -164,6 +178,7 @@ export default async function Roster({ params, searchParams }: { params: Promise
                       {a.teams.length ? ` · ${a.teams.map((t) => t.name).join(', ')}` : ''}
                       {' · '}{a.nextWorkout ? `Prochaine séance ${formatWeekday(a.nextWorkout).toLowerCase()} ${formatShortDate(a.nextWorkout)}` : 'Aucune séance publiée à venir'}
                     </p>
+                    {a.state === 'active' ? <Regularity r={a.regularity} /> : null}
                     {a.todo.length ? (
                       <p className="row-todo">{a.todo.slice(0, 3).map((t) => t.title + (t.source === 'auto' ? '' : ' (tâche)')).join(' · ')}{a.todo.length > 3 ? ` · +${a.todo.length - 3}` : ''}</p>
                     ) : null}

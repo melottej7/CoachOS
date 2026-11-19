@@ -19,13 +19,15 @@ export default async function ChooseWorkspace() {
       <TopBar home="/choose-workspace" />
       <main id="contenu" className="athlete-zone">
         <h1>Choisir un espace</h1>
-        <p className="sub">Connecté·e en tant que {actor.displayName}.</p>
+        <p className="sub">Connecté·e en tant que <strong>{actor.displayName}</strong>. <Link href="/profile">Ce n’est pas ton nom ? Le modifier</Link></p>
         <section className="card" style={{ marginTop: 20 }} aria-label="Espaces">
           {spaces.length === 0 ? (
-            <p className="empty">
-              Aucun espace n’est encore associé à ce compte. Athlète : ouvre le bouton « Rejoindre l’espace » de l’e-mail
-              d’invitation de ton coach. Coach : crée ton espace ci-dessous.
-            </p>
+            <div className="card-body stack">
+              <h2>Tu es coach ? Crée ton espace de coaching</h2>
+              <p>Ton espace, c’est ton activité dans CoachOS, comme ton club ou ta structure : tes élèves, leurs séances, ta bibliothèque, les retours, les messages et ta présentation. Tu y invites ensuite tes élèves.</p>
+              <p><Link className="btn primary" href="/coach/new">Créer mon espace de coaching</Link></p>
+              <p className="muted">Tu es élève ? Tu n’as rien à créer : ouvre l’e-mail d’invitation de ton coach et clique sur « Rejoindre l’espace ».</p>
+            </div>
           ) : null}
           {spaces.map((w) => (
             <div className="row" key={w.id}>
@@ -37,7 +39,7 @@ export default async function ChooseWorkspace() {
             </div>
           ))}
         </section>
-        <p style={{ marginTop: 16 }}><Link className="btn" href="/coach/new">+ Créer un espace coach</Link></p>
+        {spaces.length ? <p style={{ marginTop: 16 }}><Link className="btn" href="/coach/new">+ Créer un autre espace de coaching</Link></p> : null}
       </main>
     </>
   );

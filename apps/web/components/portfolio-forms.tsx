@@ -1,12 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
-  addDays, APPOINTMENT_KIND_LABELS, APPOINTMENT_KINDS, LEVEL_LABELS, LEVELS, PRIORITY_LABELS, SPORT_LABELS, SPORTS, TASK_KIND_LABELS, TASK_KINDS,
+  addDays, APPOINTMENT_KIND_LABELS, LEVEL_LABELS, newVideoLink, LEVELS, PRIORITY_LABELS, SPORT_LABELS, SPORTS, TASK_KIND_LABELS, TASK_KINDS,
   type AppointmentKind, type AutoRule, type Level, type Sport, type TaskKind,
 } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
+import { mutate, newKey } from './api-client';
 import { fieldError, useIntent } from './use-intent';
 
 // Formulaires des lots G et H (D-032). Chaque action = une intention idempotente, puis rafraîchissement de la page.
@@ -214,15 +215,50 @@ export function TaskForm({ wid, athletes, teams, athleteId, open, today }: {
 }
 
 /** Actions d’une tâche : terminer, reporter, annuler (humaine) ou « plus tard » (suivi automatique). */
-export function TaskActions({ wid, source, id, rule, sourceRef, revision, today, link }: {
+/**
+ * Relance du questionnaire (profil sportif) : message explicite du coach dans la conversation, avec le lien
+ * vers le questionnaire, puis le suivi est mis de côté 3 jours pour ne pas relancer en boucle.
+ */
+function RelaunchQuestionnaire({ wid, athleteId, name, today }: { wid: string; athleteId: string; name: string; today: string }) {
+  const router = useRouter();
+  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const first = name.split(' ')[0] ?? name;
+  async function send() {
+    setState('sending');
+    const open = await mutate<{ id: string }>('POST', `/api/v1/workspaces/${wid}/athletes/${athleteId}/conversations`, {}, newKey());
+    if (!open.ok) { setState('error'); return; }
+    const body = `Bonjour ${first} ! Peux-tu remplir ton profil sportif ? Deux minutes suffisent, et ça m’aide à adapter tes séances : ${window.location.origin}/athlete/${wid}/setup`;
+    const sent = await mutate('POST', `/api/v1/workspaces/${wid}/conversations/${open.data.id}/messages`, { body }, newKey());
+    if (!sent.ok) { setState('error'); return; }
+    await mutate('PUT', `/api/v1/workspaces/${wid}/auto-tasks/${athleteId}`, { rule: 'profile_missing', until: addDays(today, 3) }, newKey());
+    setState('sent');
+    router.refresh();
+  }
+  if (state === 'sent') return <span className="muted" role="status">Relance envoyée à {first}.</span>;
+  return (
+    <>
+      <button type="button" className="btn small primary" disabled={state === 'sending'} onClick={() => void send()}
+        title={`Envoie à ${first} un message avec le lien du questionnaire`}>{state === 'sending' ? 'Envoi…' : `Relancer ${first}`}</button>
+      {state === 'error' ? <span className="field-error" role="alert">Envoi impossible. Réessaie.</span> : null}
+    </>
+  );
+}
+
+export function TaskActions({ wid, source, id, rule, sourceRef, revision, today, link, athlete }: {
   wid: string; source: 'manual' | 'auto'; id: string | null; rule: AutoRule | null; sourceRef: string; revision: number | null; today: string; link: string | null;
+  athlete?: { id: string; name: string; timeZone?: string } | null;
 }) {
   const { act, pending, error } = useAction();
+  const call = rule === 'onboarding_call' && athlete?.timeZone ? athlete.timeZone : null;
   const patch = (body: Record<string, unknown>) => act('PATCH', `/api/v1/workspaces/${wid}/tasks/${id}`, { expectedRevision: revision, ...body });
   const snooze = (days: number) => act('PUT', `/api/v1/workspaces/${wid}/auto-tasks/${sourceRef}`, { rule, until: addDays(today, days) });
   return (
     <span className="task-actions">
-      {link ? <a className="btn small primary" href={link}>Ouvrir</a> : null}
+      {rule === 'profile_missing' && athlete ? <RelaunchQuestionnaire wid={wid} athleteId={athlete.id} name={athlete.name} today={today} /> : null}
+      {call && athlete ? (
+        <AppointmentForm wid={wid} athletes={[{ id: athlete.id, name: athlete.name, timeZone: call }]} athleteId={athlete.id} timeZone={call} today={today} label="📅 Planifier l’appel" defaultTitle={`Appel de bienvenue avec ${athlete.name.split(' ')[0]}`} />
+      ) : null}
+      {link && !call ? <a className={`btn small${rule === 'profile_missing' ? '' : ' primary'}`} href={link}>{link.startsWith('#') ? 'Y aller' : 'Ouvrir'}</a> : null}
       {source === 'manual' ? (
         <>
           <button type="button" className="btn small" disabled={pending} onClick={() => void patch({ status: 'done' })}>Terminé</button>
@@ -244,6 +280,7 @@ export function TaskActions({ wid, source, id, rule, sourceRef, revision, today,
             <button type="button" onClick={() => void snooze(1)}>Demain</button>
             <button type="button" onClick={() => void snooze(3)}>Dans 3 jours</button>
             <button type="button" onClick={() => void snooze(7)}>Dans une semaine</button>
+            {rule === 'onboarding_call' ? <button type="button" onClick={() => void snooze(3650)}>Pas besoin d’appel</button> : null}
           </div>
         </details>
       )}
@@ -254,47 +291,92 @@ export function TaskActions({ wid, source, id, rule, sourceRef, revision, today,
 
 // ---------- Rendez-vous ----------
 
-export function AppointmentForm({ wid, athletes, athleteId, timeZone, today }: {
-  wid: string; athletes: { id: string; name: string; timeZone: string }[]; athleteId?: string; timeZone: string; today: string;
+const DAY_CHIPS = [{ d: 0, label: 'Aujourd’hui' }, { d: 1, label: 'Demain' }, { d: 2, label: 'Après-demain' }];
+const TIME_CHIPS = ['08:00', '12:00', '18:00', '19:00'];
+const DURATION_CHIPS = [15, 30, 45, 60];
+
+/**
+ * Planification rapide d’un rendez-vous (D-034) : type, jour, heure et durée en un toucher, lien de visio créé
+ * en un clic, annonce à l’élève dans la conversation si la case est cochée. Utilisée depuis la conversation,
+ * la fiche élève et le Planning.
+ */
+export function AppointmentForm({ wid, athletes, athleteId, timeZone, today, label = '+ Rendez-vous', defaultTitle, onDone }: {
+  wid: string; athletes: { id: string; name: string; timeZone: string }[]; athleteId?: string; timeZone: string; today: string; label?: string; defaultTitle?: string; onDone?: () => void;
 }) {
   const { act, pending, error } = useAction();
+  const uid = useId();
   const [who, setWho] = useState(athleteId ?? athletes[0]?.id ?? '');
   const [kind, setKind] = useState<AppointmentKind>('video');
-  const tz = athletes.find((a) => a.id === who)?.timeZone ?? timeZone;
+  const [date, setDate] = useState(addDays(today, 1));
+  const [time, setTime] = useState('18:00');
+  const [duration, setDuration] = useState(30);
+  const [link, setLink] = useState(() => newVideoLink());
+  const [notify, setNotify] = useState(true);
+  const [prep, setPrep] = useState('');
+  const athlete = athletes.find((a) => a.id === who);
+  const first = athlete?.name.split(' ')[0] ?? 'l’élève';
+  const [title, setTitle] = useState(defaultTitle ?? `Point avec ${first}`);
+  const tz = athlete?.timeZone ?? timeZone;
+  const seg = <T extends string | number>(value: T, current: T, set: (v: T) => void, text: string) => (
+    <button key={String(value)} type="button" className={`pick${current === value ? ' on' : ''}`} aria-pressed={current === value} onClick={() => set(value)}>{text}</button>
+  );
+
   return (
-    <Disclosure label="+ Rendez-vous">
+    <Disclosure label={label}>
       {(close) => (
-        <form className="stack" onSubmit={async (e: FormEvent<HTMLFormElement>) => {
+        <form className="planner" onSubmit={async (e: FormEvent<HTMLFormElement>) => {
           e.preventDefault();
-          const form = e.currentTarget;
-          const f = new FormData(form);
           const ok = await act('POST', `/api/v1/workspaces/${wid}/appointments`, {
-            athleteId: who, title: f.get('title'), kind, startsLocal: `${f.get('date')}T${f.get('time')}`, timeZone: tz,
-            durationMin: Number(f.get('duration')), videoUrl: kind === 'video' ? f.get('videoUrl') || null : null, prepNotes: f.get('prep') || null,
+            athleteId: who, title, kind, startsLocal: `${date}T${time}`, timeZone: tz, durationMin: duration,
+            videoUrl: kind === 'video' ? link || null : null, prepNotes: prep || null, notify,
           });
-          if (ok) { form.reset(); close(); }
+          if (ok) { close(); onDone?.(); }
         }}>
           <ErrorSummary error={error} />
-          <div className="form-row">
-            <div className="field"><label htmlFor="ap-athlete">Élève</label>
-              <select id="ap-athlete" value={who} onChange={(e) => setWho(e.target.value)} required>{athletes.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
-            <div className="field"><label htmlFor="ap-kind">Type</label>
-              <select id="ap-kind" value={kind} onChange={(e) => setKind(e.target.value as AppointmentKind)}>{APPOINTMENT_KINDS.map((k) => <option key={k} value={k}>{APPOINTMENT_KIND_LABELS[k]}</option>)}</select></div>
+          {athletes.length > 1 ? (
+            <div className="field"><label htmlFor={`${uid}-ap-athlete`}>Avec</label>
+              <select id={`${uid}-ap-athlete`} value={who} onChange={(e) => { setWho(e.target.value); setTitle(`Point avec ${athletes.find((a) => a.id === e.target.value)?.name.split(' ')[0] ?? ''}`); }}>
+                {athletes.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </select></div>
+          ) : null}
+          <div className="pick-row" role="group" aria-label="Type de rendez-vous">
+            {seg<AppointmentKind>('video', kind, setKind, '🎥 Visio')}
+            {seg<AppointmentKind>('call', kind, setKind, '📞 Appel')}
+            {seg<AppointmentKind>('in_person', kind, setKind, '🤝 Rencontre')}
           </div>
-          <div className="field"><label htmlFor="ap-title">Objet</label><input id="ap-title" name="title" maxLength={120} required defaultValue="Bilan" /></div>
-          <div className="form-row">
-            <div className="field"><label htmlFor="ap-date">Date</label><input id="ap-date" name="date" type="date" required defaultValue={today} /></div>
-            <div className="field"><label htmlFor="ap-time">Heure <span className="hint">{tz.replace(/_/g, ' ')}</span></label><input id="ap-time" name="time" type="time" required defaultValue="18:00" /></div>
+          <div className="field"><label htmlFor={`${uid}-ap-title`}>Objet</label><input id={`${uid}-ap-title`} maxLength={120} required value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+          <div className="planner-block">
+            <p className="planner-label">Quand ?</p>
+            <div className="pick-row">{DAY_CHIPS.map((c) => seg(addDays(today, c.d), date, setDate, c.label))}
+              <label className="visually-hidden" htmlFor={`${uid}-ap-date`}>Autre date</label>
+              <input id={`${uid}-ap-date`} type="date" className="pick-input" value={date} min={today} onChange={(e) => setDate(e.target.value)} required />
+            </div>
+            <div className="pick-row">{TIME_CHIPS.map((t) => seg(t, time, setTime, t))}
+              <label className="visually-hidden" htmlFor={`${uid}-ap-time`}>Autre heure</label>
+              <input id={`${uid}-ap-time`} type="time" className="pick-input" value={time} step={300} onChange={(e) => setTime(e.target.value)} required />
+            </div>
+            <p className="planner-hint">Heure de {first} ({tz.replace(/_/g, ' ')})</p>
           </div>
-          <div className="form-row">
-            <div className="field"><label htmlFor="ap-duration">Durée (min)</label><input id="ap-duration" name="duration" type="number" min={5} max={480} step={5} defaultValue={30} required /></div>
-            {kind === 'video' ? (
-              <div className="field"><label htmlFor="ap-url">Lien de visio <span className="hint">https://…</span></label><input id="ap-url" name="videoUrl" type="url" placeholder="https://" aria-invalid={!!fieldError(error, 'videoUrl')} />
-                {fieldError(error, 'videoUrl') ? <span className="field-error">{fieldError(error, 'videoUrl')}</span> : null}</div>
-            ) : <div />}
+          <div className="planner-block">
+            <p className="planner-label">Durée</p>
+            <div className="pick-row">{DURATION_CHIPS.map((d) => seg(d, duration, setDuration, `${d} min`))}</div>
           </div>
-          <div className="field"><label htmlFor="ap-prep">Préparation <span className="hint">Facultatif · visible par toi seul·e</span></label><textarea id="ap-prep" name="prep" maxLength={4000} /></div>
-          <div className="actions"><button className="btn primary small" type="submit" disabled={pending}>Planifier</button></div>
+          {kind === 'video' ? (
+            <div className="field">
+              <label htmlFor={`${uid}-ap-url`}>Lien de la visio <span className="hint">Créé pour toi (Jitsi, sans compte), ou colle ton lien Zoom, Meet, Teams…</span></label>
+              <span className="inline-form">
+                <input id={`${uid}-ap-url`} type="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://" aria-invalid={!!fieldError(error, 'videoUrl')} />
+                <button type="button" className="btn small" onClick={() => setLink(newVideoLink())}>Nouveau lien</button>
+              </span>
+              {fieldError(error, 'videoUrl') ? <span className="field-error">{fieldError(error, 'videoUrl')}</span> : null}
+            </div>
+          ) : null}
+          <details className="planner-more">
+            <summary>Préparation (visible par toi seul·e)</summary>
+            <div className="field"><label className="visually-hidden" htmlFor={`${uid}-ap-prep`}>Préparation</label><textarea id={`${uid}-ap-prep`} maxLength={4000} value={prep} onChange={(e) => setPrep(e.target.value)} placeholder="Points à aborder, chiffres à revoir…" /></div>
+          </details>
+          <label className="check"><input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} /> Prévenir {first} dans la conversation (avec « Rejoindre » et « Ajouter à mon agenda »)</label>
+          <div className="actions"><button className="btn primary" type="submit" disabled={pending || !who}>{pending ? 'Planification…' : 'Planifier'}</button></div>
         </form>
       )}
     </Disclosure>

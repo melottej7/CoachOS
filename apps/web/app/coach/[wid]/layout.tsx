@@ -31,7 +31,7 @@ export default async function CoachLayout({ children, params }: { children: Reac
           </div>
           <nav aria-label="Espace coach">
             <NavLink className="nav-link" href={`${base}/planning`} match={`${base}/planning`} tour="nav-planning">Planning</NavLink>
-            <NavLink className="nav-link" href={`${base}/calendar`} match={`${base}/calendar`} tour="nav-calendar">Séances</NavLink>
+            <NavLink className="nav-link" href={`${base}/calendar`} match={`${base}/calendar`} also={[`${base}/library`, `${base}/to-plan`]} tour="nav-calendar">Séances</NavLink>
             <NavLink className="nav-link" href={`${base}/review`} match={`${base}/review`} tour="nav-review">
               Retours {pending ? <span className="count" aria-label={`${pending} à traiter`}>{pending}</span> : null}
             </NavLink>

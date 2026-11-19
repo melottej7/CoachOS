@@ -119,7 +119,7 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
 
       <section className="card" aria-label="Traitement">
         <div className="card-body stack">
-          <QuickReply wid={wid} athleteId={item.athleteId} first={first ?? item.athleteName} />
+          <QuickReply wid={wid} athleteId={item.athleteId} first={first ?? item.athleteName} workoutId={w.id} />
           {done ? (
             <p>Traité le {new Intl.DateTimeFormat('fr-BE', { dateStyle: 'long', timeStyle: 'short', timeZone: w.athlete.timeZone }).format(new Date(fb.reviewedAt!))}.</p>
           ) : (

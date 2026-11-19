@@ -3,7 +3,22 @@ import { commandAs, readAs, type Tx } from '../db/client';
 // Lectures de la messagerie (D-033), sous RLS : fil privé (coach affecté ou élève lui-même),
 // fil de groupe (coach de l’espace ou élève membre).
 
+/** Carte de rendez-vous visible dans la conversation (sans préparation ni compte rendu). */
+export interface AppointmentCard {
+  id: string; title: string; kind: 'video' | 'call' | 'in_person'; startsAt: string; durationMin: number; timeZone: string; videoUrl: string | null; status: 'planned' | 'done' | 'canceled';
+}
+
+/** Séance citée par un message ou par un retour (D-036). */
+export interface WorkoutRef { id: string; title: string; localDate: string }
+
+/** Retour de séance affiché dans la conversation : il y retrouve sa place dans l’histoire de l’échange. */
+export interface FeedbackEvent { id: string; createdAt: string; workout: WorkoutRef; state: string; rpe: number | null; comment: string | null; reviewed: boolean }
+
 export interface ThreadMessage {
+  appointment?: AppointmentCard | null;
+  appointmentId?: string | null;
+  workoutId?: string | null;
+  workout?: WorkoutRef | null;
   id: string;
   createdAt: string;
   body: string;
@@ -23,7 +38,7 @@ export interface InboxEntry {
   state?: 'invited' | 'active';
 }
 
-type MsgRow = { id: string; created_at: Date; body: string; sender_id: string | null; voice_id: string | null; voice_duration_s: number | null };
+type MsgRow = { id: string; created_at: Date; body: string; sender_id: string | null; voice_id: string | null; voice_duration_s: number | null; appointment_id?: string | null; workout_id?: string | null };
 
 async function me(tx: Tx): Promise<string> {
   return (await tx.query<{ uid: string }>('select auth.uid() as uid')).rows[0]!.uid;
@@ -78,13 +93,13 @@ async function teamEntries(tx: Tx, wid: string, teamSql: string): Promise<InboxE
   return out;
 }
 
-export interface DirectThread { athleteId: string; athleteName: string; coachName: string; conversationId: string | null; messages: ThreadMessage[] }
+export interface DirectThread { athleteId: string; athleteName: string; athleteTimeZone: string; coachName: string; conversationId: string | null; messages: ThreadMessage[]; feedbacks: FeedbackEvent[] }
 
 /** Fil privé d’un élève (vu par son coach affecté ou par l’élève). null si non visible. */
 export async function directThread(userId: string, wid: string, aid: string): Promise<DirectThread | null> {
   return readAs(userId, async (tx) => {
-    const a = await tx.query<{ display_name: string; user_id: string | null }>(
-      `select display_name, user_id from public.athletes where workspace_id = $1 and id = $2 and state <> 'archived'`,
+    const a = await tx.query<{ display_name: string; user_id: string | null; time_zone: string }>(
+      `select display_name, user_id, time_zone from public.athletes where workspace_id = $1 and id = $2 and state <> 'archived'`,
       [wid, aid],
     );
     const athlete = a.rows[0];
@@ -92,9 +107,11 @@ export async function directThread(userId: string, wid: string, aid: string): Pr
     const c = await tx.query<{ id: string }>('select id from public.conversations where workspace_id = $1 and athlete_id = $2', [wid, aid]);
     const cid = c.rows[0]?.id ?? null;
     const uid = await me(tx);
+    // Coachs visibles de l’espace : un message de coach n’est jamais compté comme venant de l’élève.
+    const coachIds = new Set((await tx.query<{ user_id: string }>('select user_id from public.memberships where workspace_id = $1 and active', [wid])).rows.map((r) => r.user_id));
     const rows = cid
       ? (await tx.query<MsgRow>(
-          `select * from (select id, created_at, body, sender_id, voice_id, voice_duration_s from public.messages
+          `select * from (select id, created_at, body, sender_id, voice_id, voice_duration_s, appointment_id, workout_id from public.messages
              where workspace_id = $1 and conversation_id = $2 order by created_at desc, id desc limit 200) x order by created_at, id`,
           [wid, cid],
         )).rows
@@ -105,18 +122,71 @@ export async function directThread(userId: string, wid: string, aid: string): Pr
       [wid],
     );
     return {
-      athleteId: aid, athleteName: athlete.display_name, coachName: coach.rows[0]?.name ?? 'Ton coach', conversationId: cid,
+      athleteId: aid, athleteName: athlete.display_name, athleteTimeZone: athlete.time_zone, coachName: coach.rows[0]?.name ?? 'Ton coach', conversationId: cid,
       messages: rows.map((m) => {
-        const fromAthlete = m.sender_id !== null && m.sender_id === athlete.user_id;
+        const fromAthlete = m.sender_id !== null && m.sender_id === athlete.user_id && !coachIds.has(m.sender_id);
         return {
           id: m.id, createdAt: new Date(m.created_at).toISOString(), body: m.body, mine: m.sender_id === uid,
           senderName: fromAthlete ? athlete.display_name : 'Coach', fromCoach: !fromAthlete,
           voiceId: m.voice_id, voiceDurationS: m.voice_duration_s === null ? null : Number(m.voice_duration_s),
+          appointment: null,
+          appointmentId: m.appointment_id ?? null,
+          workoutId: m.workout_id ?? null,
+          workout: null,
         };
       }),
+      // Retours de séance de l’élève (version observée), lisibles par l’élève et son coach affecté.
+      feedbacks: (await tx.query<{ id: string; created_at: Date; workout_id: string; title: string; local_date: string; state: string; rpe: number | null; comment: string | null; reviewed: boolean }>(
+        `select f.id, f.created_at, res.workout_id, rev.title, to_char(rev.local_date, 'YYYY-MM-DD') as local_date, res.state, f.rpe, f.comment, (f.reviewed_at is not null) as reviewed
+         from public.feedbacks f
+         join public.workout_results res on res.workspace_id = f.workspace_id and res.athlete_id = f.athlete_id and res.id = f.result_id
+         join public.workout_revisions rev on rev.workspace_id = res.workspace_id and rev.athlete_id = res.athlete_id and rev.workout_id = res.workout_id and rev.number = res.workout_revision
+         where f.workspace_id = $1 and f.athlete_id = $2 order by f.created_at desc limit 50`,
+        [wid, aid],
+      )).rows.map((f) => ({
+        id: f.id, createdAt: new Date(f.created_at).toISOString(), workout: { id: f.workout_id, title: f.title, localDate: f.local_date },
+        state: f.state, rpe: f.rpe, comment: f.comment, reviewed: Boolean(f.reviewed),
+      })),
     };
-  });
+  }).then(async (t) => (t ? withCards(userId, wid, aid, t) : t));
 }
+
+/** Séances citées par les messages : titre et date de la version publiée (ou de travail pour le coach affecté). */
+async function withWorkouts(userId: string, wid: string, aid: string, t: DirectThread): Promise<DirectThread> {
+  const ids = [...new Set(t.messages.map((m) => m.workoutId).filter(Boolean))] as string[];
+  if (!ids.length) return t;
+  const rows = await commandAs(userId, async (tx) => (await tx.query<{ id: string; title: string; local_date: string }>(
+    `select w.id, r.title, to_char(r.local_date, 'YYYY-MM-DD') as local_date
+     from public.workouts w join public.workout_revisions r on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id
+       and r.number = case when private.assigned($1, $2) then w.working_revision else w.published_revision end
+     where w.workspace_id = $1 and w.athlete_id = $2 and w.id = any($3::uuid[])`,
+    [wid, aid, ids],
+  )).rows);
+  const byId = new Map(rows.map((r) => [r.id, { id: r.id, title: r.title, localDate: r.local_date }]));
+  return { ...t, messages: t.messages.map((m) => ({ ...m, workout: m.workoutId ? byId.get(m.workoutId) ?? null : null })) };
+}
+
+/**
+ * Cartes de rendez-vous des messages visibles. L’élève n’a pas accès à la table des rendez-vous (préparation,
+ * compte rendu) : seuls les champs utiles à la carte sont lus côté serveur, pour les rendez-vous de cet élève
+ * cités par un message qu’il voit déjà.
+ */
+async function withCards(userId: string, wid: string, aid: string, t0: DirectThread): Promise<DirectThread> {
+  const t = await withWorkouts(userId, wid, aid, t0);
+  const ids = [...new Set(t.messages.map((m) => m.appointmentId).filter(Boolean))] as string[];
+  if (!ids.length) return t;
+  const rows = await commandAs(userId, async (tx) => (await tx.query<{ id: string; title: string; kind: AppointmentCard['kind']; starts_at: Date; duration_min: number; time_zone: string; video_url: string | null; status: AppointmentCard['status'] }>(
+    `select id, title, kind, starts_at, duration_min, time_zone, video_url, status from public.appointments
+     where workspace_id = $1 and athlete_id = $2 and id = any($3::uuid[])`,
+    [wid, aid, ids],
+  )).rows);
+  const byId = new Map(rows.map((r) => [r.id, {
+    id: r.id, title: r.title, kind: r.kind, startsAt: new Date(r.starts_at).toISOString(), durationMin: Number(r.duration_min), timeZone: r.time_zone, videoUrl: r.video_url, status: r.status,
+  } satisfies AppointmentCard]));
+  return { ...t, messages: t.messages.map((m) => ({ ...m, appointment: byId.get(m.appointmentId ?? '') ?? null })) };
+}
+
+
 
 export interface TeamThread { teamId: string; name: string; messages: ThreadMessage[]; members: string[] | null }
 

@@ -13,16 +13,16 @@ Légende : **Fait** (action complète, persistance et effet côté autre rôle v
 | 2 | Niveau par sport confirmé par le coach, distinct du groupe et de l’objectif | Fait | `athlete_sport_levels` (auteur, date) ; le niveau déclaré reste une proposition | G | I |
 | 2 | Vue d’ensemble des groupes : effectif, retours à traiter, couverture des programmes | Fait | Cartes de groupes : effectif, retours à traiter, élèves sans séance publiée sur 7 jours | G | I |
 | 2 | Groupe ouvert : recherche, filtres sport / niveau / objectif / statut, contexte conservé au retour | Partiel | Regroupement par groupe, niveau ou urgence ; recherche ; filtres sport, niveau, statut ; contexte conservé (`from`). Filtre par objectif à ajouter | G | I |
-| 2 | Planning par groupe, base commune puis adaptations, destinataires et exceptions avant publication | À ajouter | Publication par séance et par athlète seulement (`publishBatch`) | G2 | I |
+| 2 | Planning par groupe, base commune puis adaptations, destinataires et exceptions avant publication | Partiel | Séance de groupe : base commune, destinataires exacts, un brouillon par élève, adaptations conservées, exceptions rappelées, publication atomique, semaine du groupe avec l’état de chaque élève (CE-G2-01 à 03, D-042). Répercuter une modification de la base à ajouter | G2 | I |
 | 3 | Fiche élève : profil sportif, groupes, niveaux, objectifs, échéances | Fait | Fiche centrale : groupes, niveaux, objectifs (visibles par l’élève), repères, profil | G | I |
 | 3 | Disponibilités, contraintes, matériel, préférences, questionnaire, synthèse d’entretien | Partiel | Disponibilités et objectif texte dans `athlete_profiles` ; reste à ajouter (bilan, lot B) | B | I |
-| 3 | Programme actuel, prochaines séances, historique prévu / réalisé, retours | Partiel | Fiche : séances des 14 prochains jours, 5 derniers retours ; historique consolidé et statistiques (lot S) à ajouter | G | I |
-| 3 | Statistiques sur période, rendez-vous, messages, tâches liés au dossier | Partiel | Rendez-vous, tâches et accès à la conversation depuis la fiche (D-032, D-033) ; statistiques à ajouter | H, S | I |
+| 3 | Programme actuel, prochaines séances, historique prévu / réalisé, retours | Partiel | Fiche : séances des 14 prochains jours, 5 derniers retours, suivi prévu / réalisé sur 4, 8 ou 12 semaines (D-037) ; historique séance par séance à ajouter | G, S | I |
+| 3 | Statistiques sur période, rendez-vous, messages, tâches liés au dossier | Fait | « Suivi de l’entraînement » dans la fiche (régularité, volume, distance, effort, série, colonnes par semaine, tableau, définitions, D-037) ; rendez-vous, tâches, conversation (D-032 à D-034) | H, S | I |
 | 3 | Notes privées du coach distinctes | Fait | Créer, effacer ; visibles par l’auteur affecté seulement (prouvé en base) | G | I |
 | 3 | Source, période, fraîcheur des mesures | À ajouter | Aucune mesure importée à ce jour | X | I/D |
 | 4 | Accueil coach priorisé (attention, prochaine action, échéance) | Fait | Onglet Planning du coach : en retard, aujourd’hui, semaine, plus tard ; motif, échéance, priorité, lien d’action ; filtres élève, groupe, type, priorité | H | I |
 | 4 | Tâches humaines : types, statuts, priorité, échéance, créneau, récurrence, lien direct | Partiel | `coach_tasks` : types, 6 statuts avec transitions, priorité, échéance, lien, notes, révision. Créneau, estimation et récurrence à ajouter | H | I |
-| 4 | Tâches automatiques dédoublonnées, réévaluées, closes à la résolution, règles configurables | Partiel | 6 règles calculées depuis l’état réel (uniques, closes à la résolution), report « plus tard ». Délais réglables par le coach (CE-H-04) à ajouter | H | I |
+| 4 | Tâches automatiques dédoublonnées, réévaluées, closes à la résolution, règles configurables | Partiel | 8 règles calculées depuis l’état réel (uniques, closes à la résolution), dont « Répondre au message » (D-033) et « Planifier l’appel de bienvenue » après le questionnaire (D-038) ; report « plus tard ». Délais réglables par le coach (CE-H-04) à ajouter | H | I |
 | 4 | Rendez-vous : fuseau, début, durée, lien visio, préparation, compte rendu | Fait | `appointments` ; agenda de la semaine ; fiche élève ; heure locale (heure d’été prise en compte) | H | I |
 | 5 | Bibliothèque : séances, semaines types, blocs, programmes ; versions, classement, recherche | Prévu | Table `templates` (workout / week) sans écran | B | I |
 | 5 | Séance structurée : échauffement, étapes, répétitions, récupération, cibles | **Fait** | Constructeur (D-023) `components/workout-builder.tsx`, `packages/domain/src/structure.ts`, `intervals` jsonb, contrat `workoutBlock` ; lecture coach, revue, athlète | — | I |
@@ -34,20 +34,20 @@ Légende : **Fait** (action complète, persistance et effet côté autre rôle v
 | 6 | Modifier et régénérer une partie, différences, séances passées protégées | À ajouter | — | P | I |
 | 6 | Règles candidates depuis les corrections, essais de qualité, coûts suivis | Prévu | `dna_candidates`, `ai_budget` (SQL) | P | I |
 | 7 | Téléphone : séance du jour, consignes, prochaine action | **Fait** | X40, X42 avec déroulé structuré | — | I |
-| 7 | Calendrier, historique, objectifs, progression, échanges | Partiel | Programme semaine et mois ; Échanges (coach et groupes, texte et vocal, D-033) ; objectifs et progression côté élève à ajouter | E, S | I |
+| 7 | Calendrier, historique, objectifs, progression, échanges | Fait | Programme semaine et mois ; Échanges (D-033) ; onglet Progression : objectif avec compte à rebours, régularité, volumes, série (D-037) | E, S | I |
 | 7 | Retour : réalisé, partiel, reporté, non réalisé, ressenti général, difficulté | Partiel | Réalisé / partiel / non réalisé, durée, RPE, commentaire, version observée (C06) ; « reporté », ressenti général et difficulté à ajouter | E | I |
 | 7 | Plusieurs activités associées à une séance, correction du rapprochement | À ajouter | `workout_results` unique par séance | X | I |
-| 7 | Statistiques élève et coach, provenance, « données insuffisantes » | À ajouter | — | S | I |
+| 7 | Statistiques élève et coach, provenance, « données insuffisantes » | Partiel | Mêmes chiffres pour l’élève et le coach, calculés sur les seules séances publiées et les retours déclarés ; « — » et « pas de retour » quand la donnée manque ; définitions affichées (D-037) ; régularité par élève et par groupe dans Élèves, filtre « sous 50 % » (D-043). Comparaison entre périodes à ajouter | S | I |
 | 8 | Activités entrantes Garmin et Strava | Prévu | Strava retiré du chemin critique (D04) ; aucun accès Garmin obtenu | X | D |
 | 8 | Import manuel FIT / TCX | À ajouter | — | X | I |
 | 8 | Séances sortantes : modèle structuré compatible Garmin | Partiel | Modèle D-023 conçu pour se traduire en étapes FIT (voir correspondance ci-dessous) | X | I |
 | 8 | Export FIT de séance, procédure vérifiée | À ajouter | — | X | I, puis essai sur montre (F) |
 | 8 | Publication vers Garmin Connect (Training API), mise à jour, annulation | À ajouter | Accès Garmin Connect Developer Program non obtenu | X | D |
 | 9 | Navigation : accueil, groupes / élèves, calendrier, bibliothèque, échanges, méthode | Partiel | Planning (accueil du coach), Séances, Retours, Messages, Élèves, Paramètres ; bibliothèque et méthode à ajouter | H | I |
-| 9 | Élève : Aujourd’hui, Programme, Progression, Échanges | Partiel | Aujourd’hui, Programme (semaine et mois, D-031), Échanges (D-033), Profil ; Progression à ajouter | E, S | I |
+| 9 | Élève : Aujourd’hui, Programme, Progression, Échanges | Fait | 5 onglets à icône : Aujourd’hui, Programme, Progression (D-037), Échanges, Profil ; vérifié à 375 px | E, S | I |
 | — | Visite interactive d’Allure sur les vrais écrans (retour du fondateur, modèle Foulée) | Fait | CE-C-01, D-028 : élève, coach, coach sans élève ; projecteur, progression par action, relance | C | I |
 | 4 | Messagerie coach élève, fils de groupe, vocaux, réponse rapide, tâche de réponse | Fait | D-033 : fil privé par élève, fil par groupe, vocaux de 3 min (stockage privé, écoute après contrôle), non-lus, « Répondre au message » dans le Planning, réponses rapides sous un retour. Notifications par e-mail ou push à ajouter | H, E | I |
-| — | Idées éprouvées dans Foulée : retour rapide, notation texte, graphique de séance, séance faite autrement, propositions de semaine, faisabilité | À ajouter | Voir [AUDIT_FOULEE.md](AUDIT_FOULEE.md) ; stories CE-C-03, CE-B-09, CE-E-04, CE-E-05, CE-P-05 à 07 | C, B, E, P | I |
+| — | Idées éprouvées dans Foulée : retour rapide, notation texte, graphique de séance, séance faite autrement, propositions de semaine, faisabilité | Partiel | Retour rapide (CE-C-03, D-039), graphique de séance (CE-E-04, D-040), notation texte (CE-B-09, D-041) et séance faite autrement (CE-E-05, D-031) faits. Reste propositions de semaine et faisabilité (CE-P-05) ; voir [AUDIT_FOULEE.md](AUDIT_FOULEE.md) | C, B, E, P | I |
 
 ## Ce qui est déjà acquis et sert la cible
 

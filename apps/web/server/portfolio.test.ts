@@ -138,4 +138,18 @@ describe('lot H · tâches, suivis automatiques, rendez-vous', () => {
     const athleteView = await readAs(USERS.camille, (tx) => tx.query('select id from public.appointments'));
     expect(athleteView.rows).toHaveLength(0);
   });
+
+  it('questionnaire reçu → « Planifier l’appel de bienvenue », clos par un rendez-vous, rouvert s’il est annulé (D-038)', async () => {
+    const onboarding = async () => (await home(USERS.marine, WORKSPACE_A, TIME_ZONE, weekStart(today))).tasks.filter((t) => t.rule === 'onboarding_call' && t.athlete?.id === ATHLETES.noah);
+    // Noah a rempli son questionnaire dans le test précédent, sans rendez-vous.
+    const [task] = await onboarding();
+    expect(task).toMatchObject({ kind: 'call', ref: ATHLETES.noah, athlete: { timeZone: TIME_ZONE } });
+    const r = await createAppointment(meta(USERS.marine), { athleteId: ATHLETES.noah, title: 'Appel de bienvenue', kind: 'video', startsLocal: `${addDays(today, 2)}T18:00`, timeZone: TIME_ZONE, durationMin: 30 });
+    expect(await onboarding()).toHaveLength(0);
+    await updateAppointment({ ...meta(USERS.marine), appointmentId: idOf(r) }, { expectedRevision: 1, status: 'canceled' });
+    expect(await onboarding()).toHaveLength(1);
+    // « Pas besoin d’appel » : mise en attente longue.
+    await snoozeAutoTask({ ...meta(USERS.marine), sourceRef: ATHLETES.noah }, { rule: 'onboarding_call', until: addDays(today, 3650) });
+    expect(await onboarding()).toHaveLength(0);
+  });
 });

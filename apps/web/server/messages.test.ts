@@ -3,9 +3,11 @@ import { todayIn, weekStart } from '@coachos/domain';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getDb, openDatabase, setDb } from './db/client';
 import { ATHLETES, TIME_ZONE, USERS, WORKSPACE_A } from './db/fixtures';
+import { SEED_WORKOUTS } from './db/seed';
 import { AppError } from './errors';
 import { openConversation, saveReceipt, saveTeamReceipt, sendMessage, sendTeamMessage, sendTeamVoice, sendVoice } from './commands/messages';
 import { createTeam, setTeamMember } from './commands/portfolio';
+import { createAppointment, updateAppointment } from './commands/tasks';
 import { athleteInbox, coachInbox, directThread, readVoice, teamThread } from './repo/messages';
 import { home } from './repo/portfolio';
 
@@ -111,5 +113,59 @@ describe('fil de groupe', () => {
     await setTeamMember({ ...meta(USERS.marine), teamId: tid, athleteId: ATHLETES.noah }, false);
     expect(await teamThread(USERS.noah, WORKSPACE_A, tid)).toBeNull();
     expect(await readVoice(USERS.noah, WORKSPACE_A, v.voiceId!)).toBeNull();
+  });
+});
+
+describe('rendez-vous annoncé dans la conversation (D-034)', () => {
+  it('sans case cochée : rien dans le fil ; cochée : carte visible par l’élève, sans la préparation ; annulation annoncée', async () => {
+    const base = { athleteId: ATHLETES.noah, title: 'Bilan du mois', kind: 'video', startsLocal: '2026-12-03T18:30', timeZone: TIME_ZONE, durationMin: 30,
+      videoUrl: 'https://meet.jit.si/CoachOS-abc', prepNotes: 'Parler du seuil' };
+    const silent = await createAppointment(meta(USERS.marine), base);
+    expect((silent.body as { messageId: string | null }).messageId).toBeNull();
+    expect((await directThread(USERS.noah, WORKSPACE_A, ATHLETES.noah))?.messages.some((m) => m.appointment)).toBe(false);
+
+    const loud = await createAppointment(meta(USERS.marine), { ...base, notify: true });
+    const item = (loud.body as { item: { id: string } }).item;
+    const seen = await directThread(USERS.noah, WORKSPACE_A, ATHLETES.noah);
+    const card = seen?.messages.find((m) => m.appointment)?.appointment;
+    expect(card).toMatchObject({ id: item.id, title: 'Bilan du mois', kind: 'video', videoUrl: 'https://meet.jit.si/CoachOS-abc', status: 'planned', durationMin: 30 });
+    expect(JSON.stringify(seen)).not.toContain('Parler du seuil');
+    expect(seen?.messages.at(-1)?.body).toContain('📅 Appel vidéo prévu');
+    // Un tiers ne voit ni le fil ni la carte.
+    expect(await directThread(USERS.camille, WORKSPACE_A, ATHLETES.noah)).toBeNull();
+
+    await updateAppointment({ ...meta(USERS.marine), appointmentId: item.id }, { expectedRevision: 1, status: 'canceled', notify: true });
+    const after = await directThread(USERS.noah, WORKSPACE_A, ATHLETES.noah);
+    expect(after?.messages.at(-1)?.body).toContain('❌ Appel vidéo annulé');
+    expect(after?.messages.filter((m) => m.appointment?.id === item.id).every((m) => m.appointment?.status === 'canceled')).toBe(true);
+  });
+});
+
+describe('compte à la fois coach et élève (cas de recette du fondateur)', () => {
+  it('son message de coach ne crée pas « Répondre au message » et reste affiché comme venant du coach', async () => {
+    const db = await getDb();
+    const r = await db.query<{ id: string }>(
+      `insert into public.athletes(workspace_id, display_name, time_zone, state, user_id) values ($1, 'Moi-même', $2, 'active', $3) returning id`,
+      [WORKSPACE_A, TIME_ZONE, USERS.marine],
+    );
+    const self = r.rows[0]!.id;
+    await db.query('insert into public.coach_assignments(workspace_id, athlete_id, coach_id) values ($1, $2, $3)', [WORKSPACE_A, self, USERS.marine]);
+    const cid = body(await openConversation({ ...meta(USERS.marine), athleteId: self })).id!;
+    await sendMessage({ ...meta(USERS.marine), conversationId: cid }, { body: 'salut' });
+    const h = await home(USERS.marine, WORKSPACE_A, TIME_ZONE, weekStart(today));
+    expect(h.tasks.some((t) => t.rule === 'message_reply' && t.athlete?.id === self)).toBe(false);
+    expect((await directThread(USERS.marine, WORKSPACE_A, self))?.messages.at(-1)?.fromCoach).toBe(true);
+  });
+});
+
+describe('message à propos d’une séance et retours dans la conversation (D-036)', () => {
+  it('le message cite la séance ; le fil montre aussi les retours ; un brouillon ne peut pas être cité par l’élève', async () => {
+    const cid = body(await openConversation({ ...meta(USERS.camille), athleteId: ATHLETES.camille })).id!;
+    await sendMessage({ ...meta(USERS.marine), conversationId: cid }, { body: 'On en parle ?', workoutId: SEED_WORKOUTS.camilleYesterday });
+    const t = await directThread(USERS.camille, WORKSPACE_A, ATHLETES.camille);
+    expect(t?.messages.find((m) => m.body === 'On en parle ?')?.workout).toMatchObject({ id: SEED_WORKOUTS.camilleYesterday, title: 'Endurance fondamentale' });
+    expect(Array.isArray(t?.feedbacks)).toBe(true);
+    expect(await codeOf(sendMessage({ ...meta(USERS.camille), conversationId: cid }, { body: 'Et celle-ci ?', workoutId: SEED_WORKOUTS.camilleDraft }))).toBe('INVALID_FIELDS');
+    expect(await codeOf(sendMessage({ ...meta(USERS.camille), conversationId: cid }, { body: 'Et celle de Noah ?', workoutId: SEED_WORKOUTS.noahToday }))).toBe('INVALID_FIELDS');
   });
 });

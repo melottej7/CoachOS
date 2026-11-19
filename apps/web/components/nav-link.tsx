@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 /** Lien de navigation avec aria-current selon le segment courant. */
-export function NavLink({ href, match, className, children, tour }: { href: string; match: string; className?: string; children: ReactNode; tour?: string }) {
+export function NavLink({ href, match, className, children, tour, also = [] }: { href: string; match: string; className?: string; children: ReactNode; tour?: string; also?: string[] }) {
   const pathname = usePathname();
-  const current = pathname === match || pathname.startsWith(match + '/');
+  const current = [match, ...also].some((m) => pathname === m || pathname.startsWith(m + '/'));
   return (
     <Link href={href} className={className} aria-current={current ? 'page' : undefined} data-tour={tour}>
       {children}

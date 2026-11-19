@@ -20,21 +20,24 @@ export interface AthleteWorkout {
   canceled: boolean;
   intervals: Block[];
   feedbackState: ResultState | null;
+  /** Effort ressenti déclaré (1 à 10), pour comparer à l’intention (D-039). */
+  feedbackRpe: number | null;
 }
 
 const publishedSql = `
-  select x.*, res.state as result_state from (
+  select x.*, res.state as result_state, f.rpe as feedback_rpe from (
     select distinct on (r.workout_id) r.workout_id, r.number, to_char(r.local_date, 'YYYY-MM-DD') as local_date, r.sort_order,
            r.sport_code, r.title, r.instructions, r.duration_seconds, r.distance_m, r.canceled, r.intervals, r.workspace_id, r.athlete_id
     from public.workout_revisions r
     where r.workspace_id = $1 and r.athlete_id = $2
     order by r.workout_id, r.number desc
   ) x
-  left join public.workout_results res on res.workspace_id = x.workspace_id and res.athlete_id = x.athlete_id and res.workout_id = x.workout_id`;
+  left join public.workout_results res on res.workspace_id = x.workspace_id and res.athlete_id = x.athlete_id and res.workout_id = x.workout_id
+  left join public.feedbacks f on f.workspace_id = res.workspace_id and f.athlete_id = res.athlete_id and f.result_id = res.id`;
 
 type Row = {
   workout_id: string; number: number; local_date: string; sort_order: number; sport_code: Sport; title: string;
-  instructions: string; duration_seconds: number | null; distance_m: number | null; canceled: boolean; intervals: Block[] | null; result_state: ResultState | null;
+  instructions: string; duration_seconds: number | null; distance_m: number | null; canceled: boolean; intervals: Block[] | null; result_state: ResultState | null; feedback_rpe: number | null;
 };
 
 const toWorkout = (x: Row): AthleteWorkout => ({
@@ -50,6 +53,7 @@ const toWorkout = (x: Row): AthleteWorkout => ({
   canceled: x.canceled,
   intervals: Array.isArray(x.intervals) ? x.intervals : [],
   feedbackState: x.result_state,
+  feedbackRpe: x.feedback_rpe,
 });
 
 export async function athleteSchedule(userId: string, wid: string, aid: string, from: string, to: string): Promise<AthleteWorkout[]> {

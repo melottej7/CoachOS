@@ -115,7 +115,7 @@ export const updateTaskSchema = z
 
 // ---------- Suivis automatiques (CE-H-03) ----------
 
-export const AUTO_RULES = ['feedback_review', 'no_upcoming', 'invite_pending', 'profile_missing', 'level_unconfirmed', 'vma_missing', 'message_reply'] as const;
+export const AUTO_RULES = ['feedback_review', 'no_upcoming', 'invite_pending', 'profile_missing', 'level_unconfirmed', 'vma_missing', 'message_reply', 'onboarding_call'] as const;
 export type AutoRule = (typeof AUTO_RULES)[number];
 /** Libellé, type, priorité et motif expliqué de chaque règle. */
 export const AUTO_RULE_INFO: Record<AutoRule, { title: string; kind: TaskKind; priority: Priority; reason: string }> = {
@@ -125,6 +125,7 @@ export const AUTO_RULE_INFO: Record<AutoRule, { title: string; kind: TaskKind; p
   profile_missing: { title: 'Relancer le questionnaire', kind: 'questionnaire', priority: 1, reason: 'Profil sportif pas encore rempli' },
   level_unconfirmed: { title: 'Confirmer le niveau', kind: 'check', priority: 1, reason: 'Niveau déclaré, pas encore confirmé par toi' },
   message_reply: { title: 'Répondre au message', kind: 'message', priority: 2, reason: 'Message reçu, pas encore de réponse' },
+  onboarding_call: { title: 'Planifier l’appel de bienvenue', kind: 'call', priority: 2, reason: 'Questionnaire reçu : un premier échange avant de construire le programme' },
   vma_missing: { title: 'Renseigner la VMA', kind: 'check', priority: 0, reason: 'Information à vérifier : sans VMA, pas d’allure ni de kilomètres estimés' },
 };
 export const snoozeSchema = z.object({ rule: z.enum(AUTO_RULES), until: optionalDate }).strict();
@@ -155,11 +156,14 @@ export const createAppointmentSchema = z
       .nullish()
       .transform((v) => (v ? v : null)),
     prepNotes: optionalText(4000, 'Préparation'),
+    /** Annoncer le rendez-vous à l’élève dans la conversation (envoi explicite, case visible). */
+    notify: z.boolean().default(false),
   })
   .strict();
 export const updateAppointmentSchema = z
   .object({
     expectedRevision: z.number().int().min(1),
+    notify: z.boolean().default(false),
     status: z.enum(APPOINTMENT_STATUSES).optional(),
     prepNotes: optionalText(4000, 'Préparation').optional(),
     report: optionalText(8000, 'Compte rendu').optional(),
@@ -199,4 +203,19 @@ export function urgencyScore(items: { priority: number; dueOn: string | null }[]
 /** « Urgent » demande du retard ou une accumulation (6 points : par ex. un retour à examiner en retard et un autre suivi). */
 export function urgencyLabel(score: number): 'Urgent' | 'À suivre' | 'À jour' {
   return score >= 6 ? 'Urgent' : score > 0 ? 'À suivre' : 'À jour';
+}
+
+/** Lien de visioconférence prêt à l’emploi (Jitsi Meet, sans compte) : nom de salle aléatoire, aucune donnée personnelle. */
+export function newVideoLink(random: () => number = Math.random): string {
+  const alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';
+  const id = Array.from({ length: 12 }, () => alphabet[Math.floor(random() * alphabet.length)]).join('');
+  return `https://meet.jit.si/CoachOS-${id}`;
+}
+
+/** Texte de l’annonce dans la conversation : « 📅 Visioconférence prévue jeudi 20 novembre à 18:30 (30 min) ». */
+export function appointmentAnnouncement(kind: AppointmentKind, title: string, dateLabel: string, time: string, durationMin: number, canceled = false): string {
+  const what = kind === 'video' ? 'Appel vidéo' : kind === 'call' ? 'Appel' : 'Rendez-vous';
+  return canceled
+    ? `❌ ${what} annulé : ${title}, ${dateLabel} à ${time}`
+    : `📅 ${what} prévu ${dateLabel} à ${time} (${durationMin} min) : ${title}`;
 }

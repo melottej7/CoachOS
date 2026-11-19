@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { requireActor } from '@/server/auth/session';
 import {
   APPOINTMENT_KIND_LABELS, APPOINTMENT_STATUS_LABELS, DAY_LABELS, EXPERIENCE_LABELS, formatLongDate, formatShortDate, formatWeekday, GOAL_STATE_LABELS,
-  LEVEL_LABELS, RESULT_STATE_LABELS, SPORT_LABELS, todayIn, urgencyLabel, utcToLocal, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS_LABELS,
+  addDays, LEVEL_LABELS, RESULT_STATE_LABELS, SPORT_LABELS, todayIn, weekStart, urgencyLabel, utcToLocal, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS_LABELS,
   type ResultState, type Sport,
 } from '@coachos/domain';
 import { readAthleteProfile } from '@/server/commands/athlete-profile';
@@ -11,6 +11,8 @@ import { readAthleteReferences } from '@/server/commands/athlete-references';
 import { latestInvitation } from '@/server/commands/invitations';
 import { coachContext } from '@/server/repo/context';
 import { athleteFile } from '@/server/repo/portfolio';
+import { athleteStats } from '@/server/repo/stats';
+import { StatsPanel } from '@/components/stats-panel';
 import { ReferencesForm } from '@/components/references-form';
 import { ResendInvitation, RevokeInvitation } from '@/components/roster-forms';
 import {
@@ -31,9 +33,9 @@ const fmt = (iso: string, tz: string) => new Intl.DateTimeFormat('fr-BE', { date
 const safeFrom = (from: string | undefined, wid: string) => (from && from.startsWith(`/coach/${wid}/`) && !from.includes('//') ? from : `/coach/${wid}/athletes`);
 
 /** CE-G-06 : fiche élève centrale. */
-export default async function AthletePage({ params, searchParams }: { params: Promise<{ wid: string; aid: string }>; searchParams: Promise<{ notice?: string; from?: string }> }) {
+export default async function AthletePage({ params, searchParams }: { params: Promise<{ wid: string; aid: string }>; searchParams: Promise<{ notice?: string; from?: string; periode?: string }> }) {
   const { wid, aid } = await params;
-  const { notice, from } = await searchParams;
+  const { notice, from, periode } = await searchParams;
   const actor = await requireActor();
   const ctx = await coachContext(actor.userId, wid);
   if (!ctx) notFound();
@@ -50,6 +52,13 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
   const back = safeFrom(from, wid);
   const u = urgencyLabel(a.urgency);
   // Sports à confirmer : celui du profil, plus ceux déjà confirmés.
+  // Suivi de l’entraînement (D-037) : semaines du fuseau de l’élève.
+  const weeks = [4, 8, 12].includes(Number(periode)) ? Number(periode) : 8;
+  const aToday = todayIn(a.timeZone);
+  const stats = a.state === 'active'
+    ? await athleteStats(actor.userId, wid, aid, addDays(weekStart(aToday), -7 * (weeks - 1)), addDays(weekStart(aToday), 6), aToday)
+    : null;
+  const periodHref = (n: number) => `${base}/athletes/${aid}?periode=${n}${from ? `&from=${encodeURIComponent(from)}` : ''}#suivi`;
   const sports = [...new Set([...(a.sport ? [a.sport] : []), ...a.levels.map((l) => l.sport)])] as Sport[];
 
   return (
@@ -66,7 +75,8 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
           </p>
         </div>
         <span className="actions">
-          <Link className="btn" href={`${base}/messages/${aid}`}>Écrire à {first}</Link>
+          <Link className="btn" href={`${base}/messages/${aid}`}>💬 Écrire à {first}</Link>
+          <AppointmentForm wid={wid} athletes={[{ id: a.id, name: a.name, timeZone: a.timeZone }]} athleteId={a.id} timeZone={a.timeZone} today={today} label="📅 Planifier un appel" />
           <Link className="btn primary" href={`${base}/calendar?athlete=${aid}`}>Préparer ses séances</Link>
         </span>
       </div>
@@ -90,7 +100,7 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
                   <p className="task-meta"><span className="task-why">{t.reason}</span>{t.dueOn ? ` · ${t.dueOn < today ? 'en retard, ' : ''}${formatWeekday(t.dueOn).toLowerCase()} ${formatShortDate(t.dueOn)}` : ''}
                     {t.source === 'auto' ? <> {' '}<Pill tone="neutral">Suivi automatique</Pill></> : null}</p>
                 </div>
-                <TaskActions wid={wid} source={t.source} id={t.id} rule={t.rule} sourceRef={t.ref} revision={t.revision} today={today} link={t.link?.startsWith(`${base}/athletes/${aid}`) ? null : t.link} />
+                <TaskActions wid={wid} source={t.source} id={t.id} rule={t.rule} sourceRef={t.ref} revision={t.revision} today={today} link={t.link?.startsWith(`${base}/athletes/${aid}`) ? (t.link.includes('#') ? `#${t.link.split('#')[1]}` : null) : t.link} athlete={{ id: a.id, name: a.name, timeZone: a.timeZone }} />
               </li>
             ))}
           </ul>
@@ -162,8 +172,15 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
         </section>
       </div>
 
+      {stats ? (
+        <section className="card" aria-labelledby="suivi-title" id="suivi">
+          <div className="card-head"><h2 id="suivi-title">Suivi de l’entraînement</h2></div>
+          <div className="card-body"><StatsPanel s={stats.summary} weeks={weeks} periodHref={periodHref} you={false} /></div>
+        </section>
+      ) : null}
+
       <section className="card" aria-labelledby="rdv-title" id="rdv">
-        <div className="card-head"><h2 id="rdv-title">Rendez-vous</h2><AppointmentForm wid={wid} athletes={[{ id: a.id, name: a.name, timeZone: a.timeZone }]} athleteId={a.id} timeZone={a.timeZone} today={today} /></div>
+        <div className="card-head"><h2 id="rdv-title">Rendez-vous</h2><AppointmentForm wid={wid} athletes={[{ id: a.id, name: a.name, timeZone: a.timeZone }]} athleteId={a.id} timeZone={a.timeZone} today={today} label="📅 Planifier un appel" /></div>
         {file.appointments.length ? (
           <ul className="plain list-rows">
             {file.appointments.map((p) => {
@@ -177,7 +194,7 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
                   {p.status !== 'canceled' ? (
                     <span className="actions inline">
                       <AppointmentReport wid={wid} id={p.id} revision={p.revision} report={p.report} />
-                      {p.status === 'planned' ? <ActionButton method="PATCH" url={`/api/v1/workspaces/${wid}/appointments/${p.id}`} body={{ expectedRevision: p.revision, status: 'canceled' }} className="link-btn" confirm="Annuler ce rendez-vous ?">Annuler</ActionButton> : null}
+                      {p.status === 'planned' ? <ActionButton method="PATCH" url={`/api/v1/workspaces/${wid}/appointments/${p.id}`} body={{ expectedRevision: p.revision, status: 'canceled', notify: true }} className="link-btn" confirm={`Annuler ce rendez-vous ? ${first} sera prévenu·e dans la conversation.`}>Annuler</ActionButton> : null}
                     </span>
                   ) : null}
                 </li>

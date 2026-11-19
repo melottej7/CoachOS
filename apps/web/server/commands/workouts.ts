@@ -19,7 +19,7 @@ export interface CommandMeta {
 }
 
 /** Coach actif, affecté au dossier, dossier non archivé. Sinon 404 uniforme. */
-async function requireAssignedCoach(tx: Tx, wid: string, aid: string) {
+export async function requireAssignedCoach(tx: Tx, wid: string, aid: string) {
   const r = await tx.query<{ ok: boolean; state: string | null }>(
     `select private.assigned($1, $2) as ok,
             (select state from public.athletes where workspace_id = $1 and id = $2) as state`,
@@ -29,7 +29,7 @@ async function requireAssignedCoach(tx: Tx, wid: string, aid: string) {
   if (!row?.ok || row.state === 'archived') throw notVisible();
 }
 
-async function insertRevision(tx: Tx, wid: string, aid: string, sid: string, n: number, input: WorkoutInput) {
+export async function insertRevision(tx: Tx, wid: string, aid: string, sid: string, n: number, input: WorkoutInput) {
   const t = structureTotals(input.intervals);
   const data = {
     ...input,
@@ -120,39 +120,52 @@ export async function publishWorkouts(meta: CommandMeta, body: unknown): Promise
   return commandAs(meta.actorId, async (tx) => {
     await requireAssignedCoach(tx, meta.workspaceId, meta.athleteId);
     return idempotent(tx, { ...scope(meta, 'workout.publish'), body }, async () => {
-      const toPublish: { id: string; revision: number }[] = [];
-      for (const [i, change] of changes.entries()) {
-        const current = await lockWorkout(tx, meta.workspaceId, meta.athleteId, change.id).catch(() => null);
-        if (!current) throw invalid([{ path: `changes.${i}.id`, rule: 'Séance introuvable dans ce dossier' }]);
-        if (current.working_revision !== change.revision) {
-          throw conflict('Une séance a changé depuis l’aperçu. Aucune séance n’a été publiée.', {
-            line: i,
-            id: change.id,
-            workingRevision: current.working_revision,
-          });
-        }
-        if (current.published_revision !== change.revision) toPublish.push(change);
-      }
-      if (toPublish.length) {
-        const pub = await tx.query<{ id: string }>(
-          `insert into public.publications(workspace_id, athlete_id, actor_id, kind) values ($1, $2, $3, 'publish') returning id`,
-          [meta.workspaceId, meta.athleteId, meta.actorId],
-        );
-        const publicationId = pub.rows[0]!.id;
-        for (const c of toPublish) {
-          await tx.query(
-            'insert into public.publication_items(workspace_id, athlete_id, publication_id, workout_id, number) values ($1, $2, $3, $4, $5)',
-            [meta.workspaceId, meta.athleteId, publicationId, c.id, c.revision],
-          );
-          await tx.query('update public.workouts set published_revision = $4 where workspace_id = $1 and athlete_id = $2 and id = $3', [
-            meta.workspaceId, meta.athleteId, c.id, c.revision,
-          ]);
-        }
-        await audit(tx, meta.workspaceId, meta.actorId, 'workout.publish', publicationId, meta.requestId);
-      }
+      await publishInTx(tx, { workspaceId: meta.workspaceId, athleteId: meta.athleteId, actorId: meta.actorId, requestId: meta.requestId }, changes);
       return { status: 200, body: { items: changes.map((c) => ({ id: c.id, revision: c.revision })) } };
     });
   });
+}
+
+/**
+ * Publication dans une transaction ouverte (dossier déjà vérifié) : chaque ligne doit viser la révision de travail
+ * courante, sinon 409 et rien n’est publié. Partagée par publishBatch et la séance de groupe (D-042).
+ */
+export async function publishInTx(
+  tx: Tx,
+  ctx: { workspaceId: string; athleteId: string; actorId: string; requestId: string },
+  changes: { id: string; revision: number }[],
+  lineOffset = 0,
+): Promise<number> {
+  const toPublish: { id: string; revision: number }[] = [];
+  for (const [i, change] of changes.entries()) {
+    const current = await lockWorkout(tx, ctx.workspaceId, ctx.athleteId, change.id).catch(() => null);
+    if (!current) throw invalid([{ path: `changes.${i + lineOffset}.id`, rule: 'Séance introuvable dans ce dossier' }]);
+    if (current.working_revision !== change.revision) {
+      throw conflict('Une séance a changé depuis l’aperçu. Aucune séance n’a été publiée.', {
+        line: i + lineOffset,
+        id: change.id,
+        workingRevision: current.working_revision,
+      });
+    }
+    if (current.published_revision !== change.revision) toPublish.push(change);
+  }
+  if (!toPublish.length) return 0;
+  const pub = await tx.query<{ id: string }>(
+    `insert into public.publications(workspace_id, athlete_id, actor_id, kind) values ($1, $2, $3, 'publish') returning id`,
+    [ctx.workspaceId, ctx.athleteId, ctx.actorId],
+  );
+  const publicationId = pub.rows[0]!.id;
+  for (const c of toPublish) {
+    await tx.query(
+      'insert into public.publication_items(workspace_id, athlete_id, publication_id, workout_id, number) values ($1, $2, $3, $4, $5)',
+      [ctx.workspaceId, ctx.athleteId, publicationId, c.id, c.revision],
+    );
+    await tx.query('update public.workouts set published_revision = $4 where workspace_id = $1 and athlete_id = $2 and id = $3', [
+      ctx.workspaceId, ctx.athleteId, c.id, c.revision,
+    ]);
+  }
+  await audit(tx, ctx.workspaceId, ctx.actorId, 'workout.publish', publicationId, ctx.requestId);
+  return toPublish.length;
 }
 
 const scope = (meta: CommandMeta, action: string) => ({

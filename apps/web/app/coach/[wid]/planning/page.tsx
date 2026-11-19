@@ -127,7 +127,7 @@ export default async function CoachPlanning({ params, searchParams }: { params: 
                         </p>
                         {t.notes ? <p className="task-notes">{t.notes}</p> : null}
                       </div>
-                      <TaskActions wid={wid} source={t.source} id={t.id} rule={t.rule} sourceRef={t.ref} revision={t.revision} today={today} link={t.link} />
+                      <TaskActions wid={wid} source={t.source} id={t.id} rule={t.rule} sourceRef={t.ref} revision={t.revision} today={today} link={t.link} athlete={t.athlete} />
                     </li>
                   ))}
                 </ul>

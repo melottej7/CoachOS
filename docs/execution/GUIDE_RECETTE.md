@@ -57,6 +57,20 @@ Pour simuler un téléphone, réduis la fenêtre de Safari à sa largeur minimal
 - **Mot de passe oublié ?** sur la page de connexion : l’e-mail arrive dans la boîte de test, le lien ouvre « Nouveau mot de passe ».
 - Te déconnecter puis appuyer sur la flèche « retour » du navigateur : aucune donnée ne doit réapparaître.
 
+## Nouveautés du 19 novembre (nuit) à essayer
+
+Avec ton compte coach :
+1. **Élèves** : sous chaque élève, la **régularité** des 4 dernières semaines ; sur chaque carte de groupe, celle du groupe. Le filtre « Régularité sous 50 % » isole ceux qui décrochent.
+2. Ouvre la **fiche** d’un élève : nouvelle section **Suivi de l’entraînement** (4, 8 ou 12 semaines, graphique par semaine, « Voir le tableau »).
+3. Quand un élève a rempli son questionnaire, le **Planning** propose **Planifier l’appel de bienvenue** : le bouton « 📅 Planifier l’appel » ouvre la planification dans la tâche. « Plus tard → Pas besoin d’appel » la retire.
+4. **Séances → Groupes** : « 📅 Nouvelle séance pour le groupe ». Coche les élèves, crée les brouillons, clique **Adapter** pour un élève, puis **Publier** : les exceptions sont rappelées avant l’envoi. **Semaine du groupe** montre chaque élève jour par jour.
+5. Dans le constructeur d’une séance : **✍️ Saisie rapide en texte**. Essaie `15' Z1 + 8×(400m Z5 + R200m) + 10' Z1`, puis **Remplacer le déroulé**. Sous le total, le **graphique de la séance** se met à jour.
+
+Avec ton compte élève (sur téléphone si possible) :
+1. **Aujourd’hui** : sous la séance du jour, « Ta séance d’aujourd’hui ? » → **Faite**, puis ton ressenti. Le message compare ton ressenti à ce que visait ton coach.
+2. Ouvre une séance : le **graphique** montre sa forme ; touche une barre pour le détail.
+3. Nouvel onglet **Progression** : ton objectif (compte à rebours), ta régularité et tes volumes.
+
 ## Après le test
 
 Envoie à Claude tes notes, même brèves : ce qui t’a fait hésiter, ce que tu as trouvé lent, les mots qui ne te parlaient pas. Ce retour décide de la suite : corriger la fluidité d’abord, puis seulement ensuite les modèles de séance et la messagerie.

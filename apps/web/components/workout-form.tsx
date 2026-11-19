@@ -25,14 +25,16 @@ interface Props {
   /** Absent : création. Présent : nouvelle révision sur cette séance. */
   edit?: { sid: string; expectedRevision: number; published: boolean };
   cancelHref: string;
+  /** Page où revenir après l’enregistrement (ex. séance de groupe, D-042). */
+  returnTo?: string;
   /** Repères de l’athlète (VMA) : allures des zones et kilomètres estimés. */
   refs?: References;
 }
 
-export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, cancelHref, refs }: Props) {
+export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, cancelHref, refs, returnTo }: Props) {
   const router = useRouter();
   const [values, setValues] = useState(initial);
-  const [blocks, setBlocks] = useState<EBlock[]>(() => toEditor(initial.intervals ?? []));
+  const [blocks, setBlocks] = useState<EBlock[]>(() => toEditor(initial.intervals ?? [], 'i'));
   const { run, pending, error } = useIntent<{ id: string; workingRevision: number }>();
   const set = (k: keyof WorkoutFormValues) => (e: { target: { value: string } }) => setValues((v) => ({ ...v, [k]: e.target.value }));
 
@@ -54,7 +56,7 @@ export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, ca
     const result = edit
       ? await run('PATCH', `${base}/${edit.sid}`, { expectedRevision: edit.expectedRevision, data })
       : await run('POST', base, { data });
-    if (result) router.push(`/coach/${wid}/athletes/${aid}/workouts/${result.id}?notice=saved`);
+    if (result) { router.push(returnTo ?? `/coach/${wid}/athletes/${aid}/workouts/${result.id}?notice=saved`); if (returnTo) router.refresh(); }
   }
 
   const err = (path: string) => fieldError(error, path);

@@ -85,18 +85,34 @@ export function AcceptInvitation({ signedInAs, loginEnabled }: { signedInAs: str
   return (
     <div className="stack">
       {header}
-      <p>Connecté·e en tant que <strong>{signedInAs}</strong>.</p>
-      <ErrorSummary error={error} onRetry={() => void accept()} />
       {wrongAccount ? (
-        <form action="/auth/signout" method="post">
-          <button className="btn" type="submit">Changer de compte</button>
-        </form>
-      ) : null}
+        // Point de vue de la personne invitée : le navigateur est resté connecté au compte de quelqu’un d’autre.
+        <div className="stack">
+          <div className="banner warn" role="alert">
+            <p><strong>Ce lien n’est pas destiné au compte « {signedInAs} »</strong></p>
+            <p>L’invitation a été envoyée à une autre adresse e-mail, et ce navigateur est encore connecté au compte « {signedInAs} ». Si tu es la personne invitée, continue : ce compte sera déconnecté et l’invitation gardée, pour que tu crées ou ouvres ton propre compte.</p>
+          </div>
+          <form action="/auth/signout" method="post">
+            <input type="hidden" name="next" value="/invite" />
+            <button className="btn primary" type="submit">Je suis la personne invitée : continuer</button>
+          </form>
+          <p className="muted">Astuce pour tester à deux sur le même ordinateur : ouvre le lien d’invitation dans une fenêtre de navigation privée.</p>
+        </div>
+      ) : (
+        <>
+          <p>Tu vas rejoindre cet espace avec le compte <strong>{signedInAs}</strong>.</p>
+          <ErrorSummary error={error} onRetry={() => void accept()} />
+        </>
+      )}
       {!dead && !wrongAccount ? (
         <div className="actions">
           <button className="btn primary" type="button" onClick={() => void accept()} disabled={pending}>
             {pending ? 'Activation…' : 'Rejoindre l’espace'}
           </button>
+          <form action="/auth/signout" method="post">
+            <input type="hidden" name="next" value="/invite" />
+            <button className="link-btn" type="submit">Ce n’est pas ton compte ? Changer de compte</button>
+          </form>
         </div>
       ) : null}
       {dead ? <button type="button" className="link-btn" onClick={() => { forget(); router.push('/choose-workspace'); }}>Revenir à mes espaces</button> : null}

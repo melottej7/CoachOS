@@ -70,11 +70,11 @@ export async function openConversation(meta: Meta & { athleteId: string }): Prom
   });
 }
 
-async function insertDirect(tx: Tx, wid: string, aid: string, cid: string, body: string, voice: { id: string; s: number } | null): Promise<MessageItem> {
+async function insertDirect(tx: Tx, wid: string, aid: string, cid: string, body: string, voice: { id: string; s: number } | null, appointmentId: string | null = null, workoutId: string | null = null): Promise<MessageItem> {
   const r = await tx.query<{ id: string; created_at: Date }>(
-    `insert into public.messages(workspace_id, athlete_id, conversation_id, sender_id, body, voice_id, voice_duration_s)
-     values ($1, $2, $3, auth.uid(), $4, $5, $6) returning id, created_at`,
-    [wid, aid, cid, body, voice?.id ?? null, voice?.s ?? null],
+    `insert into public.messages(workspace_id, athlete_id, conversation_id, sender_id, body, voice_id, voice_duration_s, appointment_id, workout_id)
+     values ($1, $2, $3, auth.uid(), $4, $5, $6, $7, $8) returning id, created_at`,
+    [wid, aid, cid, body, voice?.id ?? null, voice?.s ?? null, appointmentId, workoutId],
   );
   const m = r.rows[0]!;
   await tx.query('update public.conversations set last_activity_at = (select created_at from public.messages where workspace_id = $1 and id = $3) where workspace_id = $1 and id = $2', [wid, cid, m.id]);
@@ -88,14 +88,32 @@ async function insertDirect(tx: Tx, wid: string, aid: string, cid: string, body:
   return { id: m.id, createdAt: new Date(m.created_at).toISOString(), body, mine: true, voiceId: voice?.id ?? null, voiceDurationS: voice?.s ?? null };
 }
 
+/**
+ * Annonce d’un rendez-vous dans la conversation de l’élève (D-034), dans la transaction de la commande
+ * qui l’a demandée explicitement (case « Prévenir » cochée). Le fil est créé au besoin.
+ */
+export async function announceAppointment(tx: Tx, wid: string, aid: string, body: string, appointmentId: string): Promise<string> {
+  await tx.query(`insert into public.conversations(workspace_id, athlete_id) values ($1, $2) on conflict (workspace_id, athlete_id) do nothing`, [wid, aid]);
+  const c = await tx.query<{ id: string }>('select id from public.conversations where workspace_id = $1 and athlete_id = $2', [wid, aid]);
+  return (await insertDirect(tx, wid, aid, c.rows[0]!.id, body, null, appointmentId)).id;
+}
+
 /** sendMessage · CA : message texte dans le fil privé. */
 export async function sendMessage(meta: Meta & { conversationId: string }, body: unknown): Promise<StoredResponse> {
-  const v = parse<{ body: string }>(sendMessageSchema, body);
+  const v = parse<{ body: string; workoutId: string | null }>(sendMessageSchema, body);
   const wid = meta.workspaceId;
   return commandAs(meta.actorId, async (tx) => {
     const aid = await conversationAthlete(tx, wid, meta.conversationId);
+    if (v.workoutId) {
+      // Séance du même élève ; l’élève (non coach affecté) ne peut citer qu’une séance publiée.
+      const w = await tx.query<{ ok: boolean }>(
+        `select (private.assigned($1, $2) or w.published_revision is not null) as ok from public.workouts w where w.workspace_id = $1 and w.athlete_id = $2 and w.id = $3`,
+        [wid, aid, v.workoutId],
+      );
+      if (!w.rows[0]?.ok) throw invalid([{ path: 'workoutId', rule: 'Séance introuvable' }]);
+    }
     return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'message.send', key: meta.idempotencyKey, body: { cid: meta.conversationId, ...v } }, async () => {
-      const item = await insertDirect(tx, wid, aid, meta.conversationId, v.body, null);
+      const item = await insertDirect(tx, wid, aid, meta.conversationId, v.body, null, null, v.workoutId);
       await audit(tx, wid, meta.actorId, 'message.send', item.id, meta.requestId);
       return { status: 200, body: { item } };
     });
@@ -146,7 +164,7 @@ async function insertTeam(tx: Tx, wid: string, tid: string, who: { role: 'coach'
 
 /** sendTeamMessage · CA : message au groupe, lu par le coach et les élèves membres. */
 export async function sendTeamMessage(meta: Meta & { teamId: string }, body: unknown): Promise<StoredResponse> {
-  const v = parse<{ body: string }>(sendMessageSchema, body);
+  const v = parse<{ body: string; workoutId: string | null }>(sendMessageSchema, body);
   const wid = meta.workspaceId;
   return commandAs(meta.actorId, async (tx) => {
     const who = await teamAccess(tx, wid, meta.teamId);
