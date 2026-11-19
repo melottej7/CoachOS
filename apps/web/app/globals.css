@@ -929,3 +929,23 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .gp-announce { display: grid; gap: 8px; margin: 10px 0 4px; }
 .gp-announce textarea { min-height: 72px; }
 .kpi-delta { margin-top: 4px; font-size: 12.5px; font-weight: 600; color: var(--ink); }
+
+/* Semaine type et publication de la semaine (D-051) */
+.wt { padding: 12px 16px 16px; border-top: 1px solid var(--rule); display: grid; gap: 10px; }
+.wt-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.wt-panel { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--rule); border-radius: 12px; }
+.wt-list { margin: 0; padding-left: 18px; display: grid; gap: 2px; font-size: 14px; }
+.wtl { display: grid; gap: 0; }
+.wtl-row { padding: 12px 0; border-top: 1px solid var(--rule); display: grid; gap: 4px; }
+.wtl-row:first-child { border-top: 0; padding-top: 0; }
+.wtl-row h3 { margin: 0; }
+.wtl-days { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 14px; }
+.wtl-actions { display: flex; gap: 12px; }
+.wtl-edit { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.wtl-edit input { flex: 1 1 200px; }
+
+/* Historique séance par séance (D-052) */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.history table { min-width: 520px; }
+.history td a { font-weight: 600; }
+.row-goal { margin: 2px 0 0; font-size: 13.5px; }

@@ -466,3 +466,43 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Rien n’est affiché sans séance passée dans la période précédente.
   - La définition est ajoutée sous les statistiques : la semaine en cours, pas terminée, compte dans la période actuelle.
 - **Preuve.** Test du domaine (points, %, effort, absence de base, textes). Navigateur : la démonstration n’a pas de séance avant la période, donc aucune comparaison affichée, comme prévu.
+
+## D-051 · Semaines types et publication de la semaine (CE-B-02) · 2026-11-19
+
+- **Contexte.** Le complément du 17 novembre prévoit une bibliothèque de séances, semaines types, blocs et programmes. Les séances existent (D-035) ; les semaines types manquaient.
+- **Décision.**
+  - Dans Séances → Semaine, sous la semaine d’un élève :
+    - « 💾 Enregistrer comme semaine type » : nom au choix. Les séances non annulées de la semaine (version de travail) deviennent les jours de la semaine type, sans élève ni date.
+    - « 📋 Appliquer une semaine type » : choix de la semaine type, aperçu jour par jour, puis « Ajouter n brouillons ». Un brouillon par séance aux mêmes jours, dans le fuseau de l’élève. Les séances déjà prévues restent en place et **rien n’est publié**.
+    - « Publier la semaine (n) » : liste chaque brouillon ou modification à publier, puis publication explicite, par la même opération qu’une séance.
+  - Bibliothèque : section « Semaines types » qui montre, pour chacune, les jours, le nombre de séances et la durée prévue. On peut la renommer ou l’archiver.
+  - Stockage dans `templates` (kind = 'week', charge `{ days: [{ offset, workout }] }`), sans migration ; visible seulement par son auteur.
+  - Contrat : `createWeekTemplate`, `applyWeekTemplate`, `updateWeekTemplate`.
+- **Preuve.**
+  - Test : semaine de Camille enregistrée puis appliquée à Noah deux semaines plus tard, aux mêmes jours, en brouillons invisibles pour lui.
+  - Test des refus : jour autre qu’un lundi, semaine vide, autre espace, élève, élève non suivi, semaine type archivée, révision périmée.
+  - Test : les semaines types ne se mêlent pas aux séances. Contrat des 3 opérations vérifié.
+  - Navigateur (Marine) :
+    - « Semaine VMA (reprise) » enregistrée depuis Camille (6 séances) ;
+    - appliquée à Noah pour la semaine du 23 novembre : 6 brouillons aux bons jours ;
+    - « Publier la semaine (6) » liste les 6 séances (non publiées pour la vérification) ;
+    - la Bibliothèque affiche la semaine type, 4 h 24 prévues.
+
+## D-052 · Historique séance par séance dans la fiche élève · 2026-11-19
+
+- **Décision.** Sous « Suivi de l’entraînement », « Séance par séance » liste les séances publiées passées de la période, la plus récente d’abord. Pour chacune :
+  - la date et le lien vers la séance ;
+  - le prévu (durée, distance) ;
+  - le réalisé (état, durée, distance) ou « Pas de retour » ;
+  - l’effort.
+
+  Le tableau défile horizontalement sur téléphone et se déplie de lui-même jusqu’à 8 lignes.
+- **Preuve.** Test : seulement des séances publiées passées, ordre décroissant, cohérent avec le nombre de séances faites du suivi. Navigateur : fiche de Camille, 3 lignes dont « Réalisée · 45 min · 8,1 km » (mesure lue dans la montre).
+
+## D-053 · Filtre par objectif dans la liste des élèves · 2026-11-19
+
+- **Décision.**
+  - Nouveau filtre « Objectif », avec les choix : tous, avec un objectif, objectif dans les 8 semaines, sans objectif.
+  - Sous chaque élève, son prochain objectif prévu : « 🎯 Gran fondo · 29 déc. (J-40) ».
+  - Le prochain objectif est le premier objectif prévu à venir ; à défaut, un objectif sans date. Les objectifs passés, atteints ou annulés ne comptent pas.
+- **Preuve.** Test : objectif passé et objectif sans date écartés au profit de l’objectif daté à venir. Navigateur : sans objectif en démonstration, « Sans objectif » liste les 4 élèves et « Avec un objectif » aucun.

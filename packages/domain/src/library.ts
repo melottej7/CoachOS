@@ -113,3 +113,24 @@ export function groupRowState(working: number, published: number | null, base = 
   if (published === null) return base ? 'draft' : 'adapted';
   return published === working ? 'published' : 'changed';
 }
+
+// ---------- Semaines types (CE-B-02, D-051) ----------
+
+/** Une séance d’une semaine type : jour (0 = lundi … 6 = dimanche) et contenu, sans élève ni date. */
+export const weekDaySchema = z.object({ offset: z.number().int().min(0).max(6), workout: libraryWorkoutSchema }).strict();
+export type WeekDay = z.output<typeof weekDaySchema>;
+export interface WeekTemplatePayload { days: WeekDay[] }
+
+const monday = z.string().refine(isLocalDate, { message: 'Date invalide' });
+const weekTitle = z.string().trim().min(1, { message: 'Donne un nom à la semaine type' }).max(120, { message: '120 caractères au plus' });
+
+/** Enregistrer la semaine d’un élève comme semaine type (version de travail de chaque séance non annulée). */
+export const weekFromAthleteSchema = z.object({ athleteId: uuid, monday, title: weekTitle }).strict();
+/** Appliquer une semaine type à un élève : un brouillon par séance, rien de publié. */
+export const applyWeekSchema = z.object({ athleteId: uuid, monday }).strict();
+/** Renommer ou archiver une semaine type. */
+export const updateWeekTemplateSchema = z
+  .object({ expectedRevision: z.number().int().min(1), title: weekTitle.optional(), archive: z.boolean().optional() })
+  .strict();
+
+export const WEEKDAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'] as const;

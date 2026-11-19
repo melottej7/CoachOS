@@ -100,3 +100,15 @@ Avec ton compte coach :
 3. En publiant une séance de groupe, coche **Annoncer dans le fil du groupe**, relis le message, puis publie. Le message apparaît dans le fil du groupe.
 4. Dans la fiche d’un élève, « Suivi de l’entraînement » : sous chaque chiffre, la comparaison avec la période précédente apparaît dès qu’il y a des séances avant la période choisie.
 
+## Nouveautés du 19 novembre (midi) à essayer
+
+Avec ton compte coach :
+1. **Séances → Semaine**, choisis un élève dont la semaine est prête : « 💾 Enregistrer comme semaine type », donne-lui un nom.
+2. Choisis un autre élève (ou une autre semaine) : « 📋 Appliquer une semaine type », relis l’aperçu, puis « Ajouter… brouillons ». Rien n’est visible pour l’élève.
+3. « Publier la semaine » liste ce qui sera publié ; publie quand tout est prêt.
+4. **Séances → Bibliothèque**, en bas : tes semaines types (renommer, archiver).
+5. **Fiche d’un élève → Suivi de l’entraînement → Séance par séance** : prévu et réalisé côte à côte.
+6. **Élèves** : filtre « Objectif » (avec, dans les 8 semaines, sans) ; le prochain objectif s’affiche sous chaque élève.
+
+En démonstration, Noah a déjà 6 brouillons la semaine du 23 novembre (semaine type « Semaine VMA (reprise) ») pour essayer « Publier la semaine ».
+

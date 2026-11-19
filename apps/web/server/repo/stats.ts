@@ -5,7 +5,14 @@ import { commandAs } from '../db/client';
 
 export interface NextGoal { title: string; sport: Sport; targetDate: string | null; state: GoalState }
 
-export async function athleteStats(userId: string, wid: string, aid: string, from: LocalDate, to: LocalDate, today: LocalDate): Promise<{ summary: StatsSummary; previous: StatsSummary; delta: PeriodDelta; goal: NextGoal | null } | null> {
+/** Historique séance par séance (D-052) : séances publiées passées de la période, la plus récente d’abord. */
+export interface HistoryRow {
+  workoutId: string; localDate: string; title: string; canceled: boolean;
+  plannedSeconds: number | null; plannedMeters: number | null;
+  state: StatItem['state']; doneSeconds: number | null; doneMeters: number | null; rpe: number | null;
+}
+
+export async function athleteStats(userId: string, wid: string, aid: string, from: LocalDate, to: LocalDate, today: LocalDate): Promise<{ summary: StatsSummary; previous: StatsSummary; delta: PeriodDelta; goal: NextGoal | null; history: HistoryRow[] } | null> {
   // Période précédente de même durée (D-050), lue dans la même requête.
   const span = Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86_400_000) + 1;
   const prevFrom = addDays(from, -span), prevTo = addDays(from, -1);
@@ -13,10 +20,10 @@ export async function athleteStats(userId: string, wid: string, aid: string, fro
     const ok = await tx.query<{ ok: boolean }>('select (private.assigned($1, $2) or private.own_athlete($1, $2)) as ok', [wid, aid]);
     if (!ok.rows[0]?.ok) return null;
     const rows = await tx.query<{
-      local_date: string; canceled: boolean; duration_seconds: number | null; distance_m: number | null;
+      workout_id: string; title: string; local_date: string; canceled: boolean; duration_seconds: number | null; distance_m: number | null;
       state: StatItem['state']; done_seconds: number | null; done_meters: number | null; rpe: number | null; overall_feeling: number | null;
     }>(
-      `select to_char(r.local_date, 'YYYY-MM-DD') as local_date, r.canceled, r.duration_seconds, r.distance_m,
+      `select w.id as workout_id, r.title, to_char(r.local_date, 'YYYY-MM-DD') as local_date, r.canceled, r.duration_seconds, r.distance_m,
               res.state, res.duration_seconds as done_seconds, res.distance_m as done_meters, f.rpe, f.overall_feeling
        from public.workouts w
        join public.workout_revisions r on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id and r.number = w.published_revision
@@ -38,6 +45,13 @@ export async function athleteStats(userId: string, wid: string, aid: string, fro
     const goal = g.rows[0] ? { title: g.rows[0].title, sport: g.rows[0].sport_code, targetDate: g.rows[0].target_date, state: g.rows[0].state } : null;
     const summary = summarize(items, from, to, today);
     const previous = summarize(items, prevFrom, prevTo, today);
-    return { summary, previous, delta: comparePeriods(summary, previous), goal };
+    const history: HistoryRow[] = rows.rows
+      .filter((x) => x.local_date >= from && x.local_date <= (to < today ? to : today))
+      .sort((a, b) => (a.local_date < b.local_date ? 1 : a.local_date > b.local_date ? -1 : 0))
+      .map((x) => ({
+        workoutId: x.workout_id, localDate: x.local_date, title: x.title, canceled: x.canceled, plannedSeconds: x.duration_seconds, plannedMeters: x.distance_m,
+        state: x.state, doneSeconds: x.done_seconds, doneMeters: x.done_meters, rpe: x.rpe,
+      }));
+    return { summary, previous, delta: comparePeriods(summary, previous), goal, history };
   });
 }

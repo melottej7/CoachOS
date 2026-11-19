@@ -50,6 +50,8 @@ export interface RosterEntry {
   regularity: { due: number; done: number; pct: number | null; avgRpe: number | null };
   nextWorkout: string | null;
   upcoming7: number;
+  /** Prochain objectif prévu (date à venir d’abord, puis sans date), pour filtrer et afficher (D-053). */
+  nextGoal: { title: string; targetDate: string | null } | null;
   todo: HomeTask[];
   urgency: number;
 }
@@ -155,6 +157,11 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
      group by w.athlete_id`, [addDays(today, -27), today]);
   const regBy = new Map(reg.map((x) => [x.athlete_id, x]));
   // Élèves ayant déjà un rendez-vous (prévu ou fait) : l’appel de bienvenue n’est plus à planifier.
+  const goals = await q<{ athlete_id: string; title: string; target_date: string | null }>(
+    `select distinct on (athlete_id) athlete_id, title, to_char(target_date, 'YYYY-MM-DD') as target_date from public.goals
+     where workspace_id = $1 and athlete_id = any($2::uuid[]) and state = 'planned' and (target_date is null or target_date >= $3::date)
+     order by athlete_id, (target_date is null), target_date, created_at desc`, [today]);
+  const goalBy = new Map(goals.map((g) => [g.athlete_id, { title: g.title, targetDate: g.target_date }]));
   const met = new Set((await q<{ athlete_id: string }>(
     `select distinct athlete_id from public.appointments where workspace_id = $1 and athlete_id = any($2::uuid[]) and status <> 'canceled'`)).map((x) => x.athlete_id));
   const snooze = await snoozed(tx, wid);
@@ -210,7 +217,7 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
         const x = regBy.get(a.id);
         return x ? { due: x.due, done: x.done, pct: x.due ? Math.round((x.done / x.due) * 100) : null, avgRpe: x.rpe === null ? null : Number(x.rpe) } : { due: 0, done: 0, pct: null, avgRpe: null };
       })(),
-      nextWorkout: upcoming[0] ?? null, upcoming7, todo,
+      nextWorkout: upcoming[0] ?? null, upcoming7, nextGoal: goalBy.get(a.id) ?? null, todo,
       urgency: urgencyScore(todo, today),
     };
   });

@@ -4,6 +4,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { openDatabase, setDb } from './db/client';
 import { ATHLETES, TIME_ZONE, USERS, WORKSPACE_A } from './db/fixtures';
 import { createWorkout } from './commands/workouts';
+import { createGoal } from './commands/portfolio';
 import { athleteStats } from './repo/stats';
 import { portfolio } from './repo/portfolio';
 
@@ -48,4 +49,23 @@ describe('statistiques d’un élève', () => {
     }
     expect(p.roster.some((a) => a.regularity.due > 0)).toBe(true);
   });
+
+  it('historique séance par séance (D-052) : publiées passées seulement, la plus récente d’abord, cohérent avec le suivi', async () => {
+    const s = (await stats(USERS.marine, ATHLETES.camille))!;
+    expect(s.history.length).toBeGreaterThan(0);
+    expect(s.history.every((h) => h.localDate <= today && h.localDate >= from)).toBe(true);
+    expect(s.history.map((h) => h.localDate)).toEqual([...s.history.map((h) => h.localDate)].sort().reverse());
+    expect(s.history.some((h) => h.title === 'Brouillon')).toBe(false);
+    expect(s.history.filter((h) => !h.canceled && (h.state === 'completed' || h.state === 'partial'))).toHaveLength(s.summary.done);
+  });
+
+  it('prochain objectif dans la liste des élèves (D-053) : prévu et à venir seulement', async () => {
+    const meta = (extra: { athleteId: string }) => ({ actorId: USERS.marine, idempotencyKey: randomUUID(), requestId: randomUUID(), workspaceId: WORKSPACE_A, ...extra });
+    await createGoal(meta({ athleteId: ATHLETES.noah }), { title: 'Ancien objectif', sport: 'cycling', targetDate: addDays(today, -10) });
+    await createGoal(meta({ athleteId: ATHLETES.noah }), { title: 'Gran fondo', sport: 'cycling', targetDate: addDays(today, 40) });
+    await createGoal(meta({ athleteId: ATHLETES.noah }), { title: 'Sans date', sport: 'cycling', targetDate: null });
+    const noah = (await portfolio(USERS.marine, WORKSPACE_A, TIME_ZONE)).roster.find((a) => a.id === ATHLETES.noah)!;
+    expect(noah.nextGoal).toEqual({ title: 'Gran fondo', targetDate: addDays(today, 40) });
+  });
 });
+

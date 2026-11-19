@@ -7,6 +7,8 @@ import { requireActor } from '@/server/auth/session';
 import { coachWeek, listAssignedAthletes, openReviews } from '@/server/repo/coach';
 import { AthleteSelect } from '@/components/nav-link';
 import { StatusBadge, initials } from '@/components/ui';
+import { WeekTools } from '@/components/week-tools';
+import { listWeekTemplates } from '@/server/repo/library';
 
 export const metadata = { title: 'Séances' };
 
@@ -38,6 +40,8 @@ export default async function Calendar({ params, searchParams }: { params: Promi
   const first = athlete.displayName.split(' ')[0];
   const ctxTz = (await coachContext(actor.userId, wid))?.workspace.timeZone ?? athlete.timeZone;
   const toPlan = toPlanCount((await portfolio(actor.userId, wid, ctxTz)).roster);
+  const weekTemplates = await listWeekTemplates(actor.userId, wid);
+  const drafts = workouts.filter((w) => w.status !== 'published');
 
   return (
     <>
@@ -85,6 +89,9 @@ export default async function Calendar({ params, searchParams }: { params: Promi
             );
           })}
         </ol>
+        <WeekTools wid={wid} athleteId={athlete.id} first={first ?? athlete.displayName} monday={monday} hasSessions={workouts.some((w) => !w.canceled)}
+          drafts={drafts.map((w) => ({ id: w.id, revision: w.workingRevision, title: w.title, localDate: w.localDate, changed: w.status === 'changed' }))}
+          templates={weekTemplates.map((t) => ({ id: t.id, title: t.title, days: t.days.map((d) => ({ offset: d.offset, title: d.workout.title })) }))} />
       </section>
 
       <section className="card" aria-labelledby="reviews-title">

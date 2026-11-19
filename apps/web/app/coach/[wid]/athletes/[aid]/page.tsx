@@ -13,6 +13,7 @@ import { coachContext } from '@/server/repo/context';
 import { athleteFile } from '@/server/repo/portfolio';
 import { athleteStats } from '@/server/repo/stats';
 import { StatsPanel } from '@/components/stats-panel';
+import { HistoryTable } from '@/components/history-table';
 import { ReferencesForm } from '@/components/references-form';
 import { ResendInvitation, RevokeInvitation } from '@/components/roster-forms';
 import {
@@ -175,7 +176,10 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
       {stats ? (
         <section className="card" aria-labelledby="suivi-title" id="suivi">
           <div className="card-head"><h2 id="suivi-title">Suivi de l’entraînement</h2></div>
-          <div className="card-body"><StatsPanel s={stats.summary} delta={stats.delta} weeks={weeks} periodHref={periodHref} you={false} /></div>
+          <div className="card-body stack">
+            <StatsPanel s={stats.summary} delta={stats.delta} weeks={weeks} periodHref={periodHref} you={false} />
+            <HistoryTable rows={stats.history} weeks={weeks} href={(sid) => `${base}/athletes/${aid}/workouts/${sid}`} />
+          </div>
         </section>
       ) : null}
 

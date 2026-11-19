@@ -1,11 +1,12 @@
 import {
-  createTemplateSchema, parseWith, starterLibrary, updateTemplateSchema,
-  type LibraryCategory, type LibraryWorkout,
+  addDays, applyWeekSchema, createTemplateSchema, parseWith, starterLibrary, updateTemplateSchema, updateWeekTemplateSchema, weekFromAthleteSchema, weekStart,
+  type LibraryCategory, type LibraryWorkout, type WeekDay, type WeekTemplatePayload,
 } from '@coachos/domain';
 import { commandAs, type Tx } from '../db/client';
 import { conflict, invalid, notVisible } from '../errors';
 import { audit, idempotent, type StoredResponse } from './idempotency';
 import { requireAssigned, requireCoach } from './portfolio';
+import { insertRevision } from './workouts';
 
 // Bibliothèque de séances (CE-B-01, D-035) : table `templates` (kind = 'workout'), visible par son auteur.
 // Charge utile : { category, workout } ; la séance n’a ni date, ni élève, ni fuseau.
@@ -108,6 +109,103 @@ export async function templateFromWorkout(meta: Meta & { athleteId: string; work
       });
       await audit(tx, wid, meta.actorId, 'template.from-workout', t.id, meta.requestId);
       return { status: 201, body: t };
+    });
+  });
+}
+
+// ---------- Semaines types (CE-B-02, D-051) ----------
+
+/**
+ * weekFromAthlete · C : enregistre la semaine d’un élève affecté comme semaine type (kind = 'week').
+ * Chaque séance non annulée de la semaine (version de travail) devient un jour de la semaine type.
+ */
+export async function weekFromAthlete(meta: Meta, body: unknown): Promise<StoredResponse> {
+  const v = parse<{ athleteId: string; monday: string; title: string }>(weekFromAthleteSchema, body);
+  if (weekStart(v.monday) !== v.monday) throw invalid([{ path: 'monday', rule: 'La semaine commence un lundi' }]);
+  const wid = meta.workspaceId;
+  return commandAs(meta.actorId, async (tx) => {
+    await requireAssigned(tx, wid, v.athleteId);
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'template.week-from-athlete', key: meta.idempotencyKey, body: v }, async () => {
+      const r = await tx.query<{ local_date: string; sport_code: LibraryWorkout['sport']; title: string; instructions: string | null; duration_seconds: number | null; distance_m: number | null; intervals: LibraryWorkout['intervals'] }>(
+        `select to_char(r.local_date, 'YYYY-MM-DD') as local_date, r.sport_code, r.title, nullif(r.instructions, '') as instructions, r.duration_seconds, r.distance_m, r.intervals
+         from public.workouts w join public.workout_revisions r
+           on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id and r.number = w.working_revision
+         where w.workspace_id = $1 and w.athlete_id = $2 and r.local_date between $3::date and $4::date and not r.canceled
+         order by r.local_date, r.sort_order, w.created_at`,
+        [wid, v.athleteId, v.monday, addDays(v.monday, 6)],
+      );
+      if (!r.rows.length) throw invalid([{ path: 'monday', rule: 'Aucune séance cette semaine' }]);
+      const days: WeekDay[] = r.rows.map((x) => ({
+        offset: Math.round((Date.parse(`${x.local_date}T12:00:00Z`) - Date.parse(`${v.monday}T12:00:00Z`)) / 86_400_000),
+        workout: { sport: x.sport_code, title: x.title, instructions: x.instructions, durationSeconds: x.duration_seconds, distanceM: x.distance_m, intervals: x.intervals ?? [] },
+      }));
+      const t = await tx.query<{ id: string; revision: number }>(
+        `insert into public.templates(workspace_id, owner_id, kind, title, payload) values ($1, auth.uid(), 'week', $2, $3::jsonb) returning id, revision`,
+        [wid, v.title, JSON.stringify({ days } satisfies WeekTemplatePayload)],
+      );
+      await audit(tx, wid, meta.actorId, 'template.week-from-athlete', t.rows[0]!.id, meta.requestId);
+      return { status: 201, body: { ...t.rows[0]!, sessions: days.length } };
+    });
+  });
+}
+
+/**
+ * applyWeekTemplate · C : un brouillon par séance de la semaine type, aux jours correspondants de la semaine choisie,
+ * dans le fuseau de l’élève. Rien n’est publié ; les séances déjà présentes ne sont pas touchées.
+ */
+export async function applyWeekTemplate(meta: Meta & { templateId: string }, body: unknown): Promise<StoredResponse> {
+  const v = parse<{ athleteId: string; monday: string }>(applyWeekSchema, body);
+  if (weekStart(v.monday) !== v.monday) throw invalid([{ path: 'monday', rule: 'La semaine commence un lundi' }]);
+  const wid = meta.workspaceId;
+  return commandAs(meta.actorId, async (tx) => {
+    await requireAssigned(tx, wid, v.athleteId);
+    const t = await tx.query<{ payload: WeekTemplatePayload; archived: boolean }>(
+      `select payload, archived from public.templates where workspace_id = $1 and id = $2 and kind = 'week' and owner_id = auth.uid()`,
+      [wid, meta.templateId],
+    );
+    const tpl = t.rows[0];
+    if (!tpl) throw notVisible();
+    if (tpl.archived) throw invalid([{ path: 'templateId', rule: 'Cette semaine type est archivée' }]);
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'template.week-apply', key: meta.idempotencyKey, body: { id: meta.templateId, ...v } }, async () => {
+      const a = await tx.query<{ time_zone: string; state: string }>('select time_zone, state from public.athletes where workspace_id = $1 and id = $2', [wid, v.athleteId]);
+      if (!a.rows[0] || a.rows[0].state === 'archived') throw notVisible();
+      const created: { workoutId: string; localDate: string }[] = [];
+      const order = new Map<number, number>();
+      for (const d of tpl.payload.days) {
+        const localDate = addDays(v.monday, d.offset);
+        const sortOrder = order.get(d.offset) ?? 0;
+        order.set(d.offset, sortOrder + 1);
+        const w = await tx.query<{ id: string }>(
+          'insert into public.workouts(workspace_id, athlete_id, working_revision) values ($1, $2, 1) returning id', [wid, v.athleteId],
+        );
+        await insertRevision(tx, wid, v.athleteId, w.rows[0]!.id, 1, { ...d.workout, localDate, timeZone: a.rows[0].time_zone, sortOrder });
+        created.push({ workoutId: w.rows[0]!.id, localDate });
+      }
+      await audit(tx, wid, meta.actorId, 'template.week-apply', meta.templateId, meta.requestId);
+      return { status: 201, body: { created } };
+    });
+  });
+}
+
+/** updateWeekTemplate · C : l’auteur renomme ou archive une semaine type ; révision attendue. */
+export async function updateWeekTemplate(meta: Meta & { templateId: string }, body: unknown): Promise<StoredResponse> {
+  const v = parse<{ expectedRevision: number; title?: string; archive?: boolean }>(updateWeekTemplateSchema, body);
+  const wid = meta.workspaceId;
+  return commandAs(meta.actorId, async (tx) => {
+    await requireCoach(tx, wid);
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'template.week-update', key: meta.idempotencyKey, body: { id: meta.templateId, ...v } }, async () => {
+      const cur = await tx.query<{ revision: number }>(
+        `select revision from public.templates where workspace_id = $1 and id = $2 and owner_id = auth.uid() and kind = 'week' for update`, [wid, meta.templateId],
+      );
+      if (!cur.rows[0]) throw notVisible();
+      if (cur.rows[0].revision !== v.expectedRevision) throw conflict('Cette semaine type a été modifiée ailleurs. Recharge la page.', { revision: cur.rows[0].revision });
+      const r = await tx.query<{ id: string; revision: number }>(
+        `update public.templates set title = coalesce($3, title), archived = coalesce($4, archived), revision = revision + 1
+         where workspace_id = $1 and id = $2 returning id, revision`,
+        [wid, meta.templateId, v.title ?? null, v.archive ?? null],
+      );
+      await audit(tx, wid, meta.actorId, 'template.week-update', meta.templateId, meta.requestId);
+      return { status: 200, body: r.rows[0]! };
     });
   });
 }

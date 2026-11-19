@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { formatShortDate, formatWeekday, LEVEL_LABELS, LEVELS, SPORT_LABELS, SPORTS, urgencyLabel, type Level } from '@coachos/domain';
+import { addDays, daysUntil, formatShortDate, formatWeekday, LEVEL_LABELS, LEVELS, SPORT_LABELS, SPORTS, urgencyLabel, type Level } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { portfolio, type RosterEntry } from '@/server/repo/portfolio';
@@ -9,7 +9,7 @@ import { Pill, initials } from '@/components/ui';
 
 export const metadata = { title: 'Élèves' };
 
-type Search = { by?: string; q?: string; sport?: string; status?: string; team?: string; level?: string };
+type Search = { by?: string; q?: string; sport?: string; status?: string; team?: string; level?: string; goal?: string };
 const BY = [
   { k: 'team', label: 'Groupe' },
   { k: 'level', label: 'Niveau' },
@@ -58,10 +58,12 @@ export default async function Roster({ params, searchParams }: { params: Promise
     (!sp.sport || a.sport === sp.sport) &&
     (!sp.team || a.teams.some((t) => t.id === sp.team)) &&
     (!sp.level || levelOf(a).level === sp.level) &&
+    (!sp.goal || (sp.goal === 'none' ? !a.nextGoal : sp.goal === 'soon'
+      ? Boolean(a.nextGoal?.targetDate && a.nextGoal.targetDate <= addDays(today, 56)) : Boolean(a.nextGoal))) &&
     (!sp.status || (sp.status === 'invited' ? a.state === 'invited' : sp.status === 'active' ? a.state === 'active'
       : sp.status === 'irregular' ? a.regularity.pct !== null && a.regularity.due >= 2 && a.regularity.pct < 50 : a.urgency > 0)),
   );
-  const filtered = Boolean(q || sp.sport || sp.team || sp.level || sp.status);
+  const filtered = Boolean(q || sp.sport || sp.team || sp.level || sp.status || sp.goal);
   const activeTeams = teams.filter((t) => !t.archived);
 
   // Regroupement : un élève dans deux groupes apparaît dans les deux.
@@ -153,8 +155,12 @@ export default async function Roster({ params, searchParams }: { params: Promise
           <select id="status" name="status" className="select small" defaultValue={sp.status ?? ''}>
             <option value="">Tous les statuts</option><option value="attention">Demande une action</option><option value="active">Actif</option><option value="invited">Invité·e</option><option value="irregular">Régularité sous 50 %</option>
           </select>
+          <label className="visually-hidden" htmlFor="goal">Objectif</label>
+          <select id="goal" name="goal" className="select small" defaultValue={sp.goal ?? ''}>
+            <option value="">Tous les objectifs</option><option value="with">Avec un objectif</option><option value="soon">Objectif dans les 8 semaines</option><option value="none">Sans objectif</option>
+          </select>
           <button className="btn small" type="submit">Filtrer</button>
-          {filtered ? <Link className="link-btn" href={href({ q: '', sport: '', level: '', status: '' })}>Effacer</Link> : null}
+          {filtered ? <Link className="link-btn" href={href({ q: '', sport: '', level: '', status: '', goal: '' })}>Effacer</Link> : null}
         </form>
 
         {list.length ? groups.filter((g) => g.items.length).map((g) => (
@@ -178,6 +184,7 @@ export default async function Roster({ params, searchParams }: { params: Promise
                       {a.teams.length ? ` · ${a.teams.map((t) => t.name).join(', ')}` : ''}
                       {' · '}{a.nextWorkout ? `Prochaine séance ${formatWeekday(a.nextWorkout).toLowerCase()} ${formatShortDate(a.nextWorkout)}` : 'Aucune séance publiée à venir'}
                     </p>
+                    {a.nextGoal ? <p className="row-goal">🎯 {a.nextGoal.title}{a.nextGoal.targetDate ? ` · ${formatShortDate(a.nextGoal.targetDate)} (J-${daysUntil(today, a.nextGoal.targetDate)})` : ''}</p> : null}
                     {a.state === 'active' ? <Regularity r={a.regularity} /> : null}
                     {a.todo.length ? (
                       <p className="row-todo">{a.todo.slice(0, 3).map((t) => t.title + (t.source === 'auto' ? '' : ' (tâche)')).join(' · ')}{a.todo.length > 3 ? ` · +${a.todo.length - 3}` : ''}</p>

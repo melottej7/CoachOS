@@ -36,6 +36,8 @@ export interface CoachWorkoutCard {
   workingRevision: number;
   publishedRevision: number | null;
   status: WorkoutStatus;
+  /** Annulée dans la version de travail. */
+  canceled: boolean;
   feedback: { state: ResultState; reviewed: boolean } | null;
 }
 
@@ -43,9 +45,9 @@ export async function coachWeek(userId: string, wid: string, aid: string, from: 
   return readAs(userId, async (tx) => {
     const r = await tx.query<{
       id: string; local_date: string; sort_order: number; sport_code: Sport; title: string; duration_seconds: number | null;
-      working_revision: number; published_revision: number | null; result_state: ResultState | null; reviewed_at: Date | null;
+      working_revision: number; published_revision: number | null; result_state: ResultState | null; reviewed_at: Date | null; canceled: boolean;
     }>(
-      `select w.id, to_char(r.local_date, 'YYYY-MM-DD') as local_date, r.sort_order, r.sport_code, r.title, r.duration_seconds,
+      `select w.id, to_char(r.local_date, 'YYYY-MM-DD') as local_date, r.sort_order, r.sport_code, r.title, r.duration_seconds, r.canceled,
               w.working_revision, w.published_revision, res.state as result_state, f.reviewed_at
        from public.workouts w
        join public.workout_revisions r
@@ -68,6 +70,7 @@ export async function coachWeek(userId: string, wid: string, aid: string, from: 
       workingRevision: x.working_revision,
       publishedRevision: x.published_revision,
       status: workoutStatus(x.working_revision, x.published_revision),
+      canceled: x.canceled,
       feedback: x.result_state ? { state: x.result_state, reviewed: x.reviewed_at !== null } : null,
     }));
   });

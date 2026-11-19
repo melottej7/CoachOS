@@ -210,6 +210,11 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
   - **D-049** : annonce facultative d’une séance de groupe dans le fil du groupe.
   - **D-050** : comparaison avec la période précédente dans le suivi.
   - `npm test` : **156 passés** (+3 PostgreSQL), typecheck OK.
+- Commit `306247d` (D-048 à D-050). Puis (non commité) :
+  - **D-051** : semaines types (enregistrer, appliquer en brouillons) et « Publier la semaine ».
+  - **D-052** : historique séance par séance dans la fiche.
+  - **D-053** : filtre par objectif dans la liste des élèves.
+  - `npm test` : **159 passés** (+3 PostgreSQL), typecheck OK. COUVERTURE remise à jour (lignes périmées corrigées).
 
 Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au micro réel (autorisation du micro non automatisable ici) ; visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
 

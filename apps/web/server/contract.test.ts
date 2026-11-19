@@ -18,11 +18,11 @@ import { saveAthleteProfile } from './commands/athlete-profile';
 import { saveAthleteReferences } from './commands/athlete-references';
 import { confirmLevel, createGoal, createNote, createTeam, deleteNote, setTeamMember, updateGoal, updateTeam } from './commands/portfolio';
 import { createAppointment, createTask, saveAutoRuleSettings, snoozeAutoTask, updateAppointment, updateTask } from './commands/tasks';
-import { addStarterLibrary, createTemplate, templateFromWorkout, updateTemplate } from './commands/library';
+import { addStarterLibrary, applyWeekTemplate, createTemplate, templateFromWorkout, updateTemplate, updateWeekTemplate, weekFromAthlete } from './commands/library';
 import { createGroupSession, publishGroupSession, updateGroupBase } from './commands/group-sessions';
 import { openConversation, saveReceipt, saveTeamReceipt, sendMessage, sendTeamMessage, sendTeamVoice, sendVoice } from './commands/messages';
 import { deleteWorkspaceLogo, previewInvitation, saveWorkspaceProfile, setWorkspaceLogo } from './commands/workspace-profile';
-import { todayIn } from '@coachos/domain';
+import { addDays, todayIn, weekStart } from '@coachos/domain';
 import { coachWorkout } from './repo/coach';
 
 // Test de contrat : chaque réponse réelle des commandes est validée contre contracts/openapi.json
@@ -186,6 +186,14 @@ describe('réponses conformes au contrat OpenAPI', () => {
     check('/workspaces/{wid}/templates/starter', 'post', st.status, st.body);
     const fw = await templateFromWorkout({ ...m(), athleteId: ATHLETES.camille, workoutId: SEED_WORKOUTS.camilleLong }, { category: 'long' });
     check('/workspaces/{wid}/athletes/{aid}/workouts/{sid}/template', 'post', fw.status, fw.body);
+    const monday = weekStart(todayIn(TIME_ZONE));
+    const wk = await weekFromAthlete(m(), { athleteId: ATHLETES.camille, monday, title: 'Semaine type' });
+    check('/workspaces/{wid}/week-templates', 'post', wk.status, wk.body);
+    const wid = (wk.body as { id: string }).id;
+    const ap = await applyWeekTemplate({ ...m(), templateId: wid }, { athleteId: ATHLETES.noah, monday: addDays(monday, 21) });
+    check('/workspaces/{wid}/week-templates/{tid}/apply', 'post', ap.status, ap.body);
+    const up = await updateWeekTemplate({ ...m(), templateId: wid }, { expectedRevision: 1, archive: true });
+    check('/workspaces/{wid}/week-templates/{tid}', 'patch', up.status, up.body);
   });
 
   it('séance de groupe : brouillons puis publication', async () => {
