@@ -506,3 +506,41 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Sous chaque élève, son prochain objectif prévu : « 🎯 Gran fondo · 29 déc. (J-40) ».
   - Le prochain objectif est le premier objectif prévu à venir ; à défaut, un objectif sans date. Les objectifs passés, atteints ou annulés ne comptent pas.
 - **Preuve.** Test : objectif passé et objectif sans date écartés au profit de l’objectif daté à venir. Navigateur : sans objectif en démonstration, « Sans objectif » liste les 4 élèves et « Avec un objectif » aucun.
+
+## D-054 · Bilan d’arrivée inspiré de Foulée : questionnaire, reprise, confirmation, entretien (CE-B-04, CE-B-05) · 2026-11-19
+
+- **Contexte.** CE-B-04 et CE-B-05 (P0) étaient partiels : questionnaire en trois blocs, sans reprise ni confirmation, et sans entretien. Le fondateur a demandé de s’inspirer de Foulée. La capture 01 de Foulée montre une question par écran, une barre de progression, des questions qui s’adaptent (régulier, reprise, arrêt, débutant) et la pratique réelle des 4 dernières semaines.
+- **Décision.**
+  - **Ergonomie reprise de Foulée.**
+    - Une question par écran, avec barre de progression et retour ; un toucher sur une réponse fait avancer.
+    - Questions conditionnelles :
+      - « Où en es-tu avec la course à pied / le vélo / la natation… ? » : régulier, reprise après un arrêt, arrêt en cours, débutant ;
+      - en cas d’arrêt : sa durée ; en cas de reprise : depuis quand ;
+      - séances par semaine sur les 4 dernières semaines (« ce que tu as vraiment fait ») ;
+      - plus longue sortie récente (« d’une traite, pas ton record d’avant »).
+    - Réponses déduites : un débutant n’a ni ancienneté ni niveau à donner ; pendant un arrêt, la pratique est de 0 ou 1 séance par semaine.
+    - Récapitulatif avant l’envoi : chaque ligne se modifie d’un toucher. Une réponse qui ouvre une question obligatoire y conduit d’abord.
+    - Formulations adaptées à chaque sport. Aucune question de santé (pas de PAR-Q ni de douleur, contrairement à Foulée, D11).
+  - **CoachOS en plus.**
+    - Brouillon enregistré **sur le serveur** à chaque écran (table `athlete_profile_drafts`), avec l’indication « Enregistré », pour reprendre sur un autre appareil.
+    - Rappel sur Aujourd’hui : « Ton bilan · 2 réponses sur 5 » et le bouton « Continuer ».
+    - Le motif de la tâche « Relancer le questionnaire » du Planning donne l’avancement du brouillon.
+    - Statut : pas commencé, en cours, envoyé (à confirmer), confirmé.
+    - « ✓ Confirmer le bilan » dans la fiche. Une modification de l’élève le remet « à confirmer », mais un envoi identique ne retire pas la confirmation (par exemple si seul le nom a changé).
+    - **Entretien (CE-B-05).** « 📞 Compléter en entretien » ouvre le même parcours, avec les questions à la troisième personne. Il part du bilan envoyé, sinon du brouillon de l’élève, sinon de rien. Les réponses changées sont marquées « Entretien » dans la fiche, les autres restent « déclarées », et le bilan est confirmé. Révision attendue : 409 si l’élève a changé son bilan entre-temps.
+  - Migration additive `20261119080000` : nouvelles colonnes de `athlete_profiles` (questions, statut, confirmation, provenance) et table des brouillons. Lecture par l’élève et le coach affecté seulement. Les profils existants restent valides.
+  - Contrat : `saveBilanDraft`, `saveBilanByCoach`, `confirmBilan` ; schéma `athleteProfile` étendu.
+- **Preuve.**
+  - Tests du domaine (5) : écrans selon les réponses, réponses déduites, complétude, reprise, cohérence, provenance (dont profil antérieur).
+  - Tests serveur (6) :
+    - brouillon repris et lisible par le coach seul ; champ inconnu refusé ;
+    - envoi ; confirmation, puis retrait par une modification ; refus pour une révision périmée, l’élève ou un autre espace ;
+    - entretien avec provenance ; bilan créé par le coach ; envoi identique sans perte de la confirmation.
+  - Contrat des 3 opérations vérifié.
+  - Navigateur, 375 px :
+    - Camille commence (« Où en es-tu avec la course à pied ? », « Enregistré »), quitte, puis Aujourd’hui affiche « 2 réponses sur 5 » ;
+    - elle reprend à la bonne question, termine (récapitulatif complet) et envoie ;
+    - Marine confirme le bilan ;
+    - Marine complète en entretien le bilan de Noah : « Situation » manquante, « J’ai repris » conduit à la durée de l’arrêt puis à la reprise ; résultat « Confirmé » avec repères « Entretien ».
+- **Défaut trouvé et corrigé.** Un profil antérieur aux provenances voyait toutes ses réponses marquées « Entretien ». Une réponse inchangée reste désormais « déclarée ». La ligne de démonstration de Noah a été corrigée en base locale (une seule ligne, données de démonstration).
+- **Non fait.** Versions successives du bilan (Foulée garde l’historique) ; écran « Toi » (nom, fuseau) dans le premier parcours, toujours modifiables dans Profil ; tâche « Confirmer le bilan » dans le Planning (« Confirmer le niveau » existe).

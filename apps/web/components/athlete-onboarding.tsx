@@ -18,6 +18,8 @@ export interface OnboardingInitial {
   profile: {
     sport: Sport; level: Level; experience: Experience; weeklySessions: WeeklySessions; weeklyHours: WeeklyHours | null;
     availableDays: number[]; mainGoal: string | null; nextEventName: string | null; nextEventDate: string | null;
+    /** Réponses du bilan (D-054) non modifiables ici : renvoyées telles quelles pour ne pas les effacer. */
+    bilan?: { practiceStatus: string | null; breakLength: string | null; resumedSince: string | null; longestRecent: string | null };
   } | null;
 }
 
@@ -122,6 +124,7 @@ export function AthleteOnboarding({ wid, coachSpace, zones, initial, mode, after
     const saved = await prof.run('PUT', `/api/v1/workspaces/${wid}/athlete-profile`, {
       sport, level, experience, weeklySessions: sessions, weeklyHours: hours || null,
       availableDays: days, mainGoal: goal, nextEventName: eventName, nextEventDate: eventDate || null,
+      ...(p?.bilan ?? {}),
     });
     if (saved) {
       router.push(after);

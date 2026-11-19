@@ -14,7 +14,7 @@ import { errorPayload } from './http';
 import { markFeedbackReviewed, saveFeedback } from './commands/feedback';
 import { acceptInvitation, createAthlete, createWorkspace, issueInvitation, revokeInvitation } from './commands/invitations';
 import { createWorkout, publishWorkouts, updateWorkout } from './commands/workouts';
-import { saveAthleteProfile } from './commands/athlete-profile';
+import { confirmBilan, saveAthleteProfile, saveBilanByCoach, saveBilanDraft } from './commands/athlete-profile';
 import { saveAthleteReferences } from './commands/athlete-references';
 import { confirmLevel, createGoal, createNote, createTeam, deleteNote, setTeamMember, updateGoal, updateTeam } from './commands/portfolio';
 import { createAppointment, createTask, saveAutoRuleSettings, snoozeAutoTask, updateAppointment, updateTask } from './commands/tasks';
@@ -112,6 +112,17 @@ describe('réponses conformes au contrat OpenAPI', () => {
       availableDays: [1, 3, 6], mainGoal: 'Gravel de 100 km', nextEventName: 'Gravel Ardennes', nextEventDate: '2027-05-02',
     });
     check('/workspaces/{wid}/athlete-profile', 'put', full.status, full.body);
+    // Bilan (D-054) : brouillon, confirmation, entretien.
+    const draft = await saveBilanDraft({ ...m, idempotencyKey: randomUUID() }, { step: 'break', answers: { sport: 'running', practiceStatus: 'stopped', availableDays: [2] } });
+    check('/workspaces/{wid}/athlete-profile/draft', 'put', draft.status, draft.body);
+    const c = { ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: ATHLETES.noah };
+    const rev = (full.body as { item: { revision: number } }).item.revision;
+    const conf = await confirmBilan(c, { expectedRevision: rev });
+    check('/workspaces/{wid}/athletes/{aid}/athlete-profile/confirm', 'post', conf.status, conf.body);
+    const iv = await saveBilanByCoach({ ...c, idempotencyKey: randomUUID() }, {
+      expectedRevision: rev + 1, data: { sport: 'cycling', practiceStatus: 'resumed', breakLength: '3to6m', resumedSince: 'lt1m', level: 'intermediate', experience: '3to5', weeklySessions: '2to3', longestRecent: 'gt120' },
+    });
+    check('/workspaces/{wid}/athletes/{aid}/athlete-profile', 'put', iv.status, iv.body);
   });
 
   it('repères d’entraînement fixés par le coach', async () => {

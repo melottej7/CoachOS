@@ -112,3 +112,15 @@ Avec ton compte coach :
 
 En démonstration, Noah a déjà 6 brouillons la semaine du 23 novembre (semaine type « Semaine VMA (reprise) ») pour essayer « Publier la semaine ».
 
+## Bilan d’arrivée (inspiré de Foulée) à essayer
+
+Avec un compte élève qui n’a pas encore de bilan :
+1. Sur Aujourd’hui, « Ton bilan » → **Commencer**. Une question par écran ; touche une réponse pour avancer. Quitte au milieu, reviens : tu reprends au même endroit (aussi depuis un autre appareil).
+2. Au récapitulatif, touche une ligne pour la modifier, puis **Envoyer mon bilan**.
+
+Avec ton compte coach :
+3. Fiche de l’élève → section **Bilan** : réponses, état « Envoyé, à confirmer », bouton **✓ Confirmer le bilan**.
+4. **📞 Compléter en entretien** : le même parcours, à remplir pendant l’appel ; les réponses que tu changes sont marquées « Entretien ».
+
+En démonstration : Camille a envoyé son bilan (confirmé par Marine) ; celui de Noah a été complété en entretien.
+

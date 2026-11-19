@@ -949,3 +949,33 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .history table { min-width: 520px; }
 .history td a { font-weight: 600; }
 .row-goal { margin: 2px 0 0; font-size: 13.5px; }
+
+/* Bilan d’arrivée, une question par écran (D-054, ergonomie reprise de Foulée) */
+.bf { display: grid; gap: 12px; max-width: 560px; }
+.bf-top { display: flex; align-items: center; gap: 12px; }
+.bf-back { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); font-size: 20px; cursor: pointer; flex: none; }
+.bf-back:disabled { opacity: 0.35; cursor: default; }
+.bf-bar { flex: 1; height: 6px; border-radius: 999px; background: var(--rule); overflow: hidden; }
+.bf-bar span { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.2s ease; }
+.bf-saved { font-size: 12px; color: var(--muted); min-width: 84px; text-align: right; }
+.bf h2 { font-size: 24px; line-height: 1.2; margin: 6px 0 0; outline: none; }
+.bf-hint { color: var(--muted); margin: 0; }
+.bf-choices { display: grid; gap: 8px; margin-top: 6px; }
+.bf-choice { text-align: left; padding: 14px 16px; min-height: 52px; border-radius: 12px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; display: grid; gap: 2px; }
+.bf-choice small { font-weight: 450; color: var(--muted); }
+.bf-choice:hover { border-color: var(--accent); }
+.bf-choice.on { border-color: var(--accent); background: var(--mint); color: var(--mint-ink); }
+.bf-days { display: flex; flex-wrap: wrap; gap: 8px; }
+.bf-day { min-width: 56px; min-height: 48px; border-radius: 12px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+.bf-day.on { border-color: var(--accent); background: var(--mint); color: var(--mint-ink); }
+.bf-next { justify-self: start; margin-top: 6px; }
+.bf-skip { justify-self: start; }
+.bf-form { display: grid; gap: 10px; }
+.bf-recap dl { display: grid; gap: 0; margin: 0; }
+.bf-recap dl > div { display: grid; grid-template-columns: minmax(120px, 40%) 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--rule); }
+.bf-recap dt { color: var(--muted); }
+.bf-recap dd { margin: 0; }
+.bf-recap dd .link-btn { text-align: left; font-weight: 600; }
+.bf-foot { font-size: 13px; margin-top: 8px; }
+@media (prefers-reduced-motion: reduce) { .bf-bar span { transition: none; } }
+.bilan-nudge { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin: 10px 0 16px; }

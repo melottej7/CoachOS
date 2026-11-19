@@ -1,5 +1,5 @@
 import {
-  addDays, AUTO_RULE_INFO, autoRuleReason, excerpt, resolveRuleSettings, rankTasks, todayIn, urgencyScore, usesVma, utcToLocal,
+  addDays, AUTO_RULE_INFO, autoRuleReason, bilanCompletion, deriveBilan, excerpt, resolveRuleSettings, type BilanAnswers, rankTasks, todayIn, urgencyScore, usesVma, utcToLocal,
   type AppointmentKind, type AppointmentStatus, type AutoRule, type AutoRuleSetting, type GoalState, type Level, type LocalDate, type Sport, type TaskKind, type TaskStatus,
 } from '@coachos/domain';
 import { readAs, type Tx } from '../db/client';
@@ -157,6 +157,8 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
      group by w.athlete_id`, [addDays(today, -27), today]);
   const regBy = new Map(reg.map((x) => [x.athlete_id, x]));
   // Élèves ayant déjà un rendez-vous (prévu ou fait) : l’appel de bienvenue n’est plus à planifier.
+  const drafts = new Map((await q<{ athlete_id: string; answers: BilanAnswers }>(
+    `select athlete_id, answers from public.athlete_profile_drafts where workspace_id = $1 and athlete_id = any($2::uuid[])`)).map((d) => [d.athlete_id, bilanCompletion(deriveBilan(d.answers))]));
   const goals = await q<{ athlete_id: string; title: string; target_date: string | null }>(
     `select distinct on (athlete_id) athlete_id, title, to_char(target_date, 'YYYY-MM-DD') as target_date from public.goals
      where workspace_id = $1 and athlete_id = any($2::uuid[]) and state = 'planned' and (target_date is null or target_date >= $3::date)
@@ -201,7 +203,10 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
     if (a.state === 'invited') push('invite_pending', a.id, addDays(localDay(a.created_at), delay('invite_pending')), `${base}/athletes/${a.id}#inv-title`);
     if (a.state === 'active') {
       if (!upcoming.some((d) => d <= horizonEnd)) push('no_upcoming', a.id, today, `${base}/calendar?athlete=${a.id}`);
-      if (!profile) push('profile_missing', a.id, null, `${base}/athletes/${a.id}#profile-title`);
+      if (!profile) {
+        const d = drafts.get(a.id);
+        push('profile_missing', a.id, null, `${base}/athletes/${a.id}#bilan`, d ? `bilan commencé, ${d.answered} réponse${d.answered > 1 ? 's' : ''} sur ${d.total}` : null);
+      }
       if (profile && !met.has(a.id)) push('onboarding_call', a.id, addDays(localDay(profile.updated_at), delay('onboarding_call')), `${base}/athletes/${a.id}#rdv`);
       if (profile && !confirmed.some((l) => l.sport === profile.sport_code)) push('level_unconfirmed', a.id, null, `${base}/athletes/${a.id}#levels`);
       if (profile && usesVma(profile.sport_code) && vmaKmh === null) push('vma_missing', a.id, null, `${base}/athletes/${a.id}#refs-title`);

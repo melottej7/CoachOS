@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
-  addDays, canGiveFeedback, effortGap, formatDuration, formatLongDate, formatShortDate, INTENT_LABELS, todayIn, RESULT_STATE_LABELS, sessionIntent, SPORT_LABELS,
+  addDays, bilanCompletion, canGiveFeedback, deriveBilan, effortGap, formatDuration, formatLongDate, formatShortDate, INTENT_LABELS, todayIn, RESULT_STATE_LABELS, sessionIntent, SPORT_LABELS,
 } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { athleteSchedule, nextWorkout } from '@/server/repo/athlete';
 import { athleteContext } from '@/server/repo/context';
+import { readAthleteProfile, readBilanDraft } from '@/server/commands/athlete-profile';
 import { Pill } from '@/components/ui';
 import { QuickFeedback } from '@/components/quick-feedback';
 import type { AthleteWorkout } from '@/server/repo/athlete';
@@ -28,6 +29,10 @@ export default async function Today({ params, searchParams }: { params: Promise<
   const yesterday = addDays(today, -1);
   const pending = (await athleteSchedule(actor.userId, wid, ctx.athlete.id, yesterday, yesterday)).filter((w) => !w.canceled && !w.feedbackState);
   const base = `/athlete/${wid}`;
+  // D-054 : bilan pas encore envoyé → rappel avec l’avancement du brouillon.
+  const hasProfile = Boolean(await readAthleteProfile(actor.userId, wid, ctx.athlete.id));
+  const draft = hasProfile ? null : await readBilanDraft(actor.userId, wid, ctx.athlete.id);
+  const progress = draft ? bilanCompletion(deriveBilan(draft.answers)) : null;
   const feedbackBlock = (w: AthleteWorkout, when: string) => {
     if (w.canceled || !canGiveFeedback(w.localDate, today, w.canceled)) return null;
     const intent = sessionIntent(w.intervals);
@@ -48,6 +53,12 @@ export default async function Today({ params, searchParams }: { params: Promise<
       {notice === 'joined' ? <p className="banner ok" role="status" style={{ marginBottom: 16 }}>Bienvenue dans {ctx.workspace.name}. Tes séances publiées apparaissent ici et dans Programme.</p> : null}
       <div className="kicker">{formatLongDate(today)} · {ctx.athlete.timeZone}</div>
       <h1>Aujourd’hui</h1>
+      {!hasProfile ? (
+        <p className="banner bilan-nudge">
+          <span><strong>Ton bilan</strong> · {progress ? `${progress.answered} réponse${progress.answered > 1 ? 's' : ''} sur ${progress.total}` : '2 minutes'} pour que ton coach prépare un programme qui te ressemble.</span>
+          <Link className="btn small primary" href={`${base}/setup`}>{progress ? 'Continuer' : 'Commencer'}</Link>
+        </p>
+      ) : null}
       {todays.length ? todays.map((w, k) => (
         <article className="athlete-card" key={w.id} data-tour={k === 0 ? 'today-card' : undefined}>
           <Pill>{SPORT_LABELS[w.sport]}</Pill> {w.canceled ? <Pill tone="attn">Annulée</Pill> : null}

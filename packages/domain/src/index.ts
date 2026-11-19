@@ -21,3 +21,4 @@ export * from './library';
 export * from './stats';
 export * from './fit';
 export * from './activity-file';
+export * from './bilan';

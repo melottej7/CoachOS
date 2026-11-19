@@ -1147,7 +1147,14 @@
           "nextEventName",
           "nextEventDate",
           "revision",
-          "updatedAt"
+          "updatedAt",
+          "practiceStatus",
+          "breakLength",
+          "resumedSince",
+          "longestRecent",
+          "status",
+          "confirmedAt",
+          "sources"
         ],
         "properties": {
           "sport": {
@@ -1257,6 +1264,189 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "practiceStatus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "regular",
+                  "resumed",
+                  "stopped",
+                  "beginner"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "breakLength": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "lt1m",
+                  "1to3m",
+                  "3to6m",
+                  "6to12m",
+                  "1to3y",
+                  "gt3y"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resumedSince": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "lt1m",
+                  "1to3m",
+                  "gt3m"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "longestRecent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "lt20",
+                  "20to30",
+                  "30to45",
+                  "45to60",
+                  "60to90",
+                  "90to120",
+                  "gt120"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "submitted",
+              "confirmed"
+            ]
+          },
+          "confirmedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sources": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "sport": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "practiceStatus": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "experience": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "breakLength": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "resumedSince": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "weeklySessions": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "longestRecent": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "level": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "weeklyHours": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "availableDays": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "mainGoal": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "nextEventName": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "nextEventDate": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              }
+            }
           }
         }
       },
@@ -14411,6 +14601,74 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "practiceStatus": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "regular",
+                          "resumed",
+                          "stopped",
+                          "beginner"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "breakLength": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "lt1m",
+                          "1to3m",
+                          "3to6m",
+                          "6to12m",
+                          "1to3y",
+                          "gt3y"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "resumedSince": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "lt1m",
+                          "1to3m",
+                          "gt3m"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "longestRecent": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "lt20",
+                          "20to30",
+                          "30to45",
+                          "45to60",
+                          "60to90",
+                          "90to120",
+                          "gt120"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 }
               }
@@ -19963,6 +20221,909 @@
           }
         },
         "description": "Écart D-035 : une séance de bibliothèque porte { category, workout } (séance sans date) ; le format par entrées datées reste réservé aux semaines types (CE-B-02)."
+      }
+    },
+    "/workspaces/{wid}/athlete-profile/draft": {
+      "put": {
+        "operationId": "saveBilanDraft",
+        "summary": "Réponses en cours du bilan d’arrivée, reprises sur n’importe quel appareil (D-054).",
+        "tags": [
+          "roster"
+        ],
+        "x-release": "MVP",
+        "x-role": "A",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "step",
+                  "answers"
+                ],
+                "properties": {
+                  "step": {
+                    "type": "string",
+                    "enum": [
+                      "sport",
+                      "status",
+                      "experience",
+                      "break",
+                      "resumed",
+                      "sessions",
+                      "longest",
+                      "level",
+                      "hours",
+                      "days",
+                      "goal",
+                      "recap"
+                    ]
+                  },
+                  "answers": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "sport": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "running",
+                              "trail",
+                              "cycling",
+                              "swimming",
+                              "triathlon",
+                              "duathlon"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "level": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "beginner",
+                              "intermediate",
+                              "advanced",
+                              "competitive"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "experience": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "lt1",
+                              "1to3",
+                              "3to5",
+                              "gt5"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "weeklySessions": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "0to1",
+                              "2to3",
+                              "4to5",
+                              "6plus"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "weeklyHours": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "lt2",
+                              "2to4",
+                              "4to6",
+                              "6to10",
+                              "gt10"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "availableDays": {
+                        "anyOf": [
+                          {
+                            "type": "array",
+                            "maxItems": 7,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 7
+                            }
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "mainGoal": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 300
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "nextEventName": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "nextEventDate": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "practiceStatus": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "regular",
+                              "resumed",
+                              "stopped",
+                              "beginner"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "breakLength": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "lt1m",
+                              "1to3m",
+                              "3to6m",
+                              "6to12m",
+                              "1to3y",
+                              "gt3y"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "resumedSince": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "lt1m",
+                              "1to3m",
+                              "gt3m"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "longestRecent": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "lt20",
+                              "20to30",
+                              "30to45",
+                              "45to60",
+                              "60to90",
+                              "90to120",
+                              "gt120"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "step"
+                  ],
+                  "properties": {
+                    "step": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/athletes/{aid}/athlete-profile": {
+      "put": {
+        "operationId": "saveBilanByCoach",
+        "summary": "Le coach affecté remplit le bilan pendant ou après l’entretien ; réponses marquées « entretien » (D-054, CE-B-05).",
+        "tags": [
+          "roster"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "aid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "expectedRevision",
+                  "data"
+                ],
+                "properties": {
+                  "expectedRevision": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "data": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "sport",
+                      "level",
+                      "experience",
+                      "weeklySessions"
+                    ],
+                    "properties": {
+                      "sport": {
+                        "type": "string",
+                        "enum": [
+                          "running",
+                          "trail",
+                          "cycling",
+                          "swimming",
+                          "triathlon",
+                          "duathlon"
+                        ]
+                      },
+                      "level": {
+                        "type": "string",
+                        "enum": [
+                          "beginner",
+                          "intermediate",
+                          "advanced",
+                          "competitive"
+                        ]
+                      },
+                      "experience": {
+                        "type": "string",
+                        "enum": [
+                          "lt1",
+                          "1to3",
+                          "3to5",
+                          "gt5"
+                        ]
+                      },
+                      "weeklySessions": {
+                        "type": "string",
+                        "enum": [
+                          "0to1",
+                          "2to3",
+                          "4to5",
+                          "6plus"
+                        ]
+                      },
+                      "weeklyHours": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "lt2",
+                              "2to4",
+                              "4to6",
+                              "6to10",
+                              "gt10"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "availableDays": {
+                        "type": "array",
+                        "maxItems": 7,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 7
+                        }
+                      },
+                      "mainGoal": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 300
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "nextEventName": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "nextEventDate": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "practiceStatus": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "regular",
+                              "resumed",
+                              "stopped",
+                              "beginner"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "breakLength": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "lt1m",
+                              "1to3m",
+                              "3to6m",
+                              "6to12m",
+                              "1to3y",
+                              "gt3y"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "resumedSince": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "lt1m",
+                              "1to3m",
+                              "gt3m"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "longestRecent": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "lt20",
+                              "20to30",
+                              "30to45",
+                              "45to60",
+                              "60to90",
+                              "90to120",
+                              "gt120"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "item"
+                  ],
+                  "properties": {
+                    "item": {
+                      "$ref": "#/components/schemas/athleteProfile"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/athletes/{aid}/athlete-profile/confirm": {
+      "post": {
+        "operationId": "confirmBilan",
+        "summary": "Le coach affecté confirme le bilan envoyé (D-054, CE-B-04).",
+        "tags": [
+          "roster"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "aid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "expectedRevision"
+                ],
+                "properties": {
+                  "expectedRevision": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "item"
+                  ],
+                  "properties": {
+                    "item": {
+                      "$ref": "#/components/schemas/athleteProfile"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

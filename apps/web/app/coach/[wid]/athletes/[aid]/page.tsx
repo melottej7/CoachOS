@@ -4,9 +4,10 @@ import { requireActor } from '@/server/auth/session';
 import {
   APPOINTMENT_KIND_LABELS, APPOINTMENT_STATUS_LABELS, DAY_LABELS, EXPERIENCE_LABELS, formatLongDate, formatShortDate, formatWeekday, GOAL_STATE_LABELS,
   addDays, LEVEL_LABELS, RESULT_STATE_LABELS, SPORT_LABELS, todayIn, weekStart, urgencyLabel, utcToLocal, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS_LABELS,
+  BILAN_STATUS_LABELS, BREAK_LENGTH_LABELS, bilanCompletion, deriveBilan, LONGEST_RECENT_LABELS, PRACTICE_STATUS_LABELS, RESUMED_SINCE_LABELS,
   type ResultState, type Sport,
 } from '@coachos/domain';
-import { readAthleteProfile } from '@/server/commands/athlete-profile';
+import { readAthleteProfile, readBilanDraft } from '@/server/commands/athlete-profile';
 import { readAthleteReferences } from '@/server/commands/athlete-references';
 import { latestInvitation } from '@/server/commands/invitations';
 import { coachContext } from '@/server/repo/context';
@@ -27,6 +28,7 @@ const NOTICES: Record<string, string> = {
   created: 'Fiche créée. Envoie l’invitation quand tu as l’adresse e-mail.',
   invited: 'Invitation envoyée. Le lien précédent, s’il existait, ne fonctionne plus.',
   revoked: 'Invitation annulée. Le lien ne permet plus de rejoindre l’espace.',
+  bilan: 'Bilan de l’entretien enregistré et confirmé.',
 };
 
 const fmt = (iso: string, tz: string) => new Intl.DateTimeFormat('fr-BE', { dateStyle: 'long', timeZone: tz }).format(new Date(iso));
@@ -47,6 +49,8 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
   const today = todayIn(tz);
   const inv = a.state === 'invited' ? await latestInvitation(actor.userId, wid, aid) : null;
   const profile = a.state === 'active' ? await readAthleteProfile(actor.userId, wid, aid) : null;
+  const bilanDraft = a.state === 'active' && !profile ? await readBilanDraft(actor.userId, wid, aid) : null;
+  const bilanDraftDone = bilanDraft ? bilanCompletion(deriveBilan(bilanDraft.answers)) : null;
   const refs = await readAthleteReferences(actor.userId, wid, aid);
   const first = a.name.split(' ')[0] ?? a.name;
   const base = `/coach/${wid}`;
@@ -214,25 +218,49 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
       </section>
 
       {a.state === 'active' ? (
-        <section className="card" aria-labelledby="profile-title">
-          <div className="card-head"><h2 id="profile-title">Profil sportif</h2><Pill tone="neutral">Déclaré par {first}</Pill></div>
+        <section className="card" aria-labelledby="profile-title" id="bilan">
+          <div className="card-head">
+            <h2 id="profile-title">Bilan</h2>
+            <span className="actions">
+              <Pill tone={profile?.status === 'confirmed' ? 'neutral' : profile ? 'attn' : 'neutral'}>{BILAN_STATUS_LABELS[profile ? profile.status : bilanDraft ? 'draft' : 'none']}</Pill>
+              <Link className="btn small" href={`${base}/athletes/${aid}/bilan`}>📞 {profile ? 'Compléter en entretien' : 'Remplir en entretien'}</Link>
+            </span>
+          </div>
           {profile ? (
             <div className="card-body stack">
               <dl className="details">
-                <div><dt>Sport</dt><dd>{SPORT_LABELS[profile.sport]}</dd></div>
-                <div><dt>Niveau déclaré</dt><dd>{LEVEL_LABELS[profile.level].label}</dd></div>
-                <div><dt>Pratique depuis</dt><dd>{EXPERIENCE_LABELS[profile.experience]}</dd></div>
-                <div><dt>Séances / semaine</dt><dd>{WEEKLY_SESSIONS_LABELS[profile.weeklySessions]}</dd></div>
-                <div><dt>Volume / semaine</dt><dd>{profile.weeklyHours ? WEEKLY_HOURS_LABELS[profile.weeklyHours] : 'Non précisé'}</dd></div>
-                <div><dt>Jours disponibles</dt><dd>{profile.availableDays.length ? profile.availableDays.map((d) => DAY_LABELS[d - 1]).join(' ') : 'Non précisés'}</dd></div>
+                {([
+                  ['sport', 'Sport', SPORT_LABELS[profile.sport]],
+                  ['practiceStatus', 'Situation', profile.practiceStatus ? PRACTICE_STATUS_LABELS[profile.practiceStatus] : null],
+                  ['experience', 'Pratique régulière', EXPERIENCE_LABELS[profile.experience]],
+                  ['breakLength', 'Durée de l’arrêt', profile.breakLength ? BREAK_LENGTH_LABELS[profile.breakLength] : null],
+                  ['resumedSince', 'Reprise', profile.resumedSince ? RESUMED_SINCE_LABELS[profile.resumedSince] : null],
+                  ['weeklySessions', 'Séances / semaine (4 dernières sem.)', WEEKLY_SESSIONS_LABELS[profile.weeklySessions]],
+                  ['longestRecent', 'Plus longue sortie récente', profile.longestRecent ? LONGEST_RECENT_LABELS[profile.longestRecent] : null],
+                  ['level', 'Niveau', LEVEL_LABELS[profile.level].label],
+                  ['weeklyHours', 'Volume possible / semaine', profile.weeklyHours ? WEEKLY_HOURS_LABELS[profile.weeklyHours] : 'Non précisé'],
+                  ['availableDays', 'Jours disponibles', profile.availableDays.length ? profile.availableDays.map((d) => DAY_LABELS[d - 1]).join(' ') : 'Non précisés'],
+                ] as const).filter(([, , v]) => v !== null).map(([f, label, v]) => (
+                  <div key={f}><dt>{label}</dt><dd>{v}{profile.sources[f] === 'interview' ? <> <Pill tone="neutral">Entretien</Pill></> : null}</dd></div>
+                ))}
               </dl>
-              <div><h3>Objectif déclaré</h3><p className="prose">{profile.mainGoal ?? 'Non précisé.'}</p></div>
+              <div><h3>Objectif {profile.sources.mainGoal === 'interview' ? <Pill tone="neutral">Entretien</Pill> : 'déclaré'}</h3><p className="prose">{profile.mainGoal ?? 'Non précisé.'}</p></div>
               {profile.nextEventName || profile.nextEventDate ? (
                 <p><strong>Prochaine course :</strong> {profile.nextEventName ?? 'Sans nom'}{profile.nextEventDate ? `, ${formatLongDate(profile.nextEventDate).toLowerCase()}` : ''}</p>
               ) : null}
-              <p className="muted">Mis à jour le {fmt(profile.updatedAt, tz)}. Ce profil ne contient aucune donnée de santé.</p>
+              {profile.status === 'confirmed' ? (
+                <p className="muted">Confirmé{profile.confirmedAt ? ` le ${fmt(profile.confirmedAt, tz)}` : ''}. Si {first} le modifie, il repassera « à confirmer ».</p>
+              ) : (
+                <div className="actions">
+                  <ActionButton method="POST" url={`/api/v1/workspaces/${wid}/athletes/${aid}/athlete-profile/confirm`} body={{ expectedRevision: profile.revision }} className="btn small primary">✓ Confirmer le bilan</ActionButton>
+                  <span className="muted">Envoyé par {first} le {fmt(profile.updatedAt, tz)}.</span>
+                </div>
+              )}
+              <p className="muted">« Entretien » : réponse recueillie par toi ; les autres sont déclarées par {first}. Ce bilan ne contient aucune donnée de santé.</p>
             </div>
-          ) : <p className="empty">{first} n’a pas encore rempli son profil sportif.</p>}
+          ) : bilanDraft ? (
+            <p className="empty">{first} a commencé son bilan : {bilanDraftDone!.answered} réponse{bilanDraftDone!.answered > 1 ? 's' : ''} obligatoire{bilanDraftDone!.answered > 1 ? 's' : ''} sur {bilanDraftDone!.total}, dernière réponse le {fmt(bilanDraft.updatedAt, tz)}. Tu peux le terminer avec {first} pendant un appel.</p>
+          ) : <p className="empty">{first} n’a pas encore commencé son bilan. Tu peux le remplir avec {first} pendant l’appel de bienvenue.</p>}
         </section>
       ) : null}
 

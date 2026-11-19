@@ -35,9 +35,42 @@ const optionalText = (max: number) =>
       return t === '' ? null : t;
     });
 
+// ---------- Bilan (CE-B-04, CE-B-05, D-054), inspiré du questionnaire de Foulée ----------
+// Une question par écran, questions conditionnelles, pratique réelle des 4 dernières semaines. Aucune donnée de santé.
+
+export const PRACTICE_STATUSES = ['regular', 'resumed', 'stopped', 'beginner'] as const;
+export const BREAK_LENGTHS = ['lt1m', '1to3m', '3to6m', '6to12m', '1to3y', 'gt3y'] as const;
+export const RESUMED_SINCE = ['lt1m', '1to3m', 'gt3m'] as const;
+export const LONGEST_RECENT = ['lt20', '20to30', '30to45', '45to60', '60to90', '90to120', 'gt120'] as const;
+export type PracticeStatus = (typeof PRACTICE_STATUSES)[number];
+export type BreakLength = (typeof BREAK_LENGTHS)[number];
+export type ResumedSince = (typeof RESUMED_SINCE)[number];
+export type LongestRecent = (typeof LONGEST_RECENT)[number];
+
+export const PRACTICE_STATUS_LABELS: Record<PracticeStatus, string> = {
+  regular: 'Je pratique régulièrement, sans coupure depuis au moins 3 mois',
+  resumed: 'J’ai repris après un arrêt',
+  stopped: 'J’ai arrêté, et je n’ai pas encore repris',
+  beginner: 'Je débute : je n’ai jamais pratiqué régulièrement',
+};
+export const BREAK_LENGTH_LABELS: Record<BreakLength, string> = {
+  lt1m: 'Moins d’1 mois', '1to3m': '1 à 3 mois', '3to6m': '3 à 6 mois', '6to12m': '6 mois à 1 an', '1to3y': '1 à 3 ans', gt3y: 'Plus de 3 ans',
+};
+export const RESUMED_SINCE_LABELS: Record<ResumedSince, string> = { lt1m: 'Depuis moins d’1 mois', '1to3m': 'Depuis 1 à 3 mois', gt3m: 'Depuis plus de 3 mois' };
+export const LONGEST_RECENT_LABELS: Record<LongestRecent, string> = {
+  lt20: 'Moins de 20 minutes', '20to30': '20 à 30 minutes', '30to45': '30 à 45 minutes', '45to60': '45 minutes à 1 h',
+  '60to90': '1 h à 1 h 30', '90to120': '1 h 30 à 2 h', gt120: 'Plus de 2 h',
+};
+
+const optEnum = <T extends readonly [string, ...string[]]>(v: T) => z.enum(v).nullish().transform((x) => x ?? null);
+
 /** PUT /workspaces/{wid}/athlete-profile. Propriétés inconnues refusées (pas de champ santé caché). */
 export const athleteProfileSchema = z
   .object({
+    practiceStatus: optEnum(PRACTICE_STATUSES),
+    breakLength: optEnum(BREAK_LENGTHS),
+    resumedSince: optEnum(RESUMED_SINCE),
+    longestRecent: optEnum(LONGEST_RECENT),
     sport: z.enum(SPORTS, { message: 'Choisir un sport' }),
     level: z.enum(LEVELS, { message: 'Choisir un niveau' }),
     experience: z.enum(EXPERIENCES, { message: 'Choisir une ancienneté' }),
@@ -56,6 +89,13 @@ export const athleteProfileSchema = z
       .nullish()
       .transform((v) => v ?? null),
   })
-  .strict();
+  .strict()
+  .superRefine((v, ctx) => {
+    if ((v.practiceStatus === 'resumed' || v.practiceStatus === 'stopped') && !v.breakLength) {
+      ctx.addIssue({ code: 'custom', path: ['breakLength'], message: 'Indique la durée de l’arrêt' });
+    }
+    if (v.practiceStatus === 'resumed' && !v.resumedSince) ctx.addIssue({ code: 'custom', path: ['resumedSince'], message: 'Indique depuis quand tu as repris' });
+  });
 
 export type AthleteProfileInput = z.output<typeof athleteProfileSchema>;
+
