@@ -242,6 +242,17 @@ function Composer({ wid, target, about }: { wid: string; target: Target; about: 
   const [recording, setRecording] = useState(false);
   const area = useRef<HTMLTextAreaElement>(null);
 
+  // Brouillon préparé ailleurs (ex. faisabilité de l’objectif, D-057) : repris une fois, jamais envoyé seul.
+  useEffect(() => {
+    if (target.kind !== 'direct') return;
+    try {
+      const key = `coachos:draft:${target.athleteId}`;
+      const d = sessionStorage.getItem(key);
+      if (d) { setText(d); sessionStorage.removeItem(key); area.current?.focus(); }
+    } catch { /* stockage indisponible : rien à reprendre */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Le champ grandit avec le texte (5 lignes au plus).
   useEffect(() => {
     const el = area.current;

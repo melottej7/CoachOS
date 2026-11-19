@@ -22,3 +22,7 @@ export * from './stats';
 export * from './fit';
 export * from './activity-file';
 export * from './bilan';
+export * from './week-proposals';
+export * from './feasibility';
+export * from './performances';
+export * from './program';

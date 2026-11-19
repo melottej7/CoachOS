@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { openDatabase, setDb } from './db/client';
 import { ATHLETES, USERS, WORKSPACE_A } from './db/fixtures';
 import { AppError } from './errors';
-import { confirmBilan, readAthleteProfile, readBilanDraft, saveAthleteProfile, saveBilanByCoach, saveBilanDraft } from './commands/athlete-profile';
+import { confirmBilan, readAthleteProfile, readBilanDraft, readBilanVersions, saveAthleteProfile, saveBilanByCoach, saveBilanDraft } from './commands/athlete-profile';
 
 // D-054 : bilan d’arrivée (CE-B-04 brouillon, reprise, complétude, confirmation ; CE-B-05 entretien, provenance).
 
@@ -71,6 +71,17 @@ describe('bilan d’arrivée', () => {
     const { status: _s, confirmedAt: _c, sources: _src, revision: _r, updatedAt: _u, ...data } = p;
     await saveAthleteProfile(meta(USERS.noah), data);
     expect((await readAthleteProfile(USERS.noah, WORKSPACE_A, ATHLETES.noah))!).toMatchObject({ status: 'confirmed', revision: p.revision });
+  });
+
+  it('historique (D-059) : une version par enregistrement, avec les réponses changées et leur source', async () => {
+    const v = await readBilanVersions(USERS.marine, WORKSPACE_A, ATHLETES.noah);
+    expect(v.length).toBeGreaterThanOrEqual(3);
+    expect(v.map((x) => x.revision)).toEqual([...v.map((x) => x.revision)].sort((a, b) => b - a));
+    const interview = v.find((x) => x.source === 'interview')!;
+    expect(interview.changed).toEqual(expect.arrayContaining(['level', 'availableDays']));
+    expect(v.at(-1)!.changed).toEqual([]); // première version
+    expect(await readBilanVersions(USERS.camille, WORKSPACE_A, ATHLETES.noah)).toEqual([]);
+    expect((await readBilanVersions(USERS.noah, WORKSPACE_A, ATHLETES.noah)).length).toBe(v.length);
   });
 });
 

@@ -7,7 +7,7 @@ import { AppError } from './errors';
 import { confirmLevel, createGoal, createNote, createTeam, deleteNote, setTeamMember, updateGoal, updateTeam } from './commands/portfolio';
 import { createAppointment, createTask, saveAutoRuleSettings, snoozeAutoTask, updateAppointment, updateTask } from './commands/tasks';
 import { athleteFile, autoRuleSettings, home, portfolio } from './repo/portfolio';
-import { saveAthleteProfile } from './commands/athlete-profile';
+import { confirmBilan, readAthleteProfile, saveAthleteProfile } from './commands/athlete-profile';
 
 // Lots G et H (D-032) : droits, règles et lectures.
 
@@ -100,6 +100,21 @@ describe('lot H · tâches, suivis automatiques, rendez-vous', () => {
     expect(hidden.rows).toHaveLength(0);
   });
 
+  it('tâche récurrente (CE-H-06) : la clôture crée l’occurrence suivante, une seule fois ; échéance obligatoire', async () => {
+    expect(await codeOf(createTask(meta(USERS.marine), { title: 'Bilan mensuel', kind: 'call', recurrence: 'monthly' }))).toBe('INVALID_FIELDS');
+    const r = await createTask(meta(USERS.marine), { title: 'Bilan mensuel avec Camille', kind: 'call', athleteId: ATHLETES.camille, dueOn: '2027-01-31', recurrence: 'monthly' });
+    const id = idOf(r);
+    expect(await codeOf(updateTask({ ...meta(USERS.marine), taskId: id }, { expectedRevision: 1, dueOn: null }))).toBe('INVALID_FIELDS');
+    const done = await updateTask({ ...meta(USERS.marine), taskId: id }, { expectedRevision: 1, status: 'done' });
+    const next = (done.body as { next: { id: string; dueOn: string; recurrence: string; status: string } }).next;
+    expect(next).toMatchObject({ dueOn: '2027-02-28', recurrence: 'monthly', status: 'todo' }); // fin de mois respectée
+    const h = await home(USERS.marine, WORKSPACE_A, TIME_ZONE, weekStart(today));
+    expect(h.tasks.filter((t) => t.title === 'Bilan mensuel avec Camille').map((t) => t.dueOn)).toEqual(['2027-02-28']);
+    // Rouvrir puis refaire la même tâche crée une nouvelle occurrence suivante ; une tâche sans récurrence n’en crée pas.
+    const plain = await createTask(meta(USERS.marine), { title: 'Une seule fois', kind: 'other', dueOn: '2027-01-10' });
+    expect((await updateTask({ ...meta(USERS.marine), taskId: idOf(plain) }, { expectedRevision: 1, status: 'done' })).body).toMatchObject({ next: null });
+  });
+
   it('suivis automatiques uniques par règle et objet, reportables, clos quand l’objet est résolu', async () => {
     let h = await home(USERS.marine, WORKSPACE_A, TIME_ZONE, weekStart(today));
     const keys = h.tasks.filter((t) => t.source === 'auto').map((t) => t.key);
@@ -112,13 +127,18 @@ describe('lot H · tâches, suivis automatiques, rendez-vous', () => {
     await snoozeAutoTask({ ...meta(USERS.marine), sourceRef: noahGap!.ref }, { rule: noahGap!.rule, until: null });
     h = await home(USERS.marine, WORKSPACE_A, TIME_ZONE, weekStart(today));
     expect(h.tasks.some((t) => t.key === noahGap!.key)).toBe(true);
-    // Objet résolu : Noah déclare son niveau → « Confirmer le niveau » apparaît, puis disparaît une fois confirmé.
+    // Objet résolu : Noah envoie son bilan → « Confirmer le bilan » (D-059) ; une fois confirmé, plus de tâche, niveau confirmé avec.
     await saveAthleteProfile({ ...meta(USERS.noah) }, { sport: 'cycling', level: 'intermediate', experience: '1to3', weeklySessions: '2to3' });
     h = await home(USERS.marine, WORKSPACE_A, TIME_ZONE, weekStart(today));
-    expect(h.tasks.filter((t) => t.rule === 'level_unconfirmed' && t.athlete?.id === ATHLETES.noah)).toHaveLength(1);
-    await confirmLevel({ ...meta(USERS.marine), athleteId: ATHLETES.noah }, { sport: 'cycling', level: 'intermediate' });
-    h = await home(USERS.marine, WORKSPACE_A, TIME_ZONE, weekStart(today));
+    expect(h.tasks.filter((t) => t.rule === 'bilan_confirm' && t.athlete?.id === ATHLETES.noah)).toHaveLength(1);
     expect(h.tasks.some((t) => t.rule === 'level_unconfirmed' && t.athlete?.id === ATHLETES.noah)).toBe(false);
+    const prof = await readAthleteProfile(USERS.marine, WORKSPACE_A, ATHLETES.noah);
+    await confirmBilan({ ...meta(USERS.marine), athleteId: ATHLETES.noah }, { expectedRevision: prof!.revision });
+    h = await home(USERS.marine, WORKSPACE_A, TIME_ZONE, weekStart(today));
+    expect(h.tasks.some((t) => (t.rule === 'bilan_confirm' || t.rule === 'level_unconfirmed') && t.athlete?.id === ATHLETES.noah)).toBe(false);
+    expect((await portfolio(USERS.marine, WORKSPACE_A, TIME_ZONE)).roster.find((r) => r.id === ATHLETES.noah)!.levels).toEqual([{ sport: 'cycling', level: 'intermediate' }]);
+    // Le coach peut toujours fixer un autre niveau ensuite.
+    await confirmLevel({ ...meta(USERS.marine), athleteId: ATHLETES.noah }, { sport: 'cycling', level: 'advanced' });
   });
 
   it('rendez-vous à l’heure locale, dans l’agenda de la semaine ; compte rendu ; autre coach refusé', async () => {

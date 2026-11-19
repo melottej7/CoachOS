@@ -29,7 +29,8 @@ export async function requireAssignedCoach(tx: Tx, wid: string, aid: string) {
   if (!row?.ok || row.state === 'archived') throw notVisible();
 }
 
-export async function insertRevision(tx: Tx, wid: string, aid: string, sid: string, n: number, input: WorkoutInput) {
+/** `cancellation` : la révision annule la séance, avec ce motif (obligatoire en base). */
+export async function insertRevision(tx: Tx, wid: string, aid: string, sid: string, n: number, input: WorkoutInput, cancellation: string | null = null) {
   const t = structureTotals(input.intervals);
   const data = {
     ...input,
@@ -38,10 +39,10 @@ export async function insertRevision(tx: Tx, wid: string, aid: string, sid: stri
   };
   await tx.query(
     `insert into public.workout_revisions(workspace_id, athlete_id, workout_id, number, local_date, sort_order, time_zone,
-       sport_code, title, instructions, duration_seconds, distance_m, intervals)
-     values ($1, $2, $3, $4, $5::date, $6, $7, $8, $9, $10, $11, $12, $13::jsonb)`,
+       sport_code, title, instructions, duration_seconds, distance_m, intervals, canceled, cancellation_reason)
+     values ($1, $2, $3, $4, $5::date, $6, $7, $8, $9, $10, $11, $12, $13::jsonb, $14, $15)`,
     [wid, aid, sid, n, data.localDate, data.sortOrder, data.timeZone, data.sport, data.title, data.instructions ?? '',
-      data.durationSeconds, data.distanceM, JSON.stringify(data.intervals)],
+      data.durationSeconds, data.distanceM, JSON.stringify(data.intervals), cancellation !== null, cancellation],
   );
 }
 

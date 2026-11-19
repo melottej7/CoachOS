@@ -116,6 +116,11 @@ export const BILAN_FIELDS = [
   'availableDays', 'mainGoal', 'nextEventName', 'nextEventDate',
 ] as const;
 export type BilanField = (typeof BILAN_FIELDS)[number];
+export const BILAN_FIELD_LABELS: Record<BilanField, string> = {
+  sport: 'Sport', practiceStatus: 'Situation', experience: 'Pratique régulière', breakLength: 'Durée de l’arrêt', resumedSince: 'Reprise',
+  weeklySessions: 'Séances par semaine', longestRecent: 'Plus longue sortie', level: 'Niveau', weeklyHours: 'Heures par semaine',
+  availableDays: 'Jours disponibles', mainGoal: 'Objectif', nextEventName: 'Prochaine course', nextEventDate: 'Date de la course',
+};
 
 /** Provenance après une saisie : les champs modifiés prennent la nouvelle source, les autres gardent la leur. */
 export function nextSources(

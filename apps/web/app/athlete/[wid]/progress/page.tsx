@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { addDays, daysUntil, formatLongDate, SPORT_LABELS, todayIn, weekStart } from '@coachos/domain';
+import { addDays, daysUntil, formatLongDate, SPORT_LABELS, todayIn, weekStart, equivalents, formatDuration2, PERFORMANCE_KIND_LABELS } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { athleteContext } from '@/server/repo/context';
 import { athleteStats } from '@/server/repo/stats';
 import { StatsPanel } from '@/components/stats-panel';
+import { readPerformances } from '@/server/commands/performances';
 
 export const metadata = { title: 'Progression' };
 
@@ -22,6 +23,7 @@ export default async function Progress({ params, searchParams }: { params: Promi
   const data = await athleteStats(actor.userId, wid, ctx.athlete.id, from, to, today);
   if (!data) notFound();
   const { summary: s, goal } = data;
+  const results = await readPerformances(actor.userId, wid, ctx.athlete.id);
   const left = goal?.targetDate ? daysUntil(today, goal.targetDate) : null;
   return (
     <>
@@ -44,6 +46,23 @@ export default async function Progress({ params, searchParams }: { params: Promi
       <section className="card" aria-label="Tes entraînements">
         <StatsPanel s={s} delta={data.delta} weeks={weeks} periodHref={(n) => `/athlete/${wid}/progress?periode=${n}`} you />
       </section>
+      {results.length ? (
+        <section className="card" aria-labelledby="mes-resultats" style={{ marginTop: 16 }}>
+          <div className="card-head"><h2 id="mes-resultats">Tes résultats de référence</h2></div>
+          <ul className="plain perf-list card-body">
+            {results.map((r) => {
+              const eq = equivalents(r);
+              return (
+                <li key={r.id} className="perf">
+                  <span className="perf-head"><strong>{r.name ?? PERFORMANCE_KIND_LABELS[r.kind]}</strong><span className="muted"> · {formatLongDate(r.doneOn).toLowerCase()}</span></span>
+                  <span>{r.distanceM < 1000 ? `${r.distanceM} m` : `${String(Math.round(r.distanceM / 100) / 10).replace('.', ',')} km`} en <strong>{formatDuration2(r.durationS)}</strong></span>
+                  {eq.length ? <span className="muted perf-eq">Équivalences : {eq.map((e) => `${e.label} ${formatDuration2(e.seconds)}`).join(' · ')}</span> : null}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
     </>
   );
 }

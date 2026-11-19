@@ -8,12 +8,14 @@ import { coachWeek, listAssignedAthletes, openReviews } from '@/server/repo/coac
 import { AthleteSelect } from '@/components/nav-link';
 import { StatusBadge, initials } from '@/components/ui';
 import { WeekTools } from '@/components/week-tools';
+import { WeekAdapt } from '@/components/week-adapt';
+import { weekProposals } from '@/server/commands/week-proposals';
 import { listWeekTemplates } from '@/server/repo/library';
 
 export const metadata = { title: 'Séances' };
 
 /** X18 : semaine de l’athlète sélectionné, dans son fuseau. Brouillon et publié distincts. */
-export default async function Calendar({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<{ athlete?: string; week?: string }> }) {
+export default async function Calendar({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<{ athlete?: string; week?: string; notice?: string }> }) {
   const { wid } = await params;
   const sp = await searchParams;
   const actor = await requireActor();
@@ -42,6 +44,7 @@ export default async function Calendar({ params, searchParams }: { params: Promi
   const toPlan = toPlanCount((await portfolio(actor.userId, wid, ctxTz)).roster);
   const weekTemplates = await listWeekTemplates(actor.userId, wid);
   const drafts = workouts.filter((w) => w.status !== 'published');
+  const adapt = athlete.state === 'active' ? await weekProposals(actor.userId, wid, athlete.id, monday) : null;
 
   return (
     <>
@@ -54,6 +57,7 @@ export default async function Calendar({ params, searchParams }: { params: Promi
         <Link className="btn primary" href={newHref(today >= days[0]! && today <= days[6]! ? today : days[0]!)}>+ Nouvelle séance</Link>
       </div>
       <SessionsTabs wid={wid} current="week" toPlan={toPlan} />
+      {sp.notice === 'program' ? <p className="banner ok" role="status">Programme créé en brouillons, semaine par semaine. Relis, ajuste, puis « Publier la semaine » quand tout te convient.</p> : null}
 
       <section className="card" aria-labelledby="week-title">
         <div className="card-head">
@@ -92,6 +96,10 @@ export default async function Calendar({ params, searchParams }: { params: Promi
         <WeekTools wid={wid} athleteId={athlete.id} first={first ?? athlete.displayName} monday={monday} hasSessions={workouts.some((w) => !w.canceled)}
           drafts={drafts.map((w) => ({ id: w.id, revision: w.workingRevision, title: w.title, localDate: w.localDate, changed: w.status === 'changed' }))}
           templates={weekTemplates.map((t) => ({ id: t.id, title: t.title, days: t.days.map((d) => ({ offset: d.offset, title: d.workout.title })) }))} />
+        {adapt && adapt.sessions.length ? (
+          <WeekAdapt wid={wid} aid={athlete.id} monday={monday} first={first ?? athlete.displayName} proposals={adapt.proposals}
+            seen={adapt.sessions.map((x) => ({ id: x.id, revision: x.revision }))} />
+        ) : null}
       </section>
 
       <section className="card" aria-labelledby="reviews-title">

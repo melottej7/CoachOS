@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
   addDays, APPOINTMENT_KIND_LABELS, LEVEL_LABELS, newVideoLink, LEVELS, PRIORITY_LABELS, SPORT_LABELS, SPORTS, TASK_KIND_LABELS, TASK_KINDS,
-  type AppointmentKind, type AutoRule, type Level, type Sport, type TaskKind,
-} from '@coachos/domain';
+  type AppointmentKind, type AutoRule, type Level, type Sport, type TaskKind, TASK_RECURRENCES, TASK_RECURRENCE_LABELS } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
 import { mutate, newKey } from './api-client';
 import { fieldError, useIntent } from './use-intent';
@@ -184,6 +183,7 @@ export function TaskForm({ wid, athletes, teams, athleteId, open, today }: {
           const ok = await act('POST', `/api/v1/workspaces/${wid}/tasks`, {
             title: f.get('title'), kind: f.get('kind'), athleteId: f.get('athleteId') || null, teamId: f.get('teamId') || null,
             dueOn: f.get('dueOn') || null, priority: Number(f.get('priority')), notes: f.get('notes') || null,
+            recurrence: f.get('recurrence') || null,
           });
           if (ok) { form.reset(); close(); }
         }}>
@@ -201,6 +201,8 @@ export function TaskForm({ wid, athletes, teams, athleteId, open, today }: {
             <div className="field"><label htmlFor="task-due">Échéance <span className="hint">Facultatif</span></label><input id="task-due" name="dueOn" type="date" defaultValue={today} /></div>
             <div className="field"><label htmlFor="task-priority">Priorité</label>
               <select id="task-priority" name="priority" defaultValue="1">{([0, 1, 2, 3] as const).map((p) => <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>)}</select></div>
+            <div className="field"><label htmlFor="task-recurrence">Répéter <span className="hint">À la fin, la suivante est créée</span></label>
+              <select id="task-recurrence" name="recurrence" defaultValue=""><option value="">Jamais</option>{TASK_RECURRENCES.map((r) => <option key={r} value={r}>{TASK_RECURRENCE_LABELS[r]}</option>)}</select></div>
           </div>
           {teams.length ? (
             <div className="field"><label htmlFor="task-team">Groupe <span className="hint">Facultatif</span></label>

@@ -1,6 +1,6 @@
 import {
   addDays, AUTO_RULE_INFO, autoRuleReason, bilanCompletion, deriveBilan, excerpt, resolveRuleSettings, type BilanAnswers, rankTasks, todayIn, urgencyScore, usesVma, utcToLocal,
-  type AppointmentKind, type AppointmentStatus, type AutoRule, type AutoRuleSetting, type GoalState, type Level, type LocalDate, type Sport, type TaskKind, type TaskStatus,
+  type AppointmentKind, type AppointmentStatus, type AutoRule, type AutoRuleSetting, type TaskRecurrence, type GoalState, type Level, type LocalDate, type Sport, type TaskKind, type TaskStatus,
 } from '@coachos/domain';
 import { readAs, type Tx } from '../db/client';
 import { apptCols, toAppt, type AppointmentItem, type ApptRow } from '../commands/tasks';
@@ -33,6 +33,8 @@ export interface HomeTask {
   team: TeamRef | null;
   link: string | null;
   notes: string | null;
+  /** Tâche récurrente (CE-H-06, D-059). */
+  recurrence?: TaskRecurrence | null;
 }
 
 export interface RosterEntry {
@@ -82,10 +84,10 @@ export async function autoRuleSettings(userId: string, wid: string): Promise<Rec
 async function manualTasks(tx: Tx, wid: string, open: boolean): Promise<(HomeTask & { athleteId: string | null; teamId: string | null })[]> {
   const r = await tx.query<{
     id: string; title: string; kind: TaskKind; athlete_id: string | null; display_name: string | null; team_id: string | null; team_name: string | null;
-    due_on: string | null; priority: number; status: TaskStatus; link: string | null; notes: string | null; revision: number;
+    due_on: string | null; priority: number; status: TaskStatus; link: string | null; notes: string | null; revision: number; recurrence: TaskRecurrence | null;
   }>(
     `select t.id, t.title, t.kind, t.athlete_id, a.display_name, t.team_id, tm.name as team_name, to_char(t.due_on, 'YYYY-MM-DD') as due_on,
-            t.priority, t.status, t.link, t.notes, t.revision
+            t.priority, t.status, t.link, t.notes, t.revision, t.recurrence
      from public.coach_tasks t
      left join public.athletes a on a.workspace_id = t.workspace_id and a.id = t.athlete_id
      left join public.teams tm on tm.workspace_id = t.workspace_id and tm.id = t.team_id
@@ -97,7 +99,7 @@ async function manualTasks(tx: Tx, wid: string, open: boolean): Promise<(HomeTas
     key: `task:${t.id}`, source: 'manual', id: t.id, rule: null, ref: t.id, title: t.title, reason: t.status === 'waiting' ? 'En attente' : t.status === 'in_progress' ? 'En cours' : t.status === 'postponed' ? 'Reportée' : 'Tâche',
     kind: t.kind, priority: Number(t.priority), dueOn: t.due_on, status: t.status, revision: t.revision,
     athlete: t.athlete_id ? { id: t.athlete_id, name: t.display_name ?? '' } : null, team: t.team_id ? { id: t.team_id, name: t.team_name ?? '' } : null,
-    link: t.link, notes: t.notes, athleteId: t.athlete_id, teamId: t.team_id,
+    link: t.link, notes: t.notes, athleteId: t.athlete_id, teamId: t.team_id, recurrence: t.recurrence,
   }));
 }
 
@@ -118,7 +120,7 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
   const teams = await q<{ athlete_id: string; id: string; name: string }>(
       `select ta.athlete_id, t.id, t.name from public.team_athletes ta join public.teams t on t.workspace_id = ta.workspace_id and t.id = ta.team_id
        where ta.workspace_id = $1 and ta.athlete_id = any($2::uuid[]) and t.archived_at is null order by t.sort_order, t.name`);
-  const profiles = await q<{ athlete_id: string; sport_code: Sport; level: Level; updated_at: Date }>(`select athlete_id, sport_code, level, updated_at from public.athlete_profiles where workspace_id = $1 and athlete_id = any($2::uuid[])`);
+  const profiles = await q<{ athlete_id: string; sport_code: Sport; level: Level; updated_at: Date; status: 'submitted' | 'confirmed' }>(`select athlete_id, sport_code, level, updated_at, status from public.athlete_profiles where workspace_id = $1 and athlete_id = any($2::uuid[])`);
   const levels = await q<{ athlete_id: string; sport_code: Sport; level: Level }>(`select athlete_id, sport_code, level from public.athlete_sport_levels where workspace_id = $1 and athlete_id = any($2::uuid[]) order by sport_code`);
   const refs = await q<{ athlete_id: string; vma_kmh: string | null }>(`select athlete_id, vma_kmh from public.athlete_references where workspace_id = $1 and athlete_id = any($2::uuid[])`);
   const reviews = await q<{ id: string; athlete_id: string; created_at: Date; title: string | null }>(
@@ -208,7 +210,9 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
         push('profile_missing', a.id, null, `${base}/athletes/${a.id}#bilan`, d ? `bilan commencé, ${d.answered} réponse${d.answered > 1 ? 's' : ''} sur ${d.total}` : null);
       }
       if (profile && !met.has(a.id)) push('onboarding_call', a.id, addDays(localDay(profile.updated_at), delay('onboarding_call')), `${base}/athletes/${a.id}#rdv`);
-      if (profile && !confirmed.some((l) => l.sport === profile.sport_code)) push('level_unconfirmed', a.id, null, `${base}/athletes/${a.id}#levels`);
+      // D-059 : un bilan envoyé se confirme en un geste (le niveau déclaré avec) ; « Confirmer le niveau » ne double pas cette tâche.
+      if (profile?.status === 'submitted') push('bilan_confirm', a.id, addDays(localDay(profile.updated_at), delay('bilan_confirm')), `${base}/athletes/${a.id}#bilan`);
+      else if (profile && !confirmed.some((l) => l.sport === profile.sport_code)) push('level_unconfirmed', a.id, null, `${base}/athletes/${a.id}#levels`);
       if (profile && usesVma(profile.sport_code) && vmaKmh === null) push('vma_missing', a.id, null, `${base}/athletes/${a.id}#refs-title`);
     }
     const own = tasks.filter((t) => t.athleteId === a.id);

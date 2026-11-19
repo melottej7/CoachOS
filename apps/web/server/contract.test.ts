@@ -24,6 +24,10 @@ import { openConversation, saveReceipt, saveTeamReceipt, sendMessage, sendTeamMe
 import { deleteWorkspaceLogo, previewInvitation, saveWorkspaceProfile, setWorkspaceLogo } from './commands/workspace-profile';
 import { addDays, todayIn, weekStart } from '@coachos/domain';
 import { coachWorkout } from './repo/coach';
+import { decideGoal } from './commands/goal-decisions';
+import { createProgram } from './commands/programs';
+import { addPerformance, deletePerformance } from './commands/performances';
+import { applyWeekProposal, weekProposals } from './commands/week-proposals';
 
 // Test de contrat : chaque réponse réelle des commandes est validée contre contracts/openapi.json
 // (statut attendu et schéma de réponse, propriétés inconnues interdites).
@@ -145,6 +149,19 @@ describe('réponses conformes au contrat OpenAPI', () => {
     const lvl = await confirmLevel({ ...m(), athleteId: ATHLETES.noah }, { sport: 'cycling', level: 'beginner' });
     check('/workspaces/{wid}/athletes/{aid}/levels', 'put', lvl.status, lvl.body);
     const goal = await createGoal({ ...m(), athleteId: ATHLETES.noah }, { title: 'Gravel 100 km', sport: 'cycling', targetDate: null });
+    const dec = await decideGoal({ ...m(), athleteId: ATHLETES.noah, goalId: id(goal) }, {
+      statusAtDecision: 'ambitious', params: { distanceKm: 100, eventDate: '2027-06-01', targetSeconds: null, weeklySessions: '4to5', weeklyHours: null }, note: 'Habitué des longues sorties.',
+    });
+    check('/workspaces/{wid}/athletes/{aid}/goals/{gid}/decision', 'put', dec.status, dec.body);
+    const ev = addDays(weekStart(todayIn(TIME_ZONE)), 7 * 10 + 6);
+    const g2 = await createGoal({ ...m(), athleteId: ATHLETES.noah }, { title: '10 km de printemps', sport: 'cycling', targetDate: ev });
+    await decideGoal({ ...m(), athleteId: ATHLETES.noah, goalId: id(g2) }, { statusAtDecision: 'ambitious', params: { distanceKm: 60, eventDate: ev, targetSeconds: null, weeklySessions: '4to5', weeklyHours: null } });
+    const prog = await createProgram({ ...m(), athleteId: ATHLETES.noah, goalId: id(g2) }, { startMonday: addDays(weekStart(todayIn(TIME_ZONE)), 7), days: [2, 4, 6, 7], acceptRisks: true });
+    check('/workspaces/{wid}/athletes/{aid}/goals/{gid}/program', 'post', prog.status, prog.body);
+    const perf = await addPerformance({ ...m(), athleteId: ATHLETES.noah }, { sport: 'cycling', kind: 'test', distanceM: 40000, durationS: 4000, doneOn: '2026-10-01' });
+    check('/workspaces/{wid}/athletes/{aid}/performances', 'post', perf.status, perf.body);
+    const perfDel = await deletePerformance({ ...m(), athleteId: ATHLETES.noah, performanceId: (perf.body as { item: { id: string } }).item.id });
+    check('/workspaces/{wid}/athletes/{aid}/performances/{pid}', 'delete', perfDel.status, perfDel.body);
     check('/workspaces/{wid}/athletes/{aid}/goals', 'post', goal.status, goal.body);
     const goalUp = await updateGoal({ ...m(), athleteId: ATHLETES.noah, goalId: id(goal) }, { state: 'canceled' });
     check('/workspaces/{wid}/athletes/{aid}/goals/{gid}', 'patch', goalUp.status, goalUp.body);
@@ -205,6 +222,9 @@ describe('réponses conformes au contrat OpenAPI', () => {
     check('/workspaces/{wid}/week-templates/{tid}/apply', 'post', ap.status, ap.body);
     const up = await updateWeekTemplate({ ...m(), templateId: wid }, { expectedRevision: 1, archive: true });
     check('/workspaces/{wid}/week-templates/{tid}', 'patch', up.status, up.body);
+    const wp = (await weekProposals(USERS.marine, WORKSPACE_A, ATHLETES.camille, monday))!;
+    const ap2 = await applyWeekProposal({ ...m(), athleteId: ATHLETES.camille }, { monday, kind: 'lighter', seen: wp.sessions.map((x) => ({ id: x.id, revision: x.revision })) });
+    check('/workspaces/{wid}/athletes/{aid}/week-proposals', 'post', ap2.status, ap2.body);
   });
 
   it('séance de groupe : brouillons puis publication', async () => {

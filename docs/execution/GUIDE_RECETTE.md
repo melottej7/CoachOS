@@ -133,3 +133,53 @@ Avec ton compte coach :
 
 En démonstration : Noah a une FTP de 250 W et une CSS de 1:45.
 
+## Adapter la semaine (inspiré de Foulée) à essayer
+
+Avec ton compte coach :
+1. **Séances → Semaine**, choisis un élève et une semaine avec des séances à venir, puis ouvre **Adapter la semaine**.
+2. Compare les quatre propositions (récupération, alléger, endurance seule, reprise) : volume avant → après, chaque séance barrée et remplacée, conséquence probable.
+3. Choisis-en une puis **Appliquer … en brouillons**. Relis les séances, puis **Publier la semaine** quand tout te convient.
+4. Dis-moi si les règles te semblent justes (par exemple −25 % pour « Alléger », 40 minutes au plus pour « Reprise »).
+
+En démonstration : la semaine du 23 novembre de Noah a reçu « Endurance seule » (brouillons non publiés).
+
+## Faisabilité de l’objectif (inspirée de Foulée) à essayer
+
+Avec ton compte coach, pour un élève qui a envoyé son bilan :
+1. Ajoute-lui un objectif daté, par exemple « Semi de Bruxelles en moins de 2 h ».
+2. Dans sa fiche, ouvre **Faisabilité** : statut, critères, solutions avec leur statut.
+3. **Essayer cette solution** change les paramètres ; « Nouveau calcul » montre l’effet. Tu peux aussi changer les paramètres toi-même. Rien n’est enregistré.
+4. **Rédiger un message**, relis-le, puis **Ouvrir la conversation avec ce message** : il t’attend dans la conversation, tu l’envoies toi-même.
+5. Dis-moi si les seuils te paraissent justes (semaines conseillées, séance longue, séances par semaine).
+
+En démonstration : Camille a l’objectif « Semi de Bruxelles en moins de 2 h » au 17 janvier.
+6. Dans la faisabilité, regarde les critères **Passif** et **Régularité réelle** : ce que l’élève a vraiment fait compte. Puis, dans **Ta décision**, valide l’objectif (même s’il est jugé risqué) avec ta justification : il porte ensuite « ✓ Validé par toi ». Ta justification reste privée.
+
+En démonstration : l’objectif de Camille est validé par Marine malgré l’indication « risqué ».
+
+## Bilan à confirmer, tâches récurrentes, historique à essayer
+
+1. Quand un élève envoie son bilan, **Confirmer le bilan** apparaît dans ton Planning ; le confirmer confirme aussi son niveau.
+2. **+ Tâche → Répéter** (chaque semaine, 2 semaines, mois) : marque-la « Terminé », la suivante apparaît à la bonne date.
+3. Fiche d’un élève → Bilan → **Historique** : chaque version, sa source et ce qui a changé.
+
+En démonstration : tâche « Point hebdo avec Camille » chaque semaine (prochaine le 26 novembre).
+
+## Résultats de référence à essayer
+
+1. Fiche d’un élève → **Résultats de référence → + Ajouter un résultat** : une course (« 10 km en 52:30 ») ou un test (« Test 6 minutes, 1500 m en 6' »). Tu vois l’allure, les équivalences et, pour un test de 6 minutes, une VMA estimée.
+2. Dans **Faisabilité**, le chrono visé est maintenant jugé d’après ce résultat.
+3. Côté élève, **Progression** montre ses résultats et leurs équivalences.
+
+En démonstration : Camille a « 10 km de Bruxelles » en 52:30.
+
+## Générateur de programme à essayer
+
+1. Pour un élève avec un bilan, valide un objectif daté (Faisabilité → Ta décision).
+2. **📅 Générer le programme** : choisis le premier lundi et les jours, puis **Recalculer**.
+3. Lis le résumé (départ → pic), les **risques** et les semaines : tremplin (4 semaines), développement (une semaine allégée sur quatre), affûtage, course.
+4. Coche « J’ai lu les risques… » puis **Créer les séances en brouillons**. Relis-les dans Séances, ajuste, puis publie semaine par semaine.
+5. Dis-moi ce qui ne te convient pas : durées, types de séances, jours, progression. Les règles sont faciles à ajuster.
+
+En démonstration : le programme de Camille (semi du 17 janvier) est créé en brouillons à partir du 23 novembre.
+

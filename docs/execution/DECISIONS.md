@@ -565,3 +565,200 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Test serveur : enregistrement, champ absent conservé, effacement, bornes, élève et autre espace refusés.
   - Navigateur (Marine) : FTP 250 W et CSS 1:45 pour Noah, tableau des 7 zones en watts et en allures de nage. Dans le constructeur en Cyclisme, « 20' Z2 + 3×(8' Z4 + R3') + 10' Z1 » affiche 140 à 190 W, 230 à 265 W et 115 à 140 W (séance non enregistrée).
 - **À valider par le fondateur.** Les noms d’usage des zones viennent de la course (« VMA longue » pour Z5) ; pour le vélo et la natation, peut-être « PMA », « anaérobie » et « sprint ».
+
+## D-056 · Adapter la semaine : quatre propositions inspirées de Foulée (CE-P-05) · 2026-11-19
+
+- **Contexte.** L’éditeur de semaine de Foulée (capture 09) propose « Semaine de récupération », « Alléger », « Endurance seule » et « Semaine de reprise ». Chaque proposition montre le volume avant → après, chaque séance barrée et remplacée, et la conséquence probable. Les séances verrouillées ou réalisées ne changent pas. Foulée descend d’un palier dans sa bibliothèque ; CoachOS n’a pas de paliers et raisonne sur la structure des séances.
+- **Décision.**
+  - Sous la semaine d’un élève (Séances → Semaine), « Adapter la semaine » présente les quatre propositions, de la plus prudente à la plus exigeante. Le coach en coche une, puis « Appliquer … en brouillons ».
+  - Règles (`proposeWeek`, domaine) ; une séance de qualité atteint le niveau 4 ou plus (seuil, VMA, effort élevé) :
+    - **Récupération** : la qualité devient une séance facile à 70 % de la durée ; les autres perdent un quart ; la séance la plus exigeante est retirée s’il en reste au moins quatre.
+    - **Alléger** : environ −25 % sur chaque séance, en retirant des répétitions (minimum 2) ou en raccourcissant les blocs, intensité inchangée.
+    - **Endurance seule** : la qualité devient facile à 80 % ; une sortie longue reste une sortie longue (90 %).
+    - **Reprise** : tout devient facile, 40 minutes au plus.
+  - Les séances faciles générées sont nommées selon le sport : « Footing 35′ », « Sortie vélo facile 1 h 10 », « Nage facile ».
+  - Les séances faites, passées ou annulées ne changent jamais, mais comptent dans le volume affiché.
+  - Application côté serveur (`applyWeekProposal`) : la proposition est recalculée depuis les séances en base, jamais reprise du navigateur. Chaque séance reçoit une nouvelle révision ; une séance retirée devient une révision annulée, avec un motif.
+  - **Rien n’est publié** : l’élève garde les versions publiées jusqu’à « Publier la semaine » (D-051).
+  - Si une séance a changé depuis l’aperçu, rien n’est appliqué (409).
+  - Contrat : `applyWeekProposal`.
+- **Preuve.**
+  - 7 tests du domaine, sur la semaine type de Foulée (fractionné, seuil, footing, sortie longue) : qualité reconnue, effet de chaque proposition, séances bloquées, outils.
+  - 2 tests serveur : 4 propositions pour le coach affecté seulement ; « récupération » appliquée (fractionné retiré, seuil devenu « Footing », sortie longue publiée restée visible telle quelle par l’élève) ; aperçu périmé refusé ; élève refusé ; jour autre qu’un lundi refusé.
+  - Contrat vérifié.
+  - Navigateur (Marine) : semaine de Noah du 23 novembre, 4 h 24 → 2 h 55 / 3 h 18 / 3 h 50 / 3 h 20 selon la proposition, avec le détail séance par séance. « Endurance seule » appliquée : 6 brouillons (données de démonstration).
+- **Limites.** Une séance sans déroulé (durée seule) est vue comme facile, faute d’intensité connue : elle est raccourcie, jamais transformée. La cohérence avec le profil (Foulée : « rien à signaler ») viendra avec le lot P (programmes).
+
+## D-057 · Faisabilité de l’objectif, inspirée de Foulée (CE-P-07) · 2026-11-19
+
+- **Contexte.** La capture 10 de Foulée montre un statut, des critères expliqués (chrono, endurance, délai, temps disponible, séances), « à proposer à ton élève » et des solutions qui indiquent chacune le statut qu’elles donneraient. Des paramètres modifiables recalculent tout sans rien enregistrer, et un « nouveau calcul » compare avant et après. Story CE-P-07 : quatre statuts, critères et solutions chiffrées ; message proposé à l’élève, jamais envoyé seul.
+- **Décision.**
+  - Dans la fiche élève, la section repliée « Faisabilité · {objectif} » affiche son statut en titre. Elle porte sur le prochain objectif daté, sinon sur la prochaine course déclarée dans le bilan. Elle n’apparaît que si le bilan existe.
+  - **Quatre statuts** : réalisable, ambitieux mais possible, risqué (à sécuriser), irréaliste en l’état. Le statut est le pire des critères. Les critères sont classés du plus bloquant au moins bloquant, chacun avec son explication chiffrée.
+  - **Calcul, pour tous les sports** (`assessGoal`, domaine) :
+    - durée d’épreuve à l’allure du niveau déclaré (vitesses typiques par sport et par niveau) ;
+    - séance longue à tenir : 65 % de l’épreuve en course, 80 % en vélo, 100 % en natation, avec un plafond ;
+    - endurance actuelle tirée du bilan (« plus longue sortie de ces 4 dernières semaines ») ; semaines pour l’atteindre à +10 % par semaine, plus 2 de marge ;
+    - semaines conseillées et séances par semaine selon la durée et le niveau ;
+    - temps disponible tiré du bilan.
+  - Le **chrono** n’allonge jamais l’épreuve : il ajoute son critère, une séance et deux semaines. Retirer le chrono ne rend donc jamais l’objectif plus difficile (testé sur 30 cas). Distance et chrono sont lus dans le titre de l’objectif (« Semi de Bruxelles en moins de 2 h ») et restent modifiables.
+  - **Solutions** : repousser la date (date calculée), libérer du temps, finir sans chrono, objectif intermédiaire (marathon → semi → 10 km → 5 km), ajouter des séances, maintenir l’objectif. Chacune affiche son statut ; « Essayer cette solution » change les paramètres. **Rien n’est enregistré.**
+  - **Message proposé** : le statut de départ, les points qui comptent, puis, si une solution a été essayée, ce qui change et le statut obtenu. Il est modifiable. « Ouvrir la conversation avec ce message » le dépose dans le champ de saisie de la conversation (une seule fois, stockage de session du navigateur) : **le coach l’envoie lui-même**.
+  - Aucune donnée de santé ; c’est une aide à la décision, pas une garantie (mention affichée).
+- **Preuve.**
+  - 6 tests du domaine :
+    - cas exact de la capture de Foulée, jugé irréaliste ;
+    - solutions et leurs statuts ; cas réalisable ;
+    - chrono retiré jamais plus difficile ;
+    - vélo et natation ;
+    - message sans et avec ajustement ;
+    - lecture de la distance et du chrono dans le titre.
+  - Navigateur (Marine), avec Camille et l’objectif « Semi de Bruxelles en moins de 2 h » au 17 janvier (ajouté par le formulaire, démonstration) :
+    - statut « Risqué » ; « objectif intermédiaire » donne « Ambitieux » ;
+    - « Nouveau calcul : Risqué → Ambitieux » ;
+    - message proposé : « préparer d’abord 10 km, puis 21,1 km… et viser de finir, sans chrono. Ainsi, il est ambitieux mais possible » ;
+    - la conversation s’ouvre avec le message dans le champ de saisie, non envoyé.
+- **Défaut trouvé et corrigé.** Le formulaire « + Ajouter un objectif » (et les autres fenêtres « + … » des en-têtes de carte) était coupé par la carte : le bouton d’envoi tombait sous la carte voisine et ne recevait pas le clic. Une carte dont une telle fenêtre est ouverte ne la coupe plus.
+- **À valider par le fondateur.** Les vitesses par niveau, les parts de séance longue et les délais conseillés. Plus tard : un test de référence (chrono) enregistré dans les repères.
+
+## D-058 · Le passif de l’élève compte, et c’est le coach qui décide · 2026-11-19
+
+- **Instruction du fondateur.**
+  - Il y a ce qui est conseillé en théorie, mais il faut prendre en compte la situation globale de l’athlète et son passif pour voir si un objectif est réalisable dans les temps.
+  - Au final, c’est toujours au coach de décider. Si le coach dit oui, le programme généré doit permettre d’atteindre l’objectif.
+- **Décision.**
+  - **Passif dans le calcul (D-057 révisé).** La faisabilité tient compte de :
+    - **les années de pratique** (bilan) : elles accélèrent la progression de la séance longue (de 8 % par semaine pour un débutant à 15 % pour plus de 3 ans de pratique) et raccourcissent la préparation conseillée (−10 à −20 %) ;
+    - **une distance déjà atteinte** (objectif « atteint » du même sport, d’au moins 95 % de la distance) : −25 % sur la préparation conseillée ;
+    - **ce qui a vraiment été fait** : la plus longue séance réalisée ces 6 dernières semaines (retours) remplace la case du bilan si elle est plus longue ;
+    - **la régularité réelle** sur 4 semaines (critère « Régularité réelle », à partir de 3 séances suivies) ;
+    - **une reprise très récente après un long arrêt** : critère « risqué », progression prudente.
+
+    Deux nouveaux critères : « Passif » et « Régularité réelle ».
+  - **Statut = indication.** Le panneau l’indique (« indication ») et rappelle : « C’est toi qui décides, plus bas ».
+  - **Décision du coach.** « Ta décision » propose : « ✓ Je valide cet objectif » (ou « … ajusté » après une solution essayée), une justification facultative (privée) et, si la date a changé, la reprise de la nouvelle date sur l’objectif (visible par l’élève). La validation est possible quelle que soit l’indication. L’objectif validé porte « ✓ Validé par toi » ; la décision rappelle les paramètres, l’indication au moment de la décision et la justification. Une validation malgré une indication risquée conseille un suivi rapproché.
+  - **Contrainte du futur programme (lot P).** Table `goal_decisions` (migration `20261119100000`) : paramètres validés (distance, date, chrono, séances, temps), indication au moment de la décision, justification, révision. Le générateur de programme devra prendre ces paramètres comme **objectif à atteindre** : planifier la progression pour y arriver à la date validée, en signalant les risques au coach, sans refuser ni revoir l’objectif à la baisse de lui-même.
+  - La décision est lisible par les coachs affectés seulement, jamais par l’élève (RLS). Écriture par `decideGoal` (droits, idempotence, journal). Contrat : `decideGoal`.
+- **Preuve.**
+  - Tests du domaine :
+    - un coureur de plus de 5 ans de pratique qui a déjà couru la distance est jugé plus favorablement (préparation conseillée plus courte, endurance réelle, statut meilleur) ;
+    - une reprise récente après un long arrêt et une régularité réelle faible rendent prudent ;
+    - pas de critère de régularité avec moins de 3 séances suivies.
+  - Tests serveur :
+    - validation d’un objectif « risqué » avec justification, invisible pour l’élève ;
+    - date reportée sur l’objectif, nouvelle révision ;
+    - refus pour l’élève, un autre espace, un autre élève, un objectif terminé et des paramètres invalides.
+  - Contrat vérifié. `npm test` : 197 passés.
+  - Navigateur (Marine, Camille) :
+    - critères « Passif » (1 à 3 ans, séance la plus longue faite ces 6 dernières semaines : 45 min) et « Régularité réelle » (2 sur 3) ;
+    - objectif validé malgré « risqué », puis justification ajoutée (« A déjà couru deux semis en 2 h 05… ») ;
+    - « ✓ Validé par toi » dans la liste des objectifs.
+- **Corrigé en route.** Le champ de justification n’avait pas de nom accessible : il est maintenant annoncé par les lecteurs d’écran.
+- **À venir.** Chronos de référence (tests, courses passées) dans les repères, pour juger un chrono visé ; historique des courses dans le bilan.
+
+## D-059 · « Confirmer le bilan », tâches récurrentes et historique du bilan · 2026-11-19
+
+- **Décision.**
+  - **Suivi « Confirmer le bilan ».**
+    - Un bilan envoyé (ou modifié par l’élève) crée une tâche dans le Planning, 2 jours après l’envoi par défaut, délai réglable avec les autres suivis (D-045). Elle se ferme dès la confirmation.
+    - Confirmer le bilan (ou le remplir en entretien) confirme aussi le niveau déclaré pour ce sport, sauf si le coach a déjà fixé un autre niveau.
+    - « Confirmer le niveau » n’apparaît plus en double tant qu’un bilan attend sa confirmation.
+    - Migration `20261119110000` (contrôles des règles).
+  - **Tâches récurrentes (CE-H-06).**
+    - « Répéter » dans le formulaire de tâche : chaque semaine, toutes les 2 semaines, chaque mois. Une tâche récurrente demande une échéance.
+    - Marquer une tâche récurrente « faite » crée l’occurrence suivante, une seule fois, au même jour du mois (ramené au dernier jour si besoin, par exemple du 31 janvier au 28 février). « 🔁 chaque semaine » s’affiche dans le Planning.
+    - Migration `20261119120000` ; contrat : `recurrence` sur la tâche, `next` dans la réponse de mise à jour.
+  - **Historique du bilan.**
+    - Chaque enregistrement, par l’élève ou en entretien, garde une version immuable des réponses (`athlete_profile_versions`, migration `20261119130000`). Lecture par l’élève et les coachs affectés.
+    - Dans la fiche, « Historique · n versions » donne pour chaque version la date, la source (envoyé par l’élève ou entretien) et les réponses modifiées.
+    - Les bilans antérieurs à cette version commencent leur historique au prochain enregistrement.
+- **Preuve.**
+  - Tests :
+    - bilan envoyé → « Confirmer le bilan » sans « Confirmer le niveau » ; confirmation → plus de tâche, niveau intermédiaire en vélo confirmé ;
+    - tâche mensuelle du 31 janvier → suivante le 28 février, une seule ; tâche simple sans suivante ;
+    - échéance obligatoire et non effaçable sur une tâche récurrente ;
+    - historique : ordre, réponses changées en entretien, première version, accès refusé à un autre élève.
+  - `npm test` : 199 passés.
+  - Navigateur (Marine) : tâche « Point hebdo avec Camille » créée chaque semaine (« 🔁 chaque semaine »), « Terminé » crée l’occurrence du jeudi 26 novembre (démonstration).
+
+## D-060 · Résultats de référence : chrono jugé sur des faits, équivalences, VMA d’un test · 2026-11-19
+
+- **Contexte.** D-058 demandait de juger un chrono visé sur le passif réel. Le fondateur fournira plus tard ses données (« continue sans, au pire on changera après ») : le modèle est volontairement simple et réversible.
+- **Décision.**
+  - Dans la fiche élève, la section « Résultats de référence » permet au coach affecté de saisir des courses, des tests et des séances de référence. Pour chacun : type, sport, nom facultatif, distance (« 10 », « 1500 m »), temps (« 52:30 », « 1h45 »), date passée.
+  - Affichage : l’allure, et pour la course à pied les équivalences 5 km, 10 km, semi et marathon (formule de Riegel, exposant 1,06). Un test de 5 à 7 minutes donne une VMA estimée, avec « Utiliser comme VMA ».
+  - L’élève les voit dans Progression (« Tes résultats de référence »).
+  - Faisabilité :
+    - le temps prévu sur la distance de l’objectif est calculé d’après le résultat de moins de 12 mois, du même sport, le plus proche en distance (entre un cinquième et cinq fois). Il donne la durée d’épreuve et juge le chrono visé : à portée, ou x % plus rapide que le prévu (au-delà de 3 %, 7 % puis plus) ;
+    - la prédiction est recalculée pour chaque distance, solutions comprises ;
+    - les courses comptent dans « a déjà réalisé » du passif ;
+    - pas de prédiction en vélo, faute de modèle fiable ; en trail et en natation, l’exposant est différent.
+  - Table `athlete_performances` (migration `20261119140000`) : écrite par le coach affecté, lue par lui et par l’élève. Contrat : `addPerformance`, `deletePerformance`. Aucune donnée de santé.
+- **Preuve.**
+  - Tests du domaine :
+    - saisie des temps ;
+    - prédiction (résultat récent et proche, trop ancien ignoré, vélo exclu) ;
+    - équivalences ; VMA d’un test de 6 minutes ;
+    - chrono jugé à portée, à surveiller, risqué ou bloquant selon l’écart ;
+    - durée d’épreuve suivant la distance d’une solution.
+  - Tests serveur : ajout, lecture par l’élève, refus (élève, autre espace, date future, bornes), suppression.
+  - Contrat vérifié. `npm test` : 205 passés.
+  - Navigateur :
+    - Marine ajoute pour Camille « 10 km de Bruxelles » en 52:30 (5:15 /km, semi prévu en 1:55:50) ; la faisabilité indique « Chrono visé 2:00:00, à sa portée » ;
+    - Camille voit le résultat et les équivalences dans Progression, sans la justification privée du coach.
+- **Corrigé en route.** Plusieurs champs de saisie (résultats, paramètres de faisabilité) n’avaient pas de nom accessible : un libellé explicite a été ajouté.
+- **À revoir avec les données du fondateur.** Formats d’import (Garmin, Foulée, tableaux), autres sports, saisie des courses par l’élève dans le bilan.
+
+## D-061 · Générateur de programme : à la hauteur de l’objectif, 4 semaines de tremplin, risques au coach · 2026-11-19
+
+- **Instruction du fondateur.**
+  - Le programme généré doit être à la hauteur de l’objectif visé, tout en prévenant des risques.
+  - Les 4 premières semaines servent de tremplin vers le volume nécessaire ensuite.
+  - Les risques sont signalés au coach, et c’est à lui de décider.
+- **Décision (première version, règles écrites, sans IA).**
+  - **Entrée** : un objectif validé par le coach (D-058) : distance, date et chrono décidés. Le générateur part de ces paramètres et ne les revoit jamais à la baisse. Il utilise aussi :
+    - le bilan (situation, endurance déclarée, jours disponibles) ;
+    - ce que l’élève a réellement fait (séance la plus longue réalisée ces 6 dernières semaines, volume moyen des 4 dernières) ;
+    - ses résultats de référence (prédiction, D-060) et ses repères (VMA).
+  - **Phases** :
+    - **Tremplin**, les 4 premières semaines : départ au volume actuel, endurance d’abord, une séance de qualité légère à partir de la 3e semaine, dimensionnée pour tenir dans le volume visé. Les footings descendent à 20 minutes pour partir vraiment de l’existant.
+    - **Développement** : hausse progressive jusqu’au pic (séance longue nécessaire et volume de course) à la dernière semaine avant l’affûtage ; une semaine allégée (−25 %) toutes les quatre ; qualité alternée seuil, allure de course (si chrono), VMA.
+    - **Affûtage** : 2 semaines dès 10 semaines de préparation, 1 dès 5 ; course le jour J.
+  - La séance longue est placée le week-end si possible, les séances de qualité jamais la veille de la séance longue. Les séances suivent le sport : footing, sortie vélo, nage ; VMA en 400 m en course, PMA en 3 minutes ailleurs.
+  - **Risques signalés** à partir des semaines réellement planifiées :
+    - départ au-dessus de ce que l’élève fait (+x %) ;
+    - plus forte hausse d’une semaine à l’autre (au-delà de 10 %) ;
+    - pas de développement ni d’affûtage si la préparation est trop courte ;
+    - points de la faisabilité.
+
+    Le programme reste construit pour l’objectif : le coach lit les risques, coche « J’ai lu les risques signalés et je décide de créer ce programme », puis crée.
+  - **Création en brouillons**, rien de publié :
+    - `plans` relié à l’objectif, avec les paramètres, les risques et l’acceptation ;
+    - `plan_blocks` par phase ;
+    - séances reliées au programme (`workouts.plan_id`).
+
+    Le coach relit, ajuste, puis publie semaine par semaine (« Publier la semaine », D-051). Migration `20261119150000` ; contrat `createProgram`.
+  - **Écran** : « 📅 Générer le programme » sous la décision du coach et à côté des objectifs validés. La page affiche les paramètres (premier lundi, jours), le résumé (départ → pic, séance longue), les risques, puis chaque semaine avec sa phase, son volume (barre) et ses séances.
+- **Preuve.**
+  - 5 tests du domaine :
+    - phases et tremplin depuis le volume actuel ;
+    - séance longue nécessaire atteinte avant l’affûtage, course le jour J, allure de course si chrono ;
+    - jours choisis, séance longue le week-end ;
+    - préparation courte toujours à la hauteur, avec risques ;
+    - vélo.
+  - 2 tests serveur :
+    - objectif non validé : aperçu possible, création refusée ;
+    - risques à accepter ; lundi obligatoire ; élève refusé ;
+    - brouillons invisibles pour l’élève, phases du tremplin à l’affûtage, programme invisible pour l’élève ;
+    - **création identique à l’aperçu**, semaine par semaine.
+  - Contrat vérifié. `npm test` : 212 passés.
+  - Navigateur (Marine, Camille, semi au 17 janvier, mardi, jeudi et samedi) :
+    - 8 semaines : 1 h 35, 1 h 35, 1 h 45, 1 h 55 (tremplin), 2 h 15, 2 h 20, 2 h 40 (pic, séance longue d’1 h 15), affûtage, course ;
+    - risques : semaine 1 +27 % par rapport à ce qu’elle fait, semaine 5 +17 %, délai ;
+    - risques acceptés, programme créé en brouillons, « Publier la semaine (3) ».
+- **Écarts et réglages en route.**
+  - Les premiers risques étaient calculés sur des volumes théoriques. Ils le sont désormais sur les semaines planifiées.
+  - Le nombre de séances suit les jours choisis.
+  - Les séances de qualité sont dimensionnées pour lisser les hausses.
+  - Le programme de démonstration de Camille a été créé avant un redémarrage du serveur, avec une version précédente du module : ses footings du tremplin font 30 minutes au lieu de 20. Un test garantit désormais que la création reproduit l’aperçu.
+- **À venir.** Choisir les séances dans la bibliothèque du coach (comme le moteur de Foulée) ; régénérer une partie en gardant les séances passées (CE-P-06) ; « Pourquoi cette séance ? » ; zones et paliers par niveau validés par le fondateur.

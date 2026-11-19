@@ -2241,7 +2241,8 @@
           "status",
           "link",
           "notes",
-          "revision"
+          "revision",
+          "recurrence"
         ],
         "properties": {
           "id": {
@@ -2339,6 +2340,21 @@
           "revision": {
             "type": "integer",
             "minimum": 1
+          },
+          "recurrence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "weekly",
+                  "biweekly",
+                  "monthly"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       },
@@ -2508,6 +2524,69 @@
               "$ref": "#/components/schemas/workoutBlock"
             },
             "description": "Structure de la séance, 80 étapes au plus en tout"
+          }
+        }
+      },
+      "performance": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sport",
+          "kind",
+          "name",
+          "distanceM",
+          "durationS",
+          "doneOn"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sport": {
+            "type": "string",
+            "enum": [
+              "running",
+              "trail",
+              "cycling",
+              "swimming",
+              "triathlon",
+              "duathlon"
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "race",
+              "test",
+              "training"
+            ]
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "distanceM": {
+            "type": "integer",
+            "minimum": 50,
+            "maximum": 1000000
+          },
+          "durationS": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 604800
+          },
+          "doneOn": {
+            "type": "string",
+            "format": "date"
           }
         }
       }
@@ -16740,6 +16819,21 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "recurrence": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "weekly",
+                          "biweekly",
+                          "monthly"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 }
               }
@@ -16970,6 +17064,16 @@
                   "properties": {
                     "item": {
                       "$ref": "#/components/schemas/task"
+                    },
+                    "next": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/task"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   }
                 }
@@ -17125,7 +17229,8 @@
                       "level_unconfirmed",
                       "vma_missing",
                       "message_reply",
-                      "onboarding_call"
+                      "onboarding_call",
+                      "bilan_confirm"
                     ]
                   },
                   "until": {
@@ -17168,7 +17273,8 @@
                         "level_unconfirmed",
                         "vma_missing",
                         "message_reply",
-                        "onboarding_call"
+                        "onboarding_call",
+                        "bilan_confirm"
                       ]
                     },
                     "sourceRef": {
@@ -19298,7 +19404,8 @@
                             "level_unconfirmed",
                             "vma_missing",
                             "message_reply",
-                            "onboarding_call"
+                            "onboarding_call",
+                            "bilan_confirm"
                           ]
                         },
                         "enabled": {
@@ -19357,7 +19464,8 @@
                               "level_unconfirmed",
                               "vma_missing",
                               "message_reply",
-                              "onboarding_call"
+                              "onboarding_call",
+                              "bilan_confirm"
                             ]
                           },
                           "enabled": {
@@ -21169,6 +21277,1190 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/athletes/{aid}/week-proposals": {
+      "post": {
+        "operationId": "applyWeekProposal",
+        "summary": "Appliquer une proposition d’adaptation de la semaine (récupération, alléger, endurance seule, reprise) en brouillons ; 409 si la semaine a changé depuis l’aperçu (D-056).",
+        "tags": [
+          "calendar"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "aid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "monday",
+                  "kind",
+                  "seen"
+                ],
+                "properties": {
+                  "monday": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "recovery",
+                      "lighter",
+                      "endurance",
+                      "restart"
+                    ]
+                  },
+                  "seen": {
+                    "type": "array",
+                    "maxItems": 40,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "id",
+                        "revision"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "revision": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "updated"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "recovery",
+                        "lighter",
+                        "endurance",
+                        "restart"
+                      ]
+                    },
+                    "updated": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "workoutId",
+                          "revision",
+                          "canceled"
+                        ],
+                        "properties": {
+                          "workoutId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "revision": {
+                            "type": "integer",
+                            "minimum": 1
+                          },
+                          "canceled": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/athletes/{aid}/goals/{gid}/decision": {
+      "put": {
+        "operationId": "decideGoal",
+        "summary": "Le coach valide un objectif, tel quel ou ajusté, avec sa justification ; contrainte du futur programme ; réservé aux coachs affectés (D-058).",
+        "tags": [
+          "calendar"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "item"
+                  ],
+                  "properties": {
+                    "item": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "goalId",
+                        "statusAtDecision",
+                        "params",
+                        "note",
+                        "decidedAt",
+                        "revision"
+                      ],
+                      "properties": {
+                        "goalId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "statusAtDecision": {
+                          "type": "string",
+                          "enum": [
+                            "realistic",
+                            "ambitious",
+                            "risky",
+                            "unrealistic"
+                          ]
+                        },
+                        "params": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "distanceKm",
+                            "eventDate",
+                            "targetSeconds",
+                            "weeklySessions",
+                            "weeklyHours"
+                          ],
+                          "properties": {
+                            "distanceKm": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "maximum": 1000
+                            },
+                            "eventDate": {
+                              "type": "string",
+                              "format": "date"
+                            },
+                            "targetSeconds": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": 60,
+                                  "maximum": 604800
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "weeklySessions": {
+                              "type": "string",
+                              "enum": [
+                                "0to1",
+                                "2to3",
+                                "4to5",
+                                "6plus"
+                              ]
+                            },
+                            "weeklyHours": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "lt2",
+                                    "2to4",
+                                    "4to6",
+                                    "6to10",
+                                    "gt10"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "note": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "decidedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "revision": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "aid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "gid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "statusAtDecision",
+                  "params"
+                ],
+                "properties": {
+                  "statusAtDecision": {
+                    "type": "string",
+                    "enum": [
+                      "realistic",
+                      "ambitious",
+                      "risky",
+                      "unrealistic"
+                    ]
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "distanceKm",
+                      "eventDate",
+                      "targetSeconds",
+                      "weeklySessions",
+                      "weeklyHours"
+                    ],
+                    "properties": {
+                      "distanceKm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 1000
+                      },
+                      "eventDate": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "targetSeconds": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 60,
+                            "maximum": 604800
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "weeklySessions": {
+                        "type": "string",
+                        "enum": [
+                          "0to1",
+                          "2to3",
+                          "4to5",
+                          "6plus"
+                        ]
+                      },
+                      "weeklyHours": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "lt2",
+                              "2to4",
+                              "4to6",
+                              "6to10",
+                              "gt10"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "note": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 1000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "applyDate": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/athletes/{aid}/performances": {
+      "post": {
+        "operationId": "addPerformance",
+        "summary": "Résultat de référence de l’élève (course, test, séance de référence), saisi par le coach affecté (D-060).",
+        "tags": [
+          "calendar"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "item"
+                  ],
+                  "properties": {
+                    "item": {
+                      "$ref": "#/components/schemas/performance"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "aid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "sport",
+                  "kind",
+                  "distanceM",
+                  "durationS",
+                  "doneOn"
+                ],
+                "properties": {
+                  "sport": {
+                    "type": "string",
+                    "enum": [
+                      "running",
+                      "trail",
+                      "cycling",
+                      "swimming",
+                      "triathlon",
+                      "duathlon"
+                    ]
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "race",
+                      "test",
+                      "training"
+                    ]
+                  },
+                  "name": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "distanceM": {
+                    "type": "integer",
+                    "minimum": 50,
+                    "maximum": 1000000
+                  },
+                  "durationS": {
+                    "type": "integer",
+                    "minimum": 10,
+                    "maximum": 604800
+                  },
+                  "doneOn": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/athletes/{aid}/performances/{pid}": {
+      "delete": {
+        "operationId": "deletePerformance",
+        "summary": "Retirer un résultat de référence (D-060).",
+        "tags": [
+          "portfolio"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 60,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "aid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "deleted"
+                  ],
+                  "properties": {
+                    "deleted": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/athletes/{aid}/goals/{gid}/program": {
+      "post": {
+        "operationId": "createProgram",
+        "summary": "Générer le programme d’un objectif validé, en brouillons : tremplin de 4 semaines, développement, affûtage ; risques acceptés par le coach (D-061).",
+        "tags": [
+          "calendar"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "planId",
+                    "workouts",
+                    "weeks"
+                  ],
+                  "properties": {
+                    "planId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "workouts": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "weeks": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "aid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "gid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "startMonday",
+                  "days"
+                ],
+                "properties": {
+                  "startMonday": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "days": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 6,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 7
+                    }
+                  },
+                  "acceptRisks": {
+                    "type": "boolean"
+                  }
                 }
               }
             }

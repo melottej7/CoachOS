@@ -2,8 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
   addDays, APPOINTMENT_KIND_LABELS, BUCKET_LABELS, BUCKETS, bucketOf, dayOfMonth, formatLongDate, formatShortDate, formatWeekRange, formatWeekday,
-  isLocalDate, PRIORITY_LABELS, TASK_KIND_LABELS, TASK_KINDS, todayIn, weekStart, type Priority, type TaskKind,
-} from '@coachos/domain';
+  isLocalDate, PRIORITY_LABELS, TASK_KIND_LABELS, TASK_KINDS, todayIn, weekStart, type Priority, type TaskKind, TASK_RECURRENCE_LABELS } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { home, type HomeTask } from '@/server/repo/portfolio';
@@ -120,6 +119,7 @@ export default async function CoachPlanning({ params, searchParams }: { params: 
                         <p className="task-title">{t.title}{t.athlete ? <> · <Link href={`${base}/athletes/${t.athlete.id}?from=${encodeURIComponent(keep({}))}`}>{t.athlete.name}</Link></> : null}{t.team ? ` · ${t.team.name}` : ''}</p>
                         <p className="task-meta">
                           <span className="task-why">{t.reason}</span>
+                          {t.recurrence ? <span className="task-rec"> · 🔁 {TASK_RECURRENCE_LABELS[t.recurrence].toLowerCase()}</span> : null}
                           {' · '}<span>{dueText(t, today)}</span>
                           {' · '}<span>Priorité {PRIORITY_LABELS[t.priority as Priority].toLowerCase()}</span>
                           {' · '}<span>{TASK_KIND_LABELS[t.kind as TaskKind]}</span>

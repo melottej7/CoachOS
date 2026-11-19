@@ -1,6 +1,6 @@
 import {
   appointmentAnnouncement, canTransition, createAppointmentSchema, formatLongDate, utcToLocal, createTaskSchema, isTimeZone, localToUtc, parseWith, snoozeSchema, updateAppointmentSchema,
-  updateTaskSchema, TASK_STATUS_LABELS, resolveRuleSettings, ruleSettingsSchema,
+  updateTaskSchema, TASK_STATUS_LABELS, nextOccurrence, type TaskRecurrence, resolveRuleSettings, ruleSettingsSchema,
   type AppointmentKind, type AppointmentStatus, type AutoRule, type CreateTaskInput, type TaskKind, type TaskStatus,
 } from '@coachos/domain';
 import { commandAs } from '../db/client';
@@ -23,16 +23,16 @@ const parse = <T>(schema: Parameters<typeof parseWith>[0], body: unknown): T => 
 
 export interface TaskItem {
   id: string; title: string; kind: TaskKind; athleteId: string | null; teamId: string | null; dueOn: string | null;
-  priority: number; status: TaskStatus; link: string | null; notes: string | null; revision: number;
+  priority: number; status: TaskStatus; link: string | null; notes: string | null; revision: number; recurrence: TaskRecurrence | null;
 }
 type TaskRow = {
   id: string; title: string; kind: TaskKind; athlete_id: string | null; team_id: string | null; due_on: string | null;
-  priority: number; status: TaskStatus; link: string | null; notes: string | null; revision: number;
+  priority: number; status: TaskStatus; link: string | null; notes: string | null; revision: number; recurrence: TaskRecurrence | null;
 };
-const taskCols = `id, title, kind, athlete_id, team_id, to_char(due_on, 'YYYY-MM-DD') as due_on, priority, status, link, notes, revision`;
+const taskCols = `id, title, kind, athlete_id, team_id, to_char(due_on, 'YYYY-MM-DD') as due_on, priority, status, link, notes, revision, recurrence`;
 const toTask = (t: TaskRow): TaskItem => ({
   id: t.id, title: t.title, kind: t.kind, athleteId: t.athlete_id, teamId: t.team_id, dueOn: t.due_on,
-  priority: Number(t.priority), status: t.status, link: t.link, notes: t.notes, revision: t.revision,
+  priority: Number(t.priority), status: t.status, link: t.link, notes: t.notes, revision: t.revision, recurrence: t.recurrence,
 });
 
 /** createTask · C : tâche libre, ou liée à un élève affecté ou à un groupe ; responsable = l’auteur. */
@@ -48,9 +48,9 @@ export async function createTask(meta: Meta, body: unknown): Promise<StoredRespo
     }
     return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'task.create', key: meta.idempotencyKey, body }, async () => {
       const r = await tx.query<TaskRow>(
-        `insert into public.coach_tasks(workspace_id, athlete_id, team_id, assignee_id, created_by, title, kind, due_on, priority, link, notes)
-         values ($1, $2, $3, auth.uid(), auth.uid(), $4, $5, $6::date, $7, $8, $9) returning ${taskCols}`,
-        [wid, v.athleteId, v.teamId, v.title, v.kind, v.dueOn, v.priority, v.link, v.notes],
+        `insert into public.coach_tasks(workspace_id, athlete_id, team_id, assignee_id, created_by, title, kind, due_on, priority, link, notes, recurrence)
+         values ($1, $2, $3, auth.uid(), auth.uid(), $4, $5, $6::date, $7, $8, $9, $10) returning ${taskCols}`,
+        [wid, v.athleteId, v.teamId, v.title, v.kind, v.dueOn, v.priority, v.link, v.notes, v.recurrence],
       );
       await audit(tx, wid, meta.actorId, 'task.create', r.rows[0]!.id, meta.requestId);
       return { status: 201, body: { item: toTask(r.rows[0]!) } };
@@ -74,6 +74,7 @@ export async function updateTask(meta: Meta & { taskId: string }, body: unknown)
       const t = cur.rows[0];
       if (!t) throw notVisible();
       if (t.revision !== v.expectedRevision) throw conflict('Cette tâche a été modifiée ailleurs. Recharge la page.', { revision: t.revision });
+      if (t.recurrence && v.dueOn === null) throw invalid([{ path: 'dueOn', rule: 'Une tâche récurrente a besoin d’une échéance' }]);
       if (v.status && !canTransition(t.status, v.status)) {
         throw new AppError('INVALID_FIELDS', 'Certains champs sont à corriger.', [{ path: 'status', rule: `Passage de « ${TASK_STATUS_LABELS[t.status]} » à « ${TASK_STATUS_LABELS[v.status]} » impossible` }]);
       }
@@ -91,7 +92,19 @@ export async function updateTask(meta: Meta & { taskId: string }, body: unknown)
         [wid, meta.taskId, v.status ?? null, v.dueOn !== undefined, v.dueOn ?? null, v.priority ?? null, v.title ?? null, v.notes !== undefined, v.notes ?? null, closing],
       );
       await audit(tx, wid, meta.actorId, 'task.update', meta.taskId, meta.requestId);
-      return { status: 200, body: { item: toTask(r.rows[0]!) } };
+      // CE-H-06 : une tâche récurrente faite crée l’occurrence suivante (une seule, même si l’on rejoue la clôture).
+      let next: TaskItem | null = null;
+      if (v.status === 'done' && t.status !== 'done' && t.recurrence && t.due_on) {
+        const n = await tx.query<TaskRow>(
+          `insert into public.coach_tasks(workspace_id, athlete_id, team_id, assignee_id, created_by, title, kind, due_on, priority, link, notes, recurrence)
+           select workspace_id, athlete_id, team_id, assignee_id, auth.uid(), title, kind, $3::date, priority, link, notes, recurrence
+           from public.coach_tasks where workspace_id = $1 and id = $2 returning ${taskCols}`,
+          [wid, meta.taskId, nextOccurrence(t.due_on, t.recurrence)],
+        );
+        next = toTask(n.rows[0]!);
+        await audit(tx, wid, meta.actorId, 'task.create', next.id, meta.requestId);
+      }
+      return { status: 200, body: { item: toTask(r.rows[0]!), next } };
     });
   });
 }

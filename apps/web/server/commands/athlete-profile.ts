@@ -102,13 +102,30 @@ async function upsert(tx: Tx, wid: string, aid: string, p: AthleteProfileInput, 
       p.practiceStatus, p.breakLength, p.resumedSince, p.longestRecent, confirmed, JSON.stringify(sources)],
   );
   await tx.query('delete from public.athlete_profile_drafts where workspace_id = $1 and athlete_id = $2', [wid, aid]);
-  return toProfile(r.rows[0]!);
+  const saved = toProfile(r.rows[0]!);
+  // D-059 : version immuable des réponses, pour l’historique du bilan.
+  await tx.query(
+    `insert into public.athlete_profile_versions(workspace_id, athlete_id, revision, source, answers, saved_by)
+     values ($1, $2, $3, $4, $5::jsonb, auth.uid()) on conflict do nothing`,
+    [wid, aid, saved.revision, source, JSON.stringify(profileAnswers(saved))],
+  );
+  return saved;
 }
 
 async function ownAthlete(tx: Tx, wid: string): Promise<string> {
   const r = await tx.query<{ id: string }>(`select id from public.athletes where workspace_id = $1 and user_id = auth.uid() and state = 'active' for update`, [wid]);
   if (!r.rows[0]) throw notVisible();
   return r.rows[0].id;
+}
+
+/** D-059 : confirmer le bilan confirme le niveau déclaré pour ce sport, sauf si le coach en a déjà fixé un. */
+async function confirmDeclaredLevel(tx: Tx, wid: string, aid: string) {
+  await tx.query(
+    `insert into public.athlete_sport_levels(workspace_id, athlete_id, sport_code, level, confirmed_by)
+     select workspace_id, athlete_id, sport_code, level, auth.uid() from public.athlete_profiles where workspace_id = $1 and athlete_id = $2
+     on conflict (workspace_id, athlete_id, sport_code) do nothing`,
+    [wid, aid],
+  );
 }
 
 /** saveAthleteProfile · A : l’athlète envoie son bilan pour cette relation. Le brouillon est effacé. */
@@ -158,6 +175,7 @@ export async function saveBilanByCoach(meta: Meta & { athleteId: string }, body:
       const revision = cur.rows[0]?.revision ?? null;
       if (revision !== v.expectedRevision) throw conflict('Le bilan a changé entre-temps (l’élève l’a peut-être complété). Recharge la page.', { revision });
       const item = await upsert(tx, wid, meta.athleteId, v.data, 'interview');
+      await confirmDeclaredLevel(tx, wid, meta.athleteId);
       await audit(tx, wid, meta.actorId, 'athlete.bilan-interview', meta.athleteId, meta.requestId);
       return { status: 200, body: { item } };
     });
@@ -181,6 +199,7 @@ export async function confirmBilan(meta: Meta & { athleteId: string }, body: unk
          where workspace_id = $1 and athlete_id = $2 returning ${columns}`,
         [wid, meta.athleteId],
       );
+      await confirmDeclaredLevel(tx, wid, meta.athleteId);
       await audit(tx, wid, meta.actorId, 'athlete.bilan-confirm', meta.athleteId, meta.requestId);
       return { status: 200, body: { item: toProfile(r.rows[0]!) } };
     });
@@ -215,4 +234,24 @@ export function profileAnswers(p: AthleteProfile): BilanAnswers {
     weeklySessions: p.weeklySessions, longestRecent: p.longestRecent, level: p.level, weeklyHours: p.weeklyHours, availableDays: p.availableDays,
     mainGoal: p.mainGoal, nextEventName: p.nextEventName, nextEventDate: p.nextEventDate,
   };
+}
+
+export interface BilanVersion { revision: number; source: BilanSource; savedAt: string; answers: BilanAnswers; changed: BilanField[] }
+
+/** Historique du bilan, du plus récent au plus ancien, avec les réponses changées par rapport à la version précédente. */
+export async function readBilanVersions(userId: string, wid: string, aid: string): Promise<BilanVersion[]> {
+  return readAs(userId, async (tx) => {
+    const r = await tx.query<{ revision: number; source: BilanSource; saved_at: Date; answers: BilanAnswers }>(
+      'select revision, source, saved_at, answers from public.athlete_profile_versions where workspace_id = $1 and athlete_id = $2 order by revision',
+      [wid, aid],
+    );
+    const out: BilanVersion[] = [];
+    let prev: BilanAnswers | null = null;
+    for (const x of r.rows) {
+      const changed = prev ? BILAN_FIELDS.filter((f) => JSON.stringify(prev![f] ?? null) !== JSON.stringify(x.answers[f] ?? null)) : [];
+      out.push({ revision: x.revision, source: x.source, savedAt: new Date(x.saved_at).toISOString(), answers: x.answers, changed });
+      prev = x.answers;
+    }
+    return out.reverse();
+  });
 }

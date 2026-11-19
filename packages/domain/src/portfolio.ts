@@ -88,6 +88,19 @@ const coachLink = z
   .nullish()
   .transform((v) => v ?? null);
 
+export const TASK_RECURRENCES = ['weekly', 'biweekly', 'monthly'] as const;
+export type TaskRecurrence = (typeof TASK_RECURRENCES)[number];
+export const TASK_RECURRENCE_LABELS: Record<TaskRecurrence, string> = { weekly: 'Chaque semaine', biweekly: 'Toutes les 2 semaines', monthly: 'Chaque mois' };
+
+/** Échéance de l’occurrence suivante (même jour du mois, ramené au dernier jour si besoin). */
+export function nextOccurrence(due: string, r: TaskRecurrence): string {
+  if (r !== 'monthly') return addDays(due, r === 'weekly' ? 7 : 14);
+  const [y, m, d] = due.split('-').map(Number) as [number, number, number];
+  const ny = m === 12 ? y + 1 : y, nm = m === 12 ? 1 : m + 1;
+  const last = new Date(Date.UTC(ny, nm, 0)).getUTCDate();
+  return `${ny}-${String(nm).padStart(2, '0')}-${String(Math.min(d, last)).padStart(2, '0')}`;
+}
+
 export const createTaskSchema = z
   .object({
     title: text(1, 200, 'Titre'),
@@ -98,8 +111,13 @@ export const createTaskSchema = z
     priority: z.number().int().min(0).max(3).default(1),
     link: coachLink,
     notes: optionalText(2000, 'Notes'),
+    /** CE-H-06 (D-059) : à la clôture, l’occurrence suivante est créée. Demande une échéance. */
+    recurrence: z.enum(TASK_RECURRENCES).nullish().transform((v) => v ?? null),
   })
-  .strict();
+  .strict()
+  .superRefine((v, ctx) => {
+    if (v.recurrence && !v.dueOn) ctx.addIssue({ code: 'custom', path: ['dueOn'], message: 'Une tâche récurrente a besoin d’une échéance' });
+  });
 export type CreateTaskInput = z.output<typeof createTaskSchema>;
 
 export const updateTaskSchema = z
@@ -115,7 +133,7 @@ export const updateTaskSchema = z
 
 // ---------- Suivis automatiques (CE-H-03) ----------
 
-export const AUTO_RULES = ['feedback_review', 'no_upcoming', 'invite_pending', 'profile_missing', 'level_unconfirmed', 'vma_missing', 'message_reply', 'onboarding_call'] as const;
+export const AUTO_RULES = ['feedback_review', 'no_upcoming', 'invite_pending', 'profile_missing', 'level_unconfirmed', 'vma_missing', 'message_reply', 'onboarding_call', 'bilan_confirm'] as const;
 export type AutoRule = (typeof AUTO_RULES)[number];
 /** Libellé, type, priorité et motif expliqué de chaque règle. */
 export const AUTO_RULE_INFO: Record<AutoRule, { title: string; kind: TaskKind; priority: Priority; reason: string }> = {
@@ -126,6 +144,7 @@ export const AUTO_RULE_INFO: Record<AutoRule, { title: string; kind: TaskKind; p
   level_unconfirmed: { title: 'Confirmer le niveau', kind: 'check', priority: 1, reason: 'Niveau déclaré, pas encore confirmé par toi' },
   message_reply: { title: 'Répondre au message', kind: 'message', priority: 2, reason: 'Message reçu, pas encore de réponse' },
   onboarding_call: { title: 'Planifier l’appel de bienvenue', kind: 'call', priority: 2, reason: 'Questionnaire reçu : un premier échange avant de construire le programme' },
+  bilan_confirm: { title: 'Confirmer le bilan', kind: 'check', priority: 2, reason: 'Bilan envoyé, pas encore confirmé par toi' },
   vma_missing: { title: 'Renseigner la VMA', kind: 'check', priority: 0, reason: 'Information à vérifier : sans VMA, pas d’allure ni de kilomètres estimés' },
 };
 export const snoozeSchema = z.object({ rule: z.enum(AUTO_RULES), until: optionalDate }).strict();
@@ -140,6 +159,7 @@ export const AUTO_RULE_DELAY: Record<AutoRule, { default: number; min: number; m
   message_reply: { default: 1, min: 0, max: 14, label: 'jour(s) après le message' },
   feedback_review: { default: 2, min: 0, max: 14, label: 'jour(s) après le retour' },
   onboarding_call: { default: 2, min: 0, max: 14, label: 'jour(s) après le questionnaire' },
+  bilan_confirm: { default: 2, min: 0, max: 14, label: 'jour(s) après l’envoi du bilan' },
   invite_pending: { default: 3, min: 1, max: 30, label: 'jour(s) après l’invitation' },
   no_upcoming: { default: 7, min: 1, max: 21, label: 'prochains jours sans séance publiée' },
   profile_missing: null,
@@ -147,7 +167,7 @@ export const AUTO_RULE_DELAY: Record<AutoRule, { default: number; min: number; m
   vma_missing: null,
 };
 /** Ordre d’affichage dans les réglages : du plus fréquent au plus rare. */
-export const AUTO_RULE_ORDER: readonly AutoRule[] = ['message_reply', 'feedback_review', 'no_upcoming', 'onboarding_call', 'invite_pending', 'profile_missing', 'level_unconfirmed', 'vma_missing'];
+export const AUTO_RULE_ORDER: readonly AutoRule[] = ['message_reply', 'feedback_review', 'no_upcoming', 'onboarding_call', 'bilan_confirm', 'invite_pending', 'profile_missing', 'level_unconfirmed', 'vma_missing'];
 
 export interface AutoRuleSetting { rule: AutoRule; enabled: boolean; delayDays: number | null }
 

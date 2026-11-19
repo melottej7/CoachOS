@@ -982,3 +982,74 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 
 /* Repères VMA, FTP, CSS (D-055) */
 .refs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px 16px; }
+
+/* Adapter la semaine (D-056, modèle Foulée) */
+.wa { padding: 0 16px 16px; }
+.wa > summary { cursor: pointer; padding: 12px 0; }
+.wa-list { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; }
+.wa-card { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; cursor: pointer; }
+.wa-card.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.wa-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.wa-head input { width: 18px; height: 18px; accent-color: var(--accent); }
+.wa-vol { margin-left: auto; font-size: 14px; color: var(--muted); }
+.wa-vol strong { color: var(--ink); }
+.wa-sum { color: var(--muted); font-size: 14px; }
+.wa-changes { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
+.wa-changes li { display: grid; grid-template-columns: 76px 1fr; gap: 8px; }
+.wa-changes s { color: var(--muted); }
+.wa-day { color: var(--muted); font-weight: 600; font-size: 12.5px; text-transform: uppercase; }
+.wa-cons { font-size: 14px; }
+
+/* Faisabilité de l’objectif (D-057, modèle Foulée) */
+.fz { display: grid; gap: 12px; }
+.fz h3 { margin: 8px 0 0; }
+.fz-status { border: 1px solid var(--rule); border-radius: 14px; padding: 14px 16px; display: grid; gap: 6px; }
+.fz-status.attn { border-color: var(--attention); }
+.fz-status:not(.attn):not(.neutral) { border-color: var(--accent); }
+.fz-title { font-size: 20px; font-weight: 700; margin: 0; }
+.fz-criteria { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 8px; }
+.fz-c { display: grid; grid-template-columns: 20px 1fr; gap: 6px; font-size: 14px; }
+.fz-mark { font-weight: 800; text-align: center; }
+.fz-c.block .fz-mark, .fz-c.risk .fz-mark { color: var(--attention); }
+.fz-c.ok .fz-mark { color: var(--accent); }
+.fz-note { font-size: 12.5px; color: var(--muted); margin: 4px 0 0; }
+.fz-solutions { display: grid; gap: 8px; }
+.fz-sol { display: grid; gap: 4px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; }
+.fz-sol-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; align-items: baseline; }
+.fz-sol .link-btn { justify-self: start; }
+.fz-params { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 12px; }
+.fz-compare { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.fz-msg { min-height: 220px; }
+
+/* Fenêtres « + Ajouter … » dans l’en-tête d’une carte : la carte ne doit ni les couper ni passer dessus
+   (le bouton d’envoi tombait sous la carte voisine, D-057). */
+.card:has(.card-head .disclosure[open]) { overflow: visible; position: relative; z-index: 20; }
+.fz-decided { padding: 10px 12px; border-radius: 10px; background: var(--mint); color: var(--mint-ink); font-size: 14px; }
+.bilan-history > summary { cursor: pointer; color: var(--muted); }
+.bilan-history ol { margin: 8px 0 0; display: grid; gap: 4px; font-size: 14px; }
+
+/* Résultats de référence (D-060) */
+.perf-list { display: grid; gap: 0; }
+.perf { display: grid; gap: 2px; padding: 10px 0; border-top: 1px solid var(--rule); position: relative; }
+.perf:first-child { border-top: 0; }
+.perf-eq { font-size: 13px; }
+.perf-vma { font-size: 14px; }
+.perf-del { justify-self: start; font-size: 13px; }
+.perf-add > summary { cursor: pointer; font-weight: 600; }
+
+/* Générateur de programme (D-061) */
+.prog-params .form-row { align-items: end; flex-wrap: wrap; }
+.prog-days { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.prog-days legend { font-weight: 600; margin-bottom: 4px; }
+.prog-risks { padding: 12px 14px; border: 1px solid var(--attention); border-radius: 12px; display: grid; gap: 8px; }
+.prog-risks ul { display: grid; gap: 6px; }
+.prog-weeks { display: grid; gap: 0; }
+.prog-week { padding: 10px 0; border-top: 1px solid var(--rule); display: grid; gap: 6px; }
+.prog-week:first-child { border-top: 0; }
+.prog-week-head { margin: 0; }
+.prog-bar { height: 6px; border-radius: 999px; background: var(--rule); overflow: hidden; }
+.prog-bar span { display: block; height: 100%; background: var(--accent); }
+.prog-week.recuperation .prog-bar span, .prog-week.affutage .prog-bar span { opacity: 0.55; }
+.prog-sessions { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 14px; }
+.prog-s.long { font-weight: 600; }
+.prog-s.race { font-weight: 700; }

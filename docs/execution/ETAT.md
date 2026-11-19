@@ -221,6 +221,16 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
 - Commit `3ca7ca6` (D-054). Puis (non commité) :
   - **D-055** : FTP et CSS de l’élève, zones traduites en watts et en allures de nage partout, y compris dans le fichier FIT ; migration `20261119090000` appliquée.
   - `npm test` : **177 passés** (+3 PostgreSQL), typecheck OK.
+- Commit `51d81ec` (D-055). Puis (non commité) :
+  - **D-056** : « Adapter la semaine », quatre propositions inspirées de Foulée, appliquées en brouillons.
+  - `npm test` : **186 passés** (+3 PostgreSQL), typecheck OK.
+  - **D-057** : faisabilité de l’objectif (statut, critères, solutions, paramètres, message proposé jamais envoyé seul) ; correction des fenêtres « + … » coupées par les cartes.
+  - **D-058** (instruction du fondateur) : le passif de l’élève entre dans la faisabilité ; le statut n’est qu’une indication ; le coach valide l’objectif (paramètres et justification, table `goal_decisions`, migration `20261119100000`). **Le futur générateur de programme (lot P) devra atteindre les objectifs validés par le coach.**
+  - **D-059** : suivi « Confirmer le bilan » (niveau confirmé avec), tâches récurrentes, historique du bilan (migrations `20261119110000` à `20261119130000`).
+  - **D-060** : résultats de référence (courses, tests), équivalences, VMA d’un test ; chrono visé jugé par prédiction de Riegel dans la faisabilité ; résultats visibles par l’élève (migration `20261119140000`).
+  - **D-061** (instruction du fondateur) : générateur de programme à règles — à la hauteur de l’objectif validé, 4 semaines de tremplin depuis le volume réel, développement, affûtage ; risques signalés au coach qui décide ; brouillons (migration `20261119150000`).
+  - `npm test` : **212 passés** (+3 PostgreSQL), typecheck OK.
+- Prochaines tranches : générateur — choix dans la bibliothèque du coach, régénération partielle (CE-P-06), « Pourquoi cette séance ? » ; données du fondateur ; notifications.
 
 Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au micro réel (autorisation du micro non automatisable ici) ; visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
 
