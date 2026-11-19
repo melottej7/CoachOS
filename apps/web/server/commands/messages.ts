@@ -3,6 +3,7 @@ import {
 } from '@coachos/domain';
 import { commandAs, type Tx } from '../db/client';
 import { invalid, notVisible } from '../errors';
+import { notify } from './notifications';
 import { audit, idempotent, type StoredResponse } from './idempotency';
 
 // Messagerie coach élève (CE-H-07, CE-E-02, CE-H-09, D-033).
@@ -85,6 +86,7 @@ async function insertDirect(tx: Tx, wid: string, aid: string, cid: string, body:
      on conflict (workspace_id, conversation_id, user_id) do update set read_through_at = excluded.read_through_at, read_through_id = excluded.read_through_id`,
     [wid, aid, cid, m.id],
   );
+  await notify(tx, { wid, aid, kind: 'message', entityId: m.id, to: 'other' }); // D-067 : sans contenu
   return { id: m.id, createdAt: new Date(m.created_at).toISOString(), body, mine: true, voiceId: voice?.id ?? null, voiceDurationS: voice?.s ?? null };
 }
 

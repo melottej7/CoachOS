@@ -1,5 +1,5 @@
 import {
-  addDays, applyWeekSchema, createTemplateSchema, parseWith, starterLibrary, updateTemplateSchema, updateWeekTemplateSchema, weekFromAthleteSchema, weekStart,
+  addDays, applyWeekSchema, createTemplateSchema, fouleeLibrary, type FouleeMeta, parseWith, starterLibrary, updateTemplateSchema, updateWeekTemplateSchema, weekFromAthleteSchema, weekStart,
   type LibraryCategory, type LibraryWorkout, type WeekDay, type WeekTemplatePayload,
 } from '@coachos/domain';
 import { commandAs, type Tx } from '../db/client';
@@ -19,10 +19,10 @@ const parse = <T>(schema: Parameters<typeof parseWith>[0], body: unknown): T => 
   return p.value as T;
 };
 
-async function insertTemplate(tx: Tx, wid: string, category: LibraryCategory, workout: LibraryWorkout): Promise<{ id: string; revision: number }> {
+async function insertTemplate(tx: Tx, wid: string, category: LibraryCategory, workout: LibraryWorkout, meta?: FouleeMeta): Promise<{ id: string; revision: number }> {
   const r = await tx.query<{ id: string; revision: number }>(
     `insert into public.templates(workspace_id, owner_id, kind, title, payload) values ($1, auth.uid(), 'workout', $2, $3::jsonb) returning id, revision`,
-    [wid, workout.title, JSON.stringify({ category, workout })],
+    [wid, workout.title, JSON.stringify(meta ? { category, workout, meta } : { category, workout })],
   );
   return r.rows[0]!;
 }
@@ -55,7 +55,8 @@ export async function updateTemplate(meta: Meta & { templateId: string }, body: 
       const t = cur.rows[0];
       if (!t) throw notVisible();
       if (t.revision !== v.expectedRevision) throw conflict('Cette séance a été modifiée ailleurs. Recharge la page.', { revision: t.revision });
-      const payload = { category: v.category ?? t.payload.category, workout: v.workout ?? t.payload.workout };
+      // Les métadonnées (ex. niveaux et phases Foulée, D-068) restent avec la séance modifiée.
+      const payload = { ...t.payload, category: v.category ?? t.payload.category, workout: v.workout ?? t.payload.workout };
       const r = await tx.query<{ id: string; revision: number }>(
         `update public.templates set title = $3, payload = $4::jsonb, archived = coalesce($5, archived), revision = revision + 1
          where workspace_id = $1 and id = $2 returning id, revision`,
@@ -84,6 +85,40 @@ export async function addStarterLibrary(meta: Meta): Promise<StoredResponse> {
       }
       await audit(tx, wid, meta.actorId, 'template.starter', wid, meta.requestId);
       return { status: 200, body: { added } };
+    });
+  });
+}
+
+/**
+ * addFouleeLibrary · C : bibliothèque Foulée (D-068), 79 familles, 324 séances par paliers, ajoutée à la bibliothèque
+ * du coach qui la demande. Les séances déjà présentes (même titre) ne sont pas doublées ; rejouer ne fait rien de plus.
+ */
+export async function addFouleeLibrary(meta: Meta): Promise<StoredResponse> {
+  const wid = meta.workspaceId;
+  return commandAs(meta.actorId, async (tx) => {
+    await requireCoach(tx, wid);
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'template.foulee', key: meta.idempotencyKey, body: {} }, async () => {
+      const have = new Set((await tx.query<{ title: string }>(
+        `select lower(title) as title from public.templates where workspace_id = $1 and owner_id = auth.uid() and kind = 'workout' and not archived`, [wid],
+      )).rows.map((r) => r.title));
+      let added = 0, skipped = 0;
+      for (const s of fouleeLibrary()) {
+        if (have.has(s.workout.title.toLowerCase())) {
+          // Déjà là : on complète seulement ses niveaux et phases si une version précédente de l’import les avait omis.
+          await tx.query(
+            `update public.templates set payload = payload || jsonb_build_object('meta', $4::jsonb)
+             where workspace_id = $1 and owner_id = auth.uid() and kind = 'workout' and lower(title) = lower($2) and not archived
+               and payload->'workout'->>'instructions' like $3 and not (payload ? 'meta')`,
+            [wid, s.workout.title, 'Bibliothèque Foulée%', JSON.stringify(s.meta)],
+          );
+          skipped++; continue;
+        }
+        await insertTemplate(tx, wid, s.category, s.workout, s.meta);
+        have.add(s.workout.title.toLowerCase());
+        added++;
+      }
+      await audit(tx, wid, meta.actorId, 'template.foulee', wid, meta.requestId);
+      return { status: 200, body: { added, skipped } };
     });
   });
 }

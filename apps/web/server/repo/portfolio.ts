@@ -35,6 +35,10 @@ export interface HomeTask {
   notes: string | null;
   /** Tâche récurrente (CE-H-06, D-059). */
   recurrence?: TaskRecurrence | null;
+  /** Créneau de travail et durée estimée (D-065), tâches humaines seulement. */
+  slotOn?: string | null;
+  slotTime?: string | null;
+  estimateMin?: number | null;
 }
 
 export interface RosterEntry {
@@ -85,9 +89,11 @@ async function manualTasks(tx: Tx, wid: string, open: boolean): Promise<(HomeTas
   const r = await tx.query<{
     id: string; title: string; kind: TaskKind; athlete_id: string | null; display_name: string | null; team_id: string | null; team_name: string | null;
     due_on: string | null; priority: number; status: TaskStatus; link: string | null; notes: string | null; revision: number; recurrence: TaskRecurrence | null;
+    slot_on: string | null; slot_time: string | null; estimate_min: number | null;
   }>(
     `select t.id, t.title, t.kind, t.athlete_id, a.display_name, t.team_id, tm.name as team_name, to_char(t.due_on, 'YYYY-MM-DD') as due_on,
-            t.priority, t.status, t.link, t.notes, t.revision, t.recurrence
+            t.priority, t.status, t.link, t.notes, t.revision, t.recurrence,
+            to_char(t.slot_on, 'YYYY-MM-DD') as slot_on, to_char(t.slot_time, 'HH24:MI') as slot_time, t.estimate_min
      from public.coach_tasks t
      left join public.athletes a on a.workspace_id = t.workspace_id and a.id = t.athlete_id
      left join public.teams tm on tm.workspace_id = t.workspace_id and tm.id = t.team_id
@@ -100,6 +106,7 @@ async function manualTasks(tx: Tx, wid: string, open: boolean): Promise<(HomeTas
     kind: t.kind, priority: Number(t.priority), dueOn: t.due_on, status: t.status, revision: t.revision,
     athlete: t.athlete_id ? { id: t.athlete_id, name: t.display_name ?? '' } : null, team: t.team_id ? { id: t.team_id, name: t.team_name ?? '' } : null,
     link: t.link, notes: t.notes, athleteId: t.athlete_id, teamId: t.team_id, recurrence: t.recurrence,
+    slotOn: t.slot_on, slotTime: t.slot_time, estimateMin: t.estimate_min === null ? null : Number(t.estimate_min),
   }));
 }
 
@@ -259,7 +266,8 @@ export async function portfolio(userId: string, wid: string, tz: string): Promis
   });
 }
 
-export interface AgendaDay { date: LocalDate; appointments: (AppointmentItem & { athleteName: string; localTime: string })[]; tasksDue: number; sessions: number }
+export interface AgendaSlot { key: string; title: string; time: string | null; estimateMin: number | null; athlete: { id: string; name: string } | null }
+export interface AgendaDay { date: LocalDate; appointments: (AppointmentItem & { athleteName: string; localTime: string })[]; tasksDue: number; sessions: number; slots: AgendaSlot[] }
 export interface HomeView { today: LocalDate; tasks: HomeTask[]; week: AgendaDay[]; roster: RosterEntry[]; teams: TeamRef[] }
 
 /** Lot H : tâches classées (humaines et automatiques) et agenda de la semaine du coach. */
@@ -320,6 +328,10 @@ export async function home(userId: string, wid: string, tz: string, monday: Loca
         appointments: items.filter((x) => x.localDate === date).map(({ localDate: _d, ...rest }) => rest),
         tasksDue: all.filter((t) => t.dueOn === date).length,
         sessions: perDay.get(date) ?? 0,
+        // D-065 : créneaux de travail du jour (à l’heure d’abord), distincts des rendez-vous à horaire fixe.
+        slots: all.filter((t) => t.slotOn === date)
+          .sort((a, b) => (a.slotTime ?? '99').localeCompare(b.slotTime ?? '99'))
+          .map((t) => ({ key: t.key, title: t.title, time: t.slotTime ?? null, estimateMin: t.estimateMin ?? null, athlete: t.athlete })),
       };
     });
     const teams = (await tx.query<TeamRef>('select id, name from public.teams where workspace_id = $1 and archived_at is null order by sort_order, name', [wid])).rows;

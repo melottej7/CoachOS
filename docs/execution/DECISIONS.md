@@ -825,3 +825,176 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
     - risques acceptés, appliqué ; Séances affiche lundi, mercredi et samedi, « Publier la semaine (3) ».
 - **Limite.** Une séance isolée se régénère en choisissant sa semaine, ce qui recalcule aussi les autres séances non protégées de cette semaine. Il n’y a pas encore de choix séance par séance.
 
+## D-064 · Plusieurs activités de la montre par séance, correction possible, aucun double comptage · 2026-11-19
+
+- **Source.** Complément du fondateur, § 7 : « l’association d’une ou plusieurs activités réalisées à la séance prescrite, leur ajout ou retrait et la correction d’un rapprochement erroné ». Story CE-X-03 : « plusieurs activités par séance, correction possible, aucun double comptage ».
+- **Décision.**
+  - Dans « Mon retour », l’élève peut importer **un ou plusieurs fichiers** (.fit, .tcx, .gpx), par exemple un échauffement et une course enregistrés à part, ou une montre coupée en route.
+    - Chaque activité est listée (sport, durée, distance, jour et heure) avec **Retirer**.
+    - Durée et distance sont **additionnées**. Elles suivent les ajouts et retraits tant que l’élève ne les corrige pas à la main.
+    - Les alertes « autre jour » et « autre sport » restent données pour chaque activité.
+  - **Comme D-048, le fichier ne quitte pas l’appareil.** Seul son résumé est envoyé et conservé, dans la table `workout_activities` (migration `20261119170000`) : format, sport, début, durée, distance. Pas de fréquence cardiaque, de puissance ni de positions.
+  - **Aucun double comptage.**
+    - Chaque activité a une empreinte (format, sport, début, durée, distance), unique par élève.
+    - Le même fichier ajouté deux fois au même retour est refusé dans le formulaire et par le serveur.
+    - Une activité déjà rattachée à une autre séance est refusée : « Cette activité est déjà rattachée à « titre » du date. Retire-la d’abord de cette séance pour la déplacer ici. »
+  - **Correction.**
+    - L’élève retire l’activité de la mauvaise séance (en corrigeant ce retour), puis l’ajoute à la bonne.
+    - Les activités envoyées remplacent celles de la séance.
+    - Une séance déclarée non réalisée ou reportée perd ses activités.
+  - **Coach.** Le retour affiche « Provenance : Additionnée de N activités de sa montre » et la liste des activités. Les statistiques gardent la durée et la distance déclarées du retour : elles ne comptent donc les activités qu’une fois.
+  - Lecture sous RLS : l’élève et le coach affecté seulement. Écriture par la commande du retour uniquement. Contrat `saveFeedback` complété (`activities`, `FeedbackActivity`).
+- **Preuve.**
+  - 2 tests :
+    - domaine : empreinte stable, totaux, doublons et séance non faite refusés, activité vide refusée ;
+    - serveur : deux activités sur une séance, renvoi sans duplication, la même refusée sur une autre séance avec le message, retirée puis rattachée ailleurs, séance non faite sans activité, autre élève sans accès.
+  - Contrat vérifié. `npm test` : 219 passés (+3 PostgreSQL), typecheck OK.
+  - Navigateur, Camille, « Footing facile » du 17 novembre, avec deux fichiers TCX fabriqués :
+    - échauffement de 10 min et 1,6 km, course de 25 min et 4,7 km : « 2 activités rattachées », 35 min et 6,3 km additionnés ;
+    - « Retirer » donne 25 min et 4,7 km ; ré-import refusé, « cette activité est déjà ajoutée » ;
+    - envoi enregistré. Marine lit « Additionnée de 2 activités de sa montre » et les deux activités, allure 5:33 /km.
+- **Non fait.** Déplacer une activité en un geste depuis l’autre séance. Rapprochement automatique (plus tard, avec Strava ou Garmin).
+
+## D-065 · Créneau de travail et durée estimée des tâches · 2026-11-19
+
+- **Source.** Complément du fondateur, § 4. Une tâche a une « estimation de durée facultative ». Le planning « distingue l’échéance d’une tâche, son éventuel créneau de travail et l’horaire fixe d’un rendez-vous ».
+- **Décision.**
+  - Une tâche humaine peut porter :
+    - un **créneau de travail** : jour, et heure facultative ;
+    - une **durée estimée** : 5 min à 8 h.
+
+    Ces informations s’ajoutent à l’échéance sans la remplacer. L’échéance dit « pour quand », le créneau dit « quand je m’y mets ». Migration `20261119180000` : `slot_on`, `slot_time`, `estimate_min`. Une heure sans jour est refusée en base et au serveur. Retirer le jour retire l’heure.
+  - **Planning.**
+    - Une tâche se range au jour de son créneau s’il précède l’échéance (`workDate`). Un créneau passé n’est plus un plan : la tâche retrouve son échéance et n’est « en retard » que si l’échéance l’est.
+    - La ligne de la tâche montre « Échéance : … · 🕘 aujourd’hui à 17:00 · ≈ 45 min ».
+    - L’agenda de la semaine montre les créneaux (« 🕘 14:30 · titre · élève · 45 min · créneau de travail ») à part des rendez-vous, qui gardent leur horaire fixe.
+    - **Charge estimée aujourd’hui** : créneaux du jour, tâches sans créneau dues ou en retard, et durée des rendez-vous. Le nombre de tâches sans estimation est signalé.
+  - **Formulaires.** « + Tâche » contient « Quand je m’y mets » (jour, heure, durée estimée). Sur une tâche existante, « 🕘 Planifier » ou « 🕘 Créneau » permet de modifier ou de retirer le créneau.
+  - **Récurrence (D-059).** L’occurrence suivante garde le même écart entre créneau et échéance, la même heure et la même estimation.
+  - Contrat `createTask`, `updateTask` et `task` complétés.
+- **Preuve.**
+  - Test serveur :
+    - format des durées ; écart conservé par la récurrence ; jour de travail, y compris créneau après l’échéance et créneau passé ; charge du jour ;
+    - heure sans jour et estimation hors bornes refusées ;
+    - créneau visible dans l’agenda et dans les tâches ;
+    - retrait du jour, puis heure seule refusée ;
+    - clôture : occurrence suivante à +7 jours, même heure, même estimation.
+  - Contrat vérifié. `npm test` : 220 passés (+3 PostgreSQL), typecheck OK.
+  - Navigateur (Marine) :
+    - tâche « Préparer le bloc de décembre de Noah », échéance samedi, créneau demain à 14:30, 45 min : visible dans la liste et dans l’agenda de vendredi ;
+    - créneau déplacé à aujourd’hui 17:00 : la tâche passe dans « Aujourd’hui » et l’agenda de jeudi la montre ;
+    - « Charge estimée aujourd’hui : 45 min (45 min de tâches, 1 tâche sans estimation) ».
+
+## D-066 · Bilan : temps disponible, préférences, matériel et contraintes · 2026-11-19
+
+- **Source.** Complément du fondateur, § 6 : « Le bilan rassemble […] jours et temps disponibles, matériel, préférences et contraintes utiles. Les informations sensibles éventuelles suivent un traitement défini. » COUVERTURE : « Matériel et préférences à ajouter ».
+- **Décision.**
+  - Deux écrans facultatifs dans le bilan, après les jours disponibles. Ils ne bloquent jamais l’envoi. Ce sont les mêmes pour l’élève et pour le coach en entretien (questions à la troisième personne).
+    - **Temps et habitudes** :
+      - temps pour une séance un jour de semaine : moins de 45 min, 45 min à 1 h, 1 h à 1 h 30, plus d’1 h 30 ;
+      - moment préféré : matin, midi, soir, ça dépend ;
+      - jour préféré pour la séance longue, choisi parmi les jours disponibles.
+    - **Matériel et contraintes** :
+      - matériel proposé selon le sport : montre GPS, capteur de puissance, home trainer, vélo de route, VTT ou gravel, tapis, piste, piscine, eau libre, salle de renforcement ;
+      - une phrase de contraintes pratiques (300 caractères), avec le rappel « Pas d’information médicale ici ».
+    - Aucun capteur de fréquence cardiaque n’est proposé, en attendant la décision sur les données de santé.
+  - Migration `20261119190000` : `weekday_minutes`, `preferred_time`, `long_day`, `equipment` (liste fermée), `practical_constraints`.
+  - Comme le reste du bilan, ces réponses ont une provenance (élève ou entretien), un historique de versions, et le coach les confirme. Elles s’affichent dans la fiche (section Bilan) et dans le récapitulatif.
+  - La page Réglages de l’élève renvoie ces réponses telles quelles quand il enregistre son profil, pour ne rien effacer.
+  - **Générateur (D-061)** :
+    - la séance longue tombe le jour préféré s’il fait partie des jours choisis ;
+    - si une séance du lundi au vendredi dépasse le temps disponible, le coach est prévenu (vigilance, sans blocage) : nombre de séances, la plus longue, « Déplace-la au week-end ou raccourcis-la ».
+  - Contrat : profil, bilan de l’élève, entretien, brouillon (écrans `time` et `equipment`).
+- **Preuve.**
+  - Tests du domaine :
+    - écrans ajoutés au parcours ; valeurs bornées, matériel inconnu refusé (dont un capteur cardiaque) ; matériel selon le sport ; complétude inchangée ;
+    - générateur : jour préféré respecté, ou ignoré s’il n’est pas choisi ; vigilance « Temps en semaine » seulement au-delà du plafond.
+  - Test serveur : réponses d’entretien enregistrées et marquées « entretien », versionnées, gardées quand l’élève renvoie son profil inchangé.
+  - Contrat vérifié. `npm test` : 223 passés (+3 PostgreSQL), typecheck OK.
+  - Navigateur (Marine, entretien de Camille) :
+    - seuls les jours disponibles (mar., jeu., sam.) sont proposés pour la séance longue ;
+    - matériel de course proposé (montre, tapis, piste, renforcement) ;
+    - retour au récapitulatif, enregistrement ; la fiche montre les 5 réponses marquées « Entretien » ;
+    - programme de Camille : aucune séance de semaine au-delà de 45 min, donc pas de vigilance.
+- **Incident.** Pendant quelques instants, le serveur de dev a utilisé le nouveau code avant que la migration soit appliquée. Une fiche élève de l’espace du fondateur a alors affiché une erreur (« column weekday_minutes does not exist »). Désormais, la migration est appliquée avant le code qui la lit.
+
+## D-067 · Notifications : centre dans l’application, e-mails courts sans contenu, réglage par personne · 2026-11-19
+
+- **Source.** Backlog C25-01, C25-07, C25-08, C25-09 et CE-E-06 (en partie) ; docs/06_API.md (`notifications`, lecture idempotente) ; COUVERTURE : « Notifications par e-mail ou push à ajouter ». La table `notifications` existait sans être utilisée.
+- **Décision.**
+  - **Événements**, créés dans la transaction de la commande qui les cause. La personne qui agit n’est jamais notifiée.
+    - Séances publiées → l’élève.
+    - Message privé → l’autre partie : l’élève, ou ses coachs affectés. Les annonces de rendez-vous passent par ce même fil.
+    - Retour de séance (premier envoi) → ses coachs.
+    - Bilan envoyé par l’élève → ses coachs.
+    - Les fils de groupe ne notifient pas encore.
+  - **Regroupement (C25-07).** Tant qu’une notification du même type pour le même élève n’est pas lue, elle est remontée (« Ton coach a publié 3 séances », « 2 messages ») au lieu d’en créer une autre.
+  - **Sans contenu.** Seuls le type, l’élève concerné, un nombre et l’objet sont gardés. L’e-mail dit ce qui s’est passé et donne un lien, jamais le texte d’un message ni une donnée de séance.
+  - **E-mails.**
+    - Envoyés après la validation de la commande, sans la retarder ni la faire échouer.
+    - Réglage par personne et par espace : « l’essentiel » (par défaut) ou « aucun ».
+    - L’essentiel = séances publiées et messages pour l’élève, messages et retours pour le coach.
+    - Au plus un e-mail par type toutes les 3 heures ; les suivants restent dans l’application (`email_state` : pending, sent, skipped, failed, none).
+    - En développement, ils partent vers Mailpit (boîte de test locale). En production, l’envoi reste refusé tant que le fournisseur n’est pas branché.
+  - **Lien revérifié (C25-09).** `/n/{espace}/{notification}` marque la notification lue, revérifie les droits actuels et ouvre l’écran utile (séance, fil, retour à traiter, bilan). Si l’accès a été retiré, la page « Accès retiré » le dit.
+  - **Centre (C25-08).**
+    - Coach : entrée « Notifications » dans le menu, avec le nombre de non lues.
+    - Élève : cloche 🔔 en haut, hors des quatre onglets.
+    - Liste, « Tout marquer lu », réglage des e-mails.
+    - Lecture sous RLS : destinataire et appartenance actuelle.
+  - Migration `20261119200000` (colonnes de `notifications`, table `notification_settings`). Contrat : `markNotificationRead`, `markAllNotificationsRead`, `saveNotificationSettings`.
+- **Preuve.**
+  - Test serveur :
+    - publication notifiée à l’élève, jamais à l’auteur, e-mail avec lien ; republication sans nouvelle notification ;
+    - deux messages regroupés (« 2 »), texte absent des e-mails ; après lecture, nouvelle notification sans nouvel e-mail dans la fenêtre ;
+    - réglage « aucun » ; lien ouvrant le fil et marquant lu ; autre utilisateur refusé ;
+    - retour notifié au coach, lien vers le retour à traiter.
+  - Navigateur, démo :
+    - Marine écrit à Camille. Mailpit reçoit « Nouveau message de ton coach · Atelier Endurance », sans le texte ;
+    - Camille voit « 🔔 1 non lue » ; sur téléphone, sa notification ouvre le fil « Ton coach » et le compteur retombe.
+- **Non fait.** Push sur téléphone : il demande des clés d’envoi et l’installation d’une bibliothèque, refusée dans cet environnement. Résumé quotidien (C25-02). Fils de groupe.
+
+## D-068 · Bibliothèque Foulée importée, niveaux et phases respectés par le générateur · 2026-11-19
+
+- **Instruction du fondateur.** « Tu peux importer la bibliothèque de séances de foulée » (19 novembre 2026). Cela vaut accord écrit pour reprendre le contenu de la bibliothèque, comme le demandait AUDIT_FOULEE (CE-B-08).
+- **Source disponible.** Le code de Foulée (`src/data/library.ts`) n’est ni sur le poste ni accessible (dépôt `foul-e`). Le dossier de transmission en donne :
+  - annexe F : 79 familles, 324 séances, et pour chaque famille son type, le nombre de paliers, le premier et le dernier palier, les niveaux (D, I, C) et les phases ;
+  - annexe H : les 7 zones et la notation, identiques aux nôtres.
+- **Décision.**
+  - Module `foulee-library` : les 324 séances, famille par famille.
+    - Premier et dernier palier : titres de Foulée.
+    - Paliers intermédiaires : recalculés par progression régulière, comme Foulée les avait interpolés depuis les programmes du coach. Chacun le dit dans ses consignes (« Palier recalculé … à vérifier »).
+    - Structure écrite en zones : échauffement de 15′ en Z2 et retour au calme de 10′ en Z1 pour la qualité ; récupérations et notes (« allure course », « en côte ») selon le type.
+  - Les consignes donnent la famille, le palier, les niveaux et les phases. Les mêmes informations sont gardées dans `payload.meta`, qui est conservé quand le coach modifie la séance.
+  - Catégories :
+    - footing → endurance (récupération, technique) ; sortie longue → sortie longue ;
+    - VMA et fartlek → fractionné ; tempo et seuil → tempo et seuil ; côtes → côtes ;
+    - allure spécifique et tests → « course / test » (jamais prise pour l’allure de course du générateur) ;
+    - renforcement, mobilité et pliométrie → renforcement ou technique.
+  - **Import.** Bouton « 🏃 Importer la bibliothèque Foulée » dans Bibliothèque, avec confirmation. Rien n’est doublé (même titre). Rejouer complète seulement les niveaux et phases manquants. Contrat `addFouleeLibrary`.
+  - **Générateur (D-062).** Une séance qui déclare des niveaux n’est choisie que pour un élève de ce niveau : débutant → D, intermédiaire → I, avancé et compétiteur → C. Une séance qui déclare des phases n’est choisie que dans une phase compatible :
+    - tremplin → reprise, base ;
+    - développement → base, développement, spécifique ;
+    - semaine allégée → base, développement ;
+    - affûtage → affûtage, spécifique.
+  - **Espace du fondateur.** Import fait par la même commande, au nom de « Coach Paul » (audité) : 324 séances ajoutées aux 11 existantes, aucune modifiée. Le programme d’Emma (débutante, semi) en reprend 23 sur 56, dont les sorties longues en blocs réservées aux débutants.
+- **Preuve.**
+  - Tests du domaine :
+    - 324 séances en 79 familles, toutes lisibles, titres uniques ; paliers intermédiaires signalés ;
+    - premiers et derniers paliers identiques à l’annexe ; progression croissante ; catégories ;
+    - générateur : niveau intermédiaire, jamais une séance réservée aux débutants ; en tremplin, seulement reprise ou base.
+  - Test serveur : 324 ajoutées, rejouer n’ajoute rien, élève refusé.
+  - Navigateur (démo) : import par le bouton, le bouton disparaît une fois tout importé.
+- **À faire avec le fondateur.** Fournir `src/data/library.ts` (ou l’accès au dépôt) pour remplacer les paliers recalculés par l’original.
+
+## D-069 · Objectif validé : la génération du programme devient la suite logique · 2026-11-19
+
+- **Retour du fondateur.** « Je ne vois pas où générer le programme pour Emma maintenant que son objectif est rempli, ça doit être la suite logique une fois que je valide son objectif malgré les points d’attention. »
+- **Décision.**
+  - La première validation d’un objectif (Faisabilité → Ta décision) ouvre directement le générateur, où les points d’attention sont rappelés.
+  - Tant qu’un objectif validé et encore prévu n’a pas de programme généré, un bandeau « Prochaine étape : … 📅 Générer le programme » s’affiche en haut de la fiche de l’élève et de Séances.
+- **Preuve.**
+  - Test serveur : bandeau absent avant validation, présent après, absent une fois le programme créé, invisible pour l’élève.
+  - Emma (espace du fondateur) : son objectif « Semi marathon en moins de 2h » est détecté.
+  - Navigateur (démo, Noah) : la validation ouvre le générateur ; Séances montre le bandeau.
+

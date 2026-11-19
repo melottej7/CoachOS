@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { addDays, isLocalDate, type LocalDate } from './dates';
 import { assessGoal, currentEndurance, longNeeded, eventMinutes, type FeasibilityInput } from './feasibility';
 import { predictionOf } from './feasibility';
+import { FOULEE_LEVEL_OF, FOULEE_PHASES_OF, type FouleeLevel, type FouleePhase } from './foulee-library';
 import type { Sport } from './sports';
 import { formatClock, structureTotals, type Block, type References, type Step } from './structure';
 
@@ -31,7 +32,11 @@ export interface ProgramSession {
 }
 
 /** Séance de la bibliothèque du coach proposée au générateur (D-062). */
-export interface LibrarySession { id: string; title: string; category: string; sport: Sport; blocks: Block[]; instructions: string | null }
+export interface LibrarySession {
+  id: string; title: string; category: string; sport: Sport; blocks: Block[]; instructions: string | null;
+  /** Bibliothèque Foulée (D-068) : niveaux et phases où la séance a sa place ; absents = sans restriction. */
+  levels?: FouleeLevel[]; phases?: FouleePhase[];
+}
 
 /** Catégorie de bibliothèque correspondant à chaque type de séance du générateur. */
 const LIBRARY_CATEGORY: Record<'tempo' | 'threshold' | 'vma' | 'long', string> = { tempo: 'tempo', threshold: 'threshold', vma: 'intervals', long: 'long' };
@@ -59,6 +64,10 @@ export interface ProgramInput {
   goalTitle: string;
   /** Bibliothèque du coach : ses séances sont choisies en priorité quand elles conviennent (D-062). */
   library?: LibrarySession[];
+  /** Bilan (D-066) : jour préféré pour la séance longue (1 = lundi … 7 = dimanche), s’il fait partie des jours choisis. */
+  preferredLongDay?: number | null;
+  /** Bilan (D-066) : temps disponible pour une séance du lundi au vendredi (min) ; au-delà, le coach est prévenu. */
+  weekdayCapMin?: number | null;
 }
 
 const STEP = (phase: Step['phase'], measure: Step['measure'], zone: number | null, note: string | null = null): Step => ({
@@ -108,8 +117,11 @@ function quality(sport: Sport, type: 'tempo' | 'threshold' | 'vma' | 'race', tot
   return { title: `PMA ${n} × 3′`, blocks: [wu, { type: 'repeat', times: n, steps: [STEP('work', t(3), 6), STEP('recovery', t(3), 1)] }, cd] };
 }
 
-/** Jour de la séance longue : le dernier jour disponible du week-end, sinon le dernier de la semaine. */
-function longDay(days: number[]): number {
+const dowOf = (date: string) => ((new Date(`${date}T12:00:00Z`).getUTCDay() + 6) % 7) + 1;
+
+/** Jour de la séance longue : celui préféré par l’élève s’il est choisi, sinon le dernier jour du week-end, sinon le dernier de la semaine. */
+function longDay(days: number[], preferred?: number | null): number {
+  if (preferred && days.includes(preferred)) return preferred;
   return [...days].reverse().find((d) => d >= 6) ?? days[days.length - 1]!;
 }
 
@@ -153,13 +165,16 @@ export function generateProgram(input: ProgramInput): Program {
 
   const pred = predictionOf(f);
   const racePace = f.targetSeconds ? f.targetSeconds / f.distanceKm : pred ? pred.seconds / f.distanceKm : null;
-  const ld = longDay(days);
+  const ld = longDay(days, input.preferredLongDay);
   const qualityTypes: ('threshold' | 'vma' | 'race' | 'tempo')[] = f.targetSeconds ? ['threshold', 'race', 'vma'] : ['threshold', 'tempo', 'vma'];
   // Bibliothèque du coach : même sport, même catégorie, durée à ±30 % de la cible ; la moins utilisée d’abord.
   const used = new Map<string, number>();
   const lib = (input.library ?? []).filter((x) => x.blocks.length).map((x) => ({ ...x, minutes: minutesOf(x.blocks, x.sport, input.refs) })).filter((x) => x.minutes > 0);
-  const pick = (category: string, target: number, tolerance = 0.3) => {
-    const c = lib.filter((x) => x.sport === sport && x.category === category && Math.abs(x.minutes - target) <= target * tolerance)
+  const athleteLevel = FOULEE_LEVEL_OF[f.level as keyof typeof FOULEE_LEVEL_OF] ?? 'I';
+  const fits = (x: LibrarySession, phase: ProgramPhase) =>
+    (!x.levels?.length || x.levels.includes(athleteLevel)) && (!x.phases?.length || x.phases.some((p) => FOULEE_PHASES_OF[phase].includes(p)));
+  const pick = (category: string, target: number, phase: ProgramPhase, tolerance = 0.3) => {
+    const c = lib.filter((x) => x.sport === sport && x.category === category && fits(x, phase) && Math.abs(x.minutes - target) <= target * tolerance)
       .sort((a, b) => (used.get(a.id) ?? 0) - (used.get(b.id) ?? 0) || Math.abs(a.minutes - target) - Math.abs(b.minutes - target))[0];
     if (c) used.set(c.id, (used.get(c.id) ?? 0) + 1);
     return c ?? null;
@@ -219,14 +234,14 @@ export function generateProgram(input: ProgramInput): Program {
       const date = addDays(monday, d - 1);
       if (d === longD) {
         const why = `${phaseWhy(phase)} : séance longue de ${label(longMin)}, vers les ${label(r5(longNeed))} nécessaires pour la course.`;
-        const fromLib = pick(LIBRARY_CATEGORY.long, longMin, 0.15);
+        const fromLib = pick(LIBRARY_CATEGORY.long, longMin, phase, 0.15);
         list.push(fromLib
           ? { date, kind: 'long', title: fromLib.title, blocks: fromLib.blocks, minutes: fromLib.minutes, source: 'library', libraryId: fromLib.id, instructions: fromLib.instructions, why: `${why} Choisie dans ta bibliothèque (${fromLib.minutes} min).` }
           : { date, kind: 'long', title: `Sortie longue ${label(longMin)}`, blocks: [STEP('work', t(longMin), 2)], minutes: longMin, source: 'generated', why });
       } else if (qDays.includes(d)) {
         const type = phase === 'tremplin' ? 'tempo' : phase === 'affutage' && f.targetSeconds ? 'race' : qualityTypes[qi++ % qualityTypes.length]!;
         const why = `${phaseWhy(phase)} : ${TYPE_REASON[type]}${type === 'race' && racePace ? ` (${Math.floor(racePace / 60)}:${String(Math.round(racePace % 60)).padStart(2, '0')} /km)` : ''}, environ ${label(qMin)}.`;
-        const fromLib = type === 'race' ? null : pick(LIBRARY_CATEGORY[type], qMin);
+        const fromLib = type === 'race' ? null : pick(LIBRARY_CATEGORY[type], qMin, phase);
         if (fromLib) list.push({ date, kind: 'quality', title: fromLib.title, blocks: fromLib.blocks, minutes: fromLib.minutes, source: 'library', libraryId: fromLib.id, instructions: fromLib.instructions, why: `${why} Choisie dans ta bibliothèque (${fromLib.minutes} min pour ${qMin} visées).` });
         else {
           const q = quality(sport, type, qMin, racePace);
@@ -260,6 +275,15 @@ export function generateProgram(input: ProgramInput): Program {
     if (gl > 1.12 && (!worst || gl > worst.g)) worst = { week: cur.index, g: gl, what: 'la séance longue' };
   }
   if (worst) progressionRisks.push({ level: worst.g > 1.2 ? 'block' : 'risk', text: `Semaine ${worst.week} : ${worst.what} augmente de ${pct(worst.g)} % par rapport à la semaine précédente (10 % conseillés).` });
+  // D-066 : séances plus longues que le temps disponible en semaine (bilan). Le coach décide : déplacer ou raccourcir.
+  const cap = input.weekdayCapMin;
+  if (cap) {
+    const over = weeks.flatMap((w) => w.sessions.filter((x) => x.kind !== 'race' && dowOf(x.date) <= 5 && x.minutes > cap).map((x) => ({ w: w.index, x })));
+    if (over.length) {
+      const top = over.reduce((a, b) => (b.x.minutes > a.x.minutes ? b : a));
+      progressionRisks.push({ level: 'watch', text: `Temps en semaine (bilan : ${label(cap)} au plus) : ${over.length} séance${over.length > 1 ? 's' : ''} du lundi au vendredi ${over.length > 1 ? 'le dépassent' : 'le dépasse'}, la plus longue semaine ${top.w} (« ${top.x.title} », ${label(top.x.minutes)}). Déplace-la au week-end ou raccourcis-la.` });
+    }
+  }
   return { weeks, risks: [...progressionRisks, ...risks], startWeekly: r5(startWeekly), peakWeekly: r5(peakWeekly), longNeed: r5(longNeed) };
 }
 

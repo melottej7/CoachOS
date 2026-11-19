@@ -88,7 +88,15 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
               <div><dt>Réalisation</dt><dd>{RESULT_STATE_LABELS[fb.state]}</dd></div>
               <div><dt>Durée réalisée</dt><dd>{formatDuration(fb.durationSeconds) ?? 'Non renseignée'}</dd></div>
               {fb.distanceM ? <div><dt>Distance</dt><dd>{formatDistance(fb.distanceM)}</dd></div> : null}
-              {fb.durationSeconds || fb.distanceM ? <div><dt>Provenance</dt><dd>{fb.measureFile ? `Lue dans un fichier ${fb.measureFile.toUpperCase()} de sa montre` : 'Saisie à la main'}</dd></div> : null}
+              {fb.durationSeconds || fb.distanceM ? <div><dt>Provenance</dt><dd>{fb.measureFile
+                ? (fb.activities.length > 1 ? `Additionnée de ${fb.activities.length} activités de sa montre` : `Lue dans un fichier ${fb.measureFile.toUpperCase()} de sa montre`)
+                : fb.activities.length ? 'Saisie à la main (activités de la montre jointes)' : 'Saisie à la main'}</dd></div> : null}
+              {fb.activities.length ? (
+                <div><dt>Activités</dt><dd><ul className="plain">{fb.activities.map((a, i) => {
+                  const t = a.startedAt ? new Intl.DateTimeFormat('fr-BE', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: w.athlete.timeZone }).format(new Date(a.startedAt)) : null;
+                  return <li key={i}>{[a.sport ? SPORT_LABELS[a.sport] : null, formatDuration(a.seconds), a.distanceM ? formatDistance(a.distanceM) : null, t].filter(Boolean).join(' · ')}</li>;
+                })}</ul></dd></div>
+              ) : null}
               {fb.distanceM && fb.durationSeconds ? <div><dt>Allure moyenne</dt><dd>{formatPace(Math.round(fb.durationSeconds / (fb.distanceM / 1000)))}</dd></div> : null}
               <div><dt>Effort ressenti</dt><dd>{fb.rpe !== null ? `${fb.rpe}/10` : 'Non renseigné'}</dd></div>
               <div><dt>Ressenti général</dt><dd>{fb.overallFeeling ? FEELING_LABELS[fb.overallFeeling as 1 | 2 | 3 | 4 | 5] : 'Non renseigné'}</dd></div>

@@ -33,6 +33,35 @@ export const CHANGE_LABELS: Record<Change, string> = {
  * PUT feedback. RPE 0 à 10 (PRD §21, C06-04), commentaire 1000 caractères (SQL).
  * Une chaîne vide devient null. Pour « missed », durée et distance ne sont pas supposées.
  */
+/**
+ * Résumé d’une activité lue dans un fichier de montre (D-048), rattachée à une séance (CE-X-03, D-064).
+ * Ni fréquence cardiaque, ni puissance, ni positions : sport, début, durée et distance seulement.
+ */
+export const feedbackActivitySchema = z
+  .object({
+    format: z.enum(['fit', 'tcx', 'gpx']),
+    sport: z.enum(SPORTS).nullish().transform((v) => v ?? null),
+    startedAt: z.iso.datetime({ message: 'Date invalide' }).nullish().transform((v) => v ?? null),
+    seconds: z.number().int().min(1).max(86400).nullish().transform((v) => v ?? null),
+    distanceM: z.number().int().min(1).max(1_000_000).nullish().transform((v) => v ?? null),
+  })
+  .strict()
+  .refine((a) => a.seconds !== null || a.distanceM !== null, { message: 'Activité sans durée ni distance' });
+export type FeedbackActivity = z.output<typeof feedbackActivitySchema>;
+
+/** Empreinte d’une activité : le même fichier importé deux fois est reconnu (aucun double comptage). */
+export function activityFingerprint(a: Pick<FeedbackActivity, 'format' | 'sport' | 'startedAt' | 'seconds' | 'distanceM'>): string {
+  const start = a.startedAt ? new Date(a.startedAt).toISOString() : '-';
+  return [a.format, a.sport ?? '-', start, a.seconds ?? '-', a.distanceM ?? '-'].join('|');
+}
+
+/** Durée et distance cumulées de plusieurs activités (null si aucune n’en porte). */
+export function activityTotals(list: Pick<FeedbackActivity, 'seconds' | 'distanceM'>[]): { seconds: number | null; distanceM: number | null } {
+  const sec = list.reduce((n, a) => n + (a.seconds ?? 0), 0);
+  const dist = list.reduce((n, a) => n + (a.distanceM ?? 0), 0);
+  return { seconds: sec > 0 ? Math.min(86400, sec) : null, distanceM: dist > 0 ? Math.min(1_000_000, dist) : null };
+}
+
 export const saveFeedbackSchema = z
   .object({
     publishedRevision: z.number().int().min(1),
@@ -57,6 +86,8 @@ export const saveFeedbackSchema = z
     repeatsDone: z.array(z.number().int().min(0, { message: '0 au moins' }).max(50, { message: '50 au plus' })).max(30).default([]),
     /** Durée et distance lues dans un fichier de montre (D-048) ; null = saisies à la main. */
     measureFile: z.enum(['fit', 'tcx', 'gpx']).nullish().transform((v) => v ?? null),
+    /** Activités de la montre rattachées à cette séance (CE-X-03, D-064) : résumés seulement, jamais le fichier. */
+    activities: z.array(feedbackActivitySchema).max(10, { message: '10 activités au plus' }).default([]),
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -69,6 +100,13 @@ export const saveFeedbackSchema = z
     }
     if ((value.state === 'missed' || value.state === 'postponed') && (value.changes.length || value.actualSport !== null || value.repeatsDone.length)) {
       ctx.addIssue({ code: 'custom', path: ['changes'], message: 'Une séance non réalisée ou reportée ne décrit pas ce qui a changé' });
+    }
+    if ((value.state === 'missed' || value.state === 'postponed') && value.activities.length) {
+      ctx.addIssue({ code: 'custom', path: ['activities'], message: 'Une séance non réalisée ou reportée ne porte pas d’activité' });
+    }
+    const prints = value.activities.map(activityFingerprint);
+    if (new Set(prints).size !== prints.length) {
+      ctx.addIssue({ code: 'custom', path: ['activities'], message: 'La même activité est ajoutée deux fois' });
     }
     if (value.measureFile !== null && value.durationSeconds === null && value.distanceM === null) {
       ctx.addIssue({ code: 'custom', path: ['measureFile'], message: 'Aucune mesure tirée du fichier' });

@@ -7,7 +7,7 @@ import { AppError } from './errors';
 import { createGoal } from './commands/portfolio';
 import { decideGoal } from './commands/goal-decisions';
 import { saveAthleteProfile } from './commands/athlete-profile';
-import { buildProgram, buildRegeneration, createProgram, nextMonday, programContext, readGoalPlans, regenContext, regenerateProgram, seenOf } from './commands/programs';
+import { buildProgram, buildRegeneration, createProgram, goalsAwaitingProgram, nextMonday, programContext, readGoalPlans, regenContext, regenerateProgram, seenOf } from './commands/programs';
 import { publishWorkouts, updateWorkout } from './commands/workouts';
 import { createTemplate } from './commands/library';
 import { coachWeek } from './repo/coach';
@@ -44,8 +44,12 @@ describe('générateur de programme (serveur)', () => {
   });
 
   it('objectif validé : brouillons reliés au programme, invisibles pour l’élève ; risques à accepter', async () => {
+    expect(await goalsAwaitingProgram(USERS.marine, WORKSPACE_A, ATHLETES.noah)).toEqual([]); // pas encore validé
     await decideGoal(meta(USERS.marine, { goalId: goal }), { statusAtDecision: 'ambitious', params: { distanceKm: 21.1, eventDate: event, targetSeconds: 7200, weeklySessions: '4to5', weeklyHours: '4to6' } });
     const ctx = (await programContext(USERS.marine, WORKSPACE_A, ATHLETES.noah, goal))!;
+    // Objectif validé, sans programme : « Prochaine étape : générer le programme » (fiche et Séances).
+    expect((await goalsAwaitingProgram(USERS.marine, WORKSPACE_A, ATHLETES.noah)).map((g) => g.id)).toEqual([goal]);
+    expect(await goalsAwaitingProgram(USERS.camille, WORKSPACE_A, ATHLETES.noah)).toEqual([]);
     const program = buildProgram(ctx, nextMonday(today), [2, 4, 6, 7])!;
     const needsAccept = program.risks.some((r) => r.level !== 'watch');
     if (needsAccept) expect(await codeOf(createProgram(meta(USERS.marine, { goalId: goal }), { startMonday: nextMonday(today), days: [2, 4, 6, 7] }))).toBe('INVALID_FIELDS');
@@ -53,6 +57,7 @@ describe('générateur de programme (serveur)', () => {
     expect(await codeOf(createProgram(meta(USERS.camille, { goalId: goal }), { startMonday: nextMonday(today), days: [2, 4, 6, 7], acceptRisks: true }))).toBe('RESOURCE_NOT_VISIBLE');
     const r = await createProgram(meta(USERS.marine, { goalId: goal }), { startMonday: nextMonday(today), days: [2, 4, 6, 7], acceptRisks: true });
     const body = r.body as { planId: string; workouts: number; weeks: number };
+    expect(await goalsAwaitingProgram(USERS.marine, WORKSPACE_A, ATHLETES.noah)).toEqual([]); // programme créé : plus de « Prochaine étape »
     expect(body.weeks).toBe(program.weeks.length);
     expect(body.workouts).toBe(program.weeks.reduce((n, w) => n + w.sessions.length, 0));
     const week1 = await coachWeek(USERS.marine, WORKSPACE_A, ATHLETES.noah, nextMonday(today), addDays(nextMonday(today), 6));

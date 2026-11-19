@@ -111,3 +111,22 @@ export function StarterButton({ wid }: { wid: string }) {
     }}>{busy ? 'Ajout…' : '✨ Ajouter les séances de départ'}</button>
   );
 }
+
+/** D-068 : importer la bibliothèque Foulée (324 séances en 79 familles, par paliers). Rien n’est doublé. */
+export function FouleeButton({ wid }: { wid: string }) {
+  const router = useRouter();
+  const [state, setState] = useState<'idle' | 'busy' | string>('idle');
+  return (
+    <span className="actions">
+      <button type="button" className="btn" disabled={state === 'busy'} onClick={async () => {
+        if (!window.confirm('Importer la bibliothèque Foulée (324 séances de course en 79 familles, par paliers) dans ta bibliothèque ? Les séances déjà présentes ne sont pas doublées.')) return;
+        setState('busy');
+        const r = await mutate<{ added: number; skipped: number }>('POST', `/api/v1/workspaces/${wid}/templates/foulee`, {}, newKey());
+        setState(r.ok ? `${r.data.added} séance${r.data.added > 1 ? 's' : ''} ajoutée${r.data.added > 1 ? 's' : ''}${r.data.skipped ? `, ${r.data.skipped} déjà là` : ''}.` : 'Import impossible. Réessaie.');
+        router.refresh();
+      }}>{state === 'busy' ? 'Import…' : '🏃 Importer la bibliothèque Foulée'}</button>
+      {state !== 'idle' && state !== 'busy' ? <span className="muted" role="status">{state}</span> : null}
+    </span>
+  );
+}
+

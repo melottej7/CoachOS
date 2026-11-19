@@ -97,6 +97,7 @@ Avec un compte élève :
 
 Avec ton compte coach :
 2. Dans « Retours », ouvre ce retour : la ligne **Provenance** indique si les mesures viennent de la montre ou ont été saisies à la main.
+3. **Plusieurs activités** (élève) : si tu as enregistré l’échauffement et la course à part, ajoute les deux fichiers (**Ajouter une autre activité**). Durée et distance s’additionnent ; **Retirer** enlève une activité. Rattache ensuite la même activité à une autre séance : elle est refusée tant qu’elle n’est pas retirée de la première.
 3. En publiant une séance de groupe, coche **Annoncer dans le fil du groupe**, relis le message, puis publie. Le message apparaît dans le fil du groupe.
 4. Dans la fiche d’un élève, « Suivi de l’entraînement » : sous chaque chiffre, la comparaison avec la période précédente apparaît dès qu’il y a des séances avant la période choisie.
 
@@ -123,6 +124,12 @@ Avec ton compte coach :
 4. **📞 Compléter en entretien** : le même parcours, à remplir pendant l’appel ; les réponses que tu changes sont marquées « Entretien ».
 
 En démonstration : Camille a envoyé son bilan (confirmé par Marine) ; celui de Noah a été complété en entretien.
+
+**Temps, matériel et contraintes** (ajoutés au bilan) : deux écrans facultatifs après les jours disponibles.
+- « Ton temps et tes habitudes » : temps pour une séance en semaine, moment préféré, jour de la séance longue. Seuls les jours disponibles sont proposés.
+- « Ton matériel et tes contraintes » : le matériel proposé dépend du sport (piscine pour la natation, home trainer pour le vélo…), plus une phrase sur les contraintes, sans information médicale.
+- Dans la fiche, ces réponses apparaissent dans **Bilan**. Le générateur de programme place la séance longue le jour préféré et te prévient si une séance du lundi au vendredi dépasse le temps disponible.
+- En démonstration : Camille, moins de 45 min en semaine, le soir, séance longue le samedi, montre GPS et piste.
 
 ## Repères FTP et CSS à essayer
 
@@ -161,6 +168,7 @@ En démonstration : l’objectif de Camille est validé par Marine malgré l’i
 
 1. Quand un élève envoie son bilan, **Confirmer le bilan** apparaît dans ton Planning ; le confirmer confirme aussi son niveau.
 2. **+ Tâche → Répéter** (chaque semaine, 2 semaines, mois) : marque-la « Terminé », la suivante apparaît à la bonne date.
+   - **Quand je m’y mets** (jour, heure, durée estimée) : distinct de l’échéance. La tâche se range au jour de son créneau, l’agenda de la semaine montre « 🕘 14:30 · … · créneau de travail » à côté des rendez-vous, et le haut du Planning affiche la charge estimée du jour. Sur une tâche existante, **🕘 Planifier** change ou retire le créneau.
 3. Fiche d’un élève → Bilan → **Historique** : chaque version, sa source et ce qui a changé.
 
 En démonstration : tâche « Point hebdo avec Camille » chaque semaine (prochaine le 26 novembre).
@@ -191,4 +199,11 @@ En démonstration : le programme de Camille (semi du 17 janvier) est créé en b
 3. Lis chaque semaine : 🔒 gardée (passée, réalisée ou retouchée par toi), = inchangée, ✎ modifiée, + ajoutée, − retirée.
 4. Retouche une séance dans Séances, puis reviens : elle doit apparaître 🔒 « retouchée par toi ».
 5. **Appliquer** : tout reste en brouillons. Une séance déjà publiée garde sa version côté élève jusqu’à **Publier la semaine**.
+
+## Notifications, bibliothèque Foulée et suite logique de l’objectif à essayer
+
+1. **Emma** : ouvre sa fiche, ou Séances avec Emma choisie. Le bandeau « Prochaine étape » propose **📅 Générer le programme** pour son semi. Lis les risques, coche, crée : tout reste en brouillons.
+2. **Bibliothèque** : les 324 séances Foulée sont déjà dans ta bibliothèque (cherche « Seuil », « 30"/30" », « Course-marche »). Chaque séance dit sa famille, son palier, ses niveaux et ses phases. Les paliers intermédiaires sont marqués « recalculé, à vérifier » : signale-moi ceux qui ne correspondent pas à ta méthode.
+3. **Notifications** (menu « Notifications ») : publie une semaine à un élève ou écris-lui. Lui voit la cloche 🔔 en haut de son espace. Quand il t’écrit ou envoie un retour, ton menu « Notifications » se met à jour. Chaque notification ouvre l’écran où agir.
+4. **E-mails** : en local, ils arrivent dans la boîte de test (Mailpit), jamais chez une vraie personne. Ils ne contiennent jamais le texte d’un message. Change le réglage « L’essentiel » / « Aucun e-mail » en bas de la page Notifications.
 

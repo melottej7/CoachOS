@@ -230,11 +230,27 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
   - **D-060** : résultats de référence (courses, tests), équivalences, VMA d’un test ; chrono visé jugé par prédiction de Riegel dans la faisabilité ; résultats visibles par l’élève (migration `20261119140000`).
   - **D-061** (instruction du fondateur) : générateur de programme à règles — à la hauteur de l’objectif validé, 4 semaines de tremplin depuis le volume réel, développement, affûtage ; risques signalés au coach qui décide ; brouillons (migration `20261119150000`).
   - `npm test` : **212 passés** (+3 PostgreSQL), typecheck OK.
-- Commit `1c81285` (D-056 à D-061). Puis (non commité) :
+- Commit `1c81285` (D-056 à D-061). Puis commit `994104a` (D-062, D-063) :
   - **D-062** (inspiré de Foulée) : le générateur reprend d’abord les séances de la bibliothèque du coach (même sport, même catégorie, durée proche), en alternance ; chaque séance dit « Pourquoi cette séance ? », dans l’aperçu et dans les consignes des brouillons.
   - `npm test` : **213 passés** (+3 PostgreSQL), typecheck OK.
   - **D-063** (CE-P-06) : régénération partielle d’un programme. Le coach choisit les semaines et les jours et voit les différences avant d’appliquer. Les séances passées, réalisées ou retouchées sont protégées. Une séance publiée attend la republication. Migration `20261119160000` appliquée en local, sans remise à zéro. Les séances annulées sont mieux affichées dans Séances.
   - `npm test` : **217 passés** (+3 PostgreSQL), typecheck OK.
+- Puis (non commité) :
+  - **D-064** (CE-X-03) : plusieurs activités de la montre par séance. Elles sont additionnées, l’élève peut en retirer une, et la même activité ne peut pas être rattachée à deux séances. Seul leur résumé est conservé (migration `20261119170000` appliquée en local). Le coach voit la liste des activités dans le retour.
+  - `npm test` : **219 passés** (+3 PostgreSQL), typecheck OK.
+  - **D-065** (CE-H-06) : créneau de travail (jour, heure) et durée estimée des tâches, distincts de l’échéance et des rendez-vous. Le créneau apparaît dans l’agenda, le haut du Planning donne la charge estimée du jour, et la récurrence suit le créneau. Migration `20261119180000` appliquée en local.
+  - `npm test` : **220 passés** (+3 PostgreSQL), typecheck OK.
+  - **D-066** : bilan, temps disponible en semaine, moment préféré, jour de la séance longue, matériel selon le sport, contraintes pratiques (sans information médicale). Le générateur place la séance longue le jour préféré et signale les séances de semaine trop longues. Migration `20261119190000` appliquée en local.
+  - `npm test` : **223 passés** (+3 PostgreSQL), typecheck OK.
+  - **D-067** : notifications.
+    - Centre coach et élève, sans contenu de message, regroupées.
+    - E-mails « essentiels » ou aucun, un par type toutes les 3 h, vers Mailpit en local.
+    - Liens revérifiés au clic. Migration `20261119200000`.
+  - **D-068** (instruction du fondateur) : bibliothèque Foulée, 324 séances en 79 familles par paliers ; paliers intermédiaires recalculés et signalés.
+    - Bouton d’import ; le générateur respecte niveaux et phases.
+    - **Importée dans l’espace du fondateur** (324 séances ajoutées, aucune modifiée).
+  - **D-069** (retour du fondateur sur Emma) : valider un objectif ouvre le générateur ; bandeau « Prochaine étape » sur la fiche et dans Séances.
+  - `npm test` : **230 passés** (+3 PostgreSQL), typecheck OK.
 - Prochaines tranches : données du fondateur (ses séances de bibliothèque et anciens programmes pour régler le générateur) ; notifications ; choix séance par séance dans la régénération.
 
 Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au micro réel (autorisation du micro non automatisable ici) ; visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
@@ -243,10 +259,8 @@ Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au mic
 1. Recette des lots G et H par le fondateur (Planning, Élèves, fiche).
 2. Recette par le fondateur des nouveautés de la nuit et du matin, dont **l’essai du fichier FIT sur la Fenix 8** (GUIDE_RECETTE).
 3. Ensuite :
-   - rapprochement de plusieurs activités par séance (CE-X-03) ;
-   - créneau et récurrence des tâches (CE-H-06) ;
-   - propositions de semaine et faisabilité (CE-P-05).
+   - rapprochement de plusieurs activités (CE-X-03) et propositions de semaine (CE-P-05) : faits (D-064, D-056).
 3. **Lot G** (détail) : CE-G-01 à CE-G-08 (groupes sur `teams` étendu par migration additive, niveaux par sport `athlete_sport_levels`, vue d’ensemble, groupe filtré avec contexte conservé, fiche élève centrale, notes privées `coach_notes`, objectifs `goals`).
 3. Lot H, puis S, B, E, G2, P ; export FIT (CE-X-01) possible en parallèle.
 
-**Pour le fondateur** : décision sur les données de santé, droit d’usage écrit de la bibliothèque et de la méthodologie Foulée, accès au dépôt `foul-e`, exemples anonymisés de vos anciens programmes. Accès Garmin reporté (D-026).
+**Pour le fondateur** : décision sur les données de santé, fichier `src/data/library.ts` de Foulée (ou accès au dépôt `foul-e`) pour remplacer les paliers recalculés (usage autorisé le 19 novembre, D-068), exemples anonymisés de vos anciens programmes. Accès Garmin reporté (D-026).

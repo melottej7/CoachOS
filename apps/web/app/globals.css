@@ -927,6 +927,9 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .ai input[type=file]:focus-visible + label.btn { outline: 2px solid var(--accent); outline-offset: 2px; }
 .ai-done { padding: 10px 12px; border-radius: 10px; background: var(--mint); color: var(--mint-ink); font-size: 14px; display: grid; gap: 4px; }
 .ai-warn { font-weight: 600; }
+.ai-list { display: grid; gap: 6px; }
+.ai-list li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.ai-list li .ai-warn { flex-basis: 100%; margin: 0; }
 .gp-announce { display: grid; gap: 8px; margin: 10px 0 4px; }
 .gp-announce textarea { min-height: 72px; }
 .kpi-delta { margin-top: 4px; font-size: 12.5px; font-weight: 600; color: var(--ink); }
@@ -1068,3 +1071,27 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .rg.added .rg-mark { color: var(--ok, var(--accent)); }
 .rg.removed .rg-mark, .rg.changed .rg-mark { color: var(--attention); }
 .rg.same { opacity: 0.7; }
+/* D-065 : créneaux de travail et charge estimée. */
+.agenda-slot { margin: 0 0 4px; font-size: 14px; padding-left: 8px; border-left: 3px dashed var(--accent); }
+.plan-load { margin-top: 2px; }
+.task-slot { border: 0; padding: 0; margin: 0; }
+.task-slot legend { font-weight: 600; margin-bottom: 4px; }
+.task-slot-edit .b-menu { min-width: 220px; }
+/* D-066 : bilan, choix multiples compacts. */
+.bf-group { border: 0; padding: 0; margin: 0 0 12px; }
+.bf-group legend { font-weight: 600; margin-bottom: 6px; }
+.bf-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.bf-chip { min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; }
+.bf-chip.on { border-color: var(--accent); background: var(--mint); color: var(--mint-ink); font-weight: 600; }
+/* D-067 : notifications. */
+.notif-list { display: grid; gap: 0; }
+.notif a { display: grid; grid-template-columns: 1.6em 1fr auto; gap: 8px; align-items: baseline; padding: 10px 4px; border-top: 1px solid var(--rule); color: var(--ink); text-decoration: none; }
+.notif:first-child a { border-top: 0; }
+.notif a:hover .notif-text { text-decoration: underline; }
+.notif.unread .notif-text { font-weight: 700; }
+.notif.unread a::before { content: ''; }
+.notif-when { font-size: 13px; white-space: nowrap; }
+.notif-bell { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 2px; min-height: 32px; }
+.notif-settings label { justify-content: flex-start; }
+.banner.next-step { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; border-left: 4px solid var(--accent); }
+

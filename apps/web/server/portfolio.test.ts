@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { addDays, todayIn, weekStart } from '@coachos/domain';
+import { addDays, dayLoad, formatEstimate, nextSlot, todayIn, weekStart, workDate } from '@coachos/domain';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { openDatabase, readAs, setDb } from './db/client';
 import { ATHLETES, TIME_ZONE, USERS, WORKSPACE_A } from './db/fixtures';
@@ -113,6 +113,39 @@ describe('lot H · tâches, suivis automatiques, rendez-vous', () => {
     // Rouvrir puis refaire la même tâche crée une nouvelle occurrence suivante ; une tâche sans récurrence n’en crée pas.
     const plain = await createTask(meta(USERS.marine), { title: 'Une seule fois', kind: 'other', dueOn: '2027-01-10' });
     expect((await updateTask({ ...meta(USERS.marine), taskId: idOf(plain) }, { expectedRevision: 1, status: 'done' })).body).toMatchObject({ next: null });
+  });
+
+  it('créneau de travail et durée estimée (D-065) : distincts de l’échéance, dans l’agenda, suivis par la récurrence', async () => {
+    expect(formatEstimate(45)).toBe('45 min');
+    expect(formatEstimate(90)).toBe('1 h 30');
+    expect(formatEstimate(120)).toBe('2 h');
+    expect(nextSlot('2027-01-31', '2027-02-28', '2027-01-29')).toBe('2027-02-26');
+    expect(workDate({ dueOn: '2027-01-10', slotOn: '2027-01-08' })).toBe('2027-01-08');
+    expect(workDate({ dueOn: '2027-01-10', slotOn: '2027-01-12' })).toBe('2027-01-10'); // créneau après l’échéance : l’échéance prime
+    expect(workDate({ dueOn: null, slotOn: '2027-01-12' })).toBe('2027-01-12');
+    expect(workDate({ dueOn: '2027-01-10', slotOn: '2027-01-05' }, '2027-01-07')).toBe('2027-01-10'); // créneau passé : l’échéance revient
+    expect(dayLoad([{ dueOn: '2027-01-10', slotOn: '2027-01-08', estimateMin: 30 }, { dueOn: '2027-01-08', estimateMin: 15 }, { dueOn: '2027-01-07' }], '2027-01-08'))
+      .toEqual({ minutes: 45, count: 3, unknown: 1 });
+    // Heure sans jour : refusée ; estimation hors bornes : refusée.
+    expect(await codeOf(createTask(meta(USERS.marine), { title: 'X', kind: 'other', slotTime: '14:00' }))).toBe('INVALID_FIELDS');
+    expect(await codeOf(createTask(meta(USERS.marine), { title: 'X', kind: 'other', estimateMin: 2 }))).toBe('INVALID_FIELDS');
+    const slot = addDays(today, 1);
+    const r = await createTask(meta(USERS.marine), { title: 'Préparer le bloc de Noah', kind: 'program', athleteId: ATHLETES.noah, dueOn: addDays(today, 3), slotOn: slot, slotTime: '14:30', estimateMin: 45, recurrence: 'weekly' });
+    expect((r.body as { item: object }).item).toMatchObject({ slotOn: slot, slotTime: '14:30', estimateMin: 45 });
+    const id = idOf(r);
+    let h = await home(USERS.marine, WORKSPACE_A, TIME_ZONE, weekStart(slot));
+    expect(h.week.find((d) => d.date === slot)!.slots).toEqual([expect.objectContaining({ title: 'Préparer le bloc de Noah', time: '14:30', estimateMin: 45 })]);
+    expect(h.tasks.find((t) => t.id === id)).toMatchObject({ slotOn: slot, slotTime: '14:30', estimateMin: 45 });
+    // Retirer le jour retire l’heure ; une heure seule ensuite est refusée.
+    const up = await updateTask({ ...meta(USERS.marine), taskId: id }, { expectedRevision: 1, slotOn: null });
+    expect((up.body as { item: object }).item).toMatchObject({ slotOn: null, slotTime: null, estimateMin: 45 });
+    expect(await codeOf(updateTask({ ...meta(USERS.marine), taskId: id }, { expectedRevision: 2, slotTime: '09:00' }))).toBe('INVALID_FIELDS');
+    await updateTask({ ...meta(USERS.marine), taskId: id }, { expectedRevision: 2, slotOn: slot, slotTime: '09:00', estimateMin: 60 });
+    // Clôture : l’occurrence suivante garde le même écart créneau/échéance, l’heure et l’estimation.
+    const done = await updateTask({ ...meta(USERS.marine), taskId: id }, { expectedRevision: 3, status: 'done' });
+    expect((done.body as { next: object }).next).toMatchObject({ dueOn: addDays(today, 10), slotOn: addDays(slot, 7), slotTime: '09:00', estimateMin: 60 });
+    h = await home(USERS.marine, WORKSPACE_A, TIME_ZONE, weekStart(slot));
+    expect(h.week.flatMap((d) => d.slots).some((x) => x.title === 'Préparer le bloc de Noah' && x.time === '09:00' && h.week.find((d) => d.slots.includes(x))!.date === slot)).toBe(false);
   });
 
   it('suivis automatiques uniques par règle et objet, reportables, clos quand l’objet est résolu', async () => {

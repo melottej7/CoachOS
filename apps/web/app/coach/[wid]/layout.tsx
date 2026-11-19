@@ -4,6 +4,7 @@ import { readWorkspacePublic } from '@/server/commands/workspace-profile';
 import { openReviewCount } from '@/server/repo/coach';
 import { coachContext } from '@/server/repo/context';
 import { coachInbox } from '@/server/repo/messages';
+import { unreadNotificationCount } from '@/server/commands/notifications';
 import { NavLink } from '@/components/nav-link';
 import { TopBar, initials } from '@/components/ui';
 import { TourHost } from '@/components/tour-host';
@@ -17,6 +18,7 @@ export default async function CoachLayout({ children, params }: { children: Reac
   const pending = await openReviewCount(actor.userId, wid);
   const unread = (await coachInbox(actor.userId, wid)).reduce((n, e) => n + e.unread, 0);
   const ws = await readWorkspacePublic(actor.userId, wid);
+  const notifs = await unreadNotificationCount(actor.userId, wid);
   const base = `/coach/${wid}`;
   return (
     <>
@@ -37,6 +39,9 @@ export default async function CoachLayout({ children, params }: { children: Reac
             </NavLink>
             <NavLink className="nav-link" href={`${base}/messages`} match={`${base}/messages`} tour="nav-messages">
               Messages {unread ? <span className="count" aria-label={`${unread} non lu${unread > 1 ? 's' : ''}`}>{unread}</span> : null}
+            </NavLink>
+            <NavLink className="nav-link" href={`${base}/notifications`} match={`${base}/notifications`}>
+              Notifications {notifs ? <span className="count" aria-label={`${notifs} non lue${notifs > 1 ? 's' : ''}`}>{notifs}</span> : null}
             </NavLink>
             <NavLink className="nav-link" href={`${base}/athletes`} match={`${base}/athletes`} tour="nav-athletes">Élèves</NavLink>
             <NavLink className="nav-link" href={`${base}/settings`} match={`${base}/settings`} tour="nav-settings">Paramètres</NavLink>

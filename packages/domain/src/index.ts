@@ -27,3 +27,5 @@ export * from './feasibility';
 export * from './performances';
 export * from './program';
 export * from './program-regen';
+export * from './notifications';
+export * from './foulee-library';

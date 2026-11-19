@@ -9,6 +9,7 @@ import {
 import { commandAs, type Tx } from '../db/client';
 import { conflict, invalid, notVisible } from '../errors';
 import { audit, idempotent, type StoredResponse } from './idempotency';
+import { notify } from './notifications';
 
 export interface CommandMeta {
   actorId: string;
@@ -166,6 +167,13 @@ export async function publishInTx(
     ]);
   }
   await audit(tx, ctx.workspaceId, ctx.actorId, 'workout.publish', publicationId, ctx.requestId);
+  // D-067 : l’élève est prévenu (la plus proche séance publiée sert de lien).
+  const first = await tx.query<{ id: string }>(
+    `select w.id from public.workouts w join public.workout_revisions r on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id and r.number = w.published_revision
+     where w.workspace_id = $1 and w.athlete_id = $2 and w.id = any($3::uuid[]) order by r.local_date, r.sort_order limit 1`,
+    [ctx.workspaceId, ctx.athleteId, toPublish.map((c) => c.id)],
+  );
+  await notify(tx, { wid: ctx.workspaceId, aid: ctx.athleteId, kind: 'workouts_published', entityId: first.rows[0]?.id ?? toPublish[0]!.id, count: toPublish.length, to: 'athlete' });
   return toPublish.length;
 }
 

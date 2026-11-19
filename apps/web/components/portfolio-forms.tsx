@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
-  addDays, APPOINTMENT_KIND_LABELS, LEVEL_LABELS, newVideoLink, LEVELS, PRIORITY_LABELS, SPORT_LABELS, SPORTS, TASK_KIND_LABELS, TASK_KINDS,
+  formatEstimate, addDays, APPOINTMENT_KIND_LABELS, LEVEL_LABELS, newVideoLink, LEVELS, PRIORITY_LABELS, SPORT_LABELS, SPORTS, TASK_KIND_LABELS, TASK_KINDS,
   type AppointmentKind, type AutoRule, type Level, type Sport, type TaskKind, TASK_RECURRENCES, TASK_RECURRENCE_LABELS } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
 import { mutate, newKey } from './api-client';
@@ -169,6 +169,39 @@ export function NoteForm({ wid, aid }: { wid: string; aid: string }) {
 
 // ---------- Tâches ----------
 
+const ESTIMATES = [5, 10, 15, 20, 30, 45, 60, 90, 120, 180];
+
+/** D-065 : planifier le créneau de travail d’une tâche (jour, heure facultative) et sa durée estimée. */
+function TaskSlot({ wid, id, revision, slotOn, slotTime, estimateMin, today }: {
+  wid: string; id: string; revision: number | null; slotOn: string | null; slotTime: string | null; estimateMin: number | null; today: string;
+}) {
+  const { act, pending } = useAction();
+  return (
+    <details className="b-more task-slot-edit">
+      <summary className="btn small" aria-label="Planifier un créneau de travail">🕘 {slotOn ? 'Créneau' : 'Planifier'}</summary>
+      <form className="b-menu stack" onSubmit={async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const f = new FormData(e.currentTarget);
+        const on = (f.get('slotOn') as string) || null;
+        await act('PATCH', `/api/v1/workspaces/${wid}/tasks/${id}`, {
+          expectedRevision: revision, slotOn: on, slotTime: on ? (f.get('slotTime') as string) || null : null,
+          estimateMin: f.get('estimateMin') ? Number(f.get('estimateMin')) : null,
+        });
+      }}>
+        <label className="field"><span>Jour</span><input name="slotOn" type="date" defaultValue={slotOn ?? today} aria-label="Jour du créneau" /></label>
+        <label className="field"><span>Heure <span className="hint">Facultatif</span></span><input name="slotTime" type="time" step={300} defaultValue={slotTime ?? ''} aria-label="Heure du créneau" /></label>
+        <label className="field"><span>Durée estimée</span>
+          <select name="estimateMin" defaultValue={estimateMin ?? ''} aria-label="Durée estimée"><option value="">—</option>{ESTIMATES.map((m) => <option key={m} value={m}>{formatEstimate(m)}</option>)}</select></label>
+        <span className="actions">
+          <button className="btn small primary" type="submit" disabled={pending}>Enregistrer</button>
+          {slotOn ? <button className="link-btn" type="button" disabled={pending}
+            onClick={() => void act('PATCH', `/api/v1/workspaces/${wid}/tasks/${id}`, { expectedRevision: revision, slotOn: null })}>Retirer le créneau</button> : null}
+        </span>
+      </form>
+    </details>
+  );
+}
+
 export function TaskForm({ wid, athletes, teams, athleteId, open, today }: {
   wid: string; athletes: { id: string; name: string }[]; teams: { id: string; name: string }[]; athleteId?: string; open?: boolean; today: string;
 }) {
@@ -184,6 +217,8 @@ export function TaskForm({ wid, athletes, teams, athleteId, open, today }: {
             title: f.get('title'), kind: f.get('kind'), athleteId: f.get('athleteId') || null, teamId: f.get('teamId') || null,
             dueOn: f.get('dueOn') || null, priority: Number(f.get('priority')), notes: f.get('notes') || null,
             recurrence: f.get('recurrence') || null,
+            slotOn: f.get('slotOn') || null, slotTime: f.get('slotOn') ? f.get('slotTime') || null : null,
+            estimateMin: f.get('estimateMin') ? Number(f.get('estimateMin')) : null,
           });
           if (ok) { form.reset(); close(); }
         }}>
@@ -204,6 +239,13 @@ export function TaskForm({ wid, athletes, teams, athleteId, open, today }: {
             <div className="field"><label htmlFor="task-recurrence">Répéter <span className="hint">À la fin, la suivante est créée</span></label>
               <select id="task-recurrence" name="recurrence" defaultValue=""><option value="">Jamais</option>{TASK_RECURRENCES.map((r) => <option key={r} value={r}>{TASK_RECURRENCE_LABELS[r]}</option>)}</select></div>
           </div>
+          <fieldset className="form-row task-slot">
+            <legend>Quand je m’y mets <span className="hint">Facultatif · distinct de l’échéance</span></legend>
+            <div className="field"><label htmlFor="task-slot-on">Jour</label><input id="task-slot-on" name="slotOn" type="date" /></div>
+            <div className="field"><label htmlFor="task-slot-time">Heure</label><input id="task-slot-time" name="slotTime" type="time" step={300} /></div>
+            <div className="field"><label htmlFor="task-estimate">Durée estimée</label>
+              <select id="task-estimate" name="estimateMin" defaultValue=""><option value="">—</option>{ESTIMATES.map((m) => <option key={m} value={m}>{formatEstimate(m)}</option>)}</select></div>
+          </fieldset>
           {teams.length ? (
             <div className="field"><label htmlFor="task-team">Groupe <span className="hint">Facultatif</span></label>
               <select id="task-team" name="teamId" defaultValue=""><option value="">Aucun</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
@@ -246,9 +288,10 @@ function RelaunchQuestionnaire({ wid, athleteId, name, today }: { wid: string; a
   );
 }
 
-export function TaskActions({ wid, source, id, rule, sourceRef, revision, today, link, athlete }: {
+export function TaskActions({ wid, source, id, rule, sourceRef, revision, today, link, athlete, slot }: {
   wid: string; source: 'manual' | 'auto'; id: string | null; rule: AutoRule | null; sourceRef: string; revision: number | null; today: string; link: string | null;
   athlete?: { id: string; name: string; timeZone?: string } | null;
+  slot?: { slotOn: string | null; slotTime: string | null; estimateMin: number | null };
 }) {
   const { act, pending, error } = useAction();
   const call = rule === 'onboarding_call' && athlete?.timeZone ? athlete.timeZone : null;
@@ -263,6 +306,7 @@ export function TaskActions({ wid, source, id, rule, sourceRef, revision, today,
       {link && !call ? <a className={`btn small${rule === 'profile_missing' ? '' : ' primary'}`} href={link}>{link.startsWith('#') ? 'Y aller' : 'Ouvrir'}</a> : null}
       {source === 'manual' ? (
         <>
+          <TaskSlot wid={wid} id={id!} revision={revision} slotOn={slot?.slotOn ?? null} slotTime={slot?.slotTime ?? null} estimateMin={slot?.estimateMin ?? null} today={today} />
           <button type="button" className="btn small" disabled={pending} onClick={() => void patch({ status: 'done' })}>Terminé</button>
           <details className="b-more">
             <summary className="icon-btn" aria-label="Plus d’actions">⋯</summary>

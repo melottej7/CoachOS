@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { goalsAwaitingProgram } from '@/server/commands/programs';
 import { SessionsTabs, toPlanCount } from '@/components/sessions-tabs';
 import { coachContext } from '@/server/repo/context';
 import { portfolio } from '@/server/repo/portfolio';
@@ -46,6 +47,7 @@ export default async function Calendar({ params, searchParams }: { params: Promi
   const weekTemplates = await listWeekTemplates(actor.userId, wid);
   const drafts = workouts.filter((w) => w.status !== 'published');
   const adapt = athlete.state === 'active' ? await weekProposals(actor.userId, wid, athlete.id, monday) : null;
+  const awaiting = await goalsAwaitingProgram(actor.userId, wid, athlete.id);
 
   return (
     <>
@@ -58,6 +60,12 @@ export default async function Calendar({ params, searchParams }: { params: Promi
         <Link className="btn primary" href={newHref(today >= days[0]! && today <= days[6]! ? today : days[0]!)}>+ Nouvelle séance</Link>
       </div>
       <SessionsTabs wid={wid} current="week" toPlan={toPlan} />
+      {awaiting.map((g) => (
+        <div key={g.id} className="banner next-step" role="status">
+          <span><strong>Prochaine étape :</strong> l’objectif « {g.title} » est validé. Génère le programme qui permet de l’atteindre (tu relis les risques, rien n’est publié).</span>
+          <Link className="btn primary small" href={`/coach/${wid}/athletes/${athlete.id}/programme?objectif=${g.id}`}>📅 Générer le programme</Link>
+        </div>
+      ))}
       {sp.notice === 'program' ? <p className="banner ok" role="status">Programme créé en brouillons, semaine par semaine. Relis, ajuste, puis « Publier la semaine » quand tout te convient.</p> : null}
       {sp.notice === 'regenerated' ? <p className="banner ok" role="status">Semaines régénérées en brouillons. Les séances déjà publiées et modifiées attendent ta republication (« Publier la semaine »).</p> : null}
 

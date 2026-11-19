@@ -174,9 +174,9 @@ describe('réponses conformes au contrat OpenAPI', () => {
     check('/workspaces/{wid}/athletes/{aid}/notes', 'post', note.status, note.body);
     const del = await deleteNote({ ...m(), athleteId: ATHLETES.noah, noteId: id(note) });
     check('/workspaces/{wid}/athletes/{aid}/notes/{nid}', 'delete', del.status, del.body);
-    const task = await createTask(m(), { title: 'Préparer le bloc de décembre', kind: 'program', athleteId: ATHLETES.noah, dueOn: '2026-12-01', priority: 2, link: `/coach/${WORKSPACE_A}/calendar` });
+    const task = await createTask(m(), { title: 'Préparer le bloc de décembre', kind: 'program', athleteId: ATHLETES.noah, dueOn: '2026-12-01', priority: 2, link: `/coach/${WORKSPACE_A}/calendar`, slotOn: '2026-11-30', slotTime: '14:00', estimateMin: 45 });
     check('/workspaces/{wid}/tasks', 'post', task.status, task.body);
-    const taskUp = await updateTask({ ...m(), taskId: id(task) }, { expectedRevision: 1, status: 'in_progress' });
+    const taskUp = await updateTask({ ...m(), taskId: id(task) }, { expectedRevision: 1, status: 'in_progress', slotTime: null, estimateMin: 60 });
     check('/workspaces/{wid}/tasks/{tid}', 'patch', taskUp.status, taskUp.body);
     const snooze = await snoozeAutoTask({ ...m(), sourceRef: ATHLETES.noah }, { rule: 'no_upcoming', until: '2026-12-01' });
     check('/workspaces/{wid}/auto-tasks/{ref}', 'put', snooze.status, snooze.body);

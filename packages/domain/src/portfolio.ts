@@ -101,6 +101,39 @@ export function nextOccurrence(due: string, r: TaskRecurrence): string {
   return `${ny}-${String(nm).padStart(2, '0')}-${String(Math.min(d, last)).padStart(2, '0')}`;
 }
 
+/** Créneau de travail et durée estimée (CE-H-06, D-065). L’échéance dit « pour quand » ; le créneau, « quand je m’y mets ». */
+const slotTime = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'Heure au format 14:30' });
+const estimate = z.number().int().min(5, { message: '5 minutes au moins' }).max(480, { message: '8 heures au plus' });
+
+/** « 45 min », « 1 h », « 1 h 30 ». */
+export function formatEstimate(min: number): string {
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min / 60), m = min % 60;
+  return m ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`;
+}
+
+/** Occurrence suivante d’une tâche récurrente : le créneau garde le même écart avec l’échéance. */
+export function nextSlot(due: string, nextDue: string, slotOn: string | null): string | null {
+  if (!slotOn) return null;
+  const gap = Math.round((Date.parse(`${slotOn}T12:00:00Z`) - Date.parse(`${due}T12:00:00Z`)) / 86_400_000);
+  return addDays(nextDue, gap);
+}
+
+/**
+ * Jour où la tâche se travaille : son créneau s’il précède l’échéance, sinon l’échéance (classement du Planning).
+ * Un créneau passé n’est plus un plan : la tâche retrouve son échéance (elle n’est « en retard » que si l’échéance l’est).
+ */
+export function workDate(t: { dueOn: string | null; slotOn?: string | null }, today?: string): string | null {
+  const slot = t.slotOn && (!today || t.slotOn >= today) ? t.slotOn : null;
+  return slot && (!t.dueOn || slot < t.dueOn) ? slot : t.dueOn;
+}
+
+/** Charge estimée d’un jour : tâches dont le créneau est ce jour-là, et tâches sans créneau dues ce jour-là ou en retard. */
+export function dayLoad(tasks: { dueOn: string | null; slotOn?: string | null; estimateMin?: number | null }[], day: string): { minutes: number; count: number; unknown: number } {
+  const mine = tasks.filter((t) => (t.slotOn ? t.slotOn === day : t.dueOn !== null && t.dueOn <= day));
+  return { minutes: mine.reduce((n, t) => n + (t.estimateMin ?? 0), 0), count: mine.length, unknown: mine.filter((t) => !t.estimateMin).length };
+}
+
 export const createTaskSchema = z
   .object({
     title: text(1, 200, 'Titre'),
@@ -113,10 +146,14 @@ export const createTaskSchema = z
     notes: optionalText(2000, 'Notes'),
     /** CE-H-06 (D-059) : à la clôture, l’occurrence suivante est créée. Demande une échéance. */
     recurrence: z.enum(TASK_RECURRENCES).nullish().transform((v) => v ?? null),
+    slotOn: optionalDate,
+    slotTime: slotTime.nullish().transform((v) => v ?? null),
+    estimateMin: estimate.nullish().transform((v) => v ?? null),
   })
   .strict()
   .superRefine((v, ctx) => {
     if (v.recurrence && !v.dueOn) ctx.addIssue({ code: 'custom', path: ['dueOn'], message: 'Une tâche récurrente a besoin d’une échéance' });
+    if (v.slotTime && !v.slotOn) ctx.addIssue({ code: 'custom', path: ['slotOn'], message: 'Choisis le jour du créneau' });
   });
 export type CreateTaskInput = z.output<typeof createTaskSchema>;
 
@@ -128,6 +165,9 @@ export const updateTaskSchema = z
     priority: z.number().int().min(0).max(3).optional(),
     title: text(1, 200, 'Titre').optional(),
     notes: optionalText(2000, 'Notes').optional(),
+    slotOn: optionalDate.optional(),
+    slotTime: slotTime.nullable().optional(),
+    estimateMin: estimate.nullable().optional(),
   })
   .strict();
 

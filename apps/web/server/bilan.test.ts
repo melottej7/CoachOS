@@ -83,5 +83,22 @@ describe('bilan d’arrivée', () => {
     expect(await readBilanVersions(USERS.camille, WORKSPACE_A, ATHLETES.noah)).toEqual([]);
     expect((await readBilanVersions(USERS.noah, WORKSPACE_A, ATHLETES.noah)).length).toBe(v.length);
   });
+
+  it('temps, matériel et contraintes (D-066) : enregistrés, gardés quand rien ne change, versionnés', async () => {
+    const before = (await readAthleteProfile(USERS.marine, WORKSPACE_A, ATHLETES.noah))!;
+    const { status: _s, confirmedAt: _c, sources: _src, revision: _r, updatedAt: _u, ...data } = before;
+    await saveBilanByCoach(meta(USERS.marine, { athleteId: ATHLETES.noah }), { expectedRevision: before.revision, data: {
+      ...data, weekdayMinutes: '60to90', preferredTime: 'evening', longDay: 7, equipment: ['home_trainer', 'power_meter'], practicalConstraints: 'Garde ses enfants le mercredi',
+    } });
+    const p = (await readAthleteProfile(USERS.noah, WORKSPACE_A, ATHLETES.noah))!;
+    expect(p).toMatchObject({ weekdayMinutes: '60to90', preferredTime: 'evening', longDay: 7, equipment: ['home_trainer', 'power_meter'], practicalConstraints: 'Garde ses enfants le mercredi' });
+    expect(p.sources.equipment).toBe('interview');
+    const v = await readBilanVersions(USERS.marine, WORKSPACE_A, ATHLETES.noah);
+    expect(v[0]!.changed).toEqual(expect.arrayContaining(['weekdayMinutes', 'equipment', 'practicalConstraints']));
+    // L’élève renvoie son profil depuis ses réglages avec ces réponses : rien n’est effacé, pas de nouvelle version.
+    const { status: _s2, confirmedAt: _c2, sources: _src2, revision: _r2, updatedAt: _u2, ...again } = p;
+    await saveAthleteProfile(meta(USERS.noah), again);
+    expect((await readAthleteProfile(USERS.noah, WORKSPACE_A, ATHLETES.noah))!).toMatchObject({ revision: p.revision, equipment: ['home_trainer', 'power_meter'] });
+  });
 });
 

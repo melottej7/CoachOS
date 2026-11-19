@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
-  addDays, APPOINTMENT_KIND_LABELS, BUCKET_LABELS, BUCKETS, bucketOf, dayOfMonth, formatLongDate, formatShortDate, formatWeekRange, formatWeekday,
+  addDays, APPOINTMENT_KIND_LABELS, BUCKET_LABELS, dayLoad, formatEstimate, workDate, BUCKETS, bucketOf, dayOfMonth, formatLongDate, formatShortDate, formatWeekRange, formatWeekday,
   isLocalDate, PRIORITY_LABELS, TASK_KIND_LABELS, TASK_KINDS, todayIn, weekStart, type Priority, type TaskKind, TASK_RECURRENCE_LABELS } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
@@ -44,6 +44,12 @@ export default async function CoachPlanning({ params, searchParams }: { params: 
   );
   const filtered = Boolean(sp.athlete || sp.team || sp.kind || sp.priority);
   const todayAppts = data.week.find((d) => d.date === today)?.appointments ?? [];
+  // D-065 : charge estimée d’aujourd’hui (créneaux du jour, tâches sans créneau dues ou en retard) et temps des rendez-vous.
+  const load = dayLoad(tasks, today);
+  const apptMin = todayAppts.reduce((n, a) => n + a.durationMin, 0);
+  const slotText = (t: HomeTask) => t.slotOn
+    ? `🕘 ${t.slotOn === today ? 'aujourd’hui' : t.slotOn === addDays(today, 1) ? 'demain' : `${formatWeekday(t.slotOn).toLowerCase()} ${formatShortDate(t.slotOn)}`}${t.slotTime ? ` à ${t.slotTime}` : ''}`
+    : null;
   const athletes = data.roster.map((a) => ({ id: a.id, name: a.name, timeZone: a.timeZone }));
   const keep = (extra: Record<string, string>) => {
     const q = new URLSearchParams(Object.entries({ ...sp, ...extra }).filter(([, v]) => v) as [string, string][]);
@@ -56,7 +62,11 @@ export default async function CoachPlanning({ params, searchParams }: { params: 
         <div>
           <div className="kicker">{formatLongDate(today)}</div>
           <h1>Planning</h1>
-          <p className="sub">{tasks.filter((t) => bucketOf(t.dueOn, today) === 'overdue').length} en retard · {tasks.filter((t) => bucketOf(t.dueOn, today) === 'today').length} pour aujourd’hui · {todayAppts.length} rendez-vous aujourd’hui</p>
+          <p className="sub">{tasks.filter((t) => bucketOf(t.dueOn, today) === 'overdue').length} en retard · {tasks.filter((t) => bucketOf(workDate(t, today), today) === 'today').length} pour aujourd’hui · {todayAppts.length} rendez-vous aujourd’hui</p>
+          {load.minutes || apptMin ? (
+            <p className="sub plan-load">Charge estimée aujourd’hui : <strong>{formatEstimate(load.minutes + apptMin)}</strong>
+              <span className="muted"> ({[load.minutes ? `${formatEstimate(load.minutes)} de tâches` : null, apptMin ? `${formatEstimate(apptMin)} de rendez-vous` : null].filter(Boolean).join(', ')}{load.unknown ? `, ${load.unknown} tâche${load.unknown > 1 ? 's' : ''} sans estimation` : ''})</span></p>
+          ) : null}
         </div>
         <div className="actions" data-tour="planning-add">
           <TaskForm wid={wid} athletes={athletes} teams={data.teams} today={today} />
@@ -107,7 +117,8 @@ export default async function CoachPlanning({ params, searchParams }: { params: 
           </form>
 
           {tasks.length ? BUCKETS.map((b) => {
-            const list = tasks.filter((t) => bucketOf(t.dueOn, today) === b);
+            // D-065 : une tâche planifiée avant son échéance se range au jour de son créneau.
+            const list = tasks.filter((t) => bucketOf(workDate(t, today), today) === b);
             if (!list.length) return null;
             return (
               <div key={b} className={`bucket bucket-${b}`}>
@@ -120,14 +131,17 @@ export default async function CoachPlanning({ params, searchParams }: { params: 
                         <p className="task-meta">
                           <span className="task-why">{t.reason}</span>
                           {t.recurrence ? <span className="task-rec"> · 🔁 {TASK_RECURRENCE_LABELS[t.recurrence].toLowerCase()}</span> : null}
-                          {' · '}<span>{dueText(t, today)}</span>
+                          {' · '}<span>{t.slotOn ? `Échéance : ${dueText(t, today).toLowerCase()}` : dueText(t, today)}</span>
+                          {slotText(t) ? <>{' · '}<span className="task-slot-text">{slotText(t)}</span></> : null}
+                          {t.estimateMin ? <>{' · '}<span>≈ {formatEstimate(t.estimateMin)}</span></> : null}
                           {' · '}<span>Priorité {PRIORITY_LABELS[t.priority as Priority].toLowerCase()}</span>
                           {' · '}<span>{TASK_KIND_LABELS[t.kind as TaskKind]}</span>
                           {t.source === 'auto' ? <> {' '}<Pill tone="neutral">Suivi automatique</Pill></> : null}
                         </p>
                         {t.notes ? <p className="task-notes">{t.notes}</p> : null}
                       </div>
-                      <TaskActions wid={wid} source={t.source} id={t.id} rule={t.rule} sourceRef={t.ref} revision={t.revision} today={today} link={t.link} athlete={t.athlete} />
+                      <TaskActions wid={wid} source={t.source} id={t.id} rule={t.rule} sourceRef={t.ref} revision={t.revision} today={today} link={t.link} athlete={t.athlete}
+                        slot={{ slotOn: t.slotOn ?? null, slotTime: t.slotTime ?? null, estimateMin: t.estimateMin ?? null }} />
                     </li>
                   ))}
                 </ul>
@@ -159,10 +173,17 @@ export default async function CoachPlanning({ params, searchParams }: { params: 
                       {a.status === 'done' ? ' · fait' : ''}
                     </p>
                   ))}
+                  {d.slots.map((x) => (
+                    <p key={x.key} className="agenda-slot">
+                      <span aria-hidden="true">🕘</span> {x.time ?? 'Dans la journée'} · {x.title}{x.athlete ? <> · <Link href={`${base}/athletes/${x.athlete.id}`}>{x.athlete.name}</Link></> : null}
+                      {x.estimateMin ? <span className="muted"> · {formatEstimate(x.estimateMin)}</span> : null}
+                      <span className="muted"> · créneau de travail</span>
+                    </p>
+                  ))}
                   <p className="agenda-counts">
                     {d.tasksDue ? <span>{d.tasksDue} tâche{d.tasksDue > 1 ? 's' : ''} à échéance</span> : null}
                     {d.sessions ? <span>{d.sessions} séance{d.sessions > 1 ? 's' : ''} publiée{d.sessions > 1 ? 's' : ''} pour tes élèves</span> : null}
-                    {!d.appointments.length && !d.tasksDue && !d.sessions ? <span className="muted">Libre</span> : null}
+                    {!d.appointments.length && !d.tasksDue && !d.sessions && !d.slots.length ? <span className="muted">Libre</span> : null}
                   </p>
                 </div>
               </li>

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { isLocalDate } from './dates';
 import { SPORTS } from './workout';
+import type { Sport } from './sports';
 
 // Profil sportif déclaré par l’athlète (D-021). Aucune donnée de santé.
 
@@ -64,6 +65,37 @@ export const LONGEST_RECENT_LABELS: Record<LongestRecent, string> = {
 
 const optEnum = <T extends readonly [string, ...string[]]>(v: T) => z.enum(v).nullish().transform((x) => x ?? null);
 
+// ---------- Temps, matériel et préférences (D-066) ----------
+
+/** Matériel et accès utiles pour construire les séances. Aucun capteur de fréquence cardiaque (décision santé en attente). */
+export const EQUIPMENT = ['gps_watch', 'power_meter', 'home_trainer', 'road_bike', 'offroad_bike', 'treadmill', 'track', 'pool', 'open_water', 'gym'] as const;
+export type Equipment = (typeof EQUIPMENT)[number];
+export const EQUIPMENT_LABELS: Record<Equipment, string> = {
+  gps_watch: 'Montre GPS', power_meter: 'Capteur de puissance', home_trainer: 'Home trainer', road_bike: 'Vélo de route', offroad_bike: 'VTT ou gravel',
+  treadmill: 'Tapis de course', track: 'Accès à une piste d’athlétisme', pool: 'Accès à une piscine', open_water: 'Eau libre (lac, mer)', gym: 'Salle de renforcement',
+};
+const BY_SPORT: Record<Sport, Equipment[]> = {
+  running: ['gps_watch', 'treadmill', 'track', 'gym'],
+  trail: ['gps_watch', 'treadmill', 'track', 'gym'],
+  cycling: ['gps_watch', 'power_meter', 'home_trainer', 'road_bike', 'offroad_bike', 'gym'],
+  swimming: ['pool', 'open_water', 'gps_watch', 'gym'],
+  triathlon: [...EQUIPMENT],
+  duathlon: ['gps_watch', 'power_meter', 'home_trainer', 'road_bike', 'offroad_bike', 'treadmill', 'track', 'gym'],
+};
+/** Matériel proposé pour un sport. */
+export const equipmentFor = (sport: Sport | null | undefined): Equipment[] => (sport ? BY_SPORT[sport] : [...EQUIPMENT]);
+
+export const PREFERRED_TIMES = ['morning', 'noon', 'evening', 'variable'] as const;
+export type PreferredTime = (typeof PREFERRED_TIMES)[number];
+export const PREFERRED_TIME_LABELS: Record<PreferredTime, string> = { morning: 'Le matin', noon: 'Le midi', evening: 'Le soir', variable: 'Ça dépend' };
+
+/** Temps disponible pour une séance un jour de semaine (lundi à vendredi). */
+export const WEEKDAY_MINUTES = ['lt45', '45to60', '60to90', 'gt90'] as const;
+export type WeekdayMinutes = (typeof WEEKDAY_MINUTES)[number];
+export const WEEKDAY_MINUTES_LABELS: Record<WeekdayMinutes, string> = { lt45: 'Moins de 45 min', '45to60': '45 min à 1 h', '60to90': '1 h à 1 h 30', gt90: 'Plus d’1 h 30' };
+/** Plafond en minutes, pour signaler une séance trop longue en semaine (null : pas de plafond). */
+export const WEEKDAY_MINUTES_CAP: Record<WeekdayMinutes, number | null> = { lt45: 45, '45to60': 60, '60to90': 90, gt90: null };
+
 /** PUT /workspaces/{wid}/athlete-profile. Propriétés inconnues refusées (pas de champ santé caché). */
 export const athleteProfileSchema = z
   .object({
@@ -88,6 +120,12 @@ export const athleteProfileSchema = z
       .refine(isLocalDate, { message: 'Date invalide' })
       .nullish()
       .transform((v) => v ?? null),
+    /** D-066 : temps disponible en semaine, moment préféré, jour préféré pour la séance longue, matériel, contraintes utiles. */
+    weekdayMinutes: optEnum(WEEKDAY_MINUTES),
+    preferredTime: optEnum(PREFERRED_TIMES),
+    longDay: z.number().int().min(1).max(7).nullish().transform((v) => v ?? null),
+    equipment: z.array(z.enum(EQUIPMENT)).max(EQUIPMENT.length).default([]).transform((e) => [...new Set(e)].sort()),
+    practicalConstraints: optionalText(300),
   })
   .strict()
   .superRefine((v, ctx) => {

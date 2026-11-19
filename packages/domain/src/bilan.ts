@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
-  athleteProfileSchema, BREAK_LENGTHS, EXPERIENCES, LEVELS, LONGEST_RECENT, PRACTICE_STATUSES, RESUMED_SINCE, WEEKLY_HOURS, WEEKLY_SESSIONS,
+  athleteProfileSchema, BREAK_LENGTHS, EQUIPMENT, EXPERIENCES, LEVELS, LONGEST_RECENT, PRACTICE_STATUSES, PREFERRED_TIMES, RESUMED_SINCE, WEEKDAY_MINUTES,
+  WEEKLY_HOURS, WEEKLY_SESSIONS,
   type AthleteProfileInput, type PracticeStatus,
 } from './athlete-profile';
 import { isLocalDate } from './dates';
@@ -15,7 +16,7 @@ import { SPORTS } from './workout';
  */
 
 export type BilanStep =
-  | 'sport' | 'status' | 'experience' | 'break' | 'resumed' | 'sessions' | 'longest' | 'level' | 'hours' | 'days' | 'goal' | 'recap';
+  | 'sport' | 'status' | 'experience' | 'break' | 'resumed' | 'sessions' | 'longest' | 'level' | 'hours' | 'days' | 'time' | 'equipment' | 'goal' | 'recap';
 
 /** Réponses en cours : tout est facultatif tant que le bilan n’est pas envoyé. */
 export type BilanAnswers = Partial<AthleteProfileInput>;
@@ -34,7 +35,7 @@ export function bilanSteps(a: BilanAnswers): BilanStep[] {
   if (st === 'resumed') s.push('resumed');
   if (st !== 'stopped') s.push('sessions', 'longest');
   if (st !== 'beginner') s.push('level');
-  s.push('hours', 'days', 'goal', 'recap');
+  s.push('hours', 'days', 'time', 'equipment', 'goal', 'recap');
   return s;
 }
 
@@ -74,7 +75,7 @@ export function resumeStep(a: BilanAnswers): BilanStep {
 /** Brouillon du bilan (PUT …/athlete-profile/draft) : mêmes valeurs permises, toutes facultatives. */
 export const bilanDraftSchema = z
   .object({
-    step: z.enum(['sport', 'status', 'experience', 'break', 'resumed', 'sessions', 'longest', 'level', 'hours', 'days', 'goal', 'recap']),
+    step: z.enum(['sport', 'status', 'experience', 'break', 'resumed', 'sessions', 'longest', 'level', 'hours', 'days', 'time', 'equipment', 'goal', 'recap']),
     answers: z
       .object({
         sport: z.enum(SPORTS).nullish(),
@@ -90,6 +91,11 @@ export const bilanDraftSchema = z
         mainGoal: z.string().max(300).nullish(),
         nextEventName: z.string().max(120).nullish(),
         nextEventDate: z.string().refine(isLocalDate, { message: 'Date invalide' }).nullish(),
+        weekdayMinutes: z.enum(WEEKDAY_MINUTES).nullish(),
+        preferredTime: z.enum(PREFERRED_TIMES).nullish(),
+        longDay: z.number().int().min(1).max(7).nullish(),
+        equipment: z.array(z.enum(EQUIPMENT)).max(EQUIPMENT.length).nullish(),
+        practicalConstraints: z.string().max(300).nullish(),
       })
       .strict(),
   })
@@ -113,13 +119,14 @@ export const BILAN_STATUS_LABELS: Record<BilanStatus, string> = {
 /** Champs du profil suivis pour la provenance des réponses. */
 export const BILAN_FIELDS = [
   'sport', 'practiceStatus', 'experience', 'breakLength', 'resumedSince', 'weeklySessions', 'longestRecent', 'level', 'weeklyHours',
-  'availableDays', 'mainGoal', 'nextEventName', 'nextEventDate',
+  'availableDays', 'mainGoal', 'nextEventName', 'nextEventDate', 'weekdayMinutes', 'preferredTime', 'longDay', 'equipment', 'practicalConstraints',
 ] as const;
 export type BilanField = (typeof BILAN_FIELDS)[number];
 export const BILAN_FIELD_LABELS: Record<BilanField, string> = {
   sport: 'Sport', practiceStatus: 'Situation', experience: 'Pratique régulière', breakLength: 'Durée de l’arrêt', resumedSince: 'Reprise',
   weeklySessions: 'Séances par semaine', longestRecent: 'Plus longue sortie', level: 'Niveau', weeklyHours: 'Heures par semaine',
   availableDays: 'Jours disponibles', mainGoal: 'Objectif', nextEventName: 'Prochaine course', nextEventDate: 'Date de la course',
+  weekdayMinutes: 'Temps en semaine', preferredTime: 'Moment préféré', longDay: 'Jour de la séance longue', equipment: 'Matériel', practicalConstraints: 'Contraintes',
 };
 
 /** Provenance après une saisie : les champs modifiés prennent la nouvelle source, les autres gardent la leur. */

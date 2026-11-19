@@ -4,10 +4,12 @@ import { requireActor } from '@/server/auth/session';
 import {
   APPOINTMENT_KIND_LABELS, APPOINTMENT_STATUS_LABELS, DAY_LABELS, EXPERIENCE_LABELS, formatLongDate, formatShortDate, formatWeekday, GOAL_STATE_LABELS,
   addDays, LEVEL_LABELS, RESULT_STATE_LABELS, SPORT_LABELS, todayIn, weekStart, urgencyLabel, utcToLocal, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS_LABELS,
+  EQUIPMENT_LABELS, PREFERRED_TIME_LABELS, WEEKDAY_MINUTES_LABELS,
   assessGoal, BILAN_FIELD_LABELS, BILAN_STATUS_LABELS, chronoFromTitle, BREAK_LENGTH_LABELS, DEFAULT_GOAL_KM, distanceFromTitle, FEASIBILITY_LABELS, bilanCompletion, deriveBilan, LONGEST_RECENT_LABELS, PRACTICE_STATUS_LABELS, RESUMED_SINCE_LABELS,
   type ResultState, type Sport,
 } from '@coachos/domain';
 import { readAthleteProfile, readBilanDraft, readBilanVersions } from '@/server/commands/athlete-profile';
+import { goalsAwaitingProgram } from '@/server/commands/programs';
 import { readAthleteReferences } from '@/server/commands/athlete-references';
 import { latestInvitation } from '@/server/commands/invitations';
 import { coachContext } from '@/server/repo/context';
@@ -102,10 +104,17 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
   const periodHref = (n: number) => `${base}/athletes/${aid}?periode=${n}${from ? `&from=${encodeURIComponent(from)}` : ''}#suivi`;
   const sports = [...new Set([...(a.sport ? [a.sport] : []), ...a.levels.map((l) => l.sport)])] as Sport[];
 
+  const awaiting = await goalsAwaitingProgram(actor.userId, wid, aid);
   return (
     <>
       <Link className="back" href={back}>← {back.includes('/planning') ? 'Planning' : 'Élèves'}</Link>
       <Notice message={notice ? NOTICES[notice] ?? null : null} />
+      {awaiting.map((g) => (
+        <div key={g.id} className="banner next-step" role="status">
+          <span><strong>Prochaine étape :</strong> l’objectif « {g.title} » est validé. Génère le programme qui permet de l’atteindre (tu relis les risques, rien n’est publié).</span>
+          <Link className="btn primary small" href={`/coach/${wid}/athletes/${aid}/programme?objectif=${g.id}`}>📅 Générer le programme</Link>
+        </div>
+      ))}
       <div className="head">
         <div>
           <div className="kicker">Fiche élève · {a.timeZone.replace(/_/g, ' ')}</div>
@@ -292,6 +301,11 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
                   ['level', 'Niveau', LEVEL_LABELS[profile.level].label],
                   ['weeklyHours', 'Volume possible / semaine', profile.weeklyHours ? WEEKLY_HOURS_LABELS[profile.weeklyHours] : 'Non précisé'],
                   ['availableDays', 'Jours disponibles', profile.availableDays.length ? profile.availableDays.map((d) => DAY_LABELS[d - 1]).join(' ') : 'Non précisés'],
+                  ['weekdayMinutes', 'Temps pour une séance en semaine', profile.weekdayMinutes ? WEEKDAY_MINUTES_LABELS[profile.weekdayMinutes] : null],
+                  ['preferredTime', 'Moment préféré', profile.preferredTime ? PREFERRED_TIME_LABELS[profile.preferredTime] : null],
+                  ['longDay', 'Jour de la séance longue', profile.longDay ? DAY_LABELS[profile.longDay - 1] ?? null : null],
+                  ['equipment', 'Matériel', profile.equipment.length ? profile.equipment.map((e) => EQUIPMENT_LABELS[e]).join(', ') : null],
+                  ['practicalConstraints', 'Contraintes', profile.practicalConstraints],
                 ] as const).filter(([, , v]) => v !== null).map(([f, label, v]) => (
                   <div key={f}><dt>{label}</dt><dd>{v}{profile.sources[f] === 'interview' ? <> <Pill tone="neutral">Entretien</Pill></> : null}</dd></div>
                 ))}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generateProgram, parseNotation, type Block, type FeasibilityInput, type ProgramInput } from './index';
+import { fouleeLibrary, generateProgram, parseNotation, type Block, type FeasibilityInput, type ProgramInput } from './index';
 
 // D-061 : règle du fondateur — à la hauteur de l’objectif, 4 semaines de tremplin, risques signalés au coach.
 
@@ -86,6 +86,30 @@ describe('générateur de programme', () => {
     // Toute séance a sa raison.
     expect(all.every((x) => x.why.length > 10)).toBe(true);
     expect(all.find((x) => x.kind === 'easy')!.why).toMatch(/^Tremplin : endurance facile/);
+  });
+
+  it('bilan (D-066) : séance longue le jour préféré ; séances trop longues en semaine signalées au coach', () => {
+    const dow = (d: string) => ((new Date(`${d}T12:00:00Z`).getUTCDay() + 6) % 7) + 1;
+    const p = generateProgram({ ...base, preferredLongDay: 6 });
+    expect(p.weeks.slice(0, -1).flatMap((w) => w.sessions.filter((x) => x.kind === 'long')).every((x) => dow(x.date) === 6)).toBe(true);
+    // Jour préféré hors des jours choisis : ignoré (dimanche reste le jour de la séance longue).
+    expect(generateProgram({ ...base, preferredLongDay: 3 }).weeks[0]!.sessions.find((x) => x.kind === 'long')!.date).toBe('2026-11-29');
+    const capped = generateProgram({ ...base, weekdayCapMin: 30 });
+    const risk = capped.risks.find((r) => r.text.startsWith('Temps en semaine'));
+    expect(risk).toMatchObject({ level: 'watch' });
+    expect(risk!.text).toMatch(/30′ au plus/);
+    expect(generateProgram({ ...base, weekdayCapMin: null }).risks.some((r) => r.text.startsWith('Temps en semaine'))).toBe(false);
+    expect(generateProgram({ ...base, weekdayCapMin: 600 }).risks.some((r) => r.text.startsWith('Temps en semaine'))).toBe(false);
+  });
+
+  it('bibliothèque Foulée (D-068) : niveaux et phases respectés ; séances adaptées choisies', () => {
+    const library = fouleeLibrary().map((x, i) => ({ id: `f${i}`, title: x.workout.title, category: x.category, sport: 'running' as const, blocks: x.workout.intervals as Block[], instructions: x.workout.instructions, levels: x.meta.levels, phases: x.meta.phases }));
+    const byId = new Map(library.map((x) => [x.id, x]));
+    const p = generateProgram({ ...base, library });
+    const picked = p.weeks.flatMap((w) => w.sessions.filter((x) => x.libraryId).map((x) => ({ w, x: byId.get(x.libraryId!)! })));
+    expect(picked.length).toBeGreaterThan(5);
+    expect(picked.every(({ x }) => x.levels.includes('I'))).toBe(true); // niveau intermédiaire : jamais une séance réservée aux débutants
+    expect(picked.filter(({ w }) => w.phase === 'tremplin').every(({ x }) => x.phases.some((ph) => ph === 'reprise' || ph === 'base'))).toBe(true);
   });
 });
 

@@ -3,8 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import {
-  CHANGES, CHANGE_LABELS, describeBlock, DIFFICULTIES, DIFFICULTY_LABELS, FEELING_LABELS, RESULT_STATES, RESULT_STATE_LABELS, SPORTS, SPORT_LABELS,
-  type Block, type Change, type Difficulty, type ResultState, type Sport,
+  activityTotals, CHANGES, CHANGE_LABELS, describeBlock, DIFFICULTIES, DIFFICULTY_LABELS, FEELING_LABELS, RESULT_STATES, RESULT_STATE_LABELS, SPORTS, SPORT_LABELS,
+  type Block, type Change, type Difficulty, type FeedbackActivity, type ResultState, type Sport,
 } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
 import { ActivityImport } from './activity-import';
@@ -27,6 +27,7 @@ interface Props {
     revision: number; state: ResultState; durationSeconds: number | null; distanceM: number | null; rpe: number | null; comment: string | null;
     overallFeeling: number | null; difficulties: Difficulty[]; changes: Change[]; actualSport: Sport | null; repeatsDone: number[];
     measureFile: 'fit' | 'tcx' | 'gpx' | null;
+    activities: FeedbackActivity[];
   } | null;
 }
 
@@ -53,6 +54,18 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
   const [imported, setImported] = useState<{ file: 'fit' | 'tcx' | 'gpx'; minutes: string; km: string } | null>(
     existing?.measureFile ? { file: existing.measureFile, minutes: existing.durationSeconds ? String(Math.round(existing.durationSeconds / 60)) : '', km: existing.distanceM ? String(existing.distanceM / 1000).replace('.', ',') : '' } : null,
   );
+  // CE-X-03 (D-064) : activités rattachées ; durée et distance additionnées, tant que l’élève ne les modifie pas.
+  const [activities, setActivities] = useState<FeedbackActivity[]>(existing?.activities ?? []);
+  function changeActivities(next: FeedbackActivity[]) {
+    const t = activityTotals(next);
+    const mm = t.seconds ? String(Math.round(t.seconds / 60)) : '';
+    const kk = kmText(t.distanceM);
+    // Premier import : il remplit (geste explicite). Ensuite, les valeurs suivent les activités tant qu’elles ne sont pas corrigées à la main.
+    const followed = activities.length === 0 || (!minutes && !km) || (imported !== null && imported.minutes === minutes && imported.km === km);
+    setActivities(next);
+    if (!next.length) { if (followed) { setMinutes(''); setKm(''); } setImported(null); return; }
+    if (followed) { setMinutes(mm); setKm(kk); setImported({ file: next[0]!.format, minutes: mm, km: kk }); }
+  }
   const { run, pending, error } = useIntent<{ item: { id: string; revision: number } }>();
 
   async function submit(e?: FormEvent) {
@@ -83,6 +96,7 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
       actualSport: done && changes.includes('other_sport') && actualSport ? actualSport : null,
       repeatsDone,
       measureFile: done && imported && imported.minutes === minutes && imported.km === km && (minutes || km) ? imported.file : null,
+      activities: done ? activities : [],
     };
     const sent = await run('PUT', `/api/v1/workspaces/${wid}/athletes/${aid}/workouts/${sid}/feedback`, body);
     if (sent) {
@@ -117,11 +131,8 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
 
       {state === 'completed' || state === 'partial' ? (
         <>
-          <ActivityImport plannedDate={plannedDate} plannedSport={sport} timeZone={timeZone} onRead={(s) => {
-            const mm = s.seconds ? String(Math.round(s.seconds / 60)) : '';
-            const kk = kmText(s.distanceM);
-            setMinutes(mm); setKm(kk); setImported({ file: s.format, minutes: mm, km: kk });
-          }} />
+          <ActivityImport plannedDate={plannedDate} plannedSport={sport} timeZone={timeZone} items={activities} onChange={changeActivities} />
+          {err('activities') ? <span className="field-error">{err('activities')}</span> : null}
           <div className="form-row">
             <div className="field">
               <label htmlFor="duration">

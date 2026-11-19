@@ -3,6 +3,7 @@ import { requireActor } from '@/server/auth/session';
 import { readWorkspacePublic } from '@/server/commands/workspace-profile';
 import { athleteContext } from '@/server/repo/context';
 import { athleteInbox } from '@/server/repo/messages';
+import { unreadNotificationCount } from '@/server/commands/notifications';
 import { CoachLogo } from '@/components/coach-card';
 import { NavLink } from '@/components/nav-link';
 import { TopBar } from '@/components/ui';
@@ -22,10 +23,14 @@ export default async function AthleteLayout({ children, params }: { children: Re
   const base = `/athlete/${wid}`;
   const ws = await readWorkspacePublic(actor.userId, wid);
   const unread = (await athleteInbox(actor.userId, wid, ctx.athlete.id)).reduce((n, e) => n + e.unread, 0);
+  const notifs = await unreadNotificationCount(actor.userId, wid);
   return (
     <>
       <TopBar home={`${base}/today`}>
         <span className="actions" style={{ gap: 6 }}>
+          <a href={`${base}/notifications`} className="notif-bell" aria-label={notifs ? `Notifications, ${notifs} non lue${notifs > 1 ? 's' : ''}` : 'Notifications'}>
+            🔔{notifs ? <span className="count" aria-hidden="true">{notifs}</span> : null}
+          </a>
           <a href={`${base}/setup`} style={{ color: 'inherit' }}>{ctx.athlete.displayName}</a> ·
           <a href={`${base}/coach`} style={{ color: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             {ws ? <CoachLogo data={ws} small /> : null}{ctx.workspace.name}

@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
-  BREAK_LENGTHS, BREAK_LENGTH_LABELS, DAY_LABELS, EXPERIENCES, EXPERIENCE_LABELS, LEVELS, LEVEL_LABELS, LONGEST_RECENT, LONGEST_RECENT_LABELS,
+  BREAK_LENGTHS, BREAK_LENGTH_LABELS, DAY_LABELS, EQUIPMENT_LABELS, equipmentFor, PREFERRED_TIMES, PREFERRED_TIME_LABELS, WEEKDAY_MINUTES, WEEKDAY_MINUTES_LABELS, EXPERIENCES, EXPERIENCE_LABELS, LEVELS, LEVEL_LABELS, LONGEST_RECENT, LONGEST_RECENT_LABELS,
   PRACTICE_STATUSES, PRACTICE_STATUS_LABELS, RESUMED_SINCE, RESUMED_SINCE_LABELS, SPORTS, SPORT_LABELS, SPORT_WITH_ARTICLE,
   WEEKLY_HOURS, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS, WEEKLY_SESSIONS_LABELS, bilanCompletion, bilanSteps, deriveBilan, formatLongDate, resumeStep,
   type BilanAnswers, type BilanStep, type Sport,
@@ -77,7 +77,9 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
   }
 
   async function submit() {
-    const body = { ...clean(a), availableDays: a.availableDays ?? [] };
+    // Un jour de séance longue retiré des jours disponibles n’est plus valable.
+    const longDay = a.longDay && (!a.availableDays?.length || a.availableDays.includes(a.longDay)) ? a.longDay : null;
+    const body = { ...clean(a), availableDays: a.availableDays ?? [], equipment: (a.equipment ?? []).filter((e) => equipmentFor(a.sport).includes(e)), longDay };
     const r = coach
       ? await run('PUT', `/api/v1/workspaces/${wid}/athletes/${aid}/athlete-profile`, { expectedRevision: expectedRevision ?? null, data: body })
       : await run('PUT', `/api/v1/workspaces/${wid}/athlete-profile`, body);
@@ -141,6 +143,47 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
         </>
       ),
     },
+    time: {
+      title: you('Ton temps et tes habitudes', `Temps et habitudes de ${firstName}`),
+      hint: 'Facultatif. Sert à placer les séances au bon moment et à la bonne durée.',
+      body: (
+        <div className="bf-form">
+          <fieldset className="bf-group"><legend>{you('Un jour de semaine, combien de temps as-tu pour une séance ?', 'Temps disponible pour une séance en semaine')}</legend>
+            <div className="bf-chips">{WEEKDAY_MINUTES.map((v) => (
+              <button key={v} type="button" aria-pressed={a.weekdayMinutes === v} className={`bf-chip${a.weekdayMinutes === v ? ' on' : ''}`}
+                onClick={() => setA((x) => ({ ...x, weekdayMinutes: x.weekdayMinutes === v ? null : v }))}>{WEEKDAY_MINUTES_LABELS[v]}</button>
+            ))}</div></fieldset>
+          <fieldset className="bf-group"><legend>{you('À quel moment préfères-tu t’entraîner ?', 'Moment préféré')}</legend>
+            <div className="bf-chips">{PREFERRED_TIMES.map((v) => (
+              <button key={v} type="button" aria-pressed={a.preferredTime === v} className={`bf-chip${a.preferredTime === v ? ' on' : ''}`}
+                onClick={() => setA((x) => ({ ...x, preferredTime: x.preferredTime === v ? null : v }))}>{PREFERRED_TIME_LABELS[v]}</button>
+            ))}</div></fieldset>
+          <fieldset className="bf-group"><legend>{you('Quel jour pour la séance la plus longue ?', 'Jour préféré pour la séance longue')}</legend>
+            <div className="bf-chips">{DAY_LABELS.map((d, i) => (a.availableDays?.length && !a.availableDays.includes(i + 1) ? null : (
+              <button key={d} type="button" aria-pressed={a.longDay === i + 1} className={`bf-chip${a.longDay === i + 1 ? ' on' : ''}`}
+                onClick={() => setA((x) => ({ ...x, longDay: x.longDay === i + 1 ? null : i + 1 }))}>{d}</button>
+            )))}</div></fieldset>
+          <button type="button" className="btn primary bf-next" onClick={() => nextStep(a)}>Suivant</button>
+        </div>
+      ),
+    },
+    equipment: {
+      title: you('Ton matériel et tes contraintes', `Matériel et contraintes de ${firstName}`),
+      hint: 'Facultatif. Plusieurs choix possibles.',
+      body: (
+        <div className="bf-form">
+          <div className="bf-chips" role="group" aria-label="Matériel">{equipmentFor(a.sport).map((v) => {
+            const on = (a.equipment ?? []).includes(v);
+            return <button key={v} type="button" aria-pressed={on} className={`bf-chip${on ? ' on' : ''}`}
+              onClick={() => setA((x) => ({ ...x, equipment: on ? (x.equipment ?? []).filter((e) => e !== v) : [...(x.equipment ?? []), v] }))}>{EQUIPMENT_LABELS[v]}</button>;
+          })}</div>
+          <label className="field"><span>{you('Contraintes utiles à ton coach', 'Contraintes utiles')} <span className="hint">Facultatif · ex. horaires décalés, enfants le mercredi, déplacements</span></span>
+            <textarea maxLength={300} value={a.practicalConstraints ?? ''} onChange={(e) => setA((x) => ({ ...x, practicalConstraints: e.target.value }))} /></label>
+          <p className="muted">Pas d’information médicale ici : {you('parles-en directement à ton coach', 'elle reste hors du bilan')}.</p>
+          <button type="button" className="btn primary bf-next" onClick={() => nextStep(a)}>Suivant</button>
+        </div>
+      ),
+    },
     goal: {
       title: you('Quel est ton objectif ?', `Quel est l’objectif de ${firstName} ?`), hint: 'Facultatif. En une phrase : ce que tu veux réussir, et quand.',
       body: (
@@ -199,7 +242,7 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
 function clean(a: BilanAnswers): BilanAnswers {
   const out: BilanAnswers = {};
   for (const [k, v] of Object.entries(a)) {
-    if (v === undefined || v === '' || (Array.isArray(v) && !v.length && k !== 'availableDays')) continue;
+    if (v === undefined || v === '' || (Array.isArray(v) && !v.length && k !== 'availableDays' && k !== 'equipment')) continue;
     (out as Record<string, unknown>)[k] = typeof v === 'string' ? v.trim() || null : v;
   }
   return out;
@@ -219,6 +262,14 @@ function recapRows(a: BilanAnswers): [BilanStep, string, string][] {
     if (s === 'level') rows.push([s, 'Niveau', a.level ? LEVEL_LABELS[a.level].label : dash]);
     if (s === 'hours') rows.push([s, 'Heures par semaine', a.weeklyHours ? WEEKLY_HOURS_LABELS[a.weeklyHours] : 'Non précisé']);
     if (s === 'days') rows.push([s, 'Jours disponibles', a.availableDays?.length ? a.availableDays.map((d) => DAY_LABELS[d - 1]).join(' ') : 'Non précisés']);
+    if (s === 'time') rows.push([s, 'Temps et habitudes', [
+      a.weekdayMinutes ? `${WEEKDAY_MINUTES_LABELS[a.weekdayMinutes]} en semaine` : null,
+      a.preferredTime ? PREFERRED_TIME_LABELS[a.preferredTime].toLowerCase() : null,
+      a.longDay ? `séance longue le ${(DAY_LABELS[a.longDay - 1] ?? "").toLowerCase()}` : null,
+    ].filter(Boolean).join(' · ') || 'Non précisé']);
+    if (s === 'equipment') rows.push([s, 'Matériel et contraintes', [
+      a.equipment?.length ? a.equipment.map((e) => EQUIPMENT_LABELS[e]).join(', ') : null, a.practicalConstraints?.trim() || null,
+    ].filter(Boolean).join(' · ') || 'Non précisé']);
     if (s === 'goal') rows.push([s, 'Objectif', [a.mainGoal, a.nextEventName, a.nextEventDate ? formatLongDate(a.nextEventDate).toLowerCase() : null].filter(Boolean).join(' · ') || 'Non précisé']);
   }
   return rows;

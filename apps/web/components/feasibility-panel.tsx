@@ -53,7 +53,12 @@ export function FeasibilityPanel({ aid, wid, first, goalTitle, goalId, initial: 
       statusAtDecision: a.status, note: note || null, applyDate: applyDate && p.eventDate !== initial.eventDate,
       params: { distanceKm: p.distanceKm, eventDate: p.eventDate, targetSeconds: p.targetSeconds, weeklySessions: p.weeklySessions, weeklyHours: p.weeklyHours },
     });
-    if (r) { setDecided(`Objectif validé. Le programme sera construit pour l’atteindre avec ces paramètres${a.status === 'risky' || a.status === 'unrealistic' ? ' ; prévois un suivi rapproché' : ''}.`); router.refresh(); }
+    if (r) {
+      setDecided(`Objectif validé. Le programme sera construit pour l’atteindre avec ces paramètres${a.status === 'risky' || a.status === 'unrealistic' ? ' ; prévois un suivi rapproché' : ''}.`);
+      // Suite logique : la première validation ouvre directement le générateur (les points d’attention y sont rappelés).
+      if (!decision) router.push(`/coach/${wid}/athletes/${aid}/programme?objectif=${goalId}`);
+      else router.refresh();
+    }
   }
 
   function openConversation() {
@@ -126,7 +131,7 @@ export function FeasibilityPanel({ aid, wid, first, goalTitle, goalId, initial: 
             </button>
           </div>
           {decided ? <p className="banner ok" role="status">{decided}</p> : null}
-          {decision || decided ? <p><a className="btn" href={`/coach/${wid}/athletes/${aid}/programme?objectif=${goalId}`}>📅 Générer le programme</a></p> : null}
+          {decision || decided ? <p><a className="btn primary" href={`/coach/${wid}/athletes/${aid}/programme?objectif=${goalId}`}>📅 Générer le programme</a></p> : null}
           {decide.error ? <p className="field-error" role="alert">{decide.error.kind === 'error' ? (decide.error.fields[0]?.rule ?? decide.error.message) : 'Connexion perdue. Réessaie.'}</p> : null}
         </div>
       ) : <p className="muted">Cette course vient du bilan de {first} : ajoute-la comme objectif pour pouvoir la valider.</p>}

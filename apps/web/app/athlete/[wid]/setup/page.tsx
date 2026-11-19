@@ -82,7 +82,11 @@ export default async function AthleteSetup({ params, searchParams }: { params: P
               sport: profile.sport, level: profile.level, experience: profile.experience, weeklySessions: profile.weeklySessions,
               weeklyHours: profile.weeklyHours, availableDays: profile.availableDays, mainGoal: profile.mainGoal,
               nextEventName: profile.nextEventName, nextEventDate: profile.nextEventDate,
-              bilan: { practiceStatus: profile.practiceStatus, breakLength: profile.breakLength, resumedSince: profile.resumedSince, longestRecent: profile.longestRecent },
+              bilan: {
+                practiceStatus: profile.practiceStatus, breakLength: profile.breakLength, resumedSince: profile.resumedSince, longestRecent: profile.longestRecent,
+                weekdayMinutes: profile.weekdayMinutes, preferredTime: profile.preferredTime, longDay: profile.longDay, equipment: profile.equipment,
+                practicalConstraints: profile.practicalConstraints,
+              },
             },
           }}
         />

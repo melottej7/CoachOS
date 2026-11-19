@@ -1,7 +1,8 @@
-import { canGiveFeedback, markReviewedSchema, parseWith, saveFeedbackSchema, todayIn } from '@coachos/domain';
+import { activityFingerprint, canGiveFeedback, formatShortDate, markReviewedSchema, parseWith, saveFeedbackSchema, todayIn, type FeedbackActivity } from '@coachos/domain';
 import { commandAs, type Tx } from '../db/client';
 import { AppError, conflict, invalid, notVisible } from '../errors';
 import { audit, idempotent, type StoredResponse } from './idempotency';
+import { notify } from './notifications';
 import type { CommandMeta } from './workouts';
 
 type Meta = CommandMeta & { workoutId: string; now?: Date };
@@ -73,6 +74,7 @@ export async function saveFeedback(meta: Meta, body: unknown): Promise<StoredRes
         );
         feedbackId = fb.rows[0]!.id;
         revision = 1;
+        await notify(tx, { wid, aid, kind: 'feedback', entityId: sid, to: 'coaches' }); // D-067
       } else {
         // Deux appareils qui corrigent le même retour : le second reçoit un conflit (PRD §21).
         if (input.expectedRevision !== prev.revision) {
@@ -94,6 +96,8 @@ export async function saveFeedback(meta: Meta, body: unknown): Promise<StoredRes
           [wid, aid, feedbackId, input.rpe, input.comment, revision, input.overallFeeling, input.difficulties, input.changes, input.actualSport, input.repeatsDone],
         );
       }
+
+      await syncActivities(tx, wid, aid, sid, input.activities);
 
       // Un seul cas par retour (unique kind + source_ref) ; une correction le rouvre.
       await tx.query(
@@ -122,11 +126,43 @@ export async function saveFeedback(meta: Meta, body: unknown): Promise<StoredRes
             actualSport: input.actualSport,
             repeatsDone: input.repeatsDone,
             measureFile: input.measureFile,
+            activities: input.activities,
           },
         },
       };
     });
   });
+}
+
+/**
+ * CE-X-03 (D-064) : les activités envoyées remplacent celles de la séance. Une activité déjà rattachée à une autre
+ * séance est refusée (aucun double comptage) : l’élève la retire d’abord de cette séance.
+ */
+async function syncActivities(tx: Tx, wid: string, aid: string, sid: string, list: FeedbackActivity[]) {
+  const prints = list.map(activityFingerprint);
+  if (prints.length) {
+    const elsewhere = await tx.query<{ title: string; local_date: string }>(
+      `select r.title, to_char(r.local_date, 'YYYY-MM-DD') as local_date
+       from public.workout_activities a
+       join public.workouts w on w.workspace_id = a.workspace_id and w.athlete_id = a.athlete_id and w.id = a.workout_id
+       join public.workout_revisions r on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id
+            and r.number = coalesce(w.published_revision, w.working_revision)
+       where a.workspace_id = $1 and a.athlete_id = $2 and a.workout_id <> $3 and a.fingerprint = any($4::text[])`,
+      [wid, aid, sid, prints],
+    );
+    const o = elsewhere.rows[0];
+    if (o) {
+      throw conflict(`Cette activité est déjà rattachée à « ${o.title} » du ${formatShortDate(o.local_date)}. Retire-la d’abord de cette séance pour la déplacer ici.`, {});
+    }
+  }
+  await tx.query('delete from public.workout_activities where workspace_id = $1 and athlete_id = $2 and workout_id = $3 and not (fingerprint = any($4::text[]))', [wid, aid, sid, prints]);
+  for (const [i, a] of list.entries()) {
+    await tx.query(
+      `insert into public.workout_activities(workspace_id, athlete_id, workout_id, format, sport_code, started_at, duration_seconds, distance_m, fingerprint)
+       values ($1, $2, $3, $4, $5, $6::timestamptz, $7, $8, $9) on conflict (workspace_id, athlete_id, fingerprint) do nothing`,
+      [wid, aid, sid, a.format, a.sport, a.startedAt, a.seconds, a.distanceM, prints[i]],
+    );
+  }
 }
 
 /**

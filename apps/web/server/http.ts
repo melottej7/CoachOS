@@ -1,3 +1,4 @@
+import { flushNotificationEmails } from './commands/notifications';
 import { randomUUID } from 'node:crypto';
 import { NextResponse, type NextRequest } from 'next/server';
 import { getActor } from './auth/session';
@@ -64,6 +65,8 @@ export async function handleMutation(
       throw new AppError('MALFORMED_REQUEST', 'Corps JSON invalide.');
     }
     const result = await run({ actorId: actor.userId, idempotencyKey: key, requestId, body, origin: new URL(origin).origin });
+    // D-067 : e-mails de notification après la validation, sans retarder la réponse ni la faire échouer.
+    void flushNotificationEmails(new URL(origin).origin).catch(() => undefined);
     return NextResponse.json(result.body, { status: result.status, headers: { 'x-request-id': requestId } });
   } catch (error) {
     const known = asAppError(error);

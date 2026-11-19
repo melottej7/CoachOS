@@ -1,6 +1,6 @@
 import {
   addDays, createProgramSchema, generateProgram, parseWith, planRegeneration, programInstructions, programPhaseTitle, regenerateProgramSchema,
-  regenWeekCount, todayIn, weekStart,
+  regenWeekCount, todayIn, weekStart, WEEKDAY_MINUTES_CAP,
   type Block, type CreateProgramInput, type FeasibilityInput, type LibrarySession, type PlannedSession, type Program, type ProgramSession,
   type ProgramWeek, type RegenerateProgramInput, type Regeneration, type WorkoutInput,
 } from '@coachos/domain';
@@ -29,6 +29,9 @@ export interface ProgramContext {
   feasibility: FeasibilityInput | null;
   currentWeeklyMin: number | null;
   refs: Awaited<ReturnType<typeof readAthleteReferences>>;
+  /** Bilan (D-066) : jour préféré pour la séance longue, temps disponible en semaine. */
+  preferredLongDay: number | null;
+  weekdayCapMin: number | null;
   /** Séances de la bibliothèque du coach (D-062), choisies d’abord quand elles conviennent. */
   library: LibrarySession[];
 }
@@ -54,7 +57,8 @@ export async function programContext(userId: string, wid: string, aid: string, g
   ]);
   const library: LibrarySession[] = lib
     .filter((x) => x.workout.intervals?.length)
-    .map((x) => ({ id: x.id, title: x.workout.title, category: x.category, sport: x.workout.sport, blocks: x.workout.intervals as Block[], instructions: x.workout.instructions ?? null }));
+    .map((x) => ({ id: x.id, title: x.workout.title, category: x.category, sport: x.workout.sport, blocks: x.workout.intervals as Block[], instructions: x.workout.instructions ?? null,
+      levels: x.meta?.levels, phases: x.meta?.phases }));
   const decision = decisions.find((d) => d.goalId === goalId) ?? null;
   const past = await athleteStats(userId, wid, aid, addDays(today, -41), today, today);
   const done = (past?.history ?? []).filter((r) => !r.canceled && (r.state === 'completed' || r.state === 'partial'));
@@ -81,13 +85,16 @@ export async function programContext(userId: string, wid: string, aid: string, g
     decision, athlete: { name: base.a.display_name, timeZone: base.a.time_zone }, today,
     defaultDays: profile?.availableDays.length && profile.availableDays.length >= 2 ? profile.availableDays.slice(0, 6) : [2, 4, 6, 7],
     feasibility, currentWeeklyMin, refs, library,
+    preferredLongDay: profile?.longDay ?? null,
+    weekdayCapMin: profile?.weekdayMinutes ? WEEKDAY_MINUTES_CAP[profile.weekdayMinutes] : null,
   };
 }
 
 /** Programme calculé pour un lundi de départ et des jours ; le premier lundi à venir par défaut. */
 export function buildProgram(ctx: ProgramContext, startMonday: string, days: number[]): Program | null {
   if (!ctx.feasibility) return null;
-  return generateProgram({ feasibility: ctx.feasibility, startMonday, days, currentWeeklyMin: ctx.currentWeeklyMin, refs: ctx.refs, goalTitle: ctx.goal.title, library: ctx.library });
+  return generateProgram({ feasibility: ctx.feasibility, startMonday, days, currentWeeklyMin: ctx.currentWeeklyMin, refs: ctx.refs, goalTitle: ctx.goal.title, library: ctx.library,
+    preferredLongDay: ctx.preferredLongDay, weekdayCapMin: ctx.weekdayCapMin });
 }
 export const nextMonday = (today: string) => addDays(weekStart(today), 7);
 
@@ -182,6 +189,25 @@ async function insertGenerated(tx: Tx, wid: string, aid: string, planId: string,
   await insertRevision(tx, wid, aid, r.rows[0]!.id, 1, inputOf(ctx, w, x, sortOrder));
 }
 
+/**
+ * Objectifs validés par le coach (D-058), encore prévus, sans programme généré : la suite logique est de générer
+ * le programme (D-061). Sert le bandeau « Prochaine étape » de la fiche et de Séances.
+ */
+export async function goalsAwaitingProgram(userId: string, wid: string, aid: string): Promise<{ id: string; title: string; targetDate: string | null }[]> {
+  return readAs(userId, async (tx) => {
+    const r = await tx.query<{ id: string; title: string; target_date: string | null }>(
+      `select g.id, g.title, to_char(g.target_date, 'YYYY-MM-DD') as target_date
+       from public.goals g
+       join public.goal_decisions d on d.workspace_id = g.workspace_id and d.athlete_id = g.athlete_id and d.goal_id = g.id
+       where g.workspace_id = $1 and g.athlete_id = $2 and g.state = 'planned' and (g.target_date is null or g.target_date >= current_date)
+         and not exists (select 1 from public.plans p where p.workspace_id = g.workspace_id and p.goal_id = g.id and p.generator is not null)
+       order by g.target_date nulls last`,
+      [wid, aid],
+    );
+    return r.rows.map((x) => ({ id: x.id, title: x.title, targetDate: x.target_date }));
+  });
+}
+
 // ——— D-063 : régénération partielle ———
 
 export interface GoalPlan { id: string; title: string; startsOn: string; endsOn: string; days: number[]; createdAt: string; regenerations: number }
@@ -254,6 +280,7 @@ export function buildRegeneration(rc: RegenContext, days: number[], fromWeek: nu
   const program = generateProgram({
     feasibility: rc.ctx.feasibility, startMonday: rc.plan.startMonday, days, currentWeeklyMin: rc.plan.currentWeeklyMin,
     refs: rc.ctx.refs, goalTitle: rc.ctx.goal.title, library: rc.ctx.library,
+    preferredLongDay: rc.ctx.preferredLongDay, weekdayCapMin: rc.ctx.weekdayCapMin,
   });
   const weekCount = regenWeekCount(rc.old, program, rc.plan.startMonday);
   const to = Math.min(toWeek, weekCount);

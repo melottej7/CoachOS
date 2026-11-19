@@ -1,4 +1,4 @@
-import { workoutStatus, type Block, type Change, type Difficulty, type ResultState, type Sport, type WorkoutStatus } from '@coachos/domain';
+import { workoutStatus, type Block, type Change, type Difficulty, type FeedbackActivity, type ResultState, type Sport, type WorkoutStatus } from '@coachos/domain';
 import { readAs, type Tx } from '../db/client';
 
 // Lectures du coach, toutes sous RLS (affectation active obligatoire).
@@ -128,6 +128,8 @@ export interface FeedbackView {
   repeatsDone: number[];
   /** Mesures lues dans un fichier de montre (D-048) ; null = saisies à la main. */
   measureFile: 'fit' | 'tcx' | 'gpx' | null;
+  /** Activités de la montre rattachées (CE-X-03, D-064), dans l’ordre de début. */
+  activities: FeedbackActivity[];
 }
 
 export interface CoachWorkoutDetail {
@@ -196,7 +198,13 @@ export async function readFeedback(
   );
   const x = r.rows[0];
   if (!x) return null;
+  const acts = await tx.query<{ format: 'fit' | 'tcx' | 'gpx'; sport_code: Sport | null; started_at: Date | null; duration_seconds: number | null; distance_m: number | null }>(
+    `select format, sport_code, started_at, duration_seconds, distance_m from public.workout_activities
+     where workspace_id = $1 and athlete_id = $2 and workout_id = $3 order by started_at nulls last, created_at`,
+    [wid, aid, sid],
+  );
   return {
+    activities: acts.rows.map((a) => ({ format: a.format, sport: a.sport_code, startedAt: a.started_at ? new Date(a.started_at).toISOString() : null, seconds: a.duration_seconds, distanceM: a.distance_m })),
     id: x.id,
     revision: x.revision,
     observedRevision: x.workout_revision,

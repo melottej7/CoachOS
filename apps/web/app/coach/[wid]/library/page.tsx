@@ -5,7 +5,7 @@ import { coachContext } from '@/server/repo/context';
 import { listLibrary, listWeekTemplates } from '@/server/repo/library';
 import { WeekTemplateList } from '@/components/week-template-list';
 import { portfolio } from '@/server/repo/portfolio';
-import { LibraryBrowser, StarterButton } from '@/components/library-browser';
+import { FouleeButton, LibraryBrowser, StarterButton } from '@/components/library-browser';
 import { SessionsTabs, toPlanCount } from '@/components/sessions-tabs';
 
 export const metadata = { title: 'Bibliothèque' };
@@ -27,6 +27,7 @@ export default async function Library({ params, searchParams }: { params: Promis
           <p className="sub">Tes séances prêtes à l’emploi : crée-les une fois, utilise-les pour n’importe quel élève.</p></div>
         <span className="actions">
           {!items.length ? <StarterButton wid={wid} /> : null}
+          {items.filter((i) => i.workout.instructions?.startsWith('Bibliothèque Foulée')).length < 324 ? <FouleeButton wid={wid} /> : null}
           <Link className="btn primary" href={`/coach/${wid}/library/new`}>+ Nouvelle séance</Link>
         </span>
       </div>

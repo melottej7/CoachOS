@@ -540,6 +540,13 @@
                 "type": "null"
               }
             ]
+          },
+          "activities": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "$ref": "#/components/schemas/FeedbackActivity"
+            }
           }
         }
       },
@@ -1154,7 +1161,12 @@
           "longestRecent",
           "status",
           "confirmedAt",
-          "sources"
+          "sources",
+          "weekdayMinutes",
+          "preferredTime",
+          "longDay",
+          "equipment",
+          "practicalConstraints"
         ],
         "properties": {
           "sport": {
@@ -1445,8 +1457,118 @@
                   "athlete",
                   "interview"
                 ]
+              },
+              "weekdayMinutes": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "preferredTime": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "longDay": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "equipment": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
+              },
+              "practicalConstraints": {
+                "type": "string",
+                "enum": [
+                  "athlete",
+                  "interview"
+                ]
               }
             }
+          },
+          "weekdayMinutes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "lt45",
+                  "45to60",
+                  "60to90",
+                  "gt90"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preferredTime": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "morning",
+                  "noon",
+                  "evening",
+                  "variable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "longDay": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 7
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "equipment": {
+            "type": "array",
+            "maxItems": 10,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "gps_watch",
+                "power_meter",
+                "home_trainer",
+                "road_bike",
+                "offroad_bike",
+                "treadmill",
+                "track",
+                "pool",
+                "open_water",
+                "gym"
+              ]
+            }
+          },
+          "practicalConstraints": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       },
@@ -2242,7 +2364,10 @@
           "link",
           "notes",
           "revision",
-          "recurrence"
+          "recurrence",
+          "slotOn",
+          "slotTime",
+          "estimateMin"
         ],
         "properties": {
           "id": {
@@ -2350,6 +2475,40 @@
                   "biweekly",
                   "monthly"
                 ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "slotOn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "slotTime": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "estimateMin": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 5,
+                "maximum": 480
               },
               {
                 "type": "null"
@@ -2587,6 +2746,52 @@
           "doneOn": {
             "type": "string",
             "format": "date"
+          }
+        }
+      },
+      "FeedbackActivity": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "format"
+        ],
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": [
+              "fit",
+              "tcx",
+              "gpx"
+            ]
+          },
+          "sport": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "startedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "seconds": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 86400
+          },
+          "distanceM": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 1000000
           }
         }
       }
@@ -7303,6 +7508,13 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "activities": {
+                    "type": "array",
+                    "maxItems": 10,
+                    "items": {
+                      "$ref": "#/components/schemas/FeedbackActivity"
+                    }
                   }
                 }
               }
@@ -13123,14 +13335,14 @@
     },
     "/workspaces/{wid}/notifications/{nid}/read": {
       "put": {
-        "operationId": "markNoticeRead",
-        "summary": "Lecture répétée idempotente",
+        "operationId": "markNotificationRead",
+        "summary": "Marquer une notification lue ; lecture répétée sans effet (D-067).",
         "tags": [
           "notifications"
         ],
-        "x-release": "V2",
-        "x-role": "CA",
-        "x-requests-per-minute": 30,
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 20,
         "security": [
           {
             "bearerAuth": []
@@ -14769,6 +14981,81 @@
                           "90to120",
                           "gt120"
                         ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "weekdayMinutes": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "lt45",
+                          "45to60",
+                          "60to90",
+                          "gt90"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "preferredTime": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "morning",
+                          "noon",
+                          "evening",
+                          "variable"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "longDay": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 7
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "equipment": {
+                    "type": "array",
+                    "maxItems": 10,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "gps_watch",
+                        "power_meter",
+                        "home_trainer",
+                        "road_bike",
+                        "offroad_bike",
+                        "treadmill",
+                        "track",
+                        "pool",
+                        "open_water",
+                        "gym"
+                      ]
+                    }
+                  },
+                  "practicalConstraints": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 300
                       },
                       {
                         "type": "null"
@@ -16834,6 +17121,40 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "slotOn": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "slotTime": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "estimateMin": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 5,
+                        "maximum": 480
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 }
               }
@@ -17039,6 +17360,40 @@
                       {
                         "type": "string",
                         "maxLength": 2000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "slotOn": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "slotTime": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "estimateMin": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 5,
+                        "maximum": 480
                       },
                       {
                         "type": "null"
@@ -20441,6 +20796,8 @@
                       "level",
                       "hours",
                       "days",
+                      "time",
+                      "equipment",
                       "goal",
                       "recap"
                     ]
@@ -20646,6 +21003,81 @@
                               "90to120",
                               "gt120"
                             ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "weekdayMinutes": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "lt45",
+                              "45to60",
+                              "60to90",
+                              "gt90"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "preferredTime": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "morning",
+                              "noon",
+                              "evening",
+                              "variable"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "longDay": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 7
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "equipment": {
+                        "type": "array",
+                        "maxItems": 10,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "gps_watch",
+                            "power_meter",
+                            "home_trainer",
+                            "road_bike",
+                            "offroad_bike",
+                            "treadmill",
+                            "track",
+                            "pool",
+                            "open_water",
+                            "gym"
+                          ]
+                        }
+                      },
+                      "practicalConstraints": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 300
                           },
                           {
                             "type": "null"
@@ -21001,6 +21433,81 @@
                               "90to120",
                               "gt120"
                             ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "weekdayMinutes": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "lt45",
+                              "45to60",
+                              "60to90",
+                              "gt90"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "preferredTime": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "morning",
+                              "noon",
+                              "evening",
+                              "variable"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "longDay": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 7
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "equipment": {
+                        "type": "array",
+                        "maxItems": 10,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "gps_watch",
+                            "power_meter",
+                            "home_trainer",
+                            "road_bike",
+                            "offroad_bike",
+                            "treadmill",
+                            "track",
+                            "pool",
+                            "open_water",
+                            "gym"
+                          ]
+                        }
+                      },
+                      "practicalConstraints": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 300
                           },
                           {
                             "type": "null"
@@ -22715,6 +23222,478 @@
                   },
                   "acceptRisks": {
                     "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/templates/foulee": {
+      "post": {
+        "operationId": "addFouleeLibrary",
+        "summary": "Importer la bibliothèque Foulée : 324 séances en 79 familles par paliers, sans doublon (D-068).",
+        "tags": [
+          "library"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "added",
+                    "skipped"
+                  ],
+                  "properties": {
+                    "added": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "skipped": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/workspaces/{wid}/notifications/read-all": {
+      "post": {
+        "operationId": "markAllNotificationsRead",
+        "summary": "Tout marquer lu dans l’espace (D-067).",
+        "tags": [
+          "notifications"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "read"
+                  ],
+                  "properties": {
+                    "read": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/workspaces/{wid}/notification-settings": {
+      "put": {
+        "operationId": "saveNotificationSettings",
+        "summary": "E-mails de notification : essentiels ou aucun, pour cet espace (D-067).",
+        "tags": [
+          "notifications"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "email"
+                  ],
+                  "properties": {
+                    "email": {
+                      "type": "string",
+                      "enum": [
+                        "essentials",
+                        "none"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "enum": [
+                      "essentials",
+                      "none"
+                    ]
                   }
                 }
               }

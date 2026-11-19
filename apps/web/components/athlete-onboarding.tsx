@@ -19,7 +19,11 @@ export interface OnboardingInitial {
     sport: Sport; level: Level; experience: Experience; weeklySessions: WeeklySessions; weeklyHours: WeeklyHours | null;
     availableDays: number[]; mainGoal: string | null; nextEventName: string | null; nextEventDate: string | null;
     /** Réponses du bilan (D-054) non modifiables ici : renvoyées telles quelles pour ne pas les effacer. */
-    bilan?: { practiceStatus: string | null; breakLength: string | null; resumedSince: string | null; longestRecent: string | null };
+    bilan?: {
+      practiceStatus: string | null; breakLength: string | null; resumedSince: string | null; longestRecent: string | null;
+      /** D-066 : renvoyés aussi pour ne pas les effacer. */
+      weekdayMinutes?: string | null; preferredTime?: string | null; longDay?: number | null; equipment?: string[]; practicalConstraints?: string | null;
+    };
   } | null;
 }
 
