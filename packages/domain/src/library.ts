@@ -117,16 +117,31 @@ export function groupRowState(working: number, published: number | null, base = 
 
 // ---------- Semaines types (CE-B-02, D-051) ----------
 
-/** Une séance d’une semaine type : jour (0 = lundi … 6 = dimanche) et contenu, sans élève ni date. */
-export const weekDaySchema = z.object({ offset: z.number().int().min(0).max(6), workout: libraryWorkoutSchema }).strict();
+/** D-083 : une semaine type peut couvrir plusieurs semaines (bloc ou programme type), 12 au plus. */
+export const WEEK_TEMPLATE_MAX_WEEKS = 12;
+/** Une séance d’une semaine type : jour depuis le premier lundi (0 = lundi de la semaine 1 … 83) et contenu, sans élève ni date. */
+export const weekDaySchema = z.object({ offset: z.number().int().min(0).max(WEEK_TEMPLATE_MAX_WEEKS * 7 - 1), workout: libraryWorkoutSchema }).strict();
 export type WeekDay = z.output<typeof weekDaySchema>;
-export interface WeekTemplatePayload { days: WeekDay[] }
+/** `weeks` absent = une semaine (semaines types d’avant D-083). */
+export interface WeekTemplatePayload { days: WeekDay[]; weeks?: number }
+/** Nombre de semaines couvertes : celui enregistré, sinon d’après les jours. */
+export function templateWeeks(p: WeekTemplatePayload): number {
+  return Math.max(p.weeks ?? 1, ...p.days.map((d) => Math.floor(d.offset / 7) + 1));
+}
+/** « Lun », ou « S2 · Lun » pour un bloc de plusieurs semaines. */
+export function templateDayLabel(offset: number, multi: boolean): string {
+  const day = WEEKDAY_SHORT[offset % 7]!;
+  return multi ? `S${Math.floor(offset / 7) + 1} · ${day}` : day;
+}
 
 const monday = z.string().refine(isLocalDate, { message: 'Date invalide' });
 const weekTitle = z.string().trim().min(1, { message: 'Donne un nom à la semaine type' }).max(120, { message: '120 caractères au plus' });
 
 /** Enregistrer la semaine d’un élève comme semaine type (version de travail de chaque séance non annulée). */
-export const weekFromAthleteSchema = z.object({ athleteId: uuid, monday, title: weekTitle }).strict();
+export const weekFromAthleteSchema = z.object({
+  athleteId: uuid, monday, title: weekTitle,
+  weeks: z.number().int().min(1).max(WEEK_TEMPLATE_MAX_WEEKS, { message: `${WEEK_TEMPLATE_MAX_WEEKS} semaines au plus` }).default(1),
+}).strict();
 /** Appliquer une semaine type à un élève : un brouillon par séance, rien de publié. */
 export const applyWeekSchema = z.object({ athleteId: uuid, monday }).strict();
 /** Renommer ou archiver une semaine type. */

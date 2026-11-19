@@ -284,6 +284,9 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
 - Commit `1536c96` (D-078 à D-081). Puis :
   - **D-082** : file des retours, reporter un cas (date future, retour seul dans la file) et filtre gardé au retour du détail (C09-08).
   - `npm test` : **266 passés** (+3 PostgreSQL), typecheck OK.
+- Commit `e9cd51a` (D-082). Puis :
+  - **D-083** : blocs de 2 à 12 semaines (programmes types) enregistrés depuis un élève, appliqués en brouillons à un autre.
+  - `npm test` : **267 passés** (+3 PostgreSQL), typecheck OK.
 - Question du fondateur sur les données de santé (« faire signer un cookie ») : réponse donnée, décision toujours à prendre. Voir « Pour le fondateur ».
 - Prochaines tranches : tout ce qui reste demande le fondateur.
   - Recette, dont l’import avec sa vraie base, l’essai FIT sur la Fenix 8 et l’installation sur téléphone.

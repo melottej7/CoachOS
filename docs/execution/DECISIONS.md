@@ -1290,3 +1290,16 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Test du domaine et du serveur : date passée refusée ; élève refusé ; cas hors de la file puis de retour à sa date ; remis ; rouvert par une correction de l’élève. Contrat vérifié.
   - Navigateur (démo, Marine) : filtre « Effort 8/10 ou plus », détail, lien de retour avec le filtre ; « Demain » → « Revient ven. 20 nov. à 07 h 00 » ; « Remettre maintenant » rétablit la démo.
   - `npm test` : **266 passés** (+3 PostgreSQL), typecheck OK.
+
+## D-083 · Blocs de plusieurs semaines (programmes types) dans la bibliothèque · 2026-11-19
+
+- **Contexte.** COUVERTURE § 5 demande une bibliothèque de « séances, semaines types, blocs, programmes ». Les semaines types (D-051) ne gardaient qu’une semaine.
+- **Décision.**
+  - « 💾 Enregistrer comme semaine type » propose **Semaines à garder** : cette semaine seulement, ou 2 à 12 semaines depuis ce lundi.
+  - Un bloc garde chaque séance avec son décalage depuis le premier lundi (jour 0 à 83). L’appliquer crée un brouillon par séance sur le même nombre de semaines, à partir de la semaine choisie, dans le fuseau de l’élève. Rien n’est publié ; les séances déjà prévues restent.
+  - Bibliothèque › Semaines types : « 3 semaines · 9 séances », jours notés « S2 · Mar ».
+  - Les semaines types d’avant restent valables (une semaine). Même table et même `kind`, donc aucune migration. Le contrat accepte `weeks` (1 à 12).
+- **Preuve.**
+  - Test serveur : bloc de 3 semaines enregistré depuis Camille, appliqué à Noah 4 semaines plus tard, chaque séance au bon jour ; 13 semaines refusées.
+  - Navigateur : le choix « Semaines à garder » s’affiche dans Séances › Semaine (non enregistré, pour ne pas encombrer la démo).
+  - `npm test` : **267 passés** (+3 PostgreSQL), typecheck OK.

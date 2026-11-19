@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { formatClock, structureTotals, WEEKDAY_SHORT, type WeekDay } from '@coachos/domain';
+import { formatClock, structureTotals, templateDayLabel, type WeekDay } from '@coachos/domain';
 import { useIntent } from './use-intent';
 
 // D-051 : semaines types de la bibliothèque. On les applique depuis la semaine d’un élève (Séances → Semaine).
 
-export interface WeekTemplateRow { id: string; revision: number; title: string; days: WeekDay[] }
+export interface WeekTemplateRow { id: string; revision: number; title: string; days: WeekDay[]; weeks: number }
 
 function minutes(d: WeekDay): number {
   const t = structureTotals(d.workout.intervals ?? [], { sport: d.workout.sport });
@@ -43,9 +43,9 @@ export function WeekTemplateList({ wid, items }: { wid: string; items: WeekTempl
                 <button className="link-btn" type="button" onClick={() => setEditing(null)}>Annuler</button>
               </form>
             ) : <h3>{t.title}</h3>}
-            <p className="muted">{t.days.length} séance{t.days.length > 1 ? 's' : ''}{total ? ` · ${formatClock(Math.round(total / 60) * 60)} prévues` : ''}</p>
+            <p className="muted">{t.weeks > 1 ? `${t.weeks} semaines · ` : ''}{t.days.length} séance{t.days.length > 1 ? 's' : ''}{total ? ` · ${formatClock(Math.round(total / 60) * 60)} prévues` : ''}</p>
             <ol className="wtl-days" aria-label={`Séances de « ${t.title} »`}>
-              {t.days.map((d, i) => <li key={i}><strong>{WEEKDAY_SHORT[d.offset]}</strong> {d.workout.title}</li>)}
+              {t.days.map((d, i) => <li key={i}><strong>{templateDayLabel(d.offset, t.weeks > 1)}</strong> {d.workout.title}</li>)}
             </ol>
             {editing === t.id ? null : (
               <span className="wtl-actions">

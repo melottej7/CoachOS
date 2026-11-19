@@ -107,7 +107,7 @@ export default async function Calendar({ params, searchParams }: { params: Promi
         </ol>
         <WeekTools wid={wid} athleteId={athlete.id} first={first ?? athlete.displayName} monday={monday} hasSessions={workouts.some((w) => !w.canceled)}
           drafts={drafts.map((w) => ({ id: w.id, revision: w.workingRevision, title: w.title, localDate: w.localDate, changed: w.status === 'changed' }))}
-          templates={weekTemplates.map((t) => ({ id: t.id, title: t.title, days: t.days.map((d) => ({ offset: d.offset, title: d.workout.title })) }))} />
+          templates={weekTemplates.map((t) => ({ id: t.id, title: t.title, weeks: t.weeks, days: t.days.map((d) => ({ offset: d.offset, title: d.workout.title })) }))} />
         {adapt && adapt.sessions.length ? (
           <WeekAdapt wid={wid} aid={athlete.id} monday={monday} first={first ?? athlete.displayName} proposals={adapt.proposals}
             seen={adapt.sessions.map((x) => ({ id: x.id, revision: x.revision }))} />

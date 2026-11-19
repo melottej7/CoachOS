@@ -267,3 +267,8 @@ Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et
 
 1. Menu **Retours** : filtre par élève, groupe, « avec commentaire » ou « effort 8/10 ou plus ». Ouvre un retour, puis reviens : le filtre est toujours là.
 2. Dans un retour, **Reporter à → Demain** : il quitte la file et revient seul demain à 7 h. Section « Reportés » : **Remettre maintenant** pour le reprendre plus tôt.
+
+## Garder un bloc de plusieurs semaines
+
+1. Séances › Semaine d’un élève : **💾 Enregistrer comme semaine type**, puis **Semaines à garder → 4 semaines**.
+2. Chez un autre élève : **📋 Appliquer une semaine type**, choisis le bloc. Les brouillons couvrent les 4 semaines suivantes ; rien n’est publié.

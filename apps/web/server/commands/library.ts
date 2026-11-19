@@ -190,7 +190,7 @@ export async function templateFromWorkout(meta: Meta & { athleteId: string; work
  * Chaque séance non annulée de la semaine (version de travail) devient un jour de la semaine type.
  */
 export async function weekFromAthlete(meta: Meta, body: unknown): Promise<StoredResponse> {
-  const v = parse<{ athleteId: string; monday: string; title: string }>(weekFromAthleteSchema, body);
+  const v = parse<{ athleteId: string; monday: string; title: string; weeks: number }>(weekFromAthleteSchema, body);
   if (weekStart(v.monday) !== v.monday) throw invalid([{ path: 'monday', rule: 'La semaine commence un lundi' }]);
   const wid = meta.workspaceId;
   return commandAs(meta.actorId, async (tx) => {
@@ -202,16 +202,16 @@ export async function weekFromAthlete(meta: Meta, body: unknown): Promise<Stored
            on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id and r.number = w.working_revision
          where w.workspace_id = $1 and w.athlete_id = $2 and r.local_date between $3::date and $4::date and not r.canceled
          order by r.local_date, r.sort_order, w.created_at`,
-        [wid, v.athleteId, v.monday, addDays(v.monday, 6)],
+        [wid, v.athleteId, v.monday, addDays(v.monday, v.weeks * 7 - 1)],
       );
-      if (!r.rows.length) throw invalid([{ path: 'monday', rule: 'Aucune séance cette semaine' }]);
+      if (!r.rows.length) throw invalid([{ path: 'monday', rule: v.weeks > 1 ? 'Aucune séance sur ces semaines' : 'Aucune séance cette semaine' }]);
       const days: WeekDay[] = r.rows.map((x) => ({
         offset: Math.round((Date.parse(`${x.local_date}T12:00:00Z`) - Date.parse(`${v.monday}T12:00:00Z`)) / 86_400_000),
         workout: { sport: x.sport_code, title: x.title, instructions: x.instructions, durationSeconds: x.duration_seconds, distanceM: x.distance_m, intervals: x.intervals ?? [] },
       }));
       const t = await tx.query<{ id: string; revision: number }>(
         `insert into public.templates(workspace_id, owner_id, kind, title, payload) values ($1, auth.uid(), 'week', $2, $3::jsonb) returning id, revision`,
-        [wid, v.title, JSON.stringify({ days } satisfies WeekTemplatePayload)],
+        [wid, v.title, JSON.stringify({ days, weeks: v.weeks } satisfies WeekTemplatePayload)],
       );
       await audit(tx, wid, meta.actorId, 'template.week-from-athlete', t.rows[0]!.id, meta.requestId);
       return { status: 201, body: { ...t.rows[0]!, sessions: days.length } };

@@ -1,4 +1,4 @@
-import type { Block, FouleeMeta, LibraryCategory, Sport, LibraryWorkout, WeekDay, WeekTemplatePayload } from '@coachos/domain';
+import { templateWeeks, type Block, type FouleeMeta, type LibraryCategory, type Sport, type LibraryWorkout, type WeekDay, type WeekTemplatePayload } from '@coachos/domain';
 import { readAs } from '../db/client';
 
 // Lectures de la bibliothèque (D-035), sous RLS : séances de l’auteur (ou partagées dans l’espace).
@@ -33,7 +33,7 @@ export async function readTemplate(userId: string, wid: string, tid: string): Pr
 }
 
 /** Semaines types de l’auteur (D-051). */
-export interface WeekTemplateItem { id: string; revision: number; title: string; archived: boolean; days: WeekDay[] }
+export interface WeekTemplateItem { id: string; revision: number; title: string; archived: boolean; days: WeekDay[]; weeks: number }
 
 export async function listWeekTemplates(userId: string, wid: string, archived = false): Promise<WeekTemplateItem[]> {
   return readAs(userId, async (tx) => {
@@ -42,7 +42,7 @@ export async function listWeekTemplates(userId: string, wid: string, archived = 
        where workspace_id = $1 and kind = 'week' and owner_id = auth.uid() and archived = $2 order by lower(title), id`,
       [wid, archived],
     );
-    return r.rows.map((x) => ({ id: x.id, revision: x.revision, title: x.title, archived: x.archived, days: [...(x.payload.days ?? [])].sort((a, b) => a.offset - b.offset) }));
+    return r.rows.map((x) => ({ id: x.id, revision: x.revision, title: x.title, archived: x.archived, days: [...(x.payload.days ?? [])].sort((a, b) => a.offset - b.offset), weeks: templateWeeks({ days: x.payload.days ?? [], weeks: x.payload.weeks }) }));
   });
 }
 

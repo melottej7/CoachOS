@@ -84,4 +84,19 @@ describe('bibliothèque de séances', () => {
     // Les séances de bibliothèque ne sont pas mêlées aux semaines types.
     expect((await listLibrary(USERS.marine, WORKSPACE_A)).some((x) => x.id === t.id)).toBe(false);
   });
+
+  it('bloc de plusieurs semaines (D-083) : enregistré sur 3 semaines, appliqué avec le décalage de chaque semaine', async () => {
+    const monday = weekStart(todayIn(TIME_ZONE));
+    const span = (await coachWeek(USERS.marine, WORKSPACE_A, ATHLETES.camille, addDays(monday, -7), addDays(monday, 13))).filter((w) => !w.canceled);
+    const r = await weekFromAthlete(meta(USERS.marine), { athleteId: ATHLETES.camille, monday: addDays(monday, -7), title: 'Bloc reprise 3 semaines', weeks: 3 });
+    expect((r.body as { sessions: number }).sessions).toBe(span.length);
+    const tpl = (await listWeekTemplates(USERS.marine, WORKSPACE_A)).find((t) => t.title === 'Bloc reprise 3 semaines')!;
+    expect(tpl.weeks).toBe(3);
+    expect(Math.max(...tpl.days.map((d) => d.offset))).toBeGreaterThanOrEqual(7);
+    const target = addDays(monday, 28);
+    const a = await applyWeekTemplate({ ...meta(USERS.marine), templateId: tpl.id }, { athleteId: ATHLETES.noah, monday: target });
+    const created = (a.body as { created: { localDate: string }[] }).created;
+    expect(created.map((c) => c.localDate).sort()).toEqual(tpl.days.map((d) => addDays(target, d.offset)).sort());
+    expect(await codeOf(weekFromAthlete(meta(USERS.marine), { athleteId: ATHLETES.camille, monday, title: 'x', weeks: 13 }))).toBe('INVALID_FIELDS');
+  });
 });
