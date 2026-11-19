@@ -9,6 +9,46 @@ import {
 import { SessionChart } from './session-chart';
 import { QuickNotation } from './quick-notation';
 import { canDrop, find, lift, moveBlock, shift, type DropTarget } from './block-tree';
+import { mutate, newKey } from './api-client';
+
+/** Bloc réutilisable de la bibliothèque du coach (D-074). */
+export interface SavedBlock { id: string; title: string; sport: Sport | null; blocks: Block[] }
+
+/** D-074 : garder une partie de la séance comme bloc réutilisable (échauffement type, série type…). */
+function KeepBlocks({ wid, sport, blocks, onSaved }: { wid: string; sport: Sport; blocks: Block[]; onSaved: (b: SavedBlock) => void }) {
+  const [picked, setPicked] = useState<number[]>([]);
+  const [title, setTitle] = useState('');
+  const [anySport, setAnySport] = useState(false);
+  const [state, setState] = useState<'idle' | 'saving' | string>('idle');
+  const ref = useRef<HTMLDetailsElement>(null);
+  if (!blocks.length) return null;
+  return (
+    <details className="b-keep" ref={ref}>
+      <summary className="link-btn">💾 Garder des blocs dans ma bibliothèque</summary>
+      <div className="stack">
+        <fieldset className="choice"><legend>Blocs à garder</legend>
+          {blocks.map((b, i) => (
+            <label key={i} className="check"><input type="checkbox" aria-label={`Garder : ${describeBlock(b, sport)}`} checked={picked.includes(i)} onChange={() => setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i].sort((a, z) => a - z)))} /> <span>{describeBlock(b, sport)}</span></label>
+          ))}
+        </fieldset>
+        <label className="field"><span>Nom du bloc</span><input aria-label="Nom du bloc" maxLength={80} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex. Échauffement piste avec gammes" /></label>
+        <label className="check"><input type="checkbox" aria-label="Utilisable dans tous les sports" checked={anySport} onChange={(e) => setAnySport(e.target.checked)} /> <span>Utilisable dans tous les sports (sinon : {SPORT_LABELS[sport].toLowerCase()} seulement)</span></label>
+        <div className="actions">
+          <button type="button" className="btn small primary" disabled={state === 'saving' || !picked.length || !title.trim()} onClick={async () => {
+            setState('saving');
+            const chosen = picked.map((i) => blocks[i]!);
+            const body = { title: title.trim(), sport: anySport ? null : sport, blocks: chosen };
+            const r = await mutate<{ id: string }>('POST', `/api/v1/workspaces/${wid}/block-templates`, body, newKey());
+            if (!r.ok) { setState(r.kind === 'error' ? (r.fields[0]?.rule ?? r.message) : 'Connexion perdue. Réessaie.'); return; }
+            onSaved({ id: r.data.id, title: body.title, sport: body.sport, blocks: chosen });
+            setPicked([]); setTitle(''); setState('Bloc gardé dans ta bibliothèque.');
+          }}>Garder ce bloc</button>
+          {state !== 'idle' && state !== 'saving' ? <span className="muted" role="status">{state}</span> : null}
+        </div>
+      </div>
+    </details>
+  );
+}
 
 // Constructeur de séance (D-023) : blocs éditables, répétitions et séries, modèles rapides, total en direct.
 
@@ -343,10 +383,14 @@ function BlockList({ blocks, sport, depth, prefix, parent, refs, dnd, onChange }
 type Indicator = { top: number; left: number; width: number };
 
 /** Constructeur complet, contrôlé par le formulaire de séance. */
-export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vmaHref }: {
+export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vmaHref, library }: {
   sport: Sport; value: EBlock[]; onChange: (b: EBlock[]) => void; refs?: References; athleteFirst?: string; vmaHref?: string;
+  /** D-074 : blocs réutilisables du coach (insérer, garder). Absent : seulement les modèles rapides. */
+  library?: { wid: string; blocks: SavedBlock[] };
 }) {
   const presets = presetsFor(sport);
+  const [mine, setMine] = useState<SavedBlock[]>(library?.blocks ?? []);
+  const usable = mine.filter((b) => !b.sport || b.sport === sport);
   const blocks = fromEditor(value);
   const totals = structureTotals(blocks, { sport, refs });
   const defaultSport = MULTISPORT.includes(sport) ? (MULTI_STEP_SPORTS[sport]?.[0] ?? null) : null;
@@ -498,7 +542,18 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
           <option value="">+ Modèle rapide…</option>
           {presets.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
         </select>
+        {library ? (
+          <>
+            <label className="visually-hidden" htmlFor="my-block">Ajouter un de mes blocs</label>
+            <select id="my-block" className="select" value="" disabled={!usable.length}
+              onChange={(e) => { const b = usable.find((x) => x.id === e.target.value); if (b) onChange([...value, ...toEditor(b.blocks)]); }}>
+              <option value="">{usable.length ? '+ Mon bloc…' : 'Aucun bloc gardé'}</option>
+              {usable.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}
+            </select>
+          </>
+        ) : null}
       </div>
+      {library ? <KeepBlocks wid={library.wid} sport={sport} blocks={blocks} onSaved={(b) => setMine((m) => [...m, b].sort((x, y) => x.title.localeCompare(y.title, 'fr')))} /> : null}
       <QuickNotation sport={sport} blocks={blocks} refs={refs}
         onApply={(bs, mode) => onChange(mode === 'replace' ? toEditor(bs) : [...value, ...toEditor(bs)])} />
       {value.length ? (

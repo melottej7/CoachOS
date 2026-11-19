@@ -263,7 +263,16 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
   - **D-072** : « Ma méthode » (Coach DNA). Règles du coach appliquées par défaut au générateur ; propositions apprises de ses retouches (5 observations, 2 semaines, 80 %). Migration `20261119210000`.
     - Corrigé en route : allure de course sans allure chiffrée (plus de VMA ou de PMA par défaut) ; identifiants d’action sur téléphone en http.
   - `npm test` : **243 passés** (+3 PostgreSQL), typecheck OK.
-- Prochaines tranches : résumé de la semaine sans IA (docs/08), blocs réutilisables (bibliothèque), fraîcheur des mesures ; données du fondateur (ses séances de bibliothèque et anciens programmes pour régler le générateur) ; notifications ; choix séance par séance dans la régénération.
+- Commit `8698998` (D-070 à D-072). Puis (non commité) :
+  - **D-073** : résumé de la semaine de chaque élève, sans IA (trois faits au plus, une question utile, données insuffisantes signalées), en tête de sa fiche ; « Poser la question » prépare le message sans l’envoyer.
+  - `npm test` : **247 passés** (+3 PostgreSQL), typecheck OK.
+  - **D-074** : blocs réutilisables (garder une partie de séance, l’insérer ailleurs ; Bibliothèque › Mes blocs). Migration `20261119220000`.
+  - **D-075** : source et fraîcheur des mesures en tête du suivi de la fiche.
+  - `npm test` : **251 passés** (+3 PostgreSQL), typecheck OK.
+- Prochaines tranches : tout ce qui reste demande le fondateur.
+  - Recette, essai FIT sur Fenix 8, installation sur téléphone.
+  - Crédit IA ; décision santé ; fichier de la bibliothèque Foulée d’origine ; accès Garmin.
+  - Commercial, après validation du parcours. (ses séances de bibliothèque et anciens programmes pour régler le générateur) ; notifications ; choix séance par séance dans la régénération.
 
 Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au micro réel (autorisation du micro non automatisable ici) ; visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
 

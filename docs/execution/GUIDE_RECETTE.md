@@ -230,3 +230,15 @@ Dis-moi si l’icône, le nom et l’ouverture te conviennent.
 3. Retouche plusieurs programmes générés de la même façon (au moins 5 fois sur 2 semaines, plusieurs élèves) : une proposition apparaît dans « Appris de tes corrections ». Accepte-la ou écarte-la.
 4. Note ce qui manque : quelles règles de ta méthode ne rentrent pas dans ces cinq types ?
 
+## Résumé de la semaine
+
+1. Ouvre la fiche d’un élève qui a eu des séances la semaine dernière : la carte **Semaine dernière** donne au plus trois faits (fait sur prévu, ce qui manque, l’effort déclaré) et une question à lui poser.
+2. **✉️ Poser la question** ouvre votre conversation avec la question prête : relis, modifie, envoie (ou non).
+3. Dis-moi si les faits et la question sonnent juste pour tes élèves.
+
+## Blocs réutilisables et fraîcheur des mesures
+
+1. Dans une séance (ou une séance de bibliothèque), construis un échauffement, puis **💾 Garder des blocs dans ma bibliothèque** : coche-le, nomme-le, **Garder ce bloc**.
+2. Dans une autre séance, **+ Mon bloc…** l’ajoute d’un geste. Bibliothèque › **Mes blocs** les liste ; **Retirer** ne touche pas aux séances déjà faites.
+3. Fiche d’un élève › **Suivi** : d’où viennent les chiffres (montre ou saisie) et depuis quand ; un avertissement apparaît après 14 jours sans nouvelle mesure.
+

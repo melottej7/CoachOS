@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { PRESETS } from './presets';
 import type { Sport } from './sports';
 import { workoutInputSchema } from './workout';
-import type { Block } from './structure';
+import { structureSchema, type Block } from './structure';
+import { SPORTS } from './sports';
 import { isLocalDate } from './dates';
 
 // Bibliothèque de séances du coach (CE-B-01, D-035) : séances réutilisables, sans date ni élève.
@@ -134,3 +135,15 @@ export const updateWeekTemplateSchema = z
   .strict();
 
 export const WEEKDAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'] as const;
+
+// ---------- Blocs réutilisables (D-074) ----------
+
+/** Un bloc de la bibliothèque : une partie de séance (échauffement type, série type…), insérable dans n’importe quelle séance. */
+export const createBlockTemplateSchema = z.object({
+  title: z.string().trim().min(1, { message: 'Donne un nom au bloc' }).max(80, { message: '80 caractères au plus' }),
+  /** null : utilisable dans tous les sports. */
+  sport: z.enum(SPORTS).nullish().transform((v) => v ?? null),
+  blocks: structureSchema.refine((b) => b.length >= 1, { message: 'Choisis au moins un bloc' }),
+}).strict();
+export type BlockTemplatePayload = z.output<typeof createBlockTemplateSchema>;
+

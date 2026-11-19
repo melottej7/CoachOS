@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
-import { listLibrary, listWeekTemplates } from '@/server/repo/library';
+import { listBlockTemplates, listLibrary, listWeekTemplates } from '@/server/repo/library';
+import { describeBlock, SPORT_LABELS } from '@coachos/domain';
+import { ActionButton } from '@/components/portfolio-forms';
 import { WeekTemplateList } from '@/components/week-template-list';
 import { portfolio } from '@/server/repo/portfolio';
 import { FouleeButton, LibraryBrowser, StarterButton } from '@/components/library-browser';
@@ -19,6 +21,7 @@ export default async function Library({ params, searchParams }: { params: Promis
   if (!ctx) notFound();
   const [items, p] = [await listLibrary(actor.userId, wid), await portfolio(actor.userId, wid, ctx.workspace.timeZone)];
   const weeks = await listWeekTemplates(actor.userId, wid);
+  const myBlocks = await listBlockTemplates(actor.userId, wid);
   const athletes = p.roster.map((a) => ({ id: a.id, name: a.name, timeZone: a.timeZone }));
   return (
     <>
@@ -39,6 +42,21 @@ export default async function Library({ params, searchParams }: { params: Promis
       <section className="card" aria-labelledby="weeks-title" id="semaines">
         <div className="card-head"><h2 id="weeks-title">Semaines types</h2><span className="muted">S’appliquent depuis la semaine d’un élève</span></div>
         <div className="card-body"><WeekTemplateList wid={wid} items={weeks.map((w) => ({ id: w.id, revision: w.revision, title: w.title, days: w.days }))} /></div>
+      </section>
+      <section className="card" aria-labelledby="blocs-title" id="blocs">
+        <div className="card-head"><h2 id="blocs-title">Mes blocs</h2><span className="muted">Parties de séance à réutiliser (échauffement type, série type…)</span></div>
+        <div className="card-body">
+          {myBlocks.length ? (
+            <ul className="plain lib-blocks">
+              {myBlocks.map((b) => (
+                <li key={b.id}>
+                  <span><strong>{b.title}</strong> <span className="muted">· {b.sport ? SPORT_LABELS[b.sport] : 'tous les sports'} · {b.blocks.map((x) => describeBlock(x, b.sport ?? 'running')).join(' + ')}</span></span>
+                  <ActionButton method="DELETE" url={`/api/v1/workspaces/${wid}/block-templates/${b.id}`} className="link-btn" confirm={`Retirer le bloc « ${b.title} » ? Les séances qui l’ont utilisé ne changent pas.`}>Retirer</ActionButton>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="empty">Aucun bloc pour l’instant. Dans l’éditeur d’une séance, « 💾 Garder des blocs dans ma bibliothèque » enregistre un échauffement ou une série ; « + Mon bloc… » l’ajoute ensuite à n’importe quelle séance.</p>}
+        </div>
       </section>
     </>
   );

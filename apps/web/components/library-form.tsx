@@ -5,11 +5,12 @@ import { useState } from 'react';
 import { LIBRARY_CATEGORIES, LIBRARY_CATEGORY_LABELS, SPORT_LABELS, SPORTS, type LibraryCategory, type LibraryWorkout, type Sport } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
 import { fieldError, useIntent } from './use-intent';
-import { fromEditor, toEditor, WorkoutBuilder, type EBlock } from './workout-builder';
+import { fromEditor, toEditor, WorkoutBuilder, type EBlock, type SavedBlock } from './workout-builder';
 
 /** Créer ou modifier une séance de bibliothèque (D-035) : titre, sport, catégorie, consignes, déroulé par blocs. */
-export function LibraryForm({ wid, initial }: {
+export function LibraryForm({ wid, initial, savedBlocks }: {
   wid: string;
+  savedBlocks?: SavedBlock[];
   initial?: { id: string; revision: number; category: LibraryCategory; workout: LibraryWorkout };
 }) {
   const router = useRouter();
@@ -42,7 +43,7 @@ export function LibraryForm({ wid, initial }: {
         <div className="field"><label htmlFor="lib-category">Catégorie</label>
           <select id="lib-category" value={category} onChange={(e) => setCategory(e.target.value as LibraryCategory)}>{LIBRARY_CATEGORIES.map((c) => <option key={c} value={c}>{LIBRARY_CATEGORY_LABELS[c]}</option>)}</select></div>
       </div>
-      <WorkoutBuilder sport={sport} value={blocks} onChange={setBlocks} />
+      <WorkoutBuilder sport={sport} value={blocks} onChange={setBlocks} library={savedBlocks ? { wid, blocks: savedBlocks } : undefined} />
       <div className="field"><label htmlFor="lib-instructions">Consignes <span className="hint">Facultatif · reprises dans chaque séance créée à partir de celle-ci</span></label>
         <textarea id="lib-instructions" maxLength={5000} value={instructions} onChange={(e) => setInstructions(e.target.value)} /></div>
       <div className="actions">

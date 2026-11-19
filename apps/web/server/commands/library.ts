@@ -1,6 +1,6 @@
 import {
-  addDays, applyWeekSchema, createTemplateSchema, fouleeLibrary, type FouleeMeta, parseWith, starterLibrary, updateTemplateSchema, updateWeekTemplateSchema, weekFromAthleteSchema, weekStart,
-  type LibraryCategory, type LibraryWorkout, type WeekDay, type WeekTemplatePayload,
+  addDays, applyWeekSchema, createBlockTemplateSchema, createTemplateSchema, fouleeLibrary, type FouleeMeta, parseWith, starterLibrary, updateTemplateSchema, updateWeekTemplateSchema, weekFromAthleteSchema, weekStart,
+  type BlockTemplatePayload, type LibraryCategory, type LibraryWorkout, type WeekDay, type WeekTemplatePayload,
 } from '@coachos/domain';
 import { commandAs, type Tx } from '../db/client';
 import { conflict, invalid, notVisible } from '../errors';
@@ -244,3 +244,37 @@ export async function updateWeekTemplate(meta: Meta & { templateId: string }, bo
     });
   });
 }
+
+// ---------- Blocs réutilisables (D-074) ----------
+
+/** createBlockTemplate · C : enregistre une partie de séance comme bloc de la bibliothèque du coach. */
+export async function createBlockTemplate(meta: Meta, body: unknown): Promise<StoredResponse> {
+  const v = parse<BlockTemplatePayload>(createBlockTemplateSchema, body);
+  const wid = meta.workspaceId;
+  return commandAs(meta.actorId, async (tx) => {
+    await requireCoach(tx, wid);
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'template.block', key: meta.idempotencyKey, body }, async () => {
+      const r = await tx.query<{ id: string }>(
+        `insert into public.templates(workspace_id, owner_id, kind, title, payload) values ($1, auth.uid(), 'block', $2, $3::jsonb) returning id`,
+        [wid, v.title, JSON.stringify({ sport: v.sport, blocks: v.blocks })],
+      );
+      await audit(tx, wid, meta.actorId, 'template.block', r.rows[0]!.id, meta.requestId);
+      return { status: 201, body: { id: r.rows[0]!.id } };
+    });
+  });
+}
+
+/** archiveBlockTemplate · C : retire un de ses blocs (archivé, les séances qui l’ont utilisé ne changent pas). */
+export async function archiveBlockTemplate(meta: Meta & { templateId: string }): Promise<StoredResponse> {
+  const wid = meta.workspaceId;
+  return commandAs(meta.actorId, async (tx) => {
+    await requireCoach(tx, wid);
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'template.block.archive', key: meta.idempotencyKey, body: { id: meta.templateId } }, async () => {
+      const r = await tx.query(`update public.templates set archived = true, revision = revision + 1 where workspace_id = $1 and id = $2 and owner_id = auth.uid() and kind = 'block' and not archived returning id`, [wid, meta.templateId]);
+      if (!r.rows.length) throw notVisible();
+      await audit(tx, wid, meta.actorId, 'template.block.archive', meta.templateId, meta.requestId);
+      return { status: 200, body: { id: meta.templateId } };
+    });
+  });
+}
+

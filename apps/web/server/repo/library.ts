@@ -1,4 +1,4 @@
-import type { FouleeMeta, LibraryCategory, LibraryWorkout, WeekDay, WeekTemplatePayload } from '@coachos/domain';
+import type { Block, FouleeMeta, LibraryCategory, Sport, LibraryWorkout, WeekDay, WeekTemplatePayload } from '@coachos/domain';
 import { readAs } from '../db/client';
 
 // Lectures de la bibliothèque (D-035), sous RLS : séances de l’auteur (ou partagées dans l’espace).
@@ -45,3 +45,19 @@ export async function listWeekTemplates(userId: string, wid: string, archived = 
     return r.rows.map((x) => ({ id: x.id, revision: x.revision, title: x.title, archived: x.archived, days: [...(x.payload.days ?? [])].sort((a, b) => a.offset - b.offset) }));
   });
 }
+
+/** Blocs réutilisables du coach connecté (D-074). */
+export interface BlockTemplateItem { id: string; title: string; sport: Sport | null; blocks: Block[] }
+
+export async function listBlockTemplates(userId: string, wid: string): Promise<BlockTemplateItem[]> {
+  return readAs(userId, async (tx) => {
+    const r = await tx.query<{ id: string; title: string; payload: { sport: Sport | null; blocks: Block[] } }>(
+      `select id, title, payload from public.templates where workspace_id = $1 and kind = 'block' and owner_id = auth.uid() and not archived order by lower(title), id`,
+      [wid],
+    );
+    // Ordre alphabétique français (« Échauffement » avant « Retour »), pas l’ordre des octets de la base.
+    return r.rows.map((x) => ({ id: x.id, title: x.title, sport: x.payload.sport ?? null, blocks: x.payload.blocks ?? [] }))
+      .sort((a, b) => a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' }));
+  });
+}
+

@@ -1113,3 +1113,69 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
     - page Programme de Noah : « Ta méthode s’applique : … », plus de PMA, « Allure objectif » à la place.
     - La règle reste dans la démo comme exemple.
 
+## D-073 · Résumé de la semaine de chaque élève, sans IA · 2026-11-19
+
+- **Source.** docs/08_AI_ASSISTANT.md, module « summary », première version : « résumé et scores déterministes ». Sa consigne : « Décris prévu, déclaré et manquant, en trois faits au maximum. Termine par une seule question utile. » ; « Une absence de retour ne vaut ni séance manquée ni problème de santé. » Choisi par le fondateur parmi les chantiers faisables sans argent.
+- **Décision.**
+  - Fonction pure `weekReview`, appliquée aux séances publiées non annulées de la semaine, jusqu’à la veille (le retour du jour peut encore venir).
+  - **Trois faits au plus :**
+    - séances faites sur prévues, dont en partie ; minutes déclarées pour minutes prévues ;
+    - non faites, reportées, sans retour. Une séance sans retour est dite « on ne sait pas si elle a été faite », jamais « manquée » ;
+    - effort moyen déclaré (dès 2 valeurs) et séances à 8 ou plus, ressenti « fatigué » ou moins, difficulté la plus fréquente (catégories fermées, non médicales).
+  - **Une seule question**, la plus utile, dans cet ordre :
+    1. une séance non faite (« Qu’est-ce qui t’a empêché de faire … ? ») ;
+    2. au moins deux séances sans retour ;
+    3. un effort ou un ressenti élevés ;
+    4. une difficulté ;
+    5. une semaine complète (« Belle régularité… ») ;
+    6. sinon une question ouverte.
+  - Moins de deux séances : « Données insuffisantes », sans question.
+  - **Fiche de l’élève**, en tête : « Semaine dernière ». Si elle est trop mince, la semaine en cours (séances déjà passées) prend le relais.
+  - **« ✉️ Poser la question »** met la question dans la conversation, pour que le coach la relise et l’envoie lui-même : rien n’est envoyé seul.
+  - Lecture sous RLS, coach affecté seulement. L’élève lit ses séances par un autre chemin, filtré ; un résumé côté élève viendra avec la progression.
+  - Aucun commentaire ni message de l’élève n’est repris.
+- **Preuve.**
+  - 3 tests du domaine :
+    - semaine régulière : faits chiffrés, question de suite ;
+    - séance manquée, sans retour, effort élevé : priorité des questions, absence de retour non assimilée à une séance manquée ;
+    - données insuffisantes, annulées ignorées, jour même exclu.
+  - 1 test serveur : coach affecté seulement.
+  - `npm test` : 247 passés (+3 PostgreSQL), typecheck OK.
+  - Navigateur (démo, fiche de Camille) :
+    - semaine dernière vide, la semaine en cours prend le relais : « 2 séances faites sur 2 · 1 h 15 déclarées pour 1 h 15 prévues », question de régularité ;
+    - « Poser la question » ouvre la conversation, question dans la zone de saisie, non envoyée.
+
+## D-074 · Blocs réutilisables dans la bibliothèque · 2026-11-19
+
+- **Source.** Complément du fondateur, § 5 : bibliothèque de « séances, semaines types, blocs de préparation » ; COUVERTURE : « Blocs réutilisables à faire ».
+- **Décision.**
+  - Un bloc est une partie de séance (échauffement type, série type, retour au calme…), gardé dans `templates` avec `kind = 'block'` et payload `{ sport, blocks }`. Migration `20261119220000` (contrainte de type élargie, migration appliquée avant le code). Sport précis, ou tous les sports.
+  - Dans l’éditeur de séance (séance d’un élève et séance de bibliothèque) :
+    - **« 💾 Garder des blocs dans ma bibliothèque »** : choisir des blocs de la séance en cours, les nommer, les garder ;
+    - **« + Mon bloc… »** à côté des modèles rapides : les ajouter à n’importe quelle séance du même sport.
+  - Bibliothèque : section **« Mes blocs »** (contenu lisible, « Retirer » archive le bloc ; les séances qui l’ont utilisé ne changent pas).
+  - Un bloc n’est visible que de son auteur. Tri alphabétique français (« Échauffement » avant « Retour »). Cases à cocher nommées pour les lecteurs d’écran.
+  - Contrat : `createBlockTemplate`, `archiveBlockTemplate`.
+- **Preuve.**
+  - Test serveur :
+    - création pour un sport ou pour tous ;
+    - structure vide et nom vide refusés ; élève refusé ;
+    - liste à soi dans l’ordre français ;
+    - retrait, réservé à l’auteur ; second retrait refusé.
+  - Navigateur (démo, nouvelle séance de Camille) : échauffement ajouté par modèle rapide, gardé comme « Échauffement progressif », proposé dans « + Mon bloc… » et inséré ; visible dans Bibliothèque › Mes blocs.
+
+## D-075 · Source et fraîcheur des mesures dans la fiche · 2026-11-19
+
+- **Source.** COUVERTURE § 3 : « Source, période, fraîcheur des mesures » (à ajouter).
+- **Décision.**
+  - En tête de « Suivi de l’entraînement », sur 30 jours :
+    - montre : dernière activité importée (jour, format), nombre d’activités ;
+    - retours : combien, dont mesurés par la montre et saisis à la main.
+  - Signal « Rien de nouveau depuis N jours : les chiffres de la fiche datent » au-delà de 14 jours sans activité ni retour, ou « Aucune mesure pour l’instant ».
+  - Coach affecté seulement. Aucune donnée de santé.
+- **Preuve.**
+  - 2 tests du domaine : montre récente et retours mêlés ; saisie à la main seulement, rien depuis 18 jours, rien du tout.
+  - 1 test serveur : retours comptés, élève refusé.
+  - `npm test` : 251 passés (+3 PostgreSQL), typecheck OK.
+  - Navigateur (fiche de Camille) : « Montre : dernière activité importée il y a 2 jours (TCX) · 2 activités sur 30 jours. Retours : 3 sur 30 jours, dont 2 mesurés par la montre et 1 saisi à la main. »
+

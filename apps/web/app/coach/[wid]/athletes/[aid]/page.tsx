@@ -5,7 +5,7 @@ import {
   APPOINTMENT_KIND_LABELS, APPOINTMENT_STATUS_LABELS, DAY_LABELS, EXPERIENCE_LABELS, formatLongDate, formatShortDate, formatWeekday, GOAL_STATE_LABELS,
   addDays, LEVEL_LABELS, RESULT_STATE_LABELS, SPORT_LABELS, todayIn, weekStart, urgencyLabel, utcToLocal, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS_LABELS,
   EQUIPMENT_LABELS, PREFERRED_TIME_LABELS, WEEKDAY_MINUTES_LABELS,
-  assessGoal, BILAN_FIELD_LABELS, BILAN_STATUS_LABELS, chronoFromTitle, BREAK_LENGTH_LABELS, DEFAULT_GOAL_KM, distanceFromTitle, FEASIBILITY_LABELS, bilanCompletion, deriveBilan, LONGEST_RECENT_LABELS, PRACTICE_STATUS_LABELS, RESUMED_SINCE_LABELS,
+  measureFreshness, assessGoal, BILAN_FIELD_LABELS, BILAN_STATUS_LABELS, chronoFromTitle, BREAK_LENGTH_LABELS, DEFAULT_GOAL_KM, distanceFromTitle, FEASIBILITY_LABELS, bilanCompletion, deriveBilan, LONGEST_RECENT_LABELS, PRACTICE_STATUS_LABELS, RESUMED_SINCE_LABELS,
   type ResultState, type Sport,
 } from '@coachos/domain';
 import { readAthleteProfile, readBilanDraft, readBilanVersions } from '@/server/commands/athlete-profile';
@@ -17,6 +17,8 @@ import { athleteFile } from '@/server/repo/portfolio';
 import { athleteStats } from '@/server/repo/stats';
 import { StatsPanel } from '@/components/stats-panel';
 import { HistoryTable } from '@/components/history-table';
+import { WeekReviewCard } from '@/components/week-review';
+import { athleteMeasureFacts, athleteWeekReview } from '@/server/repo/week-review';
 import { FeasibilityPanel } from '@/components/feasibility-panel';
 import { PerformancesPanel } from '@/components/performances-panel';
 import { readPerformances } from '@/server/commands/performances';
@@ -59,6 +61,17 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
   const bilanVersions = profile ? await readBilanVersions(actor.userId, wid, aid) : [];
   // CE-P-07 (D-057) : faisabilité du prochain objectif daté (sinon de la course déclarée dans le bilan).
   const goalToday = todayIn(a.timeZone);
+  // D-073 : résumé de la semaine dernière (complète), dans le fuseau de l’élève.
+  // Si la semaine dernière est trop mince, la semaine en cours (séances déjà passées) prend le relais.
+  const pastMonday = addDays(weekStart(goalToday), -7);
+  const lastReview = a.state === 'active' ? await athleteWeekReview(actor.userId, wid, aid, pastMonday, goalToday) : null;
+  const thisReview = lastReview?.status === 'insufficient' ? await athleteWeekReview(actor.userId, wid, aid, weekStart(goalToday), goalToday) : null;
+  const current = thisReview?.status === 'ok';
+  const review = current ? thisReview : lastReview;
+  const lastMonday = current ? weekStart(goalToday) : pastMonday;
+  // D-075 : d’où viennent les chiffres de la fiche, et depuis quand.
+  const measures = a.state === 'active' ? await athleteMeasureFacts(actor.userId, wid, aid, goalToday, a.timeZone) : null;
+  const freshness = measures ? measureFreshness(measures, goalToday) : null;
   const goalCandidate = file.goals.filter((g) => g.state === 'planned' && g.targetDate && g.targetDate > goalToday).sort((x, y) => (x.targetDate! < y.targetDate! ? -1 : 1))[0]
     ?? (profile?.nextEventDate && profile.nextEventDate > goalToday ? { title: profile.nextEventName ?? 'Prochaine course', sport: profile.sport, targetDate: profile.nextEventDate } : null);
   // Passif (D-058) : ce que l’élève a vraiment fait ces 6 dernières semaines, sa régularité réelle et ses objectifs atteints.
@@ -130,6 +143,13 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
           <Link className="btn primary" href={`${base}/calendar?athlete=${aid}`}>Préparer ses séances</Link>
         </span>
       </div>
+
+      {review ? (
+        <section className="card" aria-labelledby="wr-title" id="semaine">
+          <div className="card-head"><h2 id="wr-title">{current ? 'Cette semaine (en cours)' : 'Semaine dernière'}</h2><span className="muted">{current ? `Depuis le ${formatShortDate(lastMonday)}, jusqu’à hier` : `Du ${formatShortDate(lastMonday)} au ${formatShortDate(addDays(lastMonday, 6))}`} · calculé sur ses retours</span></div>
+          <div className="card-body"><WeekReviewCard review={review} wid={wid} aid={aid} first={first ?? a.name} title={review.status === 'insufficient' ? 'Pas assez de séances publiées pour un résumé.' : 'Prévu, déclaré et manquant :'} /></div>
+        </section>
+      ) : null}
 
       <section className="card" aria-labelledby="groups-title">
         <div className="card-head"><h2 id="groups-title">Groupes</h2></div>
@@ -237,6 +257,11 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
         <section className="card" aria-labelledby="suivi-title" id="suivi">
           <div className="card-head"><h2 id="suivi-title">Suivi de l’entraînement</h2></div>
           <div className="card-body stack">
+            {freshness ? (
+              <div className={`measures${freshness.stale ? ' stale' : ''}`} aria-label="Source et fraîcheur des mesures">
+                {freshness.lines.map((l, i) => <p key={i} className={i === 2 ? 'measures-warn' : 'muted'}>{l}</p>)}
+              </div>
+            ) : null}
             <StatsPanel s={stats.summary} delta={stats.delta} weeks={weeks} periodHref={periodHref} you={false} />
             <HistoryTable rows={stats.history} weeks={weeks} href={(sid) => `${base}/athletes/${aid}/workouts/${sid}`} />
           </div>

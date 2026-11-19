@@ -31,3 +31,5 @@ export * from './notifications';
 export * from './foulee-library';
 export * from './ai-coach';
 export * from './coach-method';
+export * from './week-review';
+export * from './measure-freshness';
