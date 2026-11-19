@@ -66,8 +66,15 @@ export const publishGroupSessionSchema = z
   .object({
     items: z.array(z.object({ athleteId: uuid, workoutId: uuid, revision: z.number().int().min(1) }).strict())
       .min(1, { message: 'Choisis au moins une séance à publier' }).max(60),
+    /** Message facultatif dans le fil du groupe, relu par le coach avant l’envoi (D-049). */
+    announce: z.string().trim().min(1, { message: 'Message vide' }).max(1000, { message: '1000 caractères au plus' }).nullish().transform((v) => v ?? null),
   })
   .strict();
+
+/** Texte proposé pour annoncer une séance de groupe : sans détail individuel, les adaptations restant privées. */
+export function groupAnnouncement(title: string, dateLabel: string): string {
+  return `📅 Nouvelle séance de groupe : « ${title} », ${dateLabel}. Elle t’attend dans ton Programme.`;
+}
 
 /** Modifier la base commune (D-046) : répercutée sur les séances encore identiques à l’ancienne base. */
 export const updateGroupBaseSchema = z

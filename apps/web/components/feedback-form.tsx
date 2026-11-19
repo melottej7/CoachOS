@@ -7,6 +7,7 @@ import {
   type Block, type Change, type Difficulty, type ResultState, type Sport,
 } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
+import { ActivityImport } from './activity-import';
 import { fieldError, useIntent } from './use-intent';
 
 interface Props {
@@ -19,9 +20,13 @@ interface Props {
   /** Déroulé prévu : sert à demander les répétitions faites par série. */
   intervals: Block[];
   sport: Sport;
+  /** Date prévue et fuseau de l’élève : vérifier qu’une activité importée est la bonne (D-048). */
+  plannedDate: string;
+  timeZone: string;
   existing: {
     revision: number; state: ResultState; durationSeconds: number | null; distanceM: number | null; rpe: number | null; comment: string | null;
     overallFeeling: number | null; difficulties: Difficulty[]; changes: Change[]; actualSport: Sport | null; repeatsDone: number[];
+    measureFile: 'fit' | 'tcx' | 'gpx' | null;
   } | null;
 }
 
@@ -29,7 +34,7 @@ interface Props {
  * X43 : retour en quelques gestes, à une main. Seul l’état est requis.
  * La saisie reste en mémoire si le réseau coupe ; « Réessayer » rejoue avec la même clé.
  */
-export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes, workspaceName, intervals, sport, existing }: Props) {
+export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes, workspaceName, intervals, sport, plannedDate, timeZone, existing }: Props) {
   const router = useRouter();
   const [state, setState] = useState<ResultState | ''>(existing?.state ?? '');
   const [minutes, setMinutes] = useState(existing?.durationSeconds ? String(Math.round(existing.durationSeconds / 60)) : '');
@@ -43,6 +48,11 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
   const repeats = intervals.filter((b): b is Extract<Block, { type: 'repeat' }> => b.type === 'repeat');
   const [repsText, setRepsText] = useState<string[]>(() => repeats.map((_, i) => (existing?.repeatsDone[i] === undefined ? '' : String(existing.repeatsDone[i]))));
   const [missingState, setMissingState] = useState(false);
+  // Provenance (D-048) : mesures lues dans un fichier, tant que l’élève ne les modifie pas.
+  const kmText = (m: number | null) => (m ? String(Math.round(m / 10) / 100).replace('.', ',') : '');
+  const [imported, setImported] = useState<{ file: 'fit' | 'tcx' | 'gpx'; minutes: string; km: string } | null>(
+    existing?.measureFile ? { file: existing.measureFile, minutes: existing.durationSeconds ? String(Math.round(existing.durationSeconds / 60)) : '', km: existing.distanceM ? String(existing.distanceM / 1000).replace('.', ',') : '' } : null,
+  );
   const { run, pending, error } = useIntent<{ item: { id: string; revision: number } }>();
 
   async function submit(e?: FormEvent) {
@@ -72,6 +82,7 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
       changes: done ? changes : [],
       actualSport: done && changes.includes('other_sport') && actualSport ? actualSport : null,
       repeatsDone,
+      measureFile: done && imported && imported.minutes === minutes && imported.km === km && (minutes || km) ? imported.file : null,
     };
     const sent = await run('PUT', `/api/v1/workspaces/${wid}/athletes/${aid}/workouts/${sid}/feedback`, body);
     if (sent) {
@@ -106,6 +117,11 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
 
       {state === 'completed' || state === 'partial' ? (
         <>
+          <ActivityImport plannedDate={plannedDate} plannedSport={sport} timeZone={timeZone} onRead={(s) => {
+            const mm = s.seconds ? String(Math.round(s.seconds / 60)) : '';
+            const kk = kmText(s.distanceM);
+            setMinutes(mm); setKm(kk); setImported({ file: s.format, minutes: mm, km: kk });
+          }} />
           <div className="form-row">
             <div className="field">
               <label htmlFor="duration">

@@ -42,7 +42,7 @@ export default async function Progress({ params, searchParams }: { params: Promi
         <p className="muted">Pas encore d’objectif fixé avec ton coach. <Link href={`/athlete/${wid}/messages/coach`}>Parlez-en ensemble</Link>.</p>
       )}
       <section className="card" aria-label="Tes entraînements">
-        <StatsPanel s={s} weeks={weeks} periodHref={(n) => `/athlete/${wid}/progress?periode=${n}`} you />
+        <StatsPanel s={s} delta={data.delta} weeks={weeks} periodHref={(n) => `/athlete/${wid}/progress?periode=${n}`} you />
       </section>
     </>
   );

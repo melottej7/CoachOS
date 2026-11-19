@@ -175,7 +175,7 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
       {stats ? (
         <section className="card" aria-labelledby="suivi-title" id="suivi">
           <div className="card-head"><h2 id="suivi-title">Suivi de l’entraînement</h2></div>
-          <div className="card-body"><StatsPanel s={stats.summary} weeks={weeks} periodHref={periodHref} you={false} /></div>
+          <div className="card-body"><StatsPanel s={stats.summary} delta={stats.delta} weeks={weeks} periodHref={periodHref} you={false} /></div>
         </section>
       ) : null}
 

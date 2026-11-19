@@ -162,6 +162,13 @@ async function insertTeam(tx: Tx, wid: string, tid: string, who: { role: 'coach'
   return { id: m.id, createdAt: new Date(m.created_at).toISOString(), body, mine: true, voiceId: voice?.id ?? null, voiceDurationS: voice?.s ?? null, senderName: who.name };
 }
 
+/** Annonce d’une séance de groupe (D-049), dans la transaction de la publication. */
+export async function announceToTeam(tx: Tx, wid: string, tid: string, body: string): Promise<string> {
+  const who = await teamAccess(tx, wid, tid);
+  if (who.role !== 'coach') throw notVisible();
+  return (await insertTeam(tx, wid, tid, who, body, null)).id;
+}
+
 /** sendTeamMessage · CA : message au groupe, lu par le coach et les élèves membres. */
 export async function sendTeamMessage(meta: Meta & { teamId: string }, body: unknown): Promise<StoredResponse> {
   const v = parse<{ body: string; workoutId: string | null }>(sendMessageSchema, body);

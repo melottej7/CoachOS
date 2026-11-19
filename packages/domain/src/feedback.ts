@@ -55,6 +55,8 @@ export const saveFeedbackSchema = z
     actualSport: z.enum(SPORTS).nullish().transform((v) => v ?? null),
     /** Répétitions faites, une valeur par série principale du déroulé, dans l’ordre. */
     repeatsDone: z.array(z.number().int().min(0, { message: '0 au moins' }).max(50, { message: '50 au plus' })).max(30).default([]),
+    /** Durée et distance lues dans un fichier de montre (D-048) ; null = saisies à la main. */
+    measureFile: z.enum(['fit', 'tcx', 'gpx']).nullish().transform((v) => v ?? null),
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -67,6 +69,9 @@ export const saveFeedbackSchema = z
     }
     if ((value.state === 'missed' || value.state === 'postponed') && (value.changes.length || value.actualSport !== null || value.repeatsDone.length)) {
       ctx.addIssue({ code: 'custom', path: ['changes'], message: 'Une séance non réalisée ou reportée ne décrit pas ce qui a changé' });
+    }
+    if (value.measureFile !== null && value.durationSeconds === null && value.distanceM === null) {
+      ctx.addIssue({ code: 'custom', path: ['measureFile'], message: 'Aucune mesure tirée du fichier' });
     }
   });
 

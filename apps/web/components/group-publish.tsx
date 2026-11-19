@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { GROUP_ROW_LABELS, type GroupSessionRowState } from '@coachos/domain';
+import { GROUP_ROW_LABELS, groupAnnouncement, type GroupSessionRowState } from '@coachos/domain';
 import { useIntent } from './use-intent';
 
 // Lot G2 (D-042) : chaque élève et l’état de sa séance ; on choisit qui reçoit la publication.
@@ -15,12 +15,18 @@ export interface PublishRow {
 
 const TONE: Record<GroupSessionRowState, string> = { draft: 'neutral', adapted: 'attn', published: '', changed: 'attn' };
 
-export function GroupPublish({ wid, gid, rows, without }: { wid: string; gid: string; rows: PublishRow[]; without: string[] }) {
+export function GroupPublish({ wid, gid, rows, without, title, dateLabel, teamName }: {
+  wid: string; gid: string; rows: PublishRow[]; without: string[]; title: string; dateLabel: string; teamName: string;
+}) {
   const router = useRouter();
-  const { run, pending, error } = useIntent<{ published: number }>();
+  const { run, pending, error } = useIntent<{ published: number; announcementId: string | null }>();
   const open = rows.filter((r) => r.state !== 'published');
   const [chosen, setChosen] = useState<Set<string>>(() => new Set(open.map((r) => r.workoutId)));
   const [done, setDone] = useState<number | null>(null);
+  // Annonce dans le fil du groupe (D-049) : décochée par défaut, texte relu et modifiable avant l’envoi.
+  const [announce, setAnnounce] = useState(false);
+  const [text, setText] = useState(() => groupAnnouncement(title, dateLabel));
+  const [announced, setAnnounced] = useState(false);
   const toggle = (id: string) => setChosen((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const picked = open.filter((r) => chosen.has(r.workoutId));
   const skipped = open.filter((r) => !chosen.has(r.workoutId));
@@ -30,8 +36,9 @@ export function GroupPublish({ wid, gid, rows, without }: { wid: string; gid: st
   async function publish() {
     const r = await run('POST', `/api/v1/workspaces/${wid}/group-sessions/${gid}/publish`, {
       items: picked.map((x) => ({ athleteId: x.athleteId, workoutId: x.workoutId, revision: x.revision })),
+      announce: announce && text.trim() ? text.trim() : null,
     });
-    if (r) { setDone(r.published); router.refresh(); }
+    if (r) { setDone(r.published); setAnnounced(Boolean(r.announcementId)); router.refresh(); }
   }
 
   return (
@@ -60,15 +67,24 @@ export function GroupPublish({ wid, gid, rows, without }: { wid: string; gid: st
           {skipped.length || without.length ? (
             <p className="gp-except">Exceptions : {[...skipped.map((r) => `${first(r.name)} (non cochée)`), ...without.map((n) => `${first(n)} (pas de séance)`)].join(', ')}.</p>
           ) : <p className="muted">Aucune exception.</p>}
+          <div className="gp-announce">
+            <label className="check">
+              <input type="checkbox" checked={announce} onChange={(e) => setAnnounce(e.target.checked)} />
+              <span>Annoncer dans le fil « {teamName} »<span className="muted rules-why">Lu par tous les membres du groupe, même ceux qui n’ont pas cette séance.</span></span>
+            </label>
+            {announce ? (
+              <textarea aria-label="Message d’annonce" maxLength={1000} value={text} onChange={(e) => setText(e.target.value)} />
+            ) : null}
+          </div>
           <div className="actions">
-            <button type="button" className="btn primary" disabled={pending || !picked.length} onClick={() => void publish()}>
-              {pending ? 'Publication…' : `Publier pour ${picked.length} élève${picked.length > 1 ? 's' : ''}`}
+            <button type="button" className="btn primary" disabled={pending || !picked.length || (announce && !text.trim())} onClick={() => void publish()}>
+              {pending ? 'Publication…' : `Publier pour ${picked.length} élève${picked.length > 1 ? 's' : ''}${announce ? ' et annoncer' : ''}`}
             </button>
           </div>
           {error ? <p className="field-error" role="alert">{error.kind === 'error' ? error.message : 'Connexion perdue. Réessaie.'}</p> : null}
         </div>
-      ) : <p className="banner ok" role="status">Toutes les séances sont publiées.{done ? ` ${done} publiée${done > 1 ? 's' : ''} à l’instant.` : ''}</p>}
-      {done && open.length ? <p className="banner ok" role="status">{done} séance{done > 1 ? 's' : ''} publiée{done > 1 ? 's' : ''}.</p> : null}
+      ) : <p className="banner ok" role="status">Toutes les séances sont publiées.{done ? ` ${done} publiée${done > 1 ? 's' : ''} à l’instant.` : ''}{announced ? ' Annonce envoyée dans le fil du groupe.' : ''}</p>}
+      {done && open.length ? <p className="banner ok" role="status">{done} séance{done > 1 ? 's' : ''} publiée{done > 1 ? 's' : ''}.{announced ? ' Annonce envoyée dans le fil du groupe.' : ''}</p> : null}
     </div>
   );
 }

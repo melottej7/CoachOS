@@ -205,6 +205,11 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
   - **D-046** : modifier la base d’une séance de groupe, répercutée sur les séances qui la suivent, sans rien publier (migration `20261119060000`).
   - **D-047** : correction de l’accusé de lecture quand un retour termine la conversation.
   - Migrations appliquées à Supabase local, sans remise à zéro. `npm test` : **148 passés** (+3 PostgreSQL), typecheck OK.
+- Commit `7b9e0ec` (D-044 à D-047). Puis (non commité) :
+  - **D-048** : import de l’activité de la montre (FIT, TCX, GPX), lue dans le navigateur, durée et distance préremplies, provenance conservée (migration `20261119070000`).
+  - **D-049** : annonce facultative d’une séance de groupe dans le fil du groupe.
+  - **D-050** : comparaison avec la période précédente dans le suivi.
+  - `npm test` : **156 passés** (+3 PostgreSQL), typecheck OK.
 
 Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au micro réel (autorisation du micro non automatisable ici) ; visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
 
@@ -212,10 +217,9 @@ Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au mic
 1. Recette des lots G et H par le fondateur (Planning, Élèves, fiche).
 2. Recette par le fondateur des nouveautés de la nuit et du matin, dont **l’essai du fichier FIT sur la Fenix 8** (GUIDE_RECETTE).
 3. Ensuite :
-   - import FIT/TCX d’une activité réalisée (CE-X-02/03), en attente de la décision sur les données de santé (fréquence cardiaque) ;
-   - annonce d’une séance de groupe dans le fil du groupe ;
+   - rapprochement de plusieurs activités par séance (CE-X-03) ;
    - créneau et récurrence des tâches (CE-H-06) ;
-   - comparaison entre périodes dans le suivi.
+   - propositions de semaine et faisabilité (CE-P-05).
 3. **Lot G** (détail) : CE-G-01 à CE-G-08 (groupes sur `teams` étendu par migration additive, niveaux par sport `athlete_sport_levels`, vue d’ensemble, groupe filtré avec contexte conservé, fiche élève centrale, notes privées `coach_notes`, objectifs `goals`).
 3. Lot H, puis S, B, E, G2, P ; export FIT (CE-X-01) possible en parallèle.
 

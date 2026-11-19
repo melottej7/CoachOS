@@ -31,7 +31,7 @@ export default async function GroupSessionPage({ params }: { params: Promise<{ w
         <div className="card-head"><h2 id="gp-title">Séance de chaque élève</h2></div>
         <div className="card-body">
           <p className="muted">« Adapter » modifie la séance d’un seul élève : elle ne suivra plus les modifications de la base. Rien n’est visible par les élèves avant la publication.</p>
-          <GroupPublish wid={wid} gid={gid} without={v.without.map((m) => m.name)}
+          <GroupPublish wid={wid} gid={gid} without={v.without.map((m) => m.name)} title={v.title} dateLabel={formatLongDate(v.localDate).toLowerCase()} teamName={v.teamName}
             rows={v.rows.map((r) => ({
               athleteId: r.athleteId, name: r.athleteName, workoutId: r.workoutId, revision: r.workingRevision, state: r.state, title: r.title,
               base: r.followsBase, editHref: `${base}/athletes/${r.athleteId}/workouts/${r.workoutId}/edit?from=${back}`,

@@ -90,3 +90,13 @@ Avec un compte élève, sur un ordinateur :
 
    Sur Mac, si la montre n’apparaît pas dans le Finder, dis-le-moi : on choisira ensemble un outil de transfert.
 
+## Nouveautés du 19 novembre (fin de matinée) à essayer
+
+Avec un compte élève :
+1. Après une séance, ouvre « Mon retour », choisis « Réalisée », puis **⌚ Importer depuis ma montre**, et choisis le fichier de l’activité exporté de Garmin Connect (.fit, .tcx ou .gpx). La durée et la distance se remplissent ; corrige si besoin, puis envoie.
+
+Avec ton compte coach :
+2. Dans « Retours », ouvre ce retour : la ligne **Provenance** indique si les mesures viennent de la montre ou ont été saisies à la main.
+3. En publiant une séance de groupe, coche **Annoncer dans le fil du groupe**, relis le message, puis publie. Le message apparaît dans le fil du groupe.
+4. Dans la fiche d’un élève, « Suivi de l’entraînement » : sous chaque chiffre, la comparaison avec la période précédente apparaît dès qu’il y a des séances avant la période choisie.
+

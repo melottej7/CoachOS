@@ -9,6 +9,7 @@ import { createGroupSession, publishGroupSession, updateGroupBase } from './comm
 import { updateWorkout } from './commands/workouts';
 import { groupSession, groupSessions, teamRecipients, teamWeek } from './repo/group-sessions';
 import { athleteSchedule } from './repo/athlete';
+import { teamThread } from './repo/messages';
 
 // Lot G2 (D-042) : base commune, brouillons par élève, adaptations conservées, exceptions, publication atomique.
 
@@ -115,6 +116,31 @@ describe('séance de groupe', () => {
     expect(await codeOf(updateGroupBase({ ...meta(USERS.marine), groupSessionId: g2 }, { expectedRevision: 1, workout: next }))).toBe('CONFLICT_OR_QUOTA');
     expect(await codeOf(updateGroupBase({ ...meta(USERS.camille), groupSessionId: g2 }, { expectedRevision: 2, workout: next }))).toBe('RESOURCE_NOT_VISIBLE');
     expect(await codeOf(updateGroupBase({ ...meta(USERS.hugo), groupSessionId: g2 }, { expectedRevision: 2, workout: next }))).toBe('RESOURCE_NOT_VISIBLE');
+  });
+
+  it('annonce dans le fil du groupe (D-049) : envoyée avec la publication, ou rien', async () => {
+    const d = addDays(day, 4);
+    const c = await createGroupSession(meta(USERS.marine), { teamId: team, localDate: d, workout, athleteIds: [ATHLETES.camille, ATHLETES.noah] });
+    const { id: g3, items: its } = c.body as { id: string; items: typeof items };
+    const [cam, noah] = [its.find((x) => x.athleteId === ATHLETES.camille)!, its.find((x) => x.athleteId === ATHLETES.noah)!];
+    const text = '📅 Nouvelle séance de groupe : « Piste », samedi. Elle t’attend dans ton Programme.';
+    // Révision périmée pour Noah : ni publication ni annonce.
+    expect(await codeOf(publishGroupSession({ ...meta(USERS.marine), groupSessionId: g3 }, {
+      items: [{ athleteId: ATHLETES.camille, workoutId: cam.workoutId, revision: 1 }, { athleteId: ATHLETES.noah, workoutId: noah.workoutId, revision: 9 }], announce: text,
+    }))).toBe('CONFLICT_OR_QUOTA');
+    expect((await teamThread(USERS.camille, WORKSPACE_A, team))!.messages.some((m) => m.body === text)).toBe(false);
+    const r = await publishGroupSession({ ...meta(USERS.marine), groupSessionId: g3 }, {
+      items: [{ athleteId: ATHLETES.camille, workoutId: cam.workoutId, revision: 1 }, { athleteId: ATHLETES.noah, workoutId: noah.workoutId, revision: 1 }], announce: text,
+    });
+    expect((r.body as { announcementId: string | null }).announcementId).toBeTruthy();
+    const seen = (await teamThread(USERS.noah, WORKSPACE_A, team))!.messages.filter((m) => m.body === text);
+    expect(seen).toHaveLength(1);
+    // Sans annonce : aucun message.
+    const c2 = await createGroupSession(meta(USERS.marine), { teamId: team, localDate: addDays(d, 1), workout, athleteIds: [ATHLETES.camille] });
+    const b2 = c2.body as { id: string; items: typeof items };
+    const r2 = await publishGroupSession({ ...meta(USERS.marine), groupSessionId: b2.id }, { items: [{ ...b2.items[0]!, revision: 1 }] });
+    expect((r2.body as { announcementId: string | null }).announcementId).toBeNull();
+    expect(await codeOf(publishGroupSession({ ...meta(USERS.marine), groupSessionId: b2.id }, { items: [{ ...b2.items[0]!, revision: 1 }], announce: ' ' }))).toBe('INVALID_FIELDS');
   });
 
   it('semaine du groupe : chaque élève, l’état de chaque séance ; rien pour un autre espace (CE-G2-03)', async () => {

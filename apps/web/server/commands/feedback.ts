@@ -62,9 +62,9 @@ export async function saveFeedback(meta: Meta, body: unknown): Promise<StoredRes
       if (!prev) {
         if (input.expectedRevision !== null) throw conflict('Ce retour n’existe plus. Recharger la séance.', { revision: null });
         const res = await tx.query<{ id: string }>(
-          `insert into public.workout_results(workspace_id, athlete_id, workout_id, workout_revision, state, duration_seconds, distance_m, source)
-           values ($1, $2, $3, $4, $5, $6, $7, 'manual') returning id`,
-          [wid, aid, sid, input.publishedRevision, input.state, input.durationSeconds, input.distanceM],
+          `insert into public.workout_results(workspace_id, athlete_id, workout_id, workout_revision, state, duration_seconds, distance_m, source, measure_file)
+           values ($1, $2, $3, $4, $5, $6, $7, 'manual', $8) returning id`,
+          [wid, aid, sid, input.publishedRevision, input.state, input.durationSeconds, input.distanceM, input.measureFile],
         );
         const fb = await tx.query<{ id: string }>(
           `insert into public.feedbacks(workspace_id, athlete_id, result_id, rpe, comment, overall_feeling, difficulties, changes, actual_sport, repeats_done)
@@ -83,9 +83,9 @@ export async function saveFeedback(meta: Meta, body: unknown): Promise<StoredRes
         feedbackId = prev.feedback_id;
         revision = prev.revision + 1;
         await tx.query(
-          `update public.workout_results set workout_revision = $4, state = $5, duration_seconds = $6, distance_m = $7, revision = $8
+          `update public.workout_results set workout_revision = $4, state = $5, duration_seconds = $6, distance_m = $7, revision = $8, measure_file = $9
            where workspace_id = $1 and athlete_id = $2 and id = $3`,
-          [wid, aid, prev.result_id, input.publishedRevision, input.state, input.durationSeconds, input.distanceM, prev.result_revision + 1],
+          [wid, aid, prev.result_id, input.publishedRevision, input.state, input.durationSeconds, input.distanceM, prev.result_revision + 1, input.measureFile],
         );
         await tx.query(
           `update public.feedbacks set rpe = $4, comment = $5, revision = $6, reviewed_at = null, overall_feeling = $7, difficulties = $8::text[],
@@ -121,6 +121,7 @@ export async function saveFeedback(meta: Meta, body: unknown): Promise<StoredRes
             changes: input.changes,
             actualSport: input.actualSport,
             repeatsDone: input.repeatsDone,
+            measureFile: input.measureFile,
           },
         },
       };

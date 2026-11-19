@@ -3,6 +3,7 @@ import { commandAs } from '../db/client';
 import { AppError, conflict, invalid, notVisible } from '../errors';
 import { audit, idempotent, type StoredResponse } from './idempotency';
 import { insertRevision, publishInTx, requireAssignedCoach } from './workouts';
+import { announceToTeam } from './messages';
 
 // Lot G2 (D-042) : séance préparée pour un groupe. Droits identiques à la création séance par séance :
 // coach actif, affecté à chaque élève, élève membre du groupe et dossier non archivé.
@@ -123,10 +124,10 @@ export async function updateGroupBase(meta: Meta & { groupSessionId: string }, b
 export async function publishGroupSession(meta: Meta & { groupSessionId: string }, body: unknown): Promise<StoredResponse> {
   const parsed = parseWith(publishGroupSessionSchema, body);
   if (!parsed.ok) throw invalid(parsed.fields);
-  const { items } = parsed.value;
+  const { items, announce } = parsed.value;
   if (new Set(items.map((x) => x.workoutId)).size !== items.length) throw invalid([{ path: 'items', rule: 'Une séance apparaît deux fois' }]);
   return commandAs(meta.actorId, async (tx) => {
-    const gs = await tx.query<{ id: string }>('select id from public.group_sessions where workspace_id = $1 and id = $2 and private.current_coach($1)', [meta.workspaceId, meta.groupSessionId]);
+    const gs = await tx.query<{ id: string; team_id: string }>('select id, team_id from public.group_sessions where workspace_id = $1 and id = $2 and private.current_coach($1)', [meta.workspaceId, meta.groupSessionId]);
     if (!gs.rows[0]) throw notVisible();
     return idempotent(tx, { ...scope(meta, 'group_session.publish'), body }, async () => {
       const own = await tx.query<{ id: string; athlete_id: string }>(
@@ -148,7 +149,9 @@ export async function publishGroupSession(meta: Meta & { groupSessionId: string 
           throw e;
         }
       }
-      return { status: 200, body: { published, items: items.map((x) => ({ workoutId: x.workoutId, revision: x.revision })) } };
+      // Annonce explicite dans le fil du groupe, dans la même transaction : publiée et annoncée, ou rien.
+      const announcementId = announce ? await announceToTeam(tx, meta.workspaceId, gs.rows[0]!.team_id, announce) : null;
+      return { status: 200, body: { published, items: items.map((x) => ({ workoutId: x.workoutId, revision: x.revision })), announcementId } };
     });
   });
 }

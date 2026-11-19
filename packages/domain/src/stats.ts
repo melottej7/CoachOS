@@ -105,7 +105,40 @@ export const STAT_DEFINITIONS = [
   ['Volume réalisé', 'durée déclarée par l’élève ; à défaut, durée prévue pour une séance faite en entier'],
   ['Effort ressenti', 'moyenne de l’effort de 0 à 10 donné dans les retours'],
   ['Série', 'semaines consécutives avec au moins une séance faite ; la semaine en cours ne la coupe pas'],
+  ['Comparaison', 'avec la période de même durée juste avant ; la semaine en cours, pas encore terminée, est comprise dans la période actuelle'],
 ] as const;
+
+/** Écart avec la période précédente (CE-S-04, D-050), ou null si l’une des deux n’a pas de quoi comparer. */
+export interface PeriodDelta {
+  /** Différence de régularité, en points. */
+  completionPts: number | null;
+  /** Variation du volume réalisé, en %. */
+  volumePct: number | null;
+  /** Variation de la distance réalisée, en %. */
+  distancePct: number | null;
+  /** Différence d’effort moyen, sur 10. */
+  rpeDiff: number | null;
+}
+
+const pct = (cur: number, prev: number) => (prev > 0 ? Math.round(((cur - prev) / prev) * 100) : null);
+
+export function comparePeriods(cur: StatsSummary, prev: StatsSummary): PeriodDelta {
+  return {
+    completionPts: cur.completion !== null && prev.completion !== null ? cur.completion - prev.completion : null,
+    volumePct: prev.due ? pct(cur.doneSeconds, prev.doneSeconds) : null,
+    distancePct: prev.due ? pct(cur.doneMeters, prev.doneMeters) : null,
+    rpeDiff: cur.avgRpe !== null && prev.avgRpe !== null ? Math.round((cur.avgRpe - prev.avgRpe) * 10) / 10 : null,
+  };
+}
+
+/** « en hausse de 12 points », « stable », « en baisse de 8 % » : le sens est écrit, jamais porté par la couleur seule. */
+export function deltaText(value: number | null, unit: 'pts' | 'pct' | 'rpe'): string | null {
+  if (value === null) return null;
+  const abs = Math.abs(value);
+  const fmt = unit === 'pts' ? `${abs} point${abs > 1 ? 's' : ''}` : unit === 'pct' ? `${abs} %` : `${String(abs).replace('.', ',')}`;
+  if (value === 0 || (unit === 'pct' && abs < 3) || (unit === 'rpe' && abs < 0.3)) return 'stable';
+  return `${value > 0 ? 'en hausse' : 'en baisse'} de ${fmt}`;
+}
 
 /** Compte à rebours vers une échéance. */
 export function daysUntil(today: LocalDate, target: LocalDate): number {

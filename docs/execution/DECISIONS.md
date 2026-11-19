@@ -416,3 +416,53 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
 - **Constat.** Le journal du serveur montrait des refus (422) sur l’accusé de lecture côté élève. Depuis D-036, la conversation intercale les retours de séance, dont l’identifiant (« fb-… ») n’est pas celui d’un message. Quand un retour terminait le fil, l’accusé lui était adressé et refusé, et le dernier vrai message restait « non lu ».
 - **Correction.** L’accusé porte sur le dernier vrai message reçu.
 - **Preuve.** Conversation de Camille terminée par un retour : accusé 200 (au lieu de 422).
+
+## D-048 · Importer l’activité de la montre pour préremplir le retour (CE-X-02) · 2026-11-19
+
+- **Contexte.** Import manuel FIT et TCX (COUVERTURE, lot X). La décision sur les données de santé est en attente (D11) : la fréquence cardiaque ne doit pas entrer.
+- **Décision.**
+  - Dans « Mon retour », séance faite en entier ou en partie : « ⌚ Importer depuis ma montre ». Formats acceptés : .fit, .tcx, .gpx, reconnus par leur contenu.
+  - **Le fichier est lu dans le navigateur de l’élève ; il n’est ni envoyé ni conservé.** Seuls le sport, l’heure de début, la durée (temps en mouvement) et la distance sont lus. Fréquence cardiaque, puissance, positions et autres mesures sont ignorées.
+  - La durée et la distance préremplissent le formulaire, puis l’élève corrige et envoie : l’envoi reste explicite.
+  - L’écran signale une activité d’un autre jour que la séance, ou d’un autre sport.
+  - Refus expliqués : séance à faire (programme), parcours, fichier abîmé (contrôle d’intégrité) ou incomplet, format inconnu, plus de 25 Mo.
+  - Provenance conservée (migration `20261119070000`, `workout_results.measure_file`) :
+    - le coach lit « Provenance : Lue dans un fichier FIT de sa montre » ou « Saisie à la main » ;
+    - si l’élève modifie une valeur importée, la mesure redevient « saisie à la main » ;
+    - un fichier sans aucune mesure est refusé.
+  - Lecteur FIT : les cas courants sont pris en charge.
+    - Lus : définitions petit- et grand-boutistes, champs de développeur, horodatages compressés, sessions multiples.
+    - Si le fichier n’a pas de session : tours, puis points.
+- **Preuve.**
+  - 6 tests du lecteur (dont fréquence cardiaque absente du résultat) et test de contrat de la provenance.
+  - Vrai fichier Garmin du poste (un parcours) : parcouru en entier sans erreur, puis reconnu comme parcours.
+  - Navigateur (Camille, 375 px) :
+    - le FIT est lu sans aucune requête réseau ; « 45 min · 8,12 km · jeudi 19 novembre à 07:30 » prérempli ;
+    - le retour est envoyé, et Marine lit « Lue dans un fichier FIT de sa montre » avec l’allure de 5:33 /km.
+- **Non fait.** Rapprochement de plusieurs activités par séance (CE-X-03) ; stockage de l’activité elle-même ; essai avec un vrai fichier d’activité de la Fenix 8.
+
+## D-049 · Annoncer une séance de groupe dans le fil du groupe · 2026-11-19
+
+- **Décision.**
+  - Au moment de publier une séance de groupe, la case « Annoncer dans le fil « Groupe… » » est **décochée par défaut**. Une fois cochée, elle affiche le message proposé, modifiable avant l’envoi :
+    - « 📅 Nouvelle séance de groupe : « titre », date. Elle t’attend dans ton Programme. » ;
+    - aucune adaptation individuelle n’y apparaît ;
+    - il est rappelé que tout le groupe lit le fil, y compris ceux qui n’ont pas cette séance.
+  - Publication et annonce se font dans une même transaction : si la publication échoue, rien n’est annoncé.
+  - Seul un coach peut annoncer. Champ `announce` de `publishGroupSession`, réponse `announcementId`.
+- **Preuve.**
+  - Test : révision périmée → ni publication ni message ; avec annonce, un seul message, lu par Noah ; sans annonce, aucun message ; message vide refusé.
+  - Navigateur (Marine, 375 px) : publication de Camille avec annonce → « Annonce envoyée dans le fil du groupe », message présent dans le fil « Groupe du mardi ».
+
+## D-050 · Comparaison avec la période précédente dans le suivi · 2026-11-19
+
+- **Décision.**
+  - Sous chaque chiffre du suivi (élève et fiche du coach), on compare à la période de même durée juste avant.
+  - La comparaison s’écrit en toutes lettres, par exemple « ↑ En hausse de 12 points par rapport aux 4 semaines d’avant », « stable » ou « en baisse de 8 % » :
+    - régularité en points ;
+    - volume et distance en % ;
+    - effort sur 10.
+  - Le sens est écrit et la flèche n’est qu’un décor : jamais la couleur seule. Sous 3 % (ou 0,3 d’effort), la comparaison indique « stable ».
+  - Rien n’est affiché sans séance passée dans la période précédente.
+  - La définition est ajoutée sous les statistiques : la semaine en cours, pas terminée, compte dans la période actuelle.
+- **Preuve.** Test du domaine (points, %, effort, absence de base, textes). Navigateur : la démonstration n’a pas de séance avant la période, donc aucune comparaison affichée, comme prévu.

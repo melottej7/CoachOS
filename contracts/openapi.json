@@ -525,6 +525,21 @@
               "maximum": 50
             },
             "description": "Répétitions faites par série principale, dans l’ordre"
+          },
+          "measureFile": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "fit",
+                  "tcx",
+                  "gpx"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       },
@@ -6978,6 +6993,21 @@
                       "maximum": 50
                     },
                     "description": "Répétitions faites par série principale, dans l’ordre"
+                  },
+                  "measureFile": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "fit",
+                          "tcx",
+                          "gpx"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 }
               }
@@ -18697,6 +18727,17 @@
                           }
                         }
                       }
+                    },
+                    "announcementId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   }
                 }
@@ -18859,6 +18900,18 @@
                         }
                       }
                     }
+                  },
+                  "announce": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 }
               }

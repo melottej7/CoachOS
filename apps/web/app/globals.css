@@ -919,3 +919,13 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .gb > summary::-webkit-details-marker { display: none; }
 .gb > summary h2 { font-size: inherit; }
 .gb[open] > summary { border-bottom: 1px solid var(--rule); }
+
+/* Import d’une activité de montre (D-048) */
+.ai { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 4px; }
+.ai label.btn { cursor: pointer; }
+.ai input[type=file]:focus-visible + label.btn { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ai-done { padding: 10px 12px; border-radius: 10px; background: var(--mint); color: var(--mint-ink); font-size: 14px; display: grid; gap: 4px; }
+.ai-warn { font-weight: 600; }
+.gp-announce { display: grid; gap: 8px; margin: 10px 0 4px; }
+.gp-announce textarea { min-height: 72px; }
+.kpi-delta { margin-top: 4px; font-size: 12.5px; font-weight: 600; color: var(--ink); }

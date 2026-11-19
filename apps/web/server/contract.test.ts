@@ -23,6 +23,7 @@ import { createGroupSession, publishGroupSession, updateGroupBase } from './comm
 import { openConversation, saveReceipt, saveTeamReceipt, sendMessage, sendTeamMessage, sendTeamVoice, sendVoice } from './commands/messages';
 import { deleteWorkspaceLogo, previewInvitation, saveWorkspaceProfile, setWorkspaceLogo } from './commands/workspace-profile';
 import { todayIn } from '@coachos/domain';
+import { coachWorkout } from './repo/coach';
 
 // Test de contrat : chaque réponse réelle des commandes est validée contre contracts/openapi.json
 // (statut attendu et schéma de réponse, propriétés inconnues interdites).
@@ -73,7 +74,16 @@ describe('réponses conformes au contrat OpenAPI', () => {
       publishedRevision: 1, expectedRevision: 1, state: 'partial', distanceM: 5000, changes: ['shorter', 'other_route'], actualSport: null, repeatsDone: [],
     });
     check(`${W}/{sid}/feedback`, 'put', autrement.status, autrement.body);
-    const rv = await markFeedbackReviewed({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille, workoutId: SEED_WORKOUTS.camilleToday }, { expectedRevision: 2 });
+    // Mesures lues dans un fichier de montre (D-048) : provenance conservée et lue par le coach ; fichier sans mesure refusé.
+    const montre = await saveFeedback({ ...m, idempotencyKey: randomUUID() }, {
+      publishedRevision: 1, expectedRevision: 2, state: 'completed', durationSeconds: 2711, distanceM: 8123, measureFile: 'fit',
+    });
+    check(`${W}/{sid}/feedback`, 'put', montre.status, montre.body);
+    expect((await coachWorkout(USERS.marine, WORKSPACE_A, ATHLETES.camille, SEED_WORKOUTS.camilleToday))!.feedback).toMatchObject({ measureFile: 'fit', durationSeconds: 2711 });
+    await expect(saveFeedback({ ...m, idempotencyKey: randomUUID() }, { publishedRevision: 1, expectedRevision: 3, state: 'completed', measureFile: 'gpx' })).rejects.toMatchObject({ code: 'INVALID_FIELDS' });
+    const manual = await saveFeedback({ ...m, idempotencyKey: randomUUID() }, { publishedRevision: 1, expectedRevision: 3, state: 'completed', durationSeconds: 2700 });
+    expect((manual.body as { item: { measureFile: unknown } }).item.measureFile).toBeNull();
+    const rv = await markFeedbackReviewed({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille, workoutId: SEED_WORKOUTS.camilleToday }, { expectedRevision: 4 });
     check(`${W}/{sid}/feedback/review`, 'post', rv.status, rv.body);
   });
 
