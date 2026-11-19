@@ -69,12 +69,40 @@ export const publishGroupSessionSchema = z
   })
   .strict();
 
+/** Modifier la base commune (D-046) : répercutée sur les séances encore identiques à l’ancienne base. */
+export const updateGroupBaseSchema = z
+  .object({ expectedRevision: z.number().int().min(1), workout: libraryWorkoutSchema })
+  .strict();
+
+/** JSON à clés triées : deux contenus égaux donnent le même texte, quel que soit l’ordre des clés. */
+function canonical(v: unknown): string {
+  if (Array.isArray(v)) return `[${v.map(canonical).join(',')}]`;
+  if (v && typeof v === 'object') {
+    return `{${Object.keys(v as object).sort().filter((k) => (v as Record<string, unknown>)[k] !== undefined)
+      .map((k) => `${JSON.stringify(k)}:${canonical((v as Record<string, unknown>)[k])}`).join(',')}}`;
+  }
+  return JSON.stringify(v ?? null);
+}
+
+/**
+ * La séance d’un élève suit-elle encore la base ? Même sport, titre, consignes, blocs et date.
+ * Toute adaptation (contenu ou date) la sort de la base : une modification de la base ne l’écrase jamais.
+ */
+export function followsBase(
+  base: { sport: string; title: string; instructions?: string | null; intervals?: unknown },
+  rev: { sport: string; title: string; instructions: string | null; intervals: unknown; localDate: string },
+  groupDate: string,
+): boolean {
+  return rev.sport === base.sport && rev.title === base.title && (rev.instructions ?? '') === (base.instructions ?? '')
+    && rev.localDate === groupDate && canonical(rev.intervals ?? []) === canonical(base.intervals ?? []);
+}
+
 export type GroupSessionRowState = 'draft' | 'adapted' | 'published' | 'changed';
 export const GROUP_ROW_LABELS: Record<GroupSessionRowState, string> = {
   draft: 'Brouillon', adapted: 'Adaptée, pas publiée', published: 'Publiée', changed: 'Modifiée depuis la publication',
 };
-/** État d’une ligne : adaptée = modifiée après la création depuis la base. */
-export function groupRowState(working: number, published: number | null): GroupSessionRowState {
-  if (published === null) return working > 1 ? 'adapted' : 'draft';
+/** État d’une ligne : adaptée = brouillon qui ne suit plus la base commune. */
+export function groupRowState(working: number, published: number | null, base = working === 1): GroupSessionRowState {
+  if (published === null) return base ? 'draft' : 'adapted';
   return published === working ? 'published' : 'changed';
 }

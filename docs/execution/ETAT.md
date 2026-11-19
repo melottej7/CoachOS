@@ -199,11 +199,23 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
 
 - **D-043** : régularité sur 4 semaines par élève et par groupe dans Élèves, filtre « Régularité sous 50 % ». `npm test` : **139 passés** (+3 PostgreSQL).
 
-Non prouvé : enregistrement au micro réel (autorisation du micro non automatisable ici) ; visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
+- Commit `66651b8` (D-034 à D-043). Puis, le 19 novembre au matin (non commité) :
+  - **D-044** : export FIT d’une séance (élève et coach). Fichier vérifié par un lecteur indépendant et par le contrôle CRC d’un vrai fichier Garmin. Droits vérifiés au navigateur.
+  - **D-045** : suivis automatiques réglables (Paramètres, migration `20261119050000`).
+  - **D-046** : modifier la base d’une séance de groupe, répercutée sur les séances qui la suivent, sans rien publier (migration `20261119060000`).
+  - **D-047** : correction de l’accusé de lecture quand un retour termine la conversation.
+  - Migrations appliquées à Supabase local, sans remise à zéro. `npm test` : **148 passés** (+3 PostgreSQL), typecheck OK.
+
+Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au micro réel (autorisation du micro non automatisable ici) ; visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
 
 À faire, dans l’ordre (D-032) :
 1. Recette des lots G et H par le fondateur (Planning, Élèves, fiche).
-2. Recette par le fondateur des nouveautés de la nuit (Progression, appel de bienvenue, retour rapide, graphique de séance, saisie en texte, séances de groupe, régularité). Puis import FIT/TCX (CE-X-02/03), export FIT (CE-X-01), délais réglables des suivis (CE-H-04), répercuter une modification de la base d’une séance de groupe.
+2. Recette par le fondateur des nouveautés de la nuit et du matin, dont **l’essai du fichier FIT sur la Fenix 8** (GUIDE_RECETTE).
+3. Ensuite :
+   - import FIT/TCX d’une activité réalisée (CE-X-02/03), en attente de la décision sur les données de santé (fréquence cardiaque) ;
+   - annonce d’une séance de groupe dans le fil du groupe ;
+   - créneau et récurrence des tâches (CE-H-06) ;
+   - comparaison entre périodes dans le suivi.
 3. **Lot G** (détail) : CE-G-01 à CE-G-08 (groupes sur `teams` étendu par migration additive, niveaux par sport `athlete_sport_levels`, vue d’ensemble, groupe filtré avec contexte conservé, fiche élève centrale, notes privées `coach_notes`, objectifs `goals`).
 3. Lot H, puis S, B, E, G2, P ; export FIT (CE-X-01) possible en parallèle.
 

@@ -1,4 +1,4 @@
-import { groupRowState, type GroupSessionRowState, type LibraryWorkout, type Sport } from '@coachos/domain';
+import { followsBase, groupRowState, type GroupSessionRowState, type LibraryWorkout, type Sport } from '@coachos/domain';
 import { readAs } from '../db/client';
 
 // Lot G2 (D-042) : lectures de la séance de groupe, sous RLS (coach affecté pour chaque séance).
@@ -8,9 +8,13 @@ export interface GroupSessionRow {
   athleteId: string; athleteName: string; athleteState: string; workoutId: string;
   workingRevision: number; publishedRevision: number | null; state: GroupSessionRowState;
   title: string; localDate: string; canceled: boolean;
+  /** La séance suit encore la base commune (une modification de la base lui sera répercutée). */
+  followsBase: boolean;
 }
 export interface GroupSessionView {
   id: string; teamId: string; teamName: string; title: string; localDate: string; sport: Sport; createdAt: string;
+  /** Base commune actuelle et sa révision (D-046). */
+  base: LibraryWorkout; revision: number;
   rows: GroupSessionRow[];
   /** Membres actuels du groupe sans séance dans cette base (exclus à la création ou arrivés depuis). */
   without: GroupMember[];
@@ -35,8 +39,8 @@ export async function teamRecipients(userId: string, wid: string, tid: string): 
 
 export async function groupSession(userId: string, wid: string, gid: string): Promise<GroupSessionView | null> {
   return readAs(userId, async (tx) => {
-    const g = await tx.query<{ id: string; team_id: string; team_name: string; title: string; local_date: string; base: LibraryWorkout; created_at: Date }>(
-      `select g.id, g.team_id, t.name as team_name, g.title, to_char(g.local_date, 'YYYY-MM-DD') as local_date, g.base, g.created_at
+    const g = await tx.query<{ id: string; team_id: string; team_name: string; title: string; local_date: string; base: LibraryWorkout; created_at: Date; revision: number }>(
+      `select g.id, g.team_id, t.name as team_name, g.title, to_char(g.local_date, 'YYYY-MM-DD') as local_date, g.base, g.created_at, g.revision
        from public.group_sessions g join public.teams t on t.workspace_id = g.workspace_id and t.id = g.team_id
        where g.workspace_id = $1 and g.id = $2`,
       [wid, gid],
@@ -45,10 +49,10 @@ export async function groupSession(userId: string, wid: string, gid: string): Pr
     if (!s) return null;
     const rows = await tx.query<{
       athlete_id: string; display_name: string; state: string; id: string; working_revision: number; published_revision: number | null;
-      title: string; local_date: string; canceled: boolean;
+      title: string; local_date: string; canceled: boolean; sport_code: string; instructions: string | null; intervals: unknown;
     }>(
       `select w.athlete_id, a.display_name, a.state, w.id, w.working_revision, w.published_revision, r.title,
-              to_char(r.local_date, 'YYYY-MM-DD') as local_date, r.canceled
+              to_char(r.local_date, 'YYYY-MM-DD') as local_date, r.canceled, r.sport_code, r.instructions, r.intervals
        from public.workouts w
        join public.athletes a on a.workspace_id = w.workspace_id and a.id = w.athlete_id
        join public.workout_revisions r on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id and r.number = w.working_revision
@@ -65,11 +69,15 @@ export async function groupSession(userId: string, wid: string, gid: string): Pr
     );
     return {
       id: s.id, teamId: s.team_id, teamName: s.team_name, title: s.title, localDate: s.local_date, sport: s.base.sport, createdAt: s.created_at.toISOString(),
-      rows: rows.rows.map((r) => ({
-        athleteId: r.athlete_id, athleteName: r.display_name, athleteState: r.state, workoutId: r.id,
-        workingRevision: r.working_revision, publishedRevision: r.published_revision, state: groupRowState(r.working_revision, r.published_revision),
-        title: r.title, localDate: r.local_date, canceled: r.canceled,
-      })),
+      base: s.base, revision: s.revision,
+      rows: rows.rows.map((r) => {
+        const follows = !r.canceled && followsBase(s.base, { sport: r.sport_code, title: r.title, instructions: r.instructions, intervals: r.intervals, localDate: r.local_date }, s.local_date);
+        return {
+          athleteId: r.athlete_id, athleteName: r.display_name, athleteState: r.state, workoutId: r.id,
+          workingRevision: r.working_revision, publishedRevision: r.published_revision, state: groupRowState(r.working_revision, r.published_revision, follows),
+          title: r.title, localDate: r.local_date, canceled: r.canceled, followsBase: follows,
+        };
+      }),
       without: members.rows.filter((m) => !inSession.has(m.id)).map((m) => ({ id: m.id, name: m.display_name, state: m.state, timeZone: m.time_zone })),
     };
   });

@@ -1,4 +1,4 @@
-import { createGroupSessionSchema, parseWith, publishGroupSessionSchema } from '@coachos/domain';
+import { createGroupSessionSchema, followsBase, parseWith, publishGroupSessionSchema, updateGroupBaseSchema, type LibraryWorkout } from '@coachos/domain';
 import { commandAs } from '../db/client';
 import { AppError, conflict, invalid, notVisible } from '../errors';
 import { audit, idempotent, type StoredResponse } from './idempotency';
@@ -57,6 +57,61 @@ export async function createGroupSession(meta: Meta, body: unknown): Promise<Sto
       }
       await audit(tx, meta.workspaceId, meta.actorId, 'group_session.create', gid, meta.requestId);
       return { status: 201, body: { id: gid, items } };
+    });
+  });
+}
+
+/**
+ * updateGroupBase (D-046) : nouvelle base commune, répercutée en nouvelle révision sur chaque séance qui suit
+ * encore l’ancienne base. Les séances adaptées ou annulées ne changent pas. Rien n’est publié : une séance déjà
+ * publiée passe à « modifiée depuis la publication » et l’élève garde la version publiée jusqu’à la republication.
+ */
+export async function updateGroupBase(meta: Meta & { groupSessionId: string }, body: unknown): Promise<StoredResponse> {
+  const parsed = parseWith(updateGroupBaseSchema, body);
+  if (!parsed.ok) throw invalid(parsed.fields);
+  const { expectedRevision, workout } = parsed.value;
+  return commandAs(meta.actorId, async (tx) => {
+    const gs = await tx.query<{ id: string; revision: number; local_date: string; base: LibraryWorkout }>(
+      `select id, revision, to_char(local_date, 'YYYY-MM-DD') as local_date, base from public.group_sessions
+       where workspace_id = $1 and id = $2 and private.current_coach($1) for update`,
+      [meta.workspaceId, meta.groupSessionId],
+    );
+    const g = gs.rows[0];
+    if (!g) throw notVisible();
+    return idempotent(tx, { ...scope(meta, 'group_session.update_base'), body: { id: meta.groupSessionId, ...parsed.value } }, async () => {
+      if (g.revision !== expectedRevision) throw conflict('La base a été modifiée entre-temps. Recharge la page pour repartir de la version actuelle.', { revision: g.revision });
+      // Base inchangée : aucune nouvelle version chez les élèves.
+      const unchanged = followsBase(g.base, { sport: workout.sport, title: workout.title, instructions: workout.instructions ?? null, intervals: workout.intervals, localDate: g.local_date }, g.local_date);
+      if (unchanged) return { status: 200, body: { revision: g.revision, updated: [], kept: [] } };
+      const rows = await tx.query<{
+        id: string; athlete_id: string; display_name: string; working_revision: number; local_date: string; sort_order: number; time_zone: string;
+        sport_code: string; title: string; instructions: string | null; intervals: unknown; canceled: boolean;
+      }>(
+        `select w.id, w.athlete_id, a.display_name, w.working_revision, to_char(r.local_date, 'YYYY-MM-DD') as local_date, r.sort_order, r.time_zone,
+                r.sport_code, r.title, r.instructions, r.intervals, r.canceled
+         from public.workouts w
+         join public.athletes a on a.workspace_id = w.workspace_id and a.id = w.athlete_id
+         join public.workout_revisions r on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id and r.number = w.working_revision
+         where w.workspace_id = $1 and w.group_session_id = $2 order by a.display_name, a.id for update of w`,
+        [meta.workspaceId, meta.groupSessionId],
+      );
+      const updated: { athleteId: string; workoutId: string; revision: number }[] = [];
+      const kept: { athleteId: string; name: string }[] = [];
+      for (const r of rows.rows) {
+        const follows = !r.canceled && followsBase(g.base, { sport: r.sport_code, title: r.title, instructions: r.instructions, intervals: r.intervals, localDate: r.local_date }, g.local_date);
+        if (!follows) { kept.push({ athleteId: r.athlete_id, name: r.display_name }); continue; }
+        await requireAssignedCoach(tx, meta.workspaceId, r.athlete_id);
+        const n = r.working_revision + 1;
+        await insertRevision(tx, meta.workspaceId, r.athlete_id, r.id, n, { ...workout, localDate: r.local_date, timeZone: r.time_zone, sortOrder: r.sort_order });
+        await tx.query('update public.workouts set working_revision = $4 where workspace_id = $1 and athlete_id = $2 and id = $3', [meta.workspaceId, r.athlete_id, r.id, n]);
+        updated.push({ athleteId: r.athlete_id, workoutId: r.id, revision: n });
+      }
+      await tx.query(
+        `update public.group_sessions set base = $3::jsonb, title = $4, revision = revision + 1, updated_at = now() where workspace_id = $1 and id = $2`,
+        [meta.workspaceId, meta.groupSessionId, JSON.stringify(workout), workout.title],
+      );
+      await audit(tx, meta.workspaceId, meta.actorId, 'group_session.update_base', meta.groupSessionId, meta.requestId);
+      return { status: 200, body: { revision: g.revision + 1, updated, kept } };
     });
   });
 }

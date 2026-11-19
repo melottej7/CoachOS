@@ -130,6 +130,65 @@ export const AUTO_RULE_INFO: Record<AutoRule, { title: string; kind: TaskKind; p
 };
 export const snoozeSchema = z.object({ rule: z.enum(AUTO_RULES), until: optionalDate }).strict();
 
+// ---------- Réglage des suivis (CE-H-04, D-045) ----------
+
+/**
+ * Délai réglable de chaque règle. `null` : règle sans délai (information absente), activable seulement.
+ * Pour `no_upcoming`, le délai est l’horizon regardé (« aucune séance sur les N prochains jours »).
+ */
+export const AUTO_RULE_DELAY: Record<AutoRule, { default: number; min: number; max: number; label: string } | null> = {
+  message_reply: { default: 1, min: 0, max: 14, label: 'jour(s) après le message' },
+  feedback_review: { default: 2, min: 0, max: 14, label: 'jour(s) après le retour' },
+  onboarding_call: { default: 2, min: 0, max: 14, label: 'jour(s) après le questionnaire' },
+  invite_pending: { default: 3, min: 1, max: 30, label: 'jour(s) après l’invitation' },
+  no_upcoming: { default: 7, min: 1, max: 21, label: 'prochains jours sans séance publiée' },
+  profile_missing: null,
+  level_unconfirmed: null,
+  vma_missing: null,
+};
+/** Ordre d’affichage dans les réglages : du plus fréquent au plus rare. */
+export const AUTO_RULE_ORDER: readonly AutoRule[] = ['message_reply', 'feedback_review', 'no_upcoming', 'onboarding_call', 'invite_pending', 'profile_missing', 'level_unconfirmed', 'vma_missing'];
+
+export interface AutoRuleSetting { rule: AutoRule; enabled: boolean; delayDays: number | null }
+
+/** Réglages complets : ceux du coach, sinon les valeurs par défaut. */
+export function resolveRuleSettings(saved: { rule: string; enabled: boolean; delay_days: number | null }[]): Record<AutoRule, AutoRuleSetting> {
+  const out = {} as Record<AutoRule, AutoRuleSetting>;
+  for (const rule of AUTO_RULES) {
+    const s = saved.find((x) => x.rule === rule);
+    const d = AUTO_RULE_DELAY[rule];
+    out[rule] = { rule, enabled: s?.enabled ?? true, delayDays: d ? (s?.delay_days ?? d.default) : null };
+  }
+  return out;
+}
+
+/** Motif affiché, avec l’horizon réglé pour `no_upcoming`. */
+export function autoRuleReason(rule: AutoRule, s: AutoRuleSetting): string {
+  if (rule === 'no_upcoming') return `Aucune séance publiée sur les ${s.delayDays ?? 7} prochains jours`;
+  return AUTO_RULE_INFO[rule].reason;
+}
+
+export const ruleSettingsSchema = z
+  .object({
+    rules: z
+      .array(z.object({ rule: z.enum(AUTO_RULES), enabled: z.boolean(), delayDays: z.number().int().min(0).max(30).nullable() }).strict())
+      .min(1)
+      .max(AUTO_RULES.length),
+  })
+  .strict()
+  .superRefine((v, ctx) => {
+    const seen = new Set<string>();
+    v.rules.forEach((r, i) => {
+      if (seen.has(r.rule)) ctx.addIssue({ code: 'custom', path: ['rules', i, 'rule'], message: 'Règle en double' });
+      seen.add(r.rule);
+      const d = AUTO_RULE_DELAY[r.rule];
+      if (!d && r.delayDays !== null) ctx.addIssue({ code: 'custom', path: ['rules', i, 'delayDays'], message: 'Cette règle n’a pas de délai' });
+      if (d && (r.delayDays === null || r.delayDays < d.min || r.delayDays > d.max)) {
+        ctx.addIssue({ code: 'custom', path: ['rules', i, 'delayDays'], message: `Entre ${d.min} et ${d.max} jours` });
+      }
+    });
+  });
+
 // ---------- Rendez-vous (CE-H-05) ----------
 
 export const APPOINTMENT_KINDS = ['video', 'call', 'in_person'] as const;

@@ -1,6 +1,6 @@
 import {
   appointmentAnnouncement, canTransition, createAppointmentSchema, formatLongDate, utcToLocal, createTaskSchema, isTimeZone, localToUtc, parseWith, snoozeSchema, updateAppointmentSchema,
-  updateTaskSchema, TASK_STATUS_LABELS,
+  updateTaskSchema, TASK_STATUS_LABELS, resolveRuleSettings, ruleSettingsSchema,
   type AppointmentKind, type AppointmentStatus, type AutoRule, type CreateTaskInput, type TaskKind, type TaskStatus,
 } from '@coachos/domain';
 import { commandAs } from '../db/client';
@@ -114,6 +114,33 @@ export async function snoozeAutoTask(meta: Meta & { sourceRef: string }, body: u
       );
       await audit(tx, wid, meta.actorId, 'autotask.snooze', meta.sourceRef, meta.requestId);
       return { status: 200, body: { rule: v.rule, sourceRef: meta.sourceRef, until: v.until } };
+    });
+  });
+}
+
+/**
+ * saveAutoRuleSettings · C (CE-H-04, D-045) : le coach active ou désactive chaque suivi et règle son délai.
+ * Réglage personnel (par coach et par espace) ; les suivis restent calculés depuis l’état réel.
+ */
+export async function saveAutoRuleSettings(meta: Meta, body: unknown): Promise<StoredResponse> {
+  const v = parse<{ rules: { rule: AutoRule; enabled: boolean; delayDays: number | null }[] }>(ruleSettingsSchema, body);
+  const wid = meta.workspaceId;
+  return commandAs(meta.actorId, async (tx) => {
+    await requireCoach(tx, wid);
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'autotask.settings', key: meta.idempotencyKey, body: v }, async () => {
+      for (const r of v.rules) {
+        await tx.query(
+          `insert into public.auto_rule_settings(workspace_id, coach_id, rule, enabled, delay_days)
+           values ($1, auth.uid(), $2, $3, $4)
+           on conflict (workspace_id, coach_id, rule) do update set enabled = excluded.enabled, delay_days = excluded.delay_days, updated_at = now()`,
+          [wid, r.rule, r.enabled, r.delayDays],
+        );
+      }
+      await audit(tx, wid, meta.actorId, 'autotask.settings', wid, meta.requestId);
+      const saved = await tx.query<{ rule: string; enabled: boolean; delay_days: number | null }>(
+        'select rule, enabled, delay_days from public.auto_rule_settings where workspace_id = $1 and coach_id = auth.uid()', [wid],
+      );
+      return { status: 200, body: { rules: Object.values(resolveRuleSettings(saved.rows)) } };
     });
   });
 }

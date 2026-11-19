@@ -5,6 +5,7 @@ import { requireActor } from '@/server/auth/session';
 import { coachContext, isUuid } from '@/server/repo/context';
 import { groupSession } from '@/server/repo/group-sessions';
 import { GroupPublish } from '@/components/group-publish';
+import { GroupBaseForm } from '@/components/group-base-form';
 
 export const metadata = { title: 'Séance de groupe' };
 
@@ -24,14 +25,16 @@ export default async function GroupSessionPage({ params }: { params: Promise<{ w
       <div className="kicker">Groupe · {v.teamName} · {SPORT_LABELS[v.sport]}</div>
       <h1>{v.title}</h1>
       <p className="sub">{formatLongDate(v.localDate)} · {v.rows.length} élève{v.rows.length > 1 ? 's' : ''}</p>
+      <GroupBaseForm wid={wid} gid={gid} revision={v.revision} base={v.base}
+        rows={v.rows.map((r) => ({ name: r.athleteName, followsBase: r.followsBase, published: r.publishedRevision !== null }))} />
       <section className="card" aria-labelledby="gp-title">
         <div className="card-head"><h2 id="gp-title">Séance de chaque élève</h2></div>
         <div className="card-body">
-          <p className="muted">« Adapter » modifie la séance d’un seul élève ; la base des autres ne change pas. Rien n’est visible par les élèves avant la publication.</p>
+          <p className="muted">« Adapter » modifie la séance d’un seul élève : elle ne suivra plus les modifications de la base. Rien n’est visible par les élèves avant la publication.</p>
           <GroupPublish wid={wid} gid={gid} without={v.without.map((m) => m.name)}
             rows={v.rows.map((r) => ({
               athleteId: r.athleteId, name: r.athleteName, workoutId: r.workoutId, revision: r.workingRevision, state: r.state, title: r.title,
-              base: r.workingRevision === 1, editHref: `${base}/athletes/${r.athleteId}/workouts/${r.workoutId}/edit?from=${back}`,
+              base: r.followsBase, editHref: `${base}/athletes/${r.athleteId}/workouts/${r.workoutId}/edit?from=${back}`,
               viewHref: `${base}/athletes/${r.athleteId}/workouts/${r.workoutId}`,
             }))} />
         </div>

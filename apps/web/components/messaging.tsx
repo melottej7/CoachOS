@@ -158,16 +158,18 @@ export function Thread({ wid, target, messages, showNames, emptyText, otherName,
   const router = useRouter();
   const list = useRef<HTMLDivElement>(null);
   const last = messages.at(-1);
+  // Seuls les vrais messages portent un accusé de lecture : les retours de séance intercalés (« fb-… ») n’en sont pas.
+  const lastMessage = messages.filter((m) => !m.event).at(-1);
 
   // Défile en bas et marque comme lu le dernier message reçu.
   useEffect(() => {
     list.current?.scrollTo({ top: list.current.scrollHeight });
-    if (!last || last.mine) return;
+    if (!lastMessage || lastMessage.mine) return;
     const cid = target.kind === 'direct' ? target.conversationId : null;
     if (target.kind === 'direct' && !cid) return;
-    void mutate('PUT', sendUrl(wid, target, cid, 'receipt'), { messageId: last.id }, newKey()).then((r) => { if (r.ok) router.refresh(); });
+    void mutate('PUT', sendUrl(wid, target, cid, 'receipt'), { messageId: lastMessage.id }, newKey()).then((r) => { if (r.ok) router.refresh(); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [last?.id]);
+  }, [last?.id, lastMessage?.id]);
 
   // Nouveaux messages : relecture discrète toutes les 15 s quand l’onglet est visible.
   useEffect(() => {

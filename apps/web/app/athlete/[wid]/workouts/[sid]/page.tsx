@@ -6,6 +6,7 @@ import { athleteWorkout } from '@/server/repo/athlete';
 import { athleteContext, isUuid } from '@/server/repo/context';
 import { Notice, Pill } from '@/components/ui';
 import { StructureView } from '@/components/structure-view';
+import { FitDownload } from '@/components/fit-download';
 import { readAthleteReferences } from '@/server/commands/athlete-references';
 
 
@@ -44,6 +45,7 @@ export default async function AthleteWorkoutPage({ params, searchParams }: { par
           <StructureView blocks={w.intervals} sport={w.sport} refs={refs} />
         </section>
       ) : null}
+      {w.canceled ? null : <FitDownload wid={wid} aid={ctx.athlete.id} sid={sid} />}
       {w.instructions || !w.intervals.length ? (
         <section style={{ marginTop: 20 }} aria-labelledby="consignes">
           <h2 id="consignes">Consignes</h2>

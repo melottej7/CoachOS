@@ -74,3 +74,19 @@ Avec ton compte élève (sur téléphone si possible) :
 ## Après le test
 
 Envoie à Claude tes notes, même brèves : ce qui t’a fait hésiter, ce que tu as trouvé lent, les mots qui ne te parlaient pas. Ce retour décide de la suite : corriger la fluidité d’abord, puis seulement ensuite les modèles de séance et la messagerie.
+
+## Nouveautés du 19 novembre (matin) à essayer
+
+Avec ton compte coach :
+1. **Paramètres → Suivis automatiques** (ou « Régler les suivis » dans le Planning) : décoche un suivi qui ne te sert pas, ou change un délai, puis « Enregistrer les suivis ». Ton Planning se met à jour.
+2. **Séances → Groupes → une séance de groupe → ✏️ Modifier la base commune** : change la séance, lis qui sera mis à jour et qui reste inchangé (les séances adaptées), puis enregistre. Rien n’est envoyé : publie ensuite plus bas.
+3. Sur la page d’une séance, **⌚ Fichier FIT** télécharge la séance pour une montre.
+
+Avec un compte élève, sur un ordinateur :
+4. Ouvre une séance, puis **⌚ Télécharger pour ma montre**. Branche ta Fenix 8, copie le fichier dans **GARMIN › NewFiles**, débranche, puis cherche la séance dans **Entraînement › Séances** sur la montre. Dis-moi ce que tu vois :
+   - la séance apparaît-elle ?
+   - les répétitions sont-elles correctes ?
+   - les allures cibles sont-elles affichées ?
+
+   Sur Mac, si la montre n’apparaît pas dans le Finder, dis-le-moi : on choisira ensemble un outil de transfert.
+

@@ -79,7 +79,7 @@ export default async function CoachPlanning({ params, searchParams }: { params: 
         <section className="card" aria-labelledby="todo-title" data-tour="planning-todo">
           <div className="card-head">
             <h2 id="todo-title">À faire</h2>
-            <span className="muted">{tasks.length} au total</span>
+            <span className="muted">{tasks.length} au total · <Link className="link-btn" href={`${base}/settings#suivis`}>Régler les suivis</Link></span>
           </div>
           <form className="filters" method="get" action={`${base}/planning`}>
             {sp.week ? <input type="hidden" name="week" value={sp.week} /> : null}

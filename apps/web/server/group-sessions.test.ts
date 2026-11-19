@@ -5,7 +5,7 @@ import { openDatabase, setDb } from './db/client';
 import { ATHLETES, TIME_ZONE, USERS, WORKSPACE_A } from './db/fixtures';
 import { AppError } from './errors';
 import { createTeam, setTeamMember } from './commands/portfolio';
-import { createGroupSession, publishGroupSession } from './commands/group-sessions';
+import { createGroupSession, publishGroupSession, updateGroupBase } from './commands/group-sessions';
 import { updateWorkout } from './commands/workouts';
 import { groupSession, groupSessions, teamRecipients, teamWeek } from './repo/group-sessions';
 import { athleteSchedule } from './repo/athlete';
@@ -81,6 +81,40 @@ describe('séance de groupe', () => {
     const other = await createGroupSession(meta(USERS.marine), { teamId: team, localDate: addDays(day, 1), workout, athleteIds: [ATHLETES.camille] });
     const foreign = (other.body as { items: { workoutId: string }[] }).items[0]!.workoutId;
     expect(await codeOf(publishGroupSession({ ...meta(USERS.marine), groupSessionId: gid }, { items: [{ athleteId: ATHLETES.camille, workoutId: foreign, revision: 1 }] }))).toBe('INVALID_FIELDS');
+  });
+
+  it('modifier la base (D-046) : répercutée sur les séances qui la suivent, adaptation intacte, rien de publié', async () => {
+    // Nouvelle séance de groupe : Camille et Noah suivent la base ; Noah est ensuite adapté.
+    const d = addDays(day, 2);
+    const c = await createGroupSession(meta(USERS.marine), { teamId: team, localDate: d, workout, athleteIds: [ATHLETES.camille, ATHLETES.noah] });
+    const { id: g2, items: its } = c.body as { id: string; items: typeof items };
+    const cam = its.find((x) => x.athleteId === ATHLETES.camille)!;
+    const noah = its.find((x) => x.athleteId === ATHLETES.noah)!;
+    await updateWorkout({ ...meta(USERS.marine), athleteId: ATHLETES.noah, workoutId: noah.workoutId }, {
+      expectedRevision: 1, data: { ...workout, title: 'Piste 6 × 400 m (Noah)', localDate: d, timeZone: TIME_ZONE, sortOrder: 0 },
+    });
+    // Camille publiée : elle doit garder la version publiée jusqu’à la republication.
+    await publishGroupSession({ ...meta(USERS.marine), groupSessionId: g2 }, { items: [{ athleteId: ATHLETES.camille, workoutId: cam.workoutId, revision: 1 }] });
+    let v = (await groupSession(USERS.marine, WORKSPACE_A, g2))!;
+    expect(v.revision).toBe(1);
+    expect(v.rows.map((r) => [r.athleteName.split(' ')[0], r.state, r.followsBase])).toEqual([['Camille', 'published', true], ['Noah', 'adapted', false]]);
+
+    const next = { ...workout, title: 'Piste 12 × 300 m', instructions: 'Récupération 1 min' };
+    const r = await updateGroupBase({ ...meta(USERS.marine), groupSessionId: g2 }, { expectedRevision: 1, workout: next });
+    expect(r.body).toMatchObject({ revision: 2, updated: [{ athleteId: ATHLETES.camille, workoutId: cam.workoutId, revision: 2 }], kept: [{ athleteId: ATHLETES.noah }] });
+    v = (await groupSession(USERS.marine, WORKSPACE_A, g2))!;
+    expect(v).toMatchObject({ title: 'Piste 12 × 300 m', revision: 2 });
+    expect(v.rows.map((x) => [x.athleteName.split(' ')[0], x.state, x.title])).toEqual([['Camille', 'changed', 'Piste 12 × 300 m'], ['Noah', 'adapted', 'Piste 6 × 400 m (Noah)']]);
+    // Camille lit toujours la version publiée (ancienne base).
+    expect((await athleteSchedule(USERS.camille, WORKSPACE_A, ATHLETES.camille, d, d)).find((w) => w.id === cam.workoutId)!.title).toBe(workout.title);
+
+    // Même base renvoyée : aucune nouvelle version.
+    expect((await updateGroupBase({ ...meta(USERS.marine), groupSessionId: g2 }, { expectedRevision: 2, workout: next })).body).toEqual({ revision: 2, updated: [], kept: [] });
+    expect((await groupSession(USERS.marine, WORKSPACE_A, g2))!.rows.find((x) => x.athleteId === ATHLETES.camille)!.workingRevision).toBe(2);
+    // Révision de base périmée : refus ; élève et autre espace : refus.
+    expect(await codeOf(updateGroupBase({ ...meta(USERS.marine), groupSessionId: g2 }, { expectedRevision: 1, workout: next }))).toBe('CONFLICT_OR_QUOTA');
+    expect(await codeOf(updateGroupBase({ ...meta(USERS.camille), groupSessionId: g2 }, { expectedRevision: 2, workout: next }))).toBe('RESOURCE_NOT_VISIBLE');
+    expect(await codeOf(updateGroupBase({ ...meta(USERS.hugo), groupSessionId: g2 }, { expectedRevision: 2, workout: next }))).toBe('RESOURCE_NOT_VISIBLE');
   });
 
   it('semaine du groupe : chaque élève, l’état de chaque séance ; rien pour un autre espace (CE-G2-03)', async () => {

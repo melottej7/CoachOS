@@ -5,6 +5,8 @@ import { coachContext } from '@/server/repo/context';
 import { CoachDetails, CoachHeader } from '@/components/coach-card';
 import { CoachSpaceForm } from '@/components/coach-space-form';
 import { Notice } from '@/components/ui';
+import { RuleSettingsForm } from '@/components/rule-settings-form';
+import { autoRuleSettings } from '@/server/repo/portfolio';
 
 export const metadata = { title: 'Paramètres' };
 
@@ -17,6 +19,17 @@ export default async function Settings({ params, searchParams }: { params: Promi
   const ws = ctx ? await readWorkspacePublic(actor.userId, wid) : null;
   if (!ctx || !ws) notFound();
   const p = ws.profile;
+  const rules = await autoRuleSettings(actor.userId, wid);
+  // CE-H-04 (D-045) : réglage personnel de chaque coach, propriétaire ou non.
+  const followUps = (
+    <section className="card" style={{ marginTop: 18 }} aria-labelledby="suivis" id="suivis">
+      <div className="card-head"><h2 id="suivis">Suivis automatiques</h2></div>
+      <div className="card-body stack">
+        <p className="muted">Ce qui apparaît tout seul dans ton Planning, et quand. Décoche ce qui ne te sert pas ; pour un seul élève, utilise plutôt « Plus tard » sur la tâche.</p>
+        <RuleSettingsForm wid={wid} initial={rules} />
+      </div>
+    </section>
+  );
 
   if (ctx.role !== 'owner') {
     return (
@@ -24,6 +37,7 @@ export default async function Settings({ params, searchParams }: { params: Promi
         <h1>Présentation de l’espace</h1>
         <p className="sub">Seul le propriétaire de l’espace peut la modifier.</p>
         <section className="card" style={{ marginTop: 18 }}><div className="card-body stack"><CoachHeader data={ws} /><CoachDetails data={ws} /></div></section>
+        {followUps}
       </>
     );
   }
@@ -53,6 +67,7 @@ export default async function Settings({ params, searchParams }: { params: Promi
           }}
         />
       </div></section>
+      {wizard ? null : followUps}
     </>
   );
 }

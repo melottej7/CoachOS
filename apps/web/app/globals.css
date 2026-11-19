@@ -895,3 +895,27 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .reg-meter span { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
 .reg.low { font-weight: 600; }
 .reg.low .reg-meter span { background: var(--danger); }
+
+/* Export FIT (D-044) */
+.fit-dl { margin-top: 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.fit-help > summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+.fit-help ol { margin: 8px 0 6px; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
+.fit-help p { font-size: 13px; }
+
+/* Réglage des suivis automatiques (D-045) */
+.rules-list { display: grid; gap: 0; }
+.rules-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; padding: 12px 0; border-top: 1px solid var(--rule); }
+.rules-row:first-child { border-top: 0; }
+.rules-row.off strong { color: var(--muted); }
+.rules-why { display: block; font-weight: 450; font-size: 13px; }
+.rules-delay { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; }
+.rules-delay input { width: 64px; }
+.rules .actions { margin-top: 12px; align-items: center; }
+.rules-delay { padding-left: 26px; }
+
+/* Modifier la base d’une séance de groupe (D-046) */
+.gb { margin-bottom: 18px; }
+.gb > summary { list-style: none; cursor: pointer; }
+.gb > summary::-webkit-details-marker { display: none; }
+.gb > summary h2 { font-size: inherit; }
+.gb[open] > summary { border-bottom: 1px solid var(--rule); }

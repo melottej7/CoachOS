@@ -17,9 +17,9 @@ import { createWorkout, publishWorkouts, updateWorkout } from './commands/workou
 import { saveAthleteProfile } from './commands/athlete-profile';
 import { saveAthleteReferences } from './commands/athlete-references';
 import { confirmLevel, createGoal, createNote, createTeam, deleteNote, setTeamMember, updateGoal, updateTeam } from './commands/portfolio';
-import { createAppointment, createTask, snoozeAutoTask, updateAppointment, updateTask } from './commands/tasks';
+import { createAppointment, createTask, saveAutoRuleSettings, snoozeAutoTask, updateAppointment, updateTask } from './commands/tasks';
 import { addStarterLibrary, createTemplate, templateFromWorkout, updateTemplate } from './commands/library';
-import { createGroupSession, publishGroupSession } from './commands/group-sessions';
+import { createGroupSession, publishGroupSession, updateGroupBase } from './commands/group-sessions';
 import { openConversation, saveReceipt, saveTeamReceipt, sendMessage, sendTeamMessage, sendTeamVoice, sendVoice } from './commands/messages';
 import { deleteWorkspaceLogo, previewInvitation, saveWorkspaceProfile, setWorkspaceLogo } from './commands/workspace-profile';
 import { todayIn } from '@coachos/domain';
@@ -137,6 +137,8 @@ describe('réponses conformes au contrat OpenAPI', () => {
     check('/workspaces/{wid}/tasks/{tid}', 'patch', taskUp.status, taskUp.body);
     const snooze = await snoozeAutoTask({ ...m(), sourceRef: ATHLETES.noah }, { rule: 'no_upcoming', until: '2026-12-01' });
     check('/workspaces/{wid}/auto-tasks/{ref}', 'put', snooze.status, snooze.body);
+    const rules = await saveAutoRuleSettings(m(), { rules: [{ rule: 'feedback_review', enabled: true, delayDays: 3 }, { rule: 'vma_missing', enabled: false, delayDays: null }] });
+    check('/workspaces/{wid}/auto-task-rules', 'put', rules.status, rules.body);
     const appt = await createAppointment(m(), { athleteId: ATHLETES.noah, title: 'Appel', kind: 'call', startsLocal: '2026-12-02T12:00', timeZone: TIME_ZONE, durationMin: 20 });
     check('/workspaces/{wid}/appointments', 'post', appt.status, appt.body);
     const apptUp = await updateAppointment({ ...m(), appointmentId: id(appt) }, { expectedRevision: 1, status: 'canceled' });
@@ -185,6 +187,8 @@ describe('réponses conformes au contrat OpenAPI', () => {
     const b = c.body as { id: string; items: { athleteId: string; workoutId: string }[] };
     const p = await publishGroupSession({ ...m(), groupSessionId: b.id }, { items: [{ ...b.items[0]!, revision: 1 }] });
     check('/workspaces/{wid}/group-sessions/{gid}/publish', 'post', p.status, p.body);
+    const u = await updateGroupBase({ ...m(), groupSessionId: b.id }, { expectedRevision: 1, workout: { sport: 'running', title: 'Base modifiée', instructions: null, durationSeconds: null, distanceM: null, intervals: [] } });
+    check('/workspaces/{wid}/group-sessions/{gid}', 'patch', u.status, u.body);
   });
 
   it('présentation d’espace, logo et aperçu d’invitation', async () => {

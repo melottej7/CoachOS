@@ -7,6 +7,7 @@ import { PublishButton } from '@/components/publish-button';
 import { Notice, Pill, StatusBadge } from '@/components/ui';
 import { StructureView } from '@/components/structure-view';
 import { SaveToLibrary } from '@/components/save-to-library';
+import { FitDownload } from '@/components/fit-download';
 import { readAthleteReferences } from '@/server/commands/athlete-references';
 
 
@@ -62,6 +63,7 @@ export default async function CoachWorkout({ params, searchParams }: { params: P
         <div className="actions">
           <Link className="btn" href={`${base}/messages/${aid}?seance=${sid}`}>💬 En parler à {w.athlete.displayName.split(' ')[0]}</Link>
           <SaveToLibrary wid={wid} aid={aid} sid={sid} />
+          {w.working.canceled ? null : <FitDownload wid={wid} aid={aid} sid={sid} label="Fichier FIT" compact />}
           <Link className="btn" href={`${base}/athletes/${aid}/workouts/${sid}/edit`}>Modifier</Link>
         </div>
       </div>

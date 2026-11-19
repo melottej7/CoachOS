@@ -355,3 +355,64 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
 - **Décision.** Chaque élève actif de la liste Élèves affiche sa régularité des 4 dernières semaines (jauge + « 67 % · 2 séances faites sur 3 · effort moyen 6/10 », jamais la couleur seule) ; chaque carte de groupe affiche la régularité du groupe (séances faites ÷ prévues, tous membres) ; nouveau filtre « Régularité sous 50 % » (au moins 2 séances passées). Mêmes règles que le suivi de l’entraînement (D-037) : séances publiées, non annulées, passées ; faite = réalisée ou en partie.
 - **Preuve.** Test : pour chaque élève actif, la régularité de la liste est identique au suivi calculé sur 28 jours. Navigateur (Marine) : Camille 67 %, Noah 0 %, groupes 67 % et 50 %.
 - **Non fait.** Classement par régularité ; évolution d’une période à l’autre.
+
+## D-044 · Export FIT d’une séance pour la montre (CE-X-01) · 2026-11-19
+
+- **Contexte.** Accès Garmin Connect reporté (D-026) ; en attendant, l’export de fichier est la voie prévue vers la montre (COUVERTURE, lot X).
+- **Décision.**
+  - Bouton « ⌚ Télécharger pour ma montre » sur la page d’une séance côté élève (version publiée), et « ⌚ Fichier FIT » côté coach (version en cours). Absent pour une séance annulée. Aide repliée « Comment la mettre sur ma montre ? » (copie dans GARMIN › NewFiles, puis Entraînement › Séances), marquée « procédure en cours de vérification ».
+  - Encodeur sans dépendance (`packages/domain/src/fit.ts`) : fichier FIT « workout » (en-tête de 14 octets, protocole 1.0, contrôle CRC FIT). Correspondance D-023 : étape → `workout_step` ; répétition → étape « répéter jusqu’à » placée après ses étapes et renvoyant à la première (séries imbriquées comprises) ; durée en ms, distance en cm ; phase → intensité (échauffement, actif, récupération, retour au calme, repos).
+  - Cibles : zone de course + VMA de l’élève → fourchette de vitesse ; allure → vitesse (± 5 s/km si une seule valeur) ; puissance en W ou % FTP, FC en bpm ou % FC max → cibles personnalisées ; cadence seule → cible de cadence. **Une zone sans VMA, ou hors course, reste une cible libre** avec « Z3 » dans le nom et « Zone 3 (tempo) » en note : les zones de la montre (5 en FC) ne sont pas les 7 zones du coach. RPE et cadence secondaire vont en note.
+  - Sport : course, trail, vélo, natation en bassin (25 m par défaut). Une séance qui enchaîne plusieurs sports est exportée en « générique », chaque étape préfixée du sport (« Vélo · Effort »).
+  - Lien `/media/…/workouts/{sid}/fit` (comme les vocaux, hors API JSON) : session requise, lecture sous RLS, aucun cache partagé, rien envoyé à un tiers.
+- **Preuve.**
+  - 7 tests du domaine, relus par un lecteur FIT écrit à part d’après la spécification : en-tête, CRC, ordre des messages, répétitions simples et imbriquées, conversions, toutes les cibles, troncature UTF-8, séance sans blocs.
+  - Contrôle CRC vérifié sur un vrai fichier Garmin présent sur le poste (contrôle seulement, contenu non lu).
+  - Navigateur (démonstration) :
+    - Marine télécharge « Séries courtes » de Camille : 922 octets, CRC valide, 3 × (5 × (300 m Z5 + 1' Z1) + 3' repos), allures tirées de la VMA 15 km/h.
+    - Camille le télécharge à 375 px.
+    - Refus : séance d’un autre élève 404, sans session 401, brouillon non publié 404.
+- **Non prouvé.** Import réel sur montre (essai sur la Fenix 8 du fondateur, D-026) et lecture par l’outil officiel de Garmin (installation refusée par la politique du poste).
+
+## D-045 · Réglage des suivis automatiques (CE-H-04) · 2026-11-19
+
+- **Décision.**
+  - Paramètres → « Suivis automatiques » : pour chaque coach (propriétaire ou non) et chaque espace, on coche les suivis voulus et on règle leur délai :
+    - réponse à un message : 1 jour par défaut ;
+    - retour à examiner : 2 jours ;
+    - appel de bienvenue : 2 jours après le questionnaire ;
+    - relance d’invitation : 3 jours ;
+    - séances à préparer : horizon de 7 jours, de 1 à 21.
+  - Les informations absentes (questionnaire, niveau, VMA) n’ont pas de délai : on les active ou non.
+  - Lien « Régler les suivis » en tête de la liste « À faire » du Planning.
+  - Table `auto_rule_settings` (migration `20261119050000`). Elle n’est lisible que par le coach concerné et n’est écrite que par la commande `saveAutoRuleSettings` (droits vérifiés, idempotence, journal).
+  - Les suivis restent calculés depuis l’état réel. « Plus tard » reste le report pour un seul élève.
+- **Preuve.**
+  - Test : délai porté de 3 à 10 jours → échéance décalée de 7 jours ; horizon de 21 jours repris dans le motif ; règle désactivée puis réactivée.
+  - Test des refus : bornes, délai sur une règle sans délai, doublon, élève et autre espace ; réglage invisible pour l’élève.
+  - Contrat de l’opération vérifié.
+  - Navigateur (Marine, 375 px) : « Relancer l’invitation » décoché → Planning de 6 à 4 tâches ; réglage remis par défaut ensuite.
+- **Incident.** Pendant environ une minute, le Planning du fondateur a répondu en erreur : le nouveau code lisait la table avant que la migration ne soit appliquée. Règle retenue : appliquer la migration avant de brancher le code qui la lit.
+
+## D-046 · Modifier la base d’une séance de groupe et la répercuter · 2026-11-19
+
+- **Décision.**
+  - « ✏️ Modifier la base commune » sur la page de la séance de groupe. Avant d’enregistrer, le volet annonce :
+    - qui sera mis à jour ;
+    - qui l’a déjà publiée et garde l’ancienne version jusqu’à la republication ;
+    - qui reste inchangé parce que sa séance est adaptée.
+  - Une séance « suit la base » tant que son sport, son titre, ses consignes, ses blocs et sa date sont identiques à la base (`followsBase`). Toute adaptation la sort de la base, définitivement : une modification de la base n’écrase jamais une adaptation. Une base renvoyée sans changement ne crée aucune version.
+  - Répercussion = nouvelle révision de chaque séance qui suit la base. **Rien n’est publié** : la publication reste le geste explicite plus bas.
+  - Révision de la base (migration `20261119060000`) : une modification concurrente est refusée (409).
+  - L’état « Adaptée » se calcule désormais sur le contenu et non plus sur le numéro de version.
+- **Preuve.**
+  - Test : Camille (publiée, suit la base) mise à jour et marquée « Modifiée depuis la publication », sans qu’elle voie le changement ; Noah (adapté) inchangé.
+  - Test : base identique sans nouvelle version ; révision périmée, élève et autre espace refusés.
+  - Contrat de l’opération vérifié.
+  - Navigateur (Marine) : sur « Piste du mardi », l’aperçu annonce « Mise à jour pour 1 élève : Camille · Inchangées (adaptées) : Noah » ; la consigne ajoutée apparaît dans la séance de Camille (version 3) ; un second enregistrement identique affiche « Aucun changement à enregistrer ».
+
+## D-047 · Accusé de lecture et retours intercalés dans la conversation · 2026-11-19
+
+- **Constat.** Le journal du serveur montrait des refus (422) sur l’accusé de lecture côté élève. Depuis D-036, la conversation intercale les retours de séance, dont l’identifiant (« fb-… ») n’est pas celui d’un message. Quand un retour terminait le fil, l’accusé lui était adressé et refusé, et le dernier vrai message restait « non lu ».
+- **Correction.** L’accusé porte sur le dernier vrai message reçu.
+- **Preuve.** Conversation de Camille terminée par un retour : accusé 200 (au lieu de 422).

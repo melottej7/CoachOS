@@ -1,6 +1,6 @@
 import {
-  addDays, AUTO_RULE_INFO, excerpt, rankTasks, todayIn, urgencyScore, usesVma, utcToLocal,
-  type AppointmentKind, type AppointmentStatus, type AutoRule, type GoalState, type Level, type LocalDate, type Sport, type TaskKind, type TaskStatus,
+  addDays, AUTO_RULE_INFO, autoRuleReason, excerpt, resolveRuleSettings, rankTasks, todayIn, urgencyScore, usesVma, utcToLocal,
+  type AppointmentKind, type AppointmentStatus, type AutoRule, type AutoRuleSetting, type GoalState, type Level, type LocalDate, type Sport, type TaskKind, type TaskStatus,
 } from '@coachos/domain';
 import { readAs, type Tx } from '../db/client';
 import { apptCols, toAppt, type AppointmentItem, type ApptRow } from '../commands/tasks';
@@ -62,6 +62,19 @@ async function snoozed(tx: Tx, wid: string): Promise<Map<string, string | null>>
     [wid],
   );
   return new Map(r.rows.map((x) => [`${x.rule}:${x.source_ref}`, x.snoozed_until]));
+}
+
+/** Réglages des suivis du coach connecté (CE-H-04), valeurs par défaut sinon. */
+export async function ruleSettingsIn(tx: Tx, wid: string): Promise<Record<AutoRule, AutoRuleSetting>> {
+  const r = await tx.query<{ rule: string; enabled: boolean; delay_days: number | null }>(
+    'select rule, enabled, delay_days from public.auto_rule_settings where workspace_id = $1 and coach_id = auth.uid()',
+    [wid],
+  );
+  return resolveRuleSettings(r.rows);
+}
+
+export async function autoRuleSettings(userId: string, wid: string): Promise<Record<AutoRule, AutoRuleSetting>> {
+  return readAs(userId, (tx) => ruleSettingsIn(tx, wid));
 }
 
 async function manualTasks(tx: Tx, wid: string, open: boolean): Promise<(HomeTask & { athleteId: string | null; teamId: string | null })[]> {
@@ -145,6 +158,9 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
   const met = new Set((await q<{ athlete_id: string }>(
     `select distinct athlete_id from public.appointments where workspace_id = $1 and athlete_id = any($2::uuid[]) and status <> 'canceled'`)).map((x) => x.athlete_id));
   const snooze = await snoozed(tx, wid);
+  const settings = await ruleSettingsIn(tx, wid);
+  const delay = (rule: AutoRule) => settings[rule].delayDays ?? 0;
+  const horizonEnd = addDays(today, delay('no_upcoming') - 1);
   const tasks = await manualTasks(tx, wid, true);
   const by = <T extends { athlete_id: string }>(rows: T[]) => {
     const m = new Map<string, T[]>();
@@ -164,21 +180,22 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
     const athleteRef = { id: a.id, name: a.display_name, timeZone: a.time_zone };
     const auto: HomeTask[] = [];
     const push = (rule: AutoRule, ref: string, dueOn: string | null, link: string, detail?: string | null) => {
+      if (!settings[rule].enabled) return;
       const until = snooze.get(`${rule}:${ref}`);
       if (until && until > today) return;
       const info = AUTO_RULE_INFO[rule];
       auto.push({
-        key: `auto:${rule}:${ref}`, source: 'auto', id: null, rule, ref, title: info.title, reason: detail ? `${info.reason} · ${detail}` : info.reason,
+        key: `auto:${rule}:${ref}`, source: 'auto', id: null, rule, ref, title: info.title, reason: detail ? `${autoRuleReason(rule, settings[rule])} · ${detail}` : autoRuleReason(rule, settings[rule]),
         kind: info.kind, priority: info.priority, dueOn, status: 'todo', revision: null, athlete: athleteRef, team: null, link, notes: null,
       });
     };
-    for (const m of msgBy.get(a.id) ?? []) push('message_reply', m.conversation_id, addDays(localDay(m.created_at), 1), `${base}/messages/${a.id}`, `« ${excerpt(m.body, 60)} »`);
-    for (const rv of reviewsBy.get(a.id) ?? []) push('feedback_review', rv.id, addDays(localDay(rv.created_at), 2), `${base}/review/${rv.id}`, rv.title);
-    if (a.state === 'invited') push('invite_pending', a.id, addDays(localDay(a.created_at), 3), `${base}/athletes/${a.id}#inv-title`);
+    for (const m of msgBy.get(a.id) ?? []) push('message_reply', m.conversation_id, addDays(localDay(m.created_at), delay('message_reply')), `${base}/messages/${a.id}`, `« ${excerpt(m.body, 60)} »`);
+    for (const rv of reviewsBy.get(a.id) ?? []) push('feedback_review', rv.id, addDays(localDay(rv.created_at), delay('feedback_review')), `${base}/review/${rv.id}`, rv.title);
+    if (a.state === 'invited') push('invite_pending', a.id, addDays(localDay(a.created_at), delay('invite_pending')), `${base}/athletes/${a.id}#inv-title`);
     if (a.state === 'active') {
-      if (!upcoming7) push('no_upcoming', a.id, today, `${base}/calendar?athlete=${a.id}`);
+      if (!upcoming.some((d) => d <= horizonEnd)) push('no_upcoming', a.id, today, `${base}/calendar?athlete=${a.id}`);
       if (!profile) push('profile_missing', a.id, null, `${base}/athletes/${a.id}#profile-title`);
-      if (profile && !met.has(a.id)) push('onboarding_call', a.id, addDays(localDay(profile.updated_at), 2), `${base}/athletes/${a.id}#rdv`);
+      if (profile && !met.has(a.id)) push('onboarding_call', a.id, addDays(localDay(profile.updated_at), delay('onboarding_call')), `${base}/athletes/${a.id}#rdv`);
       if (profile && !confirmed.some((l) => l.sport === profile.sport_code)) push('level_unconfirmed', a.id, null, `${base}/athletes/${a.id}#levels`);
       if (profile && usesVma(profile.sport_code) && vmaKmh === null) push('vma_missing', a.id, null, `${base}/athletes/${a.id}#refs-title`);
     }
@@ -236,6 +253,7 @@ export async function home(userId: string, wid: string, tz: string, monday: Loca
     const { roster, tasks } = await loadRoster(tx, wid, today, tz);
     const auto = roster.flatMap((a) => a.todo.filter((t) => t.source === 'auto'));
     const snooze = await snoozed(tx, wid);
+    const replyRule = (await ruleSettingsIn(tx, wid)).message_reply;
     const teamMsgs = await tx.query<{ team_id: string; name: string; created_at: Date; body: string }>(
       `select t.id as team_id, t.name, lm.created_at, lm.body from public.teams t
        join lateral (select created_at, body, sender_role from public.team_messages m
@@ -243,14 +261,14 @@ export async function home(userId: string, wid: string, tz: string, monday: Loca
        where t.workspace_id = $1 and t.archived_at is null and lm.sender_role = 'athlete'`,
       [wid],
     );
-    for (const m of teamMsgs.rows) {
+    for (const m of replyRule.enabled ? teamMsgs.rows : []) {
       const until = snooze.get(`message_reply:${m.team_id}`);
       if (until && until > today) continue;
       const info = AUTO_RULE_INFO.message_reply;
       auto.push({
         key: `auto:message_reply:${m.team_id}`, source: 'auto', id: null, rule: 'message_reply', ref: m.team_id, title: 'Répondre au groupe',
         reason: `Message dans le groupe · « ${excerpt(m.body, 60)} »`, kind: info.kind, priority: info.priority,
-        dueOn: addDays(todayIn(tz, m.created_at), 1), status: 'todo', revision: null, athlete: null, team: { id: m.team_id, name: m.name },
+        dueOn: addDays(todayIn(tz, m.created_at), replyRule.delayDays ?? 1), status: 'todo', revision: null, athlete: null, team: { id: m.team_id, name: m.name },
         link: `/coach/${wid}/messages/groupe/${m.team_id}`, notes: null,
       });
     }

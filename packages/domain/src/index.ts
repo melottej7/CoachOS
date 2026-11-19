@@ -19,3 +19,4 @@ export * from './portfolio';
 export * from './messages';
 export * from './library';
 export * from './stats';
+export * from './fit';

@@ -5,8 +5,8 @@ import { openDatabase, readAs, setDb } from './db/client';
 import { ATHLETES, TIME_ZONE, USERS, WORKSPACE_A } from './db/fixtures';
 import { AppError } from './errors';
 import { confirmLevel, createGoal, createNote, createTeam, deleteNote, setTeamMember, updateGoal, updateTeam } from './commands/portfolio';
-import { createAppointment, createTask, snoozeAutoTask, updateAppointment, updateTask } from './commands/tasks';
-import { athleteFile, home, portfolio } from './repo/portfolio';
+import { createAppointment, createTask, saveAutoRuleSettings, snoozeAutoTask, updateAppointment, updateTask } from './commands/tasks';
+import { athleteFile, autoRuleSettings, home, portfolio } from './repo/portfolio';
 import { saveAthleteProfile } from './commands/athlete-profile';
 
 // Lots G et H (D-032) : droits, règles et lectures.
@@ -151,5 +151,38 @@ describe('lot H · tâches, suivis automatiques, rendez-vous', () => {
     // « Pas besoin d’appel » : mise en attente longue.
     await snoozeAutoTask({ ...meta(USERS.marine), sourceRef: ATHLETES.noah }, { rule: 'onboarding_call', until: addDays(today, 3650) });
     expect(await onboarding()).toHaveLength(0);
+  });
+
+  it('réglage des suivis (CE-H-04) : délai pris en compte, règle désactivée puis réactivée, bornes et droits', async () => {
+    const tasks = async () => (await home(USERS.marine, WORKSPACE_A, TIME_ZONE, weekStart(today))).tasks;
+    expect(await autoRuleSettings(USERS.marine, WORKSPACE_A)).toMatchObject({
+      message_reply: { enabled: true, delayDays: 1 }, invite_pending: { enabled: true, delayDays: 3 }, vma_missing: { enabled: true, delayDays: null },
+    });
+    const invite = (await tasks()).find((t) => t.rule === 'invite_pending' && t.athlete?.id === ATHLETES.ines)!;
+    expect(invite).toBeTruthy();
+    const save = (actor: string, rules: unknown[]) => saveAutoRuleSettings(meta(actor), { rules });
+
+    // Délai porté de 3 à 10 jours : échéance décalée de 7 jours ; horizon de 21 jours pour « Préparer les prochaines séances ».
+    const r = await save(USERS.marine, [{ rule: 'invite_pending', enabled: true, delayDays: 10 }, { rule: 'no_upcoming', enabled: true, delayDays: 21 }]);
+    expect((r.body as { rules: { rule: string; delayDays: number }[] }).rules.find((x) => x.rule === 'invite_pending')!.delayDays).toBe(10);
+    let all = await tasks();
+    expect(all.find((t) => t.key === invite.key)!.dueOn).toBe(addDays(invite.dueOn!, 7));
+    for (const t of all.filter((x) => x.rule === 'no_upcoming')) expect(t.reason).toContain('21 prochains jours');
+
+    // Règle désactivée : plus aucun suivi de ce type ; réactivée : il revient.
+    await save(USERS.marine, [{ rule: 'invite_pending', enabled: false, delayDays: 10 }]);
+    expect((await tasks()).some((t) => t.rule === 'invite_pending')).toBe(false);
+    await save(USERS.marine, [{ rule: 'invite_pending', enabled: true, delayDays: 3 }, { rule: 'no_upcoming', enabled: true, delayDays: 7 }]);
+    all = await tasks();
+    expect(all.find((t) => t.key === invite.key)!.dueOn).toBe(invite.dueOn);
+
+    // Bornes : délai hors limites, délai sur une règle sans délai, règle en double.
+    expect(await codeOf(save(USERS.marine, [{ rule: 'feedback_review', enabled: true, delayDays: 99 }]))).toBe('INVALID_FIELDS');
+    expect(await codeOf(save(USERS.marine, [{ rule: 'vma_missing', enabled: true, delayDays: 2 }]))).toBe('INVALID_FIELDS');
+    expect(await codeOf(save(USERS.marine, [{ rule: 'invite_pending', enabled: true, delayDays: 3 }, { rule: 'invite_pending', enabled: false, delayDays: 3 }]))).toBe('INVALID_FIELDS');
+    // Droits : ni l’élève ni un coach d’un autre espace ; réglage invisible pour l’élève.
+    expect(await codeOf(save(USERS.camille, [{ rule: 'invite_pending', enabled: false, delayDays: 3 }]))).toBe('RESOURCE_NOT_VISIBLE');
+    expect(await codeOf(save(USERS.hugo, [{ rule: 'invite_pending', enabled: false, delayDays: 3 }]))).toBe('RESOURCE_NOT_VISIBLE');
+    expect((await readAs(USERS.camille, (tx) => tx.query('select 1 from public.auto_rule_settings'))).rows).toHaveLength(0);
   });
 });
