@@ -41,6 +41,23 @@ export interface Regeneration {
   counts: { kept: number; same: number; changed: number; added: number; removed: number };
 }
 
+/** Clé d’un changement proposé, pour le choix séance par séance (D-078) : séance existante ou jour ajouté. */
+export function regenItemKey(it: RegenItem): string | null {
+  if (it.kind === 'changed' || it.kind === 'removed') return it.before.id;
+  if (it.kind === 'added') return `add:${it.date}`;
+  return null;
+}
+
+/** Changements que le coach applique : tous, sauf ceux qu’il a décochés. */
+export function chosenCounts(regen: Regeneration, skip: ReadonlySet<string>): { changed: number; added: number; removed: number } {
+  const c = { changed: 0, added: 0, removed: 0 };
+  for (const it of regen.weeks.flatMap((w) => w.items)) {
+    const k = regenItemKey(it);
+    if (k && !skip.has(k) && (it.kind === 'changed' || it.kind === 'added' || it.kind === 'removed')) c[it.kind]++;
+  }
+  return c;
+}
+
 export function weekIndexOf(startMonday: LocalDate, date: LocalDate): number {
   const ms = Date.parse(`${date}T12:00:00Z`) - Date.parse(`${startMonday}T12:00:00Z`);
   return Math.floor(Math.round(ms / 86_400_000) / 7) + 1;
@@ -120,6 +137,8 @@ export const regenerateProgramSchema = z
       .refine((d) => new Set(d).size === d.length, { message: 'Jour en double' }),
     seen: z.array(z.object({ id: z.string().uuid(), revision: z.number().int().min(1) }).strict()).max(400),
     acceptRisks: z.boolean().default(false),
+    /** D-078 : changements décochés par le coach (clés de regenItemKey) ; ils ne sont pas appliqués. */
+    skip: z.array(z.string().max(60)).max(400).default([]),
     tweaks: programTweaksSchema.nullish().transform((v) => v ?? null),
     suggestionId: z.string().uuid().nullish().transform((v) => v ?? null),
   })

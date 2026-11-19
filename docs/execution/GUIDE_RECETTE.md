@@ -242,3 +242,23 @@ Dis-moi si l’icône, le nom et l’ouverture te conviennent.
 2. Dans une autre séance, **+ Mon bloc…** l’ajoute d’un geste. Bibliothèque › **Mes blocs** les liste ; **Retirer** ne touche pas aux séances déjà faites.
 3. Fiche d’un élève › **Suivi** : d’où viennent les chiffres (montre ou saisie) et depuis quand ; un avertissement apparaît après 14 jours sans nouvelle mesure.
 
+
+## Choisir les changements d’une régénération
+
+1. Programme d’un élève → **Régénérer une partie** → **Voir les différences**.
+2. Chaque changement a sa case : décoche ceux que tu ne veux pas (la séance actuelle reste, ou rien n’est ajouté ce jour-là).
+3. Le bouton dit combien seront appliqués (« Appliquer 4 sur 6 changements »). Tout reste en brouillons.
+
+## Importer ta base de séances
+
+1. Séances → Bibliothèque → **Importer mes séances**.
+2. Essaie **Voir un exemple**, puis ta vraie base :
+   - un fichier CSV exporté d’Excel, Numbers ou Google Sheets ;
+   - ou des cellules copiées d’un tableur ;
+   - ou une séance par ligne « Titre : séance ».
+3. Lis l’aperçu : chaque ligne dit ce qui a été compris ou ce qui bloque. Corrige la catégorie si besoin, décoche ce que tu ne veux pas, puis **Importer**.
+4. Envoie-moi les lignes mal comprises : c’est ce qui me servira pour adapter l’import à ta façon d’écrire.
+
+## IA ce mois-ci
+
+Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et budget du mois (10 $ par défaut). Au budget, l’IA s’arrête jusqu’au mois suivant ; tout reste faisable à la main.

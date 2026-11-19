@@ -275,10 +275,18 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
     - Repères Foulée sortis des consignes : un élève les aurait lus. Corrigé dans l’espace du fondateur et dans la démo.
     - Repère visible du coach seul dans la bibliothèque.
   - `npm test` : **252 passés** (+3 PostgreSQL), typecheck OK.
+- Commit `a1fa6b9` (D-076, D-077). Puis, la nuit du 19 novembre (le fondateur a accepté d’avance et autorisé les commits) :
+  - **D-078** : régénération, choix séance par séance.
+  - **D-079** : import de la base d’un coach (CSV, cellules de tableur, lignes « Titre : séance »), aperçu ligne par ligne. Une séance d’essai importée dans la démo.
+  - **D-080** : lecture hors ligne de l’espace élève (service worker, réseau d’abord, effacé à la déconnexion ; https seulement).
+  - **D-081** : coût réel de chaque appel à Claude, budget mensuel par espace (10 $ par défaut), carte « IA ce mois-ci ».
+  - `npm test` : **264 passés** (+3 PostgreSQL), typecheck OK. Aucune migration cette nuit.
+- Question du fondateur sur les données de santé (« faire signer un cookie ») : réponse donnée, décision toujours à prendre. Voir « Pour le fondateur ».
 - Prochaines tranches : tout ce qui reste demande le fondateur.
-  - Recette, essai FIT sur Fenix 8, installation sur téléphone.
+  - Recette, dont l’import avec sa vraie base, l’essai FIT sur la Fenix 8 et l’installation sur téléphone.
   - Crédit IA ; décision santé ; accès Garmin.
-  - Commercial, après validation du parcours. (ses séances de bibliothèque et anciens programmes pour régler le générateur) ; notifications ; choix séance par séance dans la régénération.
+  - Commercial, après validation du parcours.
+  - Possibles sans lui : rappels push (clés et service d’envoi à choisir), report d’un cas (snooze), filtre persistant de la file des retours.
 
 Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au micro réel (autorisation du micro non automatisable ici) ; visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
 
@@ -290,4 +298,8 @@ Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au mic
 3. **Lot G** (détail) : CE-G-01 à CE-G-08 (groupes sur `teams` étendu par migration additive, niveaux par sport `athlete_sport_levels`, vue d’ensemble, groupe filtré avec contexte conservé, fiche élève centrale, notes privées `coach_notes`, objectifs `goals`).
 3. Lot H, puis S, B, E, G2, P ; export FIT (CE-X-01) possible en parallèle.
 
-**Pour le fondateur** : décision sur les données de santé, crédit Anthropic pour l’IA, exemples anonymisés de vos anciens programmes. Accès Garmin reporté (D-026).
+**Pour le fondateur** :
+- Décision sur les données de santé. Une case « usage professionnel seulement » ne suffit pas : il faut un consentement explicite, par finalité et retirable, plus des garanties (accès, durée, effacement) et un avis juridique.
+- Crédit Anthropic pour l’IA ; le budget mensuel est de 10 $ par espace par défaut.
+- Tes séances à importer et des exemples anonymisés de tes anciens programmes.
+- Accès Garmin reporté (D-026).

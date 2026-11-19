@@ -31,6 +31,7 @@ export default async function Library({ params, searchParams }: { params: Promis
         <span className="actions">
           {!items.length ? <StarterButton wid={wid} /> : null}
           {items.filter((i) => i.meta?.source === 'foulee').length < 324 ? <FouleeButton wid={wid} /> : null}
+          <Link className="btn" href={`/coach/${wid}/library/import`}>Importer mes séances</Link>
           <Link className="btn primary" href={`/coach/${wid}/library/new`}>+ Nouvelle séance</Link>
         </span>
       </div>

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { addDays, parseNotation, todayIn, weekStart } from '@coachos/domain';
+import { addDays, regenItemKey, parseNotation, todayIn, weekStart } from '@coachos/domain';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { openDatabase, readAs, setDb } from './db/client';
 import { ATHLETES, TIME_ZONE, USERS, WORKSPACE_A } from './db/fixtures';
@@ -125,5 +125,24 @@ describe('générateur de programme (serveur)', () => {
     // Re-calcul identique ensuite : plus rien à changer dans ces semaines.
     expect(buildRegeneration(after, [1, 3, 6], 2, 3)!.regen.counts).toMatchObject({ changed: 0, added: 0, removed: 0 });
     expect((await readGoalPlans(USERS.marine, WORKSPACE_A, ATHLETES.noah, goal))[0]).toMatchObject({ days: [1, 3, 6], regenerations: 1 });
+  });
+
+  it('choix séance par séance (D-078) : les changements décochés ne sont pas appliqués', async () => {
+    const plan = (await readGoalPlans(USERS.marine, WORKSPACE_A, ATHLETES.noah, goal))[0]!;
+    const rc = (await regenContext(USERS.marine, WORKSPACE_A, ATHLETES.noah, plan.id))!;
+    const r = buildRegeneration(rc, [2, 4, 6], 4, 4)!;
+    const items = r.regen.weeks.flatMap((w) => w.items);
+    const keys = items.map(regenItemKey).filter((k): k is string => k !== null);
+    expect(keys.length).toBeGreaterThanOrEqual(2);
+    const base = { fromWeek: 4, toWeek: 4, days: [2, 4, 6], seen: seenOf(r.regen), acceptRisks: true };
+    // Tout décoché : refusé.
+    expect(await codeOf(regenerateProgram(meta(USERS.marine, { planId: plan.id }), { ...base, skip: keys }))).toBe('INVALID_FIELDS');
+    const skipped = keys[0]!;
+    const done = await regenerateProgram(meta(USERS.marine, { planId: plan.id }), { ...base, skip: [skipped] });
+    expect(done.status).toBe(200);
+    const after = (await regenContext(USERS.marine, WORKSPACE_A, ATHLETES.noah, plan.id))!;
+    const again = buildRegeneration(after, [2, 4, 6], 4, 4)!.regen.weeks.flatMap((w) => w.items);
+    // Seul le changement décoché reste à faire.
+    expect(again.map(regenItemKey).filter(Boolean)).toEqual([skipped]);
   });
 });

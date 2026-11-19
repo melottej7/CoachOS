@@ -1,39 +1,16 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { addDays, DAY_LABELS, describeTweaks, formatShortDate, parseTweaksParam, PROGRAM_PHASE_LABELS, PROTECT_LABELS, weekIndexOf, WEEKDAY_SHORT, type RegenItem } from '@coachos/domain';
+import { addDays, DAY_LABELS, describeTweaks, formatShortDate, parseTweaksParam, weekIndexOf, WEEKDAY_SHORT } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { isUuid } from '@/server/repo/context';
 import { buildRegeneration, regenContext, seenOf } from '@/server/commands/programs';
 import { ProgramRegenerate } from '@/components/program-regenerate';
 import { AiTweaks, TweaksBanner } from '@/components/ai-tweaks';
 import { aiSource } from '@/server/commands/ai';
-import { Pill } from '@/components/ui';
 
 export const metadata = { title: 'Régénérer le programme' };
 
 const RISK_MARK = { watch: '•', risk: '!', block: '✕' } as const;
-const dowOf = (d: string) => (new Date(`${d}T12:00:00Z`).getUTCDay() + 6) % 7;
-const day = (d: string) => `${WEEKDAY_SHORT[dowOf(d)]} ${formatShortDate(d)}`;
-
-function Item({ it }: { it: RegenItem }) {
-  const pub = 'before' in it && it.before.published && (it.kind === 'changed' || it.kind === 'removed')
-    ? <span className="muted"> · publiée : l’élève garde l’ancienne version jusqu’à ta republication</span> : null;
-  switch (it.kind) {
-    case 'kept':
-      return <li className="rg kept"><span className="rg-mark" aria-hidden="true">🔒</span><span><span className="muted">{day(it.date)}</span> {it.before.title}
-        <span className="muted"> · gardée ({PROTECT_LABELS[it.reason]}){it.dropped ? ` ; « ${it.dropped} » n’est pas ajoutée ce jour-là` : ''}</span></span></li>;
-    case 'same':
-      return <li className="rg same"><span className="rg-mark" aria-hidden="true">=</span><span><span className="muted">{day(it.date)}</span> {it.before.title} <span className="muted">· inchangée</span></span></li>;
-    case 'changed':
-      return <li className="rg changed"><span className="rg-mark" aria-hidden="true">✎</span><span><span className="muted">{day(it.date)}</span> {it.before.title === it.after.title
-        ? <>{it.after.title} <span className="muted">· {it.before.minutes && it.after.minutes && it.before.minutes !== it.after.minutes ? `${it.before.minutes}′ → ${it.after.minutes}′` : 'contenu ajusté'}</span></>
-        : <><s>{it.before.title}</s> → <strong>{it.after.title}</strong></>}{it.after.source === 'library' ? ' 📚' : ''}{pub}</span></li>;
-    case 'added':
-      return <li className="rg added"><span className="rg-mark" aria-hidden="true">+</span><span><span className="muted">{day(it.date)}</span> <strong>{it.after.title}</strong>{it.after.source === 'library' ? ' 📚' : ''} <span className="muted">· ajoutée</span></span></li>;
-    case 'removed':
-      return <li className="rg removed"><span className="rg-mark" aria-hidden="true">−</span><span><span className="muted">{day(it.date)}</span> <s>{it.before.title}</s> <span className="muted">· retirée</span>{pub}</span></li>;
-  }
-}
 
 /**
  * D-063 (CE-P-06) : régénérer seulement les semaines demandées d’un programme généré. Différences avant d’appliquer ;
@@ -113,24 +90,11 @@ export default async function RegeneratePage({ params, searchParams }: {
                   <ul className="plain">{built.program.risks.map((r, i) => <li key={i} className={`fz-c ${r.level}`}><span className="fz-mark" aria-hidden="true">{RISK_MARK[r.level]}</span><span>{r.text}</span></li>)}</ul>
                 </div>
               ) : null}
-              <ProgramRegenerate wid={wid} aid={aid} planId={plan.id} fromWeek={from} toWeek={to} days={days} seen={seenOf(built.regen)} tweaks={tweaks} suggestionId={suggestionId}
-                counts={built.regen.counts} needsAccept={built.program.risks.some((r) => r.level !== 'watch')} validated={Boolean(ctx.decision)}
-                calendarHref={`/coach/${wid}/calendar?athlete=${aid}&week=${addDays(plan.startMonday, (from - 1) * 7)}&notice=regenerated`} />
             </div>
           </section>
-
-          <section className="card" aria-labelledby="rg-weeks">
-            <div className="card-head"><h2 id="rg-weeks">Différences semaine par semaine</h2></div>
-            <ol className="plain prog-weeks card-body">
-              {built.regen.weeks.map((w) => (
-                <li key={w.index} className="prog-week">
-                  <p className="prog-week-head"><strong>S{w.index}</strong> · {formatShortDate(w.monday)}
-                    {w.phase ? <> · <Pill tone={w.phase === 'tremplin' ? 'neutral' : w.phase === 'recuperation' || w.phase === 'affutage' ? 'attn' : ''}>{PROGRAM_PHASE_LABELS[w.phase]}</Pill></> : null}</p>
-                  {w.items.length ? <ul className="plain rg-list">{w.items.map((it, i) => <Item key={i} it={it} />)}</ul> : <p className="muted">Aucune séance.</p>}
-                </li>
-              ))}
-            </ol>
-          </section>
+          <ProgramRegenerate wid={wid} aid={aid} planId={plan.id} fromWeek={from} toWeek={to} days={days} seen={seenOf(built.regen)} tweaks={tweaks} suggestionId={suggestionId}
+            weeks={built.regen.weeks} needsAccept={built.program.risks.some((r) => r.level !== 'watch')} validated={Boolean(ctx.decision)}
+            calendarHref={`/coach/${wid}/calendar?athlete=${aid}&week=${addDays(plan.startMonday, (from - 1) * 7)}&notice=regenerated`} />
         </>
       )}
     </>

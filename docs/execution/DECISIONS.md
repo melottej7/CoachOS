@@ -1212,3 +1212,66 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - `npm test` : 252 passés (+3 PostgreSQL), typecheck OK.
   - Navigateur (bibliothèque de la démo) : 324 cartes Foulée, dont 168 « calculé », mise en forme des cartes rétablie.
 
+
+## D-078 · Régénération : choix séance par séance · 2026-11-19
+
+- **Contexte.** Reste de CE-P-06 (COUVERTURE § 6) : le coach voyait les différences avant d’appliquer (D-063), mais devait tout prendre ou tout laisser.
+- **Décision.**
+  - Chaque changement proposé (✎ modifiée, + ajoutée, − retirée) a sa case, cochée d’office ; « Tout cocher » et « Tout décocher ».
+  - Un changement décoché n’est pas appliqué : la séance actuelle reste telle quelle, ou rien n’est ajouté ce jour-là.
+  - La commande reçoit la liste des changements décochés (`skip` : identifiant de séance, ou `add:AAAA-MM-JJ`). Elle refuse si rien n’est coché. La trace de la régénération note le nombre de changements écartés.
+  - Le contrôle de l’aperçu (mêmes séances, mêmes révisions) reste inchangé.
+  - Corrigé en route : la classe CSS des révisions (`.changed`) encadrait les séances modifiées dans la liste.
+- **Preuve.**
+  - Test serveur : tout décoché est refusé ; un changement décoché est le seul qui reste à faire au calcul suivant.
+  - Navigateur (programme de Camille, démo) : semaines 3 et 4 sur lundi, mercredi, samedi ; deux changements décochés, le bouton devient « Appliquer 4 sur 6 changements en brouillons ». Non appliqué, pour ne pas modifier la démo.
+
+## D-079 · Import de la base d’un coach · 2026-11-19
+
+- **Contexte.** COUVERTURE § 5 « Import de la base de chaque coach » était seulement prévu (D-026 : une fonction pour tout coach). Les exemples anonymisés du fondateur ne sont pas encore arrivés : l’import accepte donc les formats les plus courants plutôt qu’un format précis.
+- **Décision.**
+  - Bibliothèque → **Importer mes séances**. Trois entrées sont acceptées :
+    - un fichier CSV (UTF-8, ou Windows-1252 comme Excel en français) ;
+    - des cellules copiées d’un tableur (tabulations) ;
+    - une séance par ligne « Titre : séance ».
+  - Un classeur (.xlsx, .numbers) est refusé avec la marche à suivre (exporter en CSV ou copier les cellules). Aucune bibliothèque de lecture n’a été ajoutée.
+  - Les colonnes sont reconnues par leur nom, en français ou en anglais : titre, sport, catégorie, séance (notation texte D-041), consignes, durée, distance.
+  - Une séance écrite librement est gardée dans les consignes, sans structure. Une catégorie absente est devinée d’après le titre (marquée « devinée ») et modifiable ligne par ligne.
+  - Tout est lu et vérifié dans le navigateur. Rien n’est envoyé avant **Importer**, et seulement les lignes cochées. Chaque erreur est montrée à sa ligne (L3…), sans perte silencieuse.
+  - Doublons : un titre déjà dans la bibliothèque n’est jamais écrasé. Un même titre plus bas dans le fichier est ignoré.
+  - Provenance « import » et date dans les repères (`payload.meta`), invisibles de l’élève. Limites : 500 séances, 300 000 caractères et 1 Mo par import.
+  - Commande `importLibrary` (coach seulement, idempotente, auditée) ; route `POST …/templates/import` ajoutée au contrat.
+- **Preuve.**
+  - Domaine : 5 tests (CSV point-virgule, tableur collé, lignes, guillemets RFC 4180, durées et distances en français).
+  - Serveur : 4 séances ajoutées puis 0 en rejouant ; élève refusé ; corps invalide refusé ; contrat vérifié.
+  - Navigateur, démo, à 375 px sans débordement : exemple lu en tableau, quatre lignes dont deux erreurs expliquées. Une séance importée (« Côtes 8x200m (import) », restée dans la bibliothèque de la démo), puis reconnue comme déjà présente.
+
+## D-080 · Lecture hors ligne de l’espace élève · 2026-11-19
+
+- **Contexte.** COUVERTURE § 7 « hors ligne à venir ». L’élève ouvre sa séance sur le terrain, parfois sans réseau.
+- **Décision.**
+  - Un service worker (`public/sw.js`) va toujours d’abord sur le réseau. Il garde la dernière version des pages de l’élève (Aujourd’hui, Programme, séances, Progression, Profil, Ton coach ; 40 pages au plus) et les fichiers de l’application.
+  - Sans réseau, la page gardée s’affiche avec le bandeau « Hors ligne · page enregistrée le … ». Pour envoyer un retour, il faut attendre le réseau (pas d’envoi différé).
+  - Une page jamais ouverte affiche « Pas de réseau ».
+  - Jamais gardés : l’API, l’espace coach.
+  - Tout est effacé à la déconnexion, au changement d’identité de démonstration et quand la session a expiré (renvoi vers la connexion) : rien ne reste sur un téléphone prêté.
+  - Le service worker n’est enregistré qu’en contexte sûr. Il fonctionne donc sur la version publiée en https, pas sur l’adresse http du réseau local utilisée pour la recette sur téléphone (les navigateurs le refusent) ; l’application marche alors comme avant.
+- **Preuve.**
+  - 3 tests exécutent le vrai fichier avec un réseau et un cache simulés : réseau d’abord, page gardée avec bandeau, écran « Pas de réseau », coach et API jamais gardés, effacement à la déconnexion, au changement d’identité et à l’expiration.
+  - Non prouvé : le navigateur intégré à l’application Claude refuse l’enregistrement d’un service worker, alors que le fichier est bien servi (200, JavaScript). L’essai réel se fera sur la version https.
+
+## D-081 · Coûts de l’IA suivis et budget mensuel · 2026-11-19
+
+- **Contexte.** COUVERTURE § 6 « coûts suivis » (table `ai_budget` du SQL de référence). Le fondateur paie le compte Anthropic et n’a pas encore de crédit.
+- **Décision.**
+  - Chaque appel à Claude enregistre ses jetons facturés et son coût réel dans la proposition (`ai_suggestions.output.usage`). Prix publics : Opus 5.5 à 4 $ (entrée) et 20 $ (sortie) par million de jetons. Un modèle de secours inconnu est compté au prix d’Opus 5.5, marqué comme estimation.
+  - Budget mensuel par espace : 10 $ par défaut, réglable sur le serveur (`COACHOS_AI_MONTHLY_BUDGET_USD`).
+  - Le pire cas est réservé avant l’appel dans `ai_budget`, puis remplacé par le coût réel. Un appel en échec rend sa réserve.
+  - Budget atteint : aucun appel n’est fait, et un message renvoie à la voie manuelle.
+  - La simulation ne coûte rien et ne réserve rien.
+  - Paramètres (propriétaire) : carte **IA ce mois-ci**, avec le nombre de propositions, le coût réel, le budget et une jauge.
+- **Preuve.**
+  - Domaine : prix, réserve, budget, affichage.
+  - Serveur (client Claude simulé, aucun appel réel) : 1 500 + 300 jetons comptent 0,012 $ ; la réserve revient à 0 ; avec un budget de 0,01 $, la demande est refusée sans appel.
+  - Navigateur (démo) : carte affichée dans Paramètres.
+  - `npm test` : **264 passés** (+3 PostgreSQL), typecheck OK.

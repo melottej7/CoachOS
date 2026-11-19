@@ -1,5 +1,5 @@
 import {
-  addDays, createProgramSchema, generateProgram, mergeTweaks, methodTweaksFor, ruleLabel, parseWith, planRegeneration, programInstructions, programPhaseTitle, regenerateProgramSchema,
+  addDays, createProgramSchema, generateProgram, mergeTweaks, methodTweaksFor, ruleLabel, parseWith, planRegeneration, chosenCounts, regenItemKey, programInstructions, programPhaseTitle, regenerateProgramSchema,
   regenWeekCount, todayIn, weekStart, WEEKDAY_MINUTES_CAP,
   type Block, type CreateProgramInput, type FeasibilityInput, type LibrarySession, type PlannedSession, type Program, type ProgramSession,
   type ProgramTweaks, type ProgramWeek, type RegenerateProgramInput, type Regeneration, type WorkoutInput,
@@ -335,6 +335,10 @@ export async function regenerateProgram(meta: { actorId: string; idempotencyKey:
       if (cur.length !== v.seen.length || cur.some((x) => seen.get(x.id) !== x.revision)) {
         throw conflict('Le programme a changé depuis l’aperçu. Recharge la page pour revoir les différences.', {});
       }
+      // D-078 : le coach peut décocher des changements ; ils ne sont pas appliqués.
+      const skip = new Set(v.skip);
+      const applied = chosenCounts(regen, skip);
+      if (!applied.changed && !applied.added && !applied.removed) throw invalid([{ path: 'skip', rule: 'Aucun changement choisi' }]);
       const byId = new Map(now.map((x) => [x.id, x]));
       const bump = async (id: string, n: number) =>
         tx.query('update public.workouts set working_revision = $4, generated_revision = $4 where workspace_id = $1 and athlete_id = $2 and id = $3', [wid, aid, id, n]);
@@ -342,6 +346,8 @@ export async function regenerateProgram(meta: { actorId: string; idempotencyKey:
         const pw = built.program.weeks[w.index - 1];
         const wk = { index: w.index, phase: pw?.phase ?? 'developpement' as const };
         for (const it of w.items) {
+          const key = regenItemKey(it);
+          if (key && skip.has(key)) continue;
           if (it.kind === 'changed') {
             const n = it.before.revision + 1;
             await insertRevision(tx, wid, aid, it.before.id, n, inputOf(rc.ctx, wk, it.after, 0));
@@ -361,7 +367,7 @@ export async function regenerateProgram(meta: { actorId: string; idempotencyKey:
       }
       // Programme : jours, paramètres et risques du jour, trace de la régénération ; phases recalculées.
       const g = (await planRow(tx, wid, aid, planId))!.generator;
-      const entry = { at: new Date().toISOString(), by: meta.actorId, tweaks: v.tweaks, suggestionId: v.suggestionId, fromWeek: regen.weeks[0]?.index ?? v.fromWeek, toWeek: regen.weeks.at(-1)?.index ?? v.toWeek, days: v.days, counts: regen.counts, acceptedRisks: v.acceptRisks };
+      const entry = { at: new Date().toISOString(), by: meta.actorId, tweaks: v.tweaks, suggestionId: v.suggestionId, fromWeek: regen.weeks[0]?.index ?? v.fromWeek, toWeek: regen.weeks.at(-1)?.index ?? v.toWeek, days: v.days, counts: { ...regen.counts, ...applied, skipped: regen.counts.changed + regen.counts.added + regen.counts.removed - applied.changed - applied.added - applied.removed }, acceptedRisks: v.acceptRisks };
       const ends = built.program.weeks.at(-1)?.sessions.at(-1)?.date ?? rc.ctx.feasibility!.eventDate;
       await tx.query(
         `update public.plans set generator = $3::jsonb, ends_on = greatest(ends_on, $4::date) where workspace_id = $1 and id = $2`,
@@ -371,7 +377,7 @@ export async function regenerateProgram(meta: { actorId: string; idempotencyKey:
       await tx.query('delete from public.plan_blocks where workspace_id = $1 and plan_id = $2', [wid, planId]);
       await insertBlocks(tx, wid, aid, planId, built.program);
       await audit(tx, wid, meta.actorId, 'program.regenerate', planId, meta.requestId);
-      return { status: 200, body: { planId, ...regen.counts } };
+      return { status: 200, body: { planId, ...regen.counts, ...applied } };
     });
   });
 }

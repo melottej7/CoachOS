@@ -1071,6 +1071,14 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .rg.added .rg-mark { color: var(--ok, var(--accent)); }
 .rg.removed .rg-mark, .rg.changed .rg-mark { color: var(--attention); }
 .rg.same { opacity: 0.7; }
+/* D-078 : changement décochable ; décoché = non appliqué. */
+.rg-check { margin: 0; width: 18px; height: 18px; justify-self: center; align-self: center; accent-color: var(--accent); }
+.rg-mark-inline { font-weight: 700; }
+.rg.added .rg-mark-inline { color: var(--ok, var(--accent)); }
+.rg.removed .rg-mark-inline, .rg.changed .rg-mark-inline { color: var(--attention); }
+.rg.off > span:last-child { opacity: 0.55; }
+.rg-hint { padding-bottom: 0; }
+.rg.changed { border: 0; border-radius: 0; padding: 0; background: none; gap: 6px; } /* pas le cadre de .changed (révisions) */
 /* D-065 : créneaux de travail et charge estimée. */
 .agenda-slot { margin: 0 0 4px; font-size: 14px; padding-left: 8px; border-left: 3px dashed var(--accent); }
 .plan-load { margin-top: 2px; }
@@ -1121,3 +1129,22 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .measures.stale { border-left: 3px solid var(--attention); }
 .measures-warn { font-weight: 600; }
 
+
+/* D-079 : import de la base du coach. */
+.imp-src { align-items: end; }
+.imp-text { font-family: var(--mono, ui-monospace, monospace); font-size: 13px; width: 100%; }
+.imp-col { display: inline-block; margin: 2px 8px 2px 0; padding: 1px 6px; border: 1px solid var(--rule); border-radius: 6px; font-size: 13px; }
+.imp-col.ignored { opacity: 0.6; }
+.imp-list { display: grid; gap: 6px; }
+.imp-row { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: start; padding: 6px 0; border-bottom: 1px solid var(--rule); font-size: 14px; }
+.imp-row:last-child { border-bottom: 0; }
+.imp-row input[type=checkbox] { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); }
+.imp-main { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.imp-mark { text-align: center; font-weight: 700; color: var(--attention); }
+.imp-row.off .imp-main { opacity: 0.55; }
+.imp-cat { max-width: 170px; }
+@media (max-width: 560px) { .imp-row { grid-template-columns: 22px 1fr; } .imp-cat { grid-column: 2; max-width: none; } }
+
+/* D-081 : part du budget IA du mois. */
+.ai-meter { height: 8px; border-radius: 999px; background: var(--rule); overflow: hidden; }
+.ai-meter > span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }

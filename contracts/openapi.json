@@ -23420,6 +23420,15 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "skip": {
+                    "type": "array",
+                    "maxItems": 400,
+                    "items": {
+                      "type": "string",
+                      "maxLength": 60
+                    },
+                    "description": "D-078 : changements décochés par le coach (identifiant de séance, ou add:AAAA-MM-JJ pour un ajout) ; ils ne sont pas appliqués."
                   }
                 }
               }
@@ -24727,6 +24736,207 @@
           {
             "in": "path",
             "name": "tid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/workspaces/{wid}/templates/import": {
+      "post": {
+        "operationId": "importLibrary",
+        "summary": "Importer la base du coach : séances lues et vérifiées dans l’aperçu, ajoutées sans écraser un titre existant (D-079).",
+        "tags": [
+          "library"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 10,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "items"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 500,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "workout"
+                      ],
+                      "properties": {
+                        "category": {
+                          "type": "string",
+                          "enum": [
+                            "endurance",
+                            "tempo",
+                            "threshold",
+                            "intervals",
+                            "hills",
+                            "long",
+                            "recovery",
+                            "technique",
+                            "strength",
+                            "race",
+                            "other"
+                          ]
+                        },
+                        "workout": {
+                          "$ref": "#/components/schemas/libraryWorkout"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "added",
+                    "skipped"
+                  ],
+                  "properties": {
+                    "added": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "skipped": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
             "required": true,
             "schema": {
               "type": "string",

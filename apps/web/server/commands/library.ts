@@ -1,5 +1,5 @@
 import {
-  addDays, applyWeekSchema, createBlockTemplateSchema, createTemplateSchema, fouleeLibrary, type FouleeMeta, parseWith, starterLibrary, updateTemplateSchema, updateWeekTemplateSchema, weekFromAthleteSchema, weekStart,
+  addDays, applyWeekSchema, importLibrarySchema, type ImportLibraryInput, createBlockTemplateSchema, createTemplateSchema, fouleeLibrary, type FouleeMeta, parseWith, starterLibrary, updateTemplateSchema, updateWeekTemplateSchema, weekFromAthleteSchema, weekStart,
   type BlockTemplatePayload, type LibraryCategory, type LibraryWorkout, type WeekDay, type WeekTemplatePayload,
 } from '@coachos/domain';
 import { commandAs, type Tx } from '../db/client';
@@ -122,6 +122,37 @@ export async function addFouleeLibrary(meta: Meta): Promise<StoredResponse> {
         added++;
       }
       await audit(tx, wid, meta.actorId, 'template.foulee', wid, meta.requestId);
+      return { status: 200, body: { added, skipped } };
+    });
+  });
+}
+
+/**
+ * importLibrary · C : séances de la base du coach, lues et vérifiées dans l’aperçu (D-079), ajoutées à sa bibliothèque.
+ * Même titre déjà présent = gardée telle quelle (rien n’est écrasé) ; provenance « import » dans les repères.
+ */
+export async function importLibrary(meta: Meta, body: unknown): Promise<StoredResponse> {
+  const v = parse<ImportLibraryInput>(importLibrarySchema, body);
+  const wid = meta.workspaceId;
+  return commandAs(meta.actorId, async (tx) => {
+    await requireCoach(tx, wid);
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'template.import', key: meta.idempotencyKey, body: v }, async () => {
+      const have = new Set((await tx.query<{ title: string }>(
+        `select lower(title) as title from public.templates where workspace_id = $1 and owner_id = auth.uid() and kind = 'workout' and not archived`, [wid],
+      )).rows.map((r) => r.title));
+      const at = new Date().toISOString();
+      let added = 0, skipped = 0;
+      for (const it of v.items) {
+        const key = it.workout.title.toLowerCase();
+        if (have.has(key)) { skipped++; continue; }
+        await tx.query(
+          `insert into public.templates(workspace_id, owner_id, kind, title, payload) values ($1, auth.uid(), 'workout', $2, $3::jsonb)`,
+          [wid, it.workout.title, JSON.stringify({ category: it.category, workout: it.workout, meta: { source: 'import', importedAt: at } })],
+        );
+        have.add(key);
+        added++;
+      }
+      await audit(tx, wid, meta.actorId, 'template.import', wid, meta.requestId);
       return { status: 200, body: { added, skipped } };
     });
   });

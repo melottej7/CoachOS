@@ -7,6 +7,8 @@ import { CoachSpaceForm } from '@/components/coach-space-form';
 import { Notice } from '@/components/ui';
 import { RuleSettingsForm } from '@/components/rule-settings-form';
 import { autoRuleSettings } from '@/server/repo/portfolio';
+import { aiMonth, aiSource } from '@/server/commands/ai';
+import { formatUsd } from '@coachos/domain';
 
 export const metadata = { title: 'Paramètres' };
 
@@ -42,6 +44,20 @@ export default async function Settings({ params, searchParams }: { params: Promi
     );
   }
   const wizard = Boolean(first);
+  // D-081 : consommation de l’IA du mois, pour le propriétaire (c’est lui qui paie le compte Anthropic).
+  const ai = await aiMonth(actor.userId, wid);
+  const source = aiSource();
+  const pct = ai.budgetMicros ? Math.min(100, Math.round((ai.spentMicros / ai.budgetMicros) * 100)) : 100;
+  const aiCard = (
+    <section className="card" style={{ marginTop: 18 }} aria-labelledby="ia-mois" id="ia">
+      <div className="card-head"><h2 id="ia-mois">IA ce mois-ci</h2><span className="muted">{source === 'claude' ? 'Claude actif' : 'IA simulée (aucun coût)'}</span></div>
+      <div className="card-body stack">
+        <p><strong>{ai.calls}</strong> proposition{ai.calls > 1 ? 's' : ''} « Ajuster avec l’IA »{ai.claudeCalls !== ai.calls ? <span className="muted"> (dont {ai.claudeCalls} par Claude)</span> : null} · coût réel <strong>{formatUsd(ai.spentMicros)}</strong> sur un budget de {formatUsd(ai.budgetMicros)}.</p>
+        <div className="ai-meter" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Part du budget IA utilisée"><span style={{ width: `${pct}%` }} /></div>
+        <p className="muted">Arrivé au budget, l’IA s’arrête jusqu’au mois suivant ; tout reste faisable à la main. Le budget se règle sur le serveur (COACHOS_AI_MONTHLY_BUDGET_USD). Les coûts viennent des jetons facturés par Anthropic à chaque appel.</p>
+      </div>
+    </section>
+  );
   return (
     <>
       <Notice message={notice === 'saved' ? 'Présentation enregistrée. Tes athlètes la voient dans « Ton coach ».' : null} />
@@ -68,6 +84,7 @@ export default async function Settings({ params, searchParams }: { params: Promi
         />
       </div></section>
       {wizard ? null : followUps}
+      {wizard ? null : aiCard}
     </>
   );
 }

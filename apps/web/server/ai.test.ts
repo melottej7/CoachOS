@@ -1,14 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { addDays, NO_TWEAKS, todayIn, weekStart } from '@coachos/domain';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { openDatabase, readAs, setDb } from './db/client';
+import { commandAs, openDatabase, readAs, setDb } from './db/client';
 import { ATHLETES, TIME_ZONE, USERS, WORKSPACE_A } from './db/fixtures';
 import { AppError } from './errors';
 import { createGoal } from './commands/portfolio';
 import { decideGoal } from './commands/goal-decisions';
 import { saveAthleteProfile } from './commands/athlete-profile';
 import Anthropic from '@anthropic-ai/sdk';
-import { proposeProgramTweaks, setAnthropicClient } from './commands/ai';
+import { aiMonth, proposeProgramTweaks, setAnthropicClient } from './commands/ai';
 import { buildProgram, createProgram, nextMonday, programContext } from './commands/programs';
 
 // D-071 : « Ajuster avec l’IA » (simulée) : proposition tracée, nom retiré, réglages appliqués par le moteur.
@@ -63,7 +63,7 @@ describe('ajuster avec l’IA (D-071)', () => {
     process.env.ANTHROPIC_API_KEY = 'test-sans-appel';
     let sent: { model?: string; messages?: { content: string }[]; output_config?: unknown; fallbacks?: unknown } = {};
     const reply = (r: unknown) => setAnthropicClient({ beta: { messages: { create: async (body: typeof sent) => { sent = body; if (r instanceof Error) throw r; return r; } } } } as unknown as Anthropic);
-    const ok = { model: 'claude-opus-5-5', stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify({ status: 'ready', tweaks: { maxQualityPerWeek: 1, avoidQuality: ['vma'], volumePct: null, longProgressive: true, longDay: 6 }, days: null, explanation: 'Moins d’intensité.', uncertainty: '' }) }] };
+    const ok = { model: 'claude-opus-5-5', stop_reason: 'end_turn', usage: { input_tokens: 1500, output_tokens: 300 }, content: [{ type: 'text', text: JSON.stringify({ status: 'ready', tweaks: { maxQualityPerWeek: 1, avoidQuality: ['vma'], volumePct: null, longProgressive: true, longDay: 6 }, days: null, explanation: 'Moins d’intensité.', uncertainty: '' }) }] };
     try {
       reply(ok);
       const r = await proposeProgramTweaks(meta(USERS.marine, { goalId: goal }), { text: 'Noah récupère mal : pas de VMA', days: [2, 4, 6, 7] });
@@ -84,6 +84,36 @@ describe('ajuster avec l’IA (D-071)', () => {
     } finally {
       setAnthropicClient(null);
       if (prev === undefined) delete process.env.ANTHROPIC_API_KEY; else process.env.ANTHROPIC_API_KEY = prev;
+    }
+  });
+
+  it('coûts suivis (D-081) : coût réel compté, réserve rendue, budget du mois respecté', async () => {
+    const prev = [process.env.ANTHROPIC_API_KEY, process.env.COACHOS_AI_MONTHLY_BUDGET_USD] as const;
+    process.env.ANTHROPIC_API_KEY = 'test-sans-appel';
+    let calls = 0;
+    const ok = { model: 'claude-opus-5-5', stop_reason: 'end_turn', usage: { input_tokens: 1500, output_tokens: 300 }, content: [{ type: 'text', text: JSON.stringify({ status: 'ready', tweaks: { maxQualityPerWeek: 1, avoidQuality: [], volumePct: null, longProgressive: false, longDay: null }, days: null, explanation: 'Une seule séance de qualité.', uncertainty: '' }) }] };
+    setAnthropicClient({ beta: { messages: { create: async () => { calls++; return ok; } } } } as unknown as Anthropic);
+    try {
+      const before = await aiMonth(USERS.marine, WORKSPACE_A);
+      process.env.COACHOS_AI_MONTHLY_BUDGET_USD = '10';
+      const r = await proposeProgramTweaks(meta(USERS.marine, { goalId: goal }), { text: 'Moins de fractionné', days: [2, 4, 6, 7] });
+      const id = (r.body as { suggestionId: string }).suggestionId;
+      const row = (await readAs(USERS.marine, (tx) => tx.query<{ output: { usage: { costMicros: number; inputTokens: number } } }>('select output from public.ai_suggestions where id = $1', [id]))).rows[0]!;
+      expect(row.output.usage).toMatchObject({ inputTokens: 1500, costMicros: 1500 * 4 + 300 * 20, exactPrice: true });
+      const after = await aiMonth(USERS.marine, WORKSPACE_A);
+      expect(after.spentMicros - before.spentMicros).toBe(12_000);
+      expect(after.claudeCalls).toBe(before.claudeCalls + 1);
+      const reserved = await commandAs(USERS.marine, (tx) => tx.query<{ reserved_micros: string }>('select reserved_micros from public.ai_budget where workspace_id = $1', [WORKSPACE_A]));
+      expect(reserved.rows.every((x) => Number(x.reserved_micros) === 0)).toBe(true);
+      // Budget épuisé : aucun appel, voie manuelle rappelée.
+      process.env.COACHOS_AI_MONTHLY_BUDGET_USD = '0.01';
+      const n = calls;
+      expect(await codeOf(proposeProgramTweaks(meta(USERS.marine, { goalId: goal }), { text: 'Moins de fractionné', days: [2, 4, 6, 7] }))).toBe('TEMPORARILY_UNAVAILABLE');
+      expect(calls).toBe(n);
+    } finally {
+      setAnthropicClient(null);
+      if (prev[0] === undefined) delete process.env.ANTHROPIC_API_KEY; else process.env.ANTHROPIC_API_KEY = prev[0];
+      if (prev[1] === undefined) delete process.env.COACHOS_AI_MONTHLY_BUDGET_USD; else process.env.COACHOS_AI_MONTHLY_BUDGET_USD = prev[1];
     }
   });
 });
