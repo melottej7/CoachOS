@@ -616,3 +616,55 @@ h3 { font-size: 15px; line-height: 22px; }
 /* Le bouton du guide ne doit pas couvrir l’envoi d’un message. */
 body:has(.chat) .guide-fab { bottom: 110px; }
 @media (max-width: 639px) { body:has(.chat) .guide-fab.athlete, body:has(.chat) .guide-fab { bottom: 150px; width: 48px; height: 48px; } }
+
+/* Messagerie façon messagerie instantanée : discussions à gauche, conversation à droite (D-033) */
+.mx { display: grid; grid-template-columns: 340px minmax(0, 1fr); height: calc(100dvh - 130px); min-height: 480px; border: 1px solid var(--rule); border-radius: 16px; overflow: hidden; background: var(--surface); }
+.mx-side { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--rule); }
+.mx-title { font-size: 24px; line-height: 1.2; margin: 0; padding: 16px 16px 10px; }
+.cl { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.cl-search { padding: 0 12px 8px; }
+.cl-search input { width: 100%; border: 0; border-radius: 20px; background: var(--soft-neutral); color: var(--ink); padding: 9px 14px; font: inherit; }
+.cl-search input:focus-visible { outline: 2px solid var(--focus); }
+.cl-list { list-style: none; margin: 0; padding: 0 8px 8px; overflow-y: auto; flex: 1; }
+.cl-row { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 10px; color: var(--ink); text-decoration: none; }
+.cl-row:hover { background: var(--soft-neutral); }
+.cl-row.active { background: var(--mint); color: var(--mint-ink); }
+.cl-avatar { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; flex: none; font-weight: 800; font-size: 17px; background: var(--accent); color: var(--on-accent); }
+.cl-avatar.team { background: var(--soft-neutral); font-size: 22px; }
+.cl-text { display: grid; min-width: 0; flex: 1; }
+.cl-name { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cl-preview { display: flex; min-width: 0; font-size: 13px; color: var(--muted); }
+.cl-row.active .cl-preview { color: inherit; opacity: 0.8; }
+.cl-preview-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cl-when { flex: none; white-space: pre; }
+.cl-row.unread .cl-name, .cl-row.unread .cl-preview { font-weight: 800; color: var(--ink); }
+.cl-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); flex: none; }
+.cl-empty { padding: 16px; color: var(--muted); text-align: center; }
+.mx-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.mx-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--rule); background: var(--surface); }
+.mx-head .cl-avatar { width: 40px; height: 40px; font-size: 14px; }
+.mx-who { min-width: 0; }
+.mx-who h2 { margin: 0; font-size: 16px; line-height: 1.3; }
+.mx-who p { margin: 0; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mx-actions { margin-left: auto; display: flex; gap: 6px; }
+.mx-back { display: none; width: 36px; height: 36px; flex: none; place-items: center; font-size: 30px; line-height: 1; color: var(--accent); text-decoration: none; border-radius: 50%; }
+.mx-back:hover { background: var(--soft-neutral); }
+.mx-main .chat, .mx-solo .chat { height: auto; flex: 1; min-height: 0; }
+.mx-note { margin: 0; padding: 6px 14px; font-size: 12px; color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--rule); }
+.mx-placeholder { margin: auto; max-width: 34ch; text-align: center; color: var(--muted); padding: 24px; }
+.mx-placeholder span { font-size: 48px; display: block; }
+.mx-placeholder h2 { color: var(--ink); margin: 8px 0 4px; }
+.mx-mobile { border: 1px solid var(--rule); border-radius: 16px; background: var(--surface); overflow: hidden; }
+.mx-solo { display: flex; flex-direction: column; height: calc(100dvh - 230px); min-height: 420px; border: 1px solid var(--rule); border-radius: 16px; overflow: hidden; background: var(--surface); }
+.mx-solo .mx-back { display: grid; }
+@media (max-width: 720px) {
+  .mx { grid-template-columns: 1fr; height: calc(100dvh - 222px); min-height: 380px; border-radius: 12px; }
+  .mx.has-active .mx-side { display: none; }
+  .mx:not(.has-active) .mx-main { display: none; }
+  .mx-side { border-right: 0; }
+  .mx-back { display: grid; }
+}
+@media (max-width: 639px) {
+  .mx-solo { height: calc(100dvh - 250px); border-radius: 12px; margin: 0 -8px; }
+  .mx-mobile { margin: 0 -8px; }
+}

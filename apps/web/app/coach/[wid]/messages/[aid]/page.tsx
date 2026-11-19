@@ -2,13 +2,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireActor } from '@/server/auth/session';
 import { coachContext, isUuid } from '@/server/repo/context';
-import { directThread } from '@/server/repo/messages';
+import { coachInbox, directThread } from '@/server/repo/messages';
 import { toUi } from '@/server/repo/message-format';
+import { ChatHeader, MessagesShell, toRows } from '@/components/messages-shell';
 import { Thread } from '@/components/messaging';
 
 export const metadata = { title: 'Conversation' };
 
-/** X26 : fil privé avec un élève affecté. */
+/** X26 : conversation privée avec un élève affecté. */
 export default async function CoachThread({ params }: { params: Promise<{ wid: string; aid: string }> }) {
   const { wid, aid } = await params;
   const actor = await requireActor();
@@ -16,18 +17,16 @@ export default async function CoachThread({ params }: { params: Promise<{ wid: s
   if (!ctx || !isUuid(aid)) notFound();
   const t = await directThread(actor.userId, wid, aid);
   if (!t) notFound();
+  const base = `/coach/${wid}/messages`;
+  const tz = ctx.workspace.timeZone;
+  const rows = toRows(await coachInbox(actor.userId, wid), tz, (e) => (e.kind === 'team' ? `${base}/groupe/${e.id}` : `${base}/${e.id}`), `athlete:${aid}`);
   const first = t.athleteName.split(' ')[0] ?? t.athleteName;
   return (
-    <>
-      <Link className="back" href={`/coach/${wid}/messages`}>← Messages</Link>
-      <div className="head">
-        <div><div className="kicker">Conversation privée</div><h1>{t.athleteName}</h1></div>
-        <Link className="btn" href={`/coach/${wid}/athletes/${aid}`}>Fiche de {first}</Link>
-      </div>
-      <section className="card thread-card">
-        <Thread wid={wid} target={{ kind: 'direct', athleteId: aid, conversationId: t.conversationId }} messages={toUi(t.messages, ctx.workspace.timeZone)} showNames={false} otherName={t.athleteName}
-          emptyText={`Aucun message avec ${first} pour l’instant. Écris-lui ou envoie un vocal.`} />
-      </section>
-    </>
+    <MessagesShell rows={rows} active>
+      <ChatHeader back={base} name={t.athleteName} subtitle="Conversation privée"
+        actions={<Link className="btn small" href={`/coach/${wid}/athletes/${aid}`}>Fiche</Link>} />
+      <Thread wid={wid} target={{ kind: 'direct', athleteId: aid, conversationId: t.conversationId }} messages={toUi(t.messages, tz)} showNames={false} otherName={t.athleteName}
+        emptyText={`Démarre la discussion avec ${first} : écris-lui ou envoie un vocal.`} />
+    </MessagesShell>
   );
 }
