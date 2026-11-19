@@ -33,7 +33,8 @@ export default async function Calendar({ params, searchParams }: { params: Promi
   const today = todayIn(athlete.timeZone);
   const monday = weekStart(sp.week && isLocalDate(sp.week) ? sp.week : today);
   const days = weekDates(monday);
-  const workouts = await coachWeek(actor.userId, wid, athlete.id, days[0]!, days[6]!);
+  // Une séance annulée jamais publiée n’a rien à montrer ; annulée après publication, elle attend la republication (D-063).
+  const workouts = (await coachWeek(actor.userId, wid, athlete.id, days[0]!, days[6]!)).filter((w) => !(w.canceled && w.publishedRevision === null));
   const reviews = await openReviews(actor.userId, wid, athlete.id);
   const base = `/coach/${wid}`;
   const weekHref = (m: string) => `${base}/calendar?athlete=${athlete.id}&week=${m}`;
@@ -58,6 +59,7 @@ export default async function Calendar({ params, searchParams }: { params: Promi
       </div>
       <SessionsTabs wid={wid} current="week" toPlan={toPlan} />
       {sp.notice === 'program' ? <p className="banner ok" role="status">Programme créé en brouillons, semaine par semaine. Relis, ajuste, puis « Publier la semaine » quand tout te convient.</p> : null}
+      {sp.notice === 'regenerated' ? <p className="banner ok" role="status">Semaines régénérées en brouillons. Les séances déjà publiées et modifiées attendent ta republication (« Publier la semaine »).</p> : null}
 
       <section className="card" aria-labelledby="week-title">
         <div className="card-head">
@@ -79,9 +81,11 @@ export default async function Calendar({ params, searchParams }: { params: Promi
                   <ul>
                     {items.map((w) => (
                       <li key={w.id}>
-                        <Link className={`session ${w.status}`} href={`${base}/athletes/${athlete.id}/workouts/${w.id}`}>
+                        <Link className={`session ${w.status}${w.canceled ? ' canceled' : ''}`} href={`${base}/athletes/${athlete.id}/workouts/${w.id}`}>
                           <strong>{w.title}</strong>
-                          <small>{[formatDuration(w.durationSeconds), WORKOUT_STATUS_LABELS[w.status]].filter(Boolean).join(' · ')}</small>
+                          <small>{w.canceled
+                            ? (w.status === 'published' ? 'Annulée' : 'Annulée · à republier')
+                            : [formatDuration(w.durationSeconds), WORKOUT_STATUS_LABELS[w.status]].filter(Boolean).join(' · ')}</small>
                           {w.feedback ? <small>{RESULT_STATE_LABELS[w.feedback.state]}{w.feedback.reviewed ? ' · traité' : ' · retour à traiter'}</small> : null}
                         </Link>
                       </li>

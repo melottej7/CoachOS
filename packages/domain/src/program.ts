@@ -19,7 +19,28 @@ export const PROGRAM_PHASE_LABELS: Record<ProgramPhase, string> = {
 };
 export type SessionKind = 'easy' | 'long' | 'quality' | 'race';
 
-export interface ProgramSession { date: LocalDate; kind: SessionKind; title: string; blocks: Block[]; minutes: number }
+export interface ProgramSession {
+  date: LocalDate; kind: SessionKind; title: string; blocks: Block[]; minutes: number;
+  /** « Pourquoi cette séance ? » (D-062) : sa place dans le programme, en une phrase. */
+  why: string;
+  /** Séance tirée de la bibliothèque du coach, ou construite par le générateur. */
+  source: 'library' | 'generated';
+  libraryId?: string;
+  /** Consignes de la séance de bibliothèque, reprises telles quelles. */
+  instructions?: string | null;
+}
+
+/** Séance de la bibliothèque du coach proposée au générateur (D-062). */
+export interface LibrarySession { id: string; title: string; category: string; sport: Sport; blocks: Block[]; instructions: string | null }
+
+/** Catégorie de bibliothèque correspondant à chaque type de séance du générateur. */
+const LIBRARY_CATEGORY: Record<'tempo' | 'threshold' | 'vma' | 'long', string> = { tempo: 'tempo', threshold: 'threshold', vma: 'intervals', long: 'long' };
+const TYPE_REASON: Record<'tempo' | 'threshold' | 'vma' | 'race', string> = {
+  tempo: 'première intensité, légère, pour habituer le corps',
+  threshold: 'allonger le temps tenu à une allure soutenue',
+  vma: 'développer la vitesse maximale aérobie',
+  race: 's’habituer à l’allure visée le jour de la course',
+};
 export interface ProgramWeek { index: number; monday: LocalDate; phase: ProgramPhase; minutes: number; longMinutes: number; sessions: ProgramSession[] }
 export type RiskLevel = 'watch' | 'risk' | 'block';
 export interface ProgramRisk { level: RiskLevel; text: string }
@@ -36,6 +57,8 @@ export interface ProgramInput {
   refs?: References;
   /** Titre de l’objectif (séance du jour de course). */
   goalTitle: string;
+  /** Bibliothèque du coach : ses séances sont choisies en priorité quand elles conviennent (D-062). */
+  library?: LibrarySession[];
 }
 
 const STEP = (phase: Step['phase'], measure: Step['measure'], zone: number | null, note: string | null = null): Step => ({
@@ -132,6 +155,18 @@ export function generateProgram(input: ProgramInput): Program {
   const racePace = f.targetSeconds ? f.targetSeconds / f.distanceKm : pred ? pred.seconds / f.distanceKm : null;
   const ld = longDay(days);
   const qualityTypes: ('threshold' | 'vma' | 'race' | 'tempo')[] = f.targetSeconds ? ['threshold', 'race', 'vma'] : ['threshold', 'tempo', 'vma'];
+  // Bibliothèque du coach : même sport, même catégorie, durée à ±30 % de la cible ; la moins utilisée d’abord.
+  const used = new Map<string, number>();
+  const lib = (input.library ?? []).filter((x) => x.blocks.length).map((x) => ({ ...x, minutes: minutesOf(x.blocks, x.sport, input.refs) })).filter((x) => x.minutes > 0);
+  const pick = (category: string, target: number, tolerance = 0.3) => {
+    const c = lib.filter((x) => x.sport === sport && x.category === category && Math.abs(x.minutes - target) <= target * tolerance)
+      .sort((a, b) => (used.get(a.id) ?? 0) - (used.get(b.id) ?? 0) || Math.abs(a.minutes - target) - Math.abs(b.minutes - target))[0];
+    if (c) used.set(c.id, (used.get(c.id) ?? 0) + 1);
+    return c ?? null;
+  };
+  const phaseWhy = (p: ProgramPhase) => ({
+    tremplin: 'Tremplin', developpement: 'Développement', recuperation: 'Semaine allégée (−25 % pour assimiler)', affutage: 'Affûtage (moins de volume, un rappel d’intensité)',
+  })[p];
   const weeks: ProgramWeek[] = [];
   let w = startWeekly, l = currentLong;
   let devIndex = 0, qi = 0;
@@ -182,15 +217,28 @@ export function generateProgram(input: ProgramInput): Program {
 
     for (const d of weekDays.sort()) {
       const date = addDays(monday, d - 1);
-      if (d === longD) list.push({ date, kind: 'long', title: `Sortie longue ${label(longMin)}`, blocks: [STEP('work', t(longMin), 2)], minutes: longMin });
-      else if (qDays.includes(d)) {
+      if (d === longD) {
+        const why = `${phaseWhy(phase)} : séance longue de ${label(longMin)}, vers les ${label(r5(longNeed))} nécessaires pour la course.`;
+        const fromLib = pick(LIBRARY_CATEGORY.long, longMin, 0.15);
+        list.push(fromLib
+          ? { date, kind: 'long', title: fromLib.title, blocks: fromLib.blocks, minutes: fromLib.minutes, source: 'library', libraryId: fromLib.id, instructions: fromLib.instructions, why: `${why} Choisie dans ta bibliothèque (${fromLib.minutes} min).` }
+          : { date, kind: 'long', title: `Sortie longue ${label(longMin)}`, blocks: [STEP('work', t(longMin), 2)], minutes: longMin, source: 'generated', why });
+      } else if (qDays.includes(d)) {
         const type = phase === 'tremplin' ? 'tempo' : phase === 'affutage' && f.targetSeconds ? 'race' : qualityTypes[qi++ % qualityTypes.length]!;
-        const q = quality(sport, type, qMin, racePace);
-        list.push({ date, kind: 'quality', title: q.title, blocks: q.blocks, minutes: minutesOf(q.blocks, sport, input.refs) || qMin });
-      } else list.push({ date, kind: 'easy', title: `${easyName(sport)} ${label(easyEach)}`, blocks: [STEP('work', t(easyEach), 2)], minutes: easyEach });
+        const why = `${phaseWhy(phase)} : ${TYPE_REASON[type]}${type === 'race' && racePace ? ` (${Math.floor(racePace / 60)}:${String(Math.round(racePace % 60)).padStart(2, '0')} /km)` : ''}, environ ${label(qMin)}.`;
+        const fromLib = type === 'race' ? null : pick(LIBRARY_CATEGORY[type], qMin);
+        if (fromLib) list.push({ date, kind: 'quality', title: fromLib.title, blocks: fromLib.blocks, minutes: fromLib.minutes, source: 'library', libraryId: fromLib.id, instructions: fromLib.instructions, why: `${why} Choisie dans ta bibliothèque (${fromLib.minutes} min pour ${qMin} visées).` });
+        else {
+          const q = quality(sport, type, qMin, racePace);
+          list.push({ date, kind: 'quality', title: q.title, blocks: q.blocks, minutes: minutesOf(q.blocks, sport, input.refs) || qMin, source: 'generated', why });
+        }
+      } else {
+        const why = `${phaseWhy(phase)} : ${phase === 'tremplin' ? 'endurance facile pour installer la régularité depuis ce qui est fait aujourd’hui' : 'endurance facile pour compléter le volume de la semaine'}.`;
+        list.push({ date, kind: 'easy', title: `${easyName(sport)} ${label(easyEach)}`, blocks: [STEP('work', t(easyEach), 2)], minutes: easyEach, source: 'generated', why });
+      }
     }
     if (isLast) {
-      list.push({ date: event, kind: 'race', title: input.goalTitle, blocks: [{ ...STEP('work', { kind: 'distance', meters: Math.round(f.distanceKm * 1000) }, null, 'Jour de course : échauffement léger, départ prudent.') }], minutes: Math.round(eventMin) });
+      list.push({ date: event, kind: 'race', title: input.goalTitle, blocks: [{ ...STEP('work', { kind: 'distance', meters: Math.round(f.distanceKm * 1000) }, null, 'Jour de course : échauffement léger, départ prudent.') }], minutes: Math.round(eventMin), source: 'generated', why: 'Jour de course : l’objectif validé.' });
     }
     weeks.push({ index: i + 1, monday, phase, minutes: list.reduce((n, s) => n + (s.kind === 'race' ? 0 : s.minutes), 0), longMinutes: longMin, sessions: list });
   }

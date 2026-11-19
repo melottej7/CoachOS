@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generateProgram, type FeasibilityInput, type ProgramInput } from './index';
+import { generateProgram, parseNotation, type Block, type FeasibilityInput, type ProgramInput } from './index';
 
 // D-061 : règle du fondateur — à la hauteur de l’objectif, 4 semaines de tremplin, risques signalés au coach.
 
@@ -63,4 +63,29 @@ describe('générateur de programme', () => {
     expect(titles.some((x) => x.startsWith('Sortie vélo facile'))).toBe(true);
     expect(titles.some((x) => x.startsWith('Sortie longue'))).toBe(true);
   });
+
+  it('bibliothèque du coach (D-062) : ses séances d’abord quand elles conviennent, en alternance ; sinon le générateur', () => {
+    const lib = (id: string, title: string, category: string, n: string, sport: 'running' | 'cycling' = 'running') =>
+      ({ id, title, category, sport, blocks: parseNotation(n, sport).blocks as Block[], instructions: `Consignes ${title}` });
+    const library = [
+      lib('s1', 'Seuil 3 × 10′', 'threshold', "10' Z1 + 3×(8' Z4 + R2') + 5' Z1"), // 45 min
+      lib('s2', 'Seuil 4 × 6′', 'threshold', "10' Z1 + 4×(5' Z4 + R2') + 5' Z1"), // 43 min
+      lib('v1', 'VMA vélo', 'intervals', "15' Z1 + 6×(3' Z6 + R3') + 10' Z1", 'cycling'), // autre sport : ignorée
+      lib('l1', 'Sortie longue vallonnée', 'long', "80' Z2"),
+    ];
+    const p = generateProgram({ ...base, library });
+    const all = p.weeks.flatMap((w) => w.sessions);
+    const fromLib = all.filter((x) => x.source === 'library');
+    expect(fromLib.some((x) => x.libraryId === 's1')).toBe(true);
+    expect(fromLib.some((x) => x.libraryId === 's2')).toBe(true); // alternance
+    expect(fromLib.some((x) => x.libraryId === 'v1')).toBe(false);
+    expect(fromLib.find((x) => x.libraryId === 's1')!).toMatchObject({ title: 'Seuil 3 × 10′', instructions: 'Consignes Seuil 3 × 10′' });
+    expect(fromLib.find((x) => x.libraryId === 's1')!.why).toMatch(/Choisie dans ta bibliothèque/);
+    // La sortie longue de bibliothèque n’est prise que si sa durée est proche (±15 %) : 80 min, au pic.
+    expect(all.filter((x) => x.libraryId === 'l1').every((x) => x.kind === 'long')).toBe(true);
+    // Toute séance a sa raison.
+    expect(all.every((x) => x.why.length > 10)).toBe(true);
+    expect(all.find((x) => x.kind === 'easy')!.why).toMatch(/^Tremplin : endurance facile/);
+  });
 });
+

@@ -761,4 +761,67 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Le nombre de séances suit les jours choisis.
   - Les séances de qualité sont dimensionnées pour lisser les hausses.
   - Le programme de démonstration de Camille a été créé avant un redémarrage du serveur, avec une version précédente du module : ses footings du tremplin font 30 minutes au lieu de 20. Un test garantit désormais que la création reproduit l’aperçu.
-- **À venir.** Choisir les séances dans la bibliothèque du coach (comme le moteur de Foulée) ; régénérer une partie en gardant les séances passées (CE-P-06) ; « Pourquoi cette séance ? » ; zones et paliers par niveau validés par le fondateur.
+- **À venir.** Zones et paliers par niveau validés par le fondateur. (Bibliothèque et « Pourquoi cette séance ? » : D-062 ; régénération partielle : D-063.)
+
+## D-062 · Générateur : séances de la bibliothèque du coach d’abord, « Pourquoi cette séance ? » · 2026-11-19
+
+- **Inspiration.** Le moteur de Foulée compose ses programmes à partir de la bibliothèque du coach et explique chaque séance (AUDIT_FOULEE).
+- **Décision.**
+  - Pour chaque séance de qualité (tempo, seuil, VMA) et chaque séance longue, le générateur cherche d’abord dans la bibliothèque du coach une séance :
+    - du même sport ;
+    - de la même catégorie (tempo → « tempo », seuil → « threshold », VMA → « intervals », longue → « long ») ;
+    - d’une durée proche de ce qui est prévu : ±30 % pour la qualité, ±15 % pour la séance longue, pour ne pas fausser la progression.
+  - Parmi celles qui conviennent, la moins utilisée dans le programme passe d’abord (alternance), puis la plus proche en durée. Sinon, le générateur construit la séance comme avant. La séance à allure de course n’est jamais prise dans la bibliothèque, car elle dépend du chrono validé.
+  - Une séance reprise garde son titre, ses blocs et ses consignes. Les risques restent calculés sur les durées réellement retenues.
+  - Chaque séance porte sa raison (phase et rôle), par exemple « Tremplin : première intensité, légère, pour habituer le corps, environ 25′. Choisie dans ta bibliothèque (20 min pour 25 visées). »
+  - **Aperçu** : 📚 sur les séances reprises, nombre de séances venant de la bibliothèque. Un toucher sur une séance ouvre « Pourquoi cette séance ? ».
+  - **Brouillons** : les consignes contiennent la semaine et la phase, « Pourquoi cette séance ? … », puis les consignes de la bibliothèque. L’élève les lira une fois la semaine publiée ; le coach peut les modifier avant.
+  - Pas de migration.
+- **Preuve.**
+  - Test du domaine : séances de bibliothèque choisies en alternance ; séance d’un autre sport ignorée ; séance longue prise seulement si la durée est proche ; toute séance a sa raison.
+  - Test serveur : la bibliothèque de Marine est lue ; la séance « Seuil maison » est reprise avec ses consignes ; chaque brouillon contient « Pourquoi cette séance ? ».
+  - `npm test` : 213 passés (+3 PostgreSQL), typecheck OK.
+  - Navigateur (Marine, Camille, semi) : 2 séances viennent de la bibliothèque démo (Tempo 20 min, Séries 3 × (5 × 300 m)). Leur explication s’ouvre au toucher.
+- **Limite.** Les séances de la bibliothèque de démonstration sont souvent sans échauffement, donc plus courtes. Une séance de 55 minutes n’est retenue que si le programme prévoit environ 45 à 75 minutes à cet endroit. À régler avec les vraies séances du fondateur.
+
+## D-063 · Régénération partielle d’un programme, différences avant d’appliquer, séances protégées · 2026-11-19
+
+- **Source.** Complément du fondateur, § 6 : « régénérer uniquement la partie demandée. Présenter les différences et protéger les séances passées et déjà réalisées » (CE-P-06). Inspiré de l’éditeur de Foulée (verrous, différences).
+- **Décision.**
+  - Depuis la page Programme d’un objectif, « Programme déjà créé » → **Régénérer une partie**. Le coach choisit :
+    - les semaines, de … à … (par défaut, de la semaine en cours à la fin) ;
+    - les jours d’entraînement.
+  - Le programme est recalculé depuis **le même lundi de départ et le même volume de départ** qu’à la création, pour garder les phases alignées. Il utilise la décision actuelle du coach sur l’objectif, la bibliothèque du jour et les jours choisis.
+  - **Séances protégées**, jamais touchées (🔒) :
+    - passées ;
+    - réalisées, c’est-à-dire avec un retour de l’élève ;
+    - **retouchées par le coach** : la révision de travail diffère de celle écrite par le générateur. La nouvelle colonne `workouts.generated_revision` le note (migration `20261119160000`). Les programmes déjà créés sont marqués à la révision 1.
+
+    La séance recalculée pour le jour d’une séance protégée n’est pas ajoutée, et l’écran le dit.
+  - Les autres séances, dans les semaines demandées, sont comparées jour par jour (titre et blocs, sans tenir compte de l’ordre des clés JSON) :
+    - inchangées (=) ;
+    - modifiées (✎, avec la durée quand le titre reste le même) ;
+    - ajoutées (+) ;
+    - retirées (−, révision d’annulation « Retirée : programme régénéré »).
+  - **Différences avant d’appliquer**, semaine par semaine, avec les risques du programme recalculé. Si un risque n’est pas une simple vigilance, le coach coche son accord. L’application est refusée (409) si une séance a changé depuis l’aperçu (séances et révisions vues).
+  - **Publication explicite.** Tout reste en brouillons. Une séance déjà publiée reçoit une nouvelle version de travail : l’élève garde la version publiée jusqu’à « Publier la semaine ».
+  - Le programme garde la trace de chaque régénération (`generator.regenerations` : semaines, jours, nombres de changements, acceptation des risques). Ses phases (`plan_blocks`) sont recalculées.
+  - Contrat `regenerateProgram` (POST `/workspaces/{wid}/athletes/{aid}/plans/{pid}/regenerate`).
+  - **Écran Séances.** Une séance annulée jamais publiée n’est plus affichée. Une séance annulée après publication est barrée, « Annulée · à republier ». Avant cela, les séances retirées par « Adapter la semaine » restaient affichées comme des brouillons.
+- **Preuve.**
+  - 3 tests du domaine :
+    - mêmes paramètres, aucune différence ;
+    - nouveaux jours à partir de la semaine 6, avec séances passées, réalisées et retouchées protégées, et rien avant la semaine 6 ;
+    - une seule semaine, séance annulée ignorée, consignes avec la raison.
+  - 1 test serveur :
+    - semaines 2 à 3 avec nouveaux jours ; retouche du coach gardée ; semaines 1 et 4 intactes ;
+    - aperçu périmé refusé ; élève et autre coach refusés ;
+    - l’élève voit toujours la semaine publiée telle quelle ;
+    - recalcul identique ensuite ; trace de la régénération.
+  - Contrat vérifié. `npm test` : 217 passés (+3 PostgreSQL), typecheck OK.
+  - Navigateur (Marine, programme de démonstration de Camille) :
+    - semaines 2 à 3 passées de mardi, jeudi et samedi à lundi, mercredi et samedi ;
+    - 4 ajoutées, 4 retirées, 2 inchangées, dont « Tempo 20 min » 📚 de la bibliothèque ;
+    - risques acceptés, appliqué ; Séances affiche lundi, mercredi et samedi, « Publier la semaine (3) ».
+- **Limite.** Une séance isolée se régénère en choisissant sa semaine, ce qui recalcule aussi les autres séances non protégées de cette semaine. Il n’y a pas encore de choix séance par séance.
+

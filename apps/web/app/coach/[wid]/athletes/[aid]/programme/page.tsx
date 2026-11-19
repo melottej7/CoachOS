@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { addDays, formatClock, formatLongDate, formatShortDate, isLocalDate, PROGRAM_PHASE_LABELS, weekStart, WEEKDAY_SHORT } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { isUuid } from '@/server/repo/context';
-import { buildProgram, existingInPeriod, nextMonday, programContext } from '@/server/commands/programs';
+import { buildProgram, existingInPeriod, nextMonday, programContext, readGoalPlans } from '@/server/commands/programs';
 import { ProgramCreate } from '@/components/program-create';
 import { Pill } from '@/components/ui';
 
@@ -34,9 +34,11 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
   const days = raw ? [...new Set(raw.map(Number).filter((d) => d >= 1 && d <= 7))].sort() : ctx.defaultDays;
   const program = days.length >= 2 ? buildProgram(ctx, start, days) : null;
   const total = program ? program.weeks.reduce((n, w) => n + w.sessions.length, 0) : 0;
+  const fromLib = program ? program.weeks.reduce((n, w) => n + w.sessions.filter((s) => s.source === 'library').length, 0) : 0;
   const existing = program ? await existingInPeriod(actor.userId, wid, aid, start, ctx.feasibility.eventDate) : 0;
   const maxMin = program ? Math.max(...program.weeks.map((w) => w.minutes), 1) : 1;
   const d = ctx.decision?.params;
+  const plans = await readGoalPlans(actor.userId, wid, aid, ctx.goal.id);
 
   return (
     <>
@@ -47,6 +49,22 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
         {d ? <>Objectif validé : {String(d.distanceKm).replace('.', ',')} km le {formatLongDate(d.eventDate).toLowerCase()}{d.targetSeconds ? ` en ${formatClock(d.targetSeconds)}` : ', pour finir'}. </> : null}
         Le programme est construit pour atteindre cet objectif : 4 semaines de tremplin depuis ce que {first} fait aujourd’hui, puis le développement et l’affûtage. Les risques te sont signalés ; c’est toi qui décides.
       </p>
+
+      {plans.length ? (
+        <section className="card" aria-labelledby="prog-existing">
+          <div className="card-head"><h2 id="prog-existing">Programme déjà créé</h2></div>
+          <ul className="plain card-body stack">
+            {plans.map((p) => (
+              <li key={p.id} className="prog-existing">
+                <span><strong>Du {formatShortDate(p.startsOn)} au {formatShortDate(p.endsOn)}</strong>
+                  <span className="muted"> · {p.days.map((x) => WEEKDAY_SHORT[x - 1]).join(', ')}{p.regenerations ? ` · régénéré ${p.regenerations} fois` : ''}</span></span>
+                <Link className="btn small" href={`/coach/${wid}/athletes/${aid}/programme/regenerer?plan=${p.id}`}>Régénérer une partie</Link>
+              </li>
+            ))}
+          </ul>
+          <p className="muted card-body">Pour changer des jours, des semaines ou suivre une nouvelle décision, régénère plutôt que de créer un second programme : les séances passées, réalisées ou retouchées sont gardées.</p>
+        </section>
+      ) : null}
 
       <form className="card prog-params" method="get">
         <input type="hidden" name="objectif" value={ctx.goal.id} />
@@ -67,6 +85,10 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
             <div className="card-head"><h2 id="prog-sum">{program.weeks.length} semaines · {total} séances</h2></div>
             <div className="card-body stack">
               <p>Départ : <strong>{h(program.startWeekly)}</strong> par semaine (ce que {first} fait aujourd’hui) → pic : <strong>{h(program.peakWeekly)}</strong> par semaine, avec une séance longue de <strong>{h(program.longNeed)}</strong>.</p>
+              <p className="muted">{fromLib
+                ? <>📚 {fromLib} séance{fromLib > 1 ? 's' : ''} vien{fromLib > 1 ? 'nent' : 't'} de ta bibliothèque (même type, durée proche de ce qui est prévu). </>
+                : <>Aucune séance de ta bibliothèque ne convient (type et durée) : le générateur les construit. </>}
+                Ouvre une séance pour lire pourquoi elle est là.</p>
               {existing ? <p className="muted">{existing} séance{existing > 1 ? 's' : ''} déjà prévue{existing > 1 ? 's' : ''} sur la période : elles restent ; le programme s’y ajoute.</p> : null}
               {program.risks.length ? (
                 <div className="prog-risks" role="note">
@@ -92,7 +114,14 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
                   <ul className="plain prog-sessions">
                     {w.sessions.map((s, i) => {
                       const dow = (new Date(`${s.date}T12:00:00Z`).getUTCDay() + 6) % 7;
-                      return <li key={i} className={`prog-s ${s.kind}`}><span className="muted">{WEEKDAY_SHORT[dow]}</span> {s.title}</li>;
+                      return (
+                        <li key={i} className={`prog-s ${s.kind}`}>
+                          <details>
+                            <summary><span className="muted">{WEEKDAY_SHORT[dow]}</span> {s.title}{s.source === 'library' ? <span title="De ta bibliothèque" aria-label="De ta bibliothèque"> 📚</span> : null}</summary>
+                            <p className="prog-why"><strong>Pourquoi cette séance ?</strong> {s.why}</p>
+                          </details>
+                        </li>
+                      );
                     })}
                   </ul>
                 </li>

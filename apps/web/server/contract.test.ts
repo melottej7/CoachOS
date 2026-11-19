@@ -25,7 +25,7 @@ import { deleteWorkspaceLogo, previewInvitation, saveWorkspaceProfile, setWorksp
 import { addDays, todayIn, weekStart } from '@coachos/domain';
 import { coachWorkout } from './repo/coach';
 import { decideGoal } from './commands/goal-decisions';
-import { createProgram } from './commands/programs';
+import { buildRegeneration, createProgram, regenContext, regenerateProgram, seenOf } from './commands/programs';
 import { addPerformance, deletePerformance } from './commands/performances';
 import { applyWeekProposal, weekProposals } from './commands/week-proposals';
 
@@ -158,6 +158,11 @@ describe('réponses conformes au contrat OpenAPI', () => {
     await decideGoal({ ...m(), athleteId: ATHLETES.noah, goalId: id(g2) }, { statusAtDecision: 'ambitious', params: { distanceKm: 60, eventDate: ev, targetSeconds: null, weeklySessions: '4to5', weeklyHours: null } });
     const prog = await createProgram({ ...m(), athleteId: ATHLETES.noah, goalId: id(g2) }, { startMonday: addDays(weekStart(todayIn(TIME_ZONE)), 7), days: [2, 4, 6, 7], acceptRisks: true });
     check('/workspaces/{wid}/athletes/{aid}/goals/{gid}/program', 'post', prog.status, prog.body);
+    const pid = (prog.body as { planId: string }).planId;
+    const rc = (await regenContext(USERS.marine, WORKSPACE_A, ATHLETES.noah, pid))!;
+    const rg = buildRegeneration(rc, [1, 3, 6], 2, 60)!;
+    const regen = await regenerateProgram({ ...m(), athleteId: ATHLETES.noah, planId: pid }, { fromWeek: 2, toWeek: 60, days: [1, 3, 6], seen: seenOf(rg.regen), acceptRisks: true });
+    check('/workspaces/{wid}/athletes/{aid}/plans/{pid}/regenerate', 'post', regen.status, regen.body);
     const perf = await addPerformance({ ...m(), athleteId: ATHLETES.noah }, { sport: 'cycling', kind: 'test', distanceM: 40000, durationS: 4000, doneOn: '2026-10-01' });
     check('/workspaces/{wid}/athletes/{aid}/performances', 'post', perf.status, perf.body);
     const perfDel = await deletePerformance({ ...m(), athleteId: ATHLETES.noah, performanceId: (perf.body as { item: { id: string } }).item.id });

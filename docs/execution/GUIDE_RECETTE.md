@@ -178,8 +178,17 @@ En démonstration : Camille a « 10 km de Bruxelles » en 52:30.
 1. Pour un élève avec un bilan, valide un objectif daté (Faisabilité → Ta décision).
 2. **📅 Générer le programme** : choisis le premier lundi et les jours, puis **Recalculer**.
 3. Lis le résumé (départ → pic), les **risques** et les semaines : tremplin (4 semaines), développement (une semaine allégée sur quatre), affûtage, course.
+   - Les séances marquées 📚 viennent de ta bibliothèque (même type, durée proche). Touche une séance pour lire **Pourquoi cette séance ?**. Dis-moi si une séance de ta bibliothèque aurait dû être choisie.
 4. Coche « J’ai lu les risques… » puis **Créer les séances en brouillons**. Relis-les dans Séances, ajuste, puis publie semaine par semaine.
 5. Dis-moi ce qui ne te convient pas : durées, types de séances, jours, progression. Les règles sont faciles à ajuster.
 
-En démonstration : le programme de Camille (semi du 17 janvier) est créé en brouillons à partir du 23 novembre.
+En démonstration : le programme de Camille (semi du 17 janvier) est créé en brouillons à partir du 23 novembre. Ses semaines 2 et 3 ont été régénérées (lundi, mercredi, samedi).
+
+### Régénérer une partie du programme
+
+1. Sur la page Programme de l’objectif, **Programme déjà créé → Régénérer une partie**.
+2. Choisis les semaines (de … à …) et les jours, puis **Voir les différences**.
+3. Lis chaque semaine : 🔒 gardée (passée, réalisée ou retouchée par toi), = inchangée, ✎ modifiée, + ajoutée, − retirée.
+4. Retouche une séance dans Séances, puis reviens : elle doit apparaître 🔒 « retouchée par toi ».
+5. **Appliquer** : tout reste en brouillons. Une séance déjà publiée garde sa version côté élève jusqu’à **Publier la semaine**.
 

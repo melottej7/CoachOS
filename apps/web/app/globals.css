@@ -150,6 +150,7 @@ h3 { font-size: 15px; line-height: 22px; }
 .session small { display: block; font-size: 11px; line-height: 1.35; }
 .session.draft { border-style: dashed; background: var(--surface); }
 .session.changed { border-style: dashed; }
+.session.canceled strong { text-decoration: line-through; color: var(--muted); }
 .add { font-size: 12px; margin-left: 3px; }
 
 /* Formulaires */
@@ -1053,3 +1054,17 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .prog-sessions { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 14px; }
 .prog-s.long { font-weight: 600; }
 .prog-s.race { font-weight: 700; }
+.prog-s summary { cursor: pointer; list-style: none; }
+.prog-s summary::-webkit-details-marker { display: none; }
+.prog-s summary:hover { text-decoration: underline; }
+.prog-s details[open] { flex-basis: 100%; }
+.prog-s:has(details[open]) { flex-basis: 100%; }
+.prog-why { margin: 4px 0 6px; padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--surface-2, transparent); font-weight: 400; font-size: 14px; }
+/* D-063 : régénération partielle, différences. */
+.prog-existing { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
+.rg-list { display: grid; gap: 4px; font-size: 14px; }
+.rg { display: grid; grid-template-columns: 1.4em 1fr; gap: 6px; align-items: baseline; }
+.rg-mark { text-align: center; font-weight: 700; }
+.rg.added .rg-mark { color: var(--ok, var(--accent)); }
+.rg.removed .rg-mark, .rg.changed .rg-mark { color: var(--attention); }
+.rg.same { opacity: 0.7; }

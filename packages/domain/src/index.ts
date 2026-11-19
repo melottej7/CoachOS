@@ -26,3 +26,4 @@ export * from './week-proposals';
 export * from './feasibility';
 export * from './performances';
 export * from './program';
+export * from './program-regen';

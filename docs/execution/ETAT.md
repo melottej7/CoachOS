@@ -230,7 +230,12 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
   - **D-060** : résultats de référence (courses, tests), équivalences, VMA d’un test ; chrono visé jugé par prédiction de Riegel dans la faisabilité ; résultats visibles par l’élève (migration `20261119140000`).
   - **D-061** (instruction du fondateur) : générateur de programme à règles — à la hauteur de l’objectif validé, 4 semaines de tremplin depuis le volume réel, développement, affûtage ; risques signalés au coach qui décide ; brouillons (migration `20261119150000`).
   - `npm test` : **212 passés** (+3 PostgreSQL), typecheck OK.
-- Prochaines tranches : générateur — choix dans la bibliothèque du coach, régénération partielle (CE-P-06), « Pourquoi cette séance ? » ; données du fondateur ; notifications.
+- Commit `1c81285` (D-056 à D-061). Puis (non commité) :
+  - **D-062** (inspiré de Foulée) : le générateur reprend d’abord les séances de la bibliothèque du coach (même sport, même catégorie, durée proche), en alternance ; chaque séance dit « Pourquoi cette séance ? », dans l’aperçu et dans les consignes des brouillons.
+  - `npm test` : **213 passés** (+3 PostgreSQL), typecheck OK.
+  - **D-063** (CE-P-06) : régénération partielle d’un programme. Le coach choisit les semaines et les jours et voit les différences avant d’appliquer. Les séances passées, réalisées ou retouchées sont protégées. Une séance publiée attend la republication. Migration `20261119160000` appliquée en local, sans remise à zéro. Les séances annulées sont mieux affichées dans Séances.
+  - `npm test` : **217 passés** (+3 PostgreSQL), typecheck OK.
+- Prochaines tranches : données du fondateur (ses séances de bibliothèque et anciens programmes pour régler le générateur) ; notifications ; choix séance par séance dans la régénération.
 
 Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au micro réel (autorisation du micro non automatisable ici) ; visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
 
