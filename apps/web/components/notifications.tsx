@@ -7,7 +7,7 @@ import { useIntent } from './use-intent';
 
 // D-067 : centre de notifications (C25-08) et réglage des e-mails (C25-01). Aucun contenu de message.
 
-const ICON: Record<NotificationKind, string> = { workouts_published: '📅', message: '💬', feedback: '✅', bilan_submitted: '📝' };
+const ICON: Record<NotificationKind, string> = { workouts_published: '📅', message: '💬', feedback: '✅', bilan_submitted: '📝', group_message: '👥' };
 
 const when = (iso: string, tz: string) => new Intl.DateTimeFormat('fr-BE', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: tz }).format(new Date(iso));
 

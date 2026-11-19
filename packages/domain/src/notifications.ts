@@ -5,7 +5,7 @@ import { z } from 'zod';
  * le type, l’objet et un nombre. Elles s’ouvrent sur l’écran utile après contrôle des droits au moment du clic.
  */
 
-export const NOTIFICATION_KINDS = ['workouts_published', 'message', 'feedback', 'bilan_submitted'] as const;
+export const NOTIFICATION_KINDS = ['workouts_published', 'message', 'feedback', 'bilan_submitted', 'group_message'] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 export type NotificationRole = 'coach' | 'athlete';
 
@@ -26,7 +26,7 @@ export const EMAIL_PREFERENCE_LABELS: Record<EmailPreference, string> = {
 export const notificationSettingsSchema = z.object({ email: z.enum(EMAIL_PREFERENCES) }).strict();
 
 /** Phrase de la notification, sans contenu de message (le coach ou l’élève l’ouvre dans l’application). */
-export function notificationText(kind: NotificationKind, role: NotificationRole, o: { athleteName?: string | null; count?: number }): string {
+export function notificationText(kind: NotificationKind, role: NotificationRole, o: { athleteName?: string | null; count?: number; teamName?: string | null }): string {
   const n = o.count ?? 1;
   const who = o.athleteName ?? 'Ton élève';
   switch (kind) {
@@ -34,6 +34,8 @@ export function notificationText(kind: NotificationKind, role: NotificationRole,
     case 'message': return role === 'athlete' ? 'Nouveau message de ton coach' : `Nouveau message de ${who}`;
     case 'feedback': return `${who} a envoyé un retour de séance`;
     case 'bilan_submitted': return `${who} a envoyé son bilan`;
+    // D-076 : fil de groupe, dans l’application seulement (pas d’e-mail : un groupe animé enverrait trop de courriels).
+    case 'group_message': return n > 1 ? `${n} nouveaux messages dans le groupe « ${o.teamName ?? 'Groupe'} »` : `Nouveau message dans le groupe « ${o.teamName ?? 'Groupe'} »`;
   }
 }
 

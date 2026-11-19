@@ -952,7 +952,7 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Navigateur, démo :
     - Marine écrit à Camille. Mailpit reçoit « Nouveau message de ton coach · Atelier Endurance », sans le texte ;
     - Camille voit « 🔔 1 non lue » ; sur téléphone, sa notification ouvre le fil « Ton coach » et le compteur retombe.
-- **Non fait.** Push sur téléphone : il demande des clés d’envoi et l’installation d’une bibliothèque, refusée dans cet environnement. Résumé quotidien (C25-02). Fils de groupe.
+- **Non fait.** Push sur téléphone : il demande des clés d’envoi et l’installation d’une bibliothèque, refusée dans cet environnement. Résumé quotidien (C25-02). (Fils de groupe : D-076.)
 
 ## D-068 · Bibliothèque Foulée importée, niveaux et phases respectés par le générateur · 2026-11-19
 
@@ -985,7 +985,7 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
     - générateur : niveau intermédiaire, jamais une séance réservée aux débutants ; en tremplin, seulement reprise ou base.
   - Test serveur : 324 ajoutées, rejouer n’ajoute rien, élève refusé.
   - Navigateur (démo) : import par le bouton, le bouton disparaît une fois tout importé.
-- **À faire avec le fondateur.** Fournir `src/data/library.ts` (ou l’accès au dépôt) pour remplacer les paliers recalculés par l’original.
+- **Paliers calculés validés par le fondateur (D-077)** : le fichier d’origine n’est plus attendu.
 
 ## D-069 · Objectif validé : la génération du programme devient la suite logique · 2026-11-19
 
@@ -1178,4 +1178,37 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - 1 test serveur : retours comptés, élève refusé.
   - `npm test` : 251 passés (+3 PostgreSQL), typecheck OK.
   - Navigateur (fiche de Camille) : « Montre : dernière activité importée il y a 2 jours (TCX) · 2 activités sur 30 jours. Retours : 3 sur 30 jours, dont 2 mesurés par la montre et 1 saisi à la main. »
+
+## D-076 · Notifications des fils de groupe · 2026-11-19
+
+- **Source.** Reste de D-067 (« Fils de groupe » non faits).
+- **Décision.**
+  - Un message dans un fil de groupe (texte, vocal ou annonce de séance de groupe) prévient, sauf l’auteur :
+    - les élèves membres qui ont un compte ;
+    - les coachs de l’espace (tous peuvent lire les fils de groupe).
+  - Type `group_message`, groupe noté (`notifications.team_id`, migration `20261119230000`). Regroupé tant que non lu : « 3 nouveaux messages dans le groupe « … » ».
+  - **Dans l’application seulement, sans e-mail** : un groupe animé enverrait trop de courriels.
+  - Le lien ouvre le fil de groupe côté élève ou côté coach, après contrôle des droits au clic ; un ancien membre n’y accède plus.
+- **Preuve.**
+  - Test serveur :
+    - deux messages du coach donnent « 2 nouveaux messages dans le groupe « Sortie du dimanche » », sans e-mail ;
+    - ni l’auteur ni un non-membre ne sont notifiés ;
+    - le lien de l’élève mène au fil côté élève ; quand l’élève répond, le coach est prévenu et son lien mène au fil côté coach.
+  - `npm test` : 252 passés (+3 PostgreSQL), typecheck OK.
+
+## D-077 · Paliers Foulée calculés validés ; repères du coach hors des consignes de l’élève · 2026-11-19
+
+- **Instruction du fondateur.** « oui tu peux extrapoler toi même les séances » : les paliers intermédiaires calculés par CoachOS (D-068) deviennent la bibliothèque de référence. Le fichier d’origine `src/data/library.ts` n’est plus attendu.
+- **Défaut corrigé.** La note interne de chaque séance Foulée (« Bibliothèque Foulée · famille… palier… Palier recalculé… à vérifier ») était dans ses consignes. Le générateur reprend les consignes de la bibliothèque dans les brouillons (D-062), donc **un élève l’aurait lue** une fois la séance publiée. Vérification faite : aucune séance, brouillon ou publiée, ne la contenait encore.
+- **Décision.**
+  - Les séances Foulée n’ont plus de consignes. Les repères (famille, palier, niveaux, phases, « calculé ») restent dans `payload.meta`, que seul le coach voit.
+  - Dans la bibliothèque, chaque carte porte « Foulée · palier 3/10 · calculé », avec l’infobulle « jamais montré à l’élève ».
+  - Rejouer l’import corrige les séances déjà importées : repères complétés, note retirée des consignes. Les séances retouchées par le coach gardent leurs propres consignes.
+  - Appliqué par la même commande, audité : espace du fondateur et démo, 324 séances chacun, 0 note restante, 168 paliers marqués « calculé ».
+  - Corrigé en route : la section « Mes blocs » (D-074) réutilisait la classe CSS des contenus de cartes de la bibliothèque et changeait leur mise en forme ; classe renommée.
+- **Preuve.**
+  - Test du domaine : aucune consigne, 168 paliers calculés marqués.
+  - Test serveur : import sans note ; une séance à l’ancienne (note, sans repères) est corrigée en rejouant l’import.
+  - `npm test` : 252 passés (+3 PostgreSQL), typecheck OK.
+  - Navigateur (bibliothèque de la démo) : 324 cartes Foulée, dont 168 « calculé », mise en forme des cartes rétablie.
 

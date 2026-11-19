@@ -69,6 +69,34 @@ export async function notify(tx: Tx, n: { wid: string; aid: string; kind: Notifi
 }
 
 /**
+ * D-076 : message dans un fil de groupe → les élèves membres (avec un compte) et les coachs de l’espace, sauf l’auteur.
+ * Regroupé tant que non lu (« 3 nouveaux messages »), sans e-mail.
+ */
+export async function notifyTeam(tx: Tx, wid: string, tid: string, messageId: string) {
+  const me = (await tx.query<{ id: string | null }>('select auth.uid() as id')).rows[0]?.id ?? null;
+  const r = await tx.query<{ user_id: string }>(
+    `select a.user_id from public.team_athletes ta join public.athletes a on a.workspace_id = ta.workspace_id and a.id = ta.athlete_id
+     where ta.workspace_id = $1 and ta.team_id = $2 and a.state = 'active' and a.user_id is not null
+     union
+     select m.user_id from public.memberships m where m.workspace_id = $1 and m.active`,
+    [wid, tid],
+  );
+  for (const { user_id: user } of r.rows) {
+    if (user === me) continue;
+    const open = await tx.query(
+      `update public.notifications set item_count = least(1000, item_count + 1), entity_id = $4, created_at = now()
+       where workspace_id = $1 and user_id = $2 and kind = 'group_message' and team_id = $3 and read_at is null returning id`,
+      [wid, user, tid, messageId],
+    );
+    if (open.rows.length) continue;
+    await tx.query(
+      `insert into public.notifications(workspace_id, user_id, kind, entity_id, team_id, email_state) values ($1, $2, 'group_message', $3, $4, 'none')`,
+      [wid, user, messageId, tid],
+    );
+  }
+}
+
+/**
  * Envoie les e-mails en attente (après validation de la commande). Lien vers le résolveur, qui revérifie les droits.
  * Ne journalise ni l’adresse ni le contenu. Un échec reste « failed » et ne bloque rien.
  */
@@ -104,15 +132,16 @@ export interface NotificationItem { id: string; kind: NotificationKind; text: st
 /** Centre de notifications : les miennes dans cet espace, récentes d’abord (RLS : destinataire et appartenance actuelle). */
 export async function listNotifications(userId: string, wid: string, limit = 50): Promise<NotificationItem[]> {
   return readAs(userId, async (tx) => {
-    const r = await tx.query<{ id: string; kind: NotificationKind; item_count: number; created_at: Date; read_at: Date | null; athlete_name: string | null; is_athlete: boolean }>(
-      `select n.id, n.kind, n.item_count, n.created_at, n.read_at, a.display_name as athlete_name, (a.user_id = n.user_id) as is_athlete
+    const r = await tx.query<{ id: string; kind: NotificationKind; item_count: number; created_at: Date; read_at: Date | null; athlete_name: string | null; is_athlete: boolean; team_name: string | null }>(
+      `select n.id, n.kind, n.item_count, n.created_at, n.read_at, a.display_name as athlete_name, (a.user_id = n.user_id) as is_athlete, tm.name as team_name
        from public.notifications n left join public.athletes a on a.workspace_id = n.workspace_id and a.id = n.athlete_id
+       left join public.teams tm on tm.workspace_id = n.workspace_id and tm.id = n.team_id
        where n.workspace_id = $1 order by n.created_at desc, n.id limit $2`,
       [wid, limit],
     );
     return r.rows.map((x) => ({
       id: x.id, kind: x.kind, count: x.item_count, createdAt: new Date(x.created_at).toISOString(), read: x.read_at !== null,
-      text: notificationText(x.kind, x.is_athlete ? 'athlete' : 'coach', { athleteName: x.athlete_name, count: x.item_count }),
+      text: notificationText(x.kind, x.is_athlete ? 'athlete' : 'coach', { athleteName: x.athlete_name, count: x.item_count, teamName: x.team_name }),
     }));
   });
 }
@@ -126,11 +155,17 @@ export async function unreadNotificationCount(userId: string, wid: string): Prom
  * null : l’accès a été retiré (affectation terminée, élève archivé, séance retirée).
  */
 export async function resolveNotification(userId: string, wid: string, nid: string): Promise<{ href: string | null } | null> {
-  const n = await readAs(userId, async (tx) => (await tx.query<{ kind: NotificationKind; entity_id: string | null; athlete_id: string | null }>(
-    'select kind, entity_id, athlete_id from public.notifications where workspace_id = $1 and id = $2', [wid, nid])).rows[0] ?? null);
+  const n = await readAs(userId, async (tx) => (await tx.query<{ kind: NotificationKind; entity_id: string | null; athlete_id: string | null; team_id: string | null }>(
+    'select kind, entity_id, athlete_id, team_id from public.notifications where workspace_id = $1 and id = $2', [wid, nid])).rows[0] ?? null);
   if (!n) return null;
   await commandAs(userId, (tx) => tx.query('update public.notifications set read_at = coalesce(read_at, now()) where workspace_id = $1 and id = $2 and user_id = auth.uid()', [wid, nid]));
   const href = await readAs(userId, async (tx) => {
+    if (n.kind === 'group_message') {
+      if (!n.team_id) return null;
+      const w = await tx.query<{ member: boolean; coach: boolean }>('select private.team_member($1, $2) as member, private.current_coach($1) as coach', [wid, n.team_id]);
+      const x = w.rows[0];
+      return x?.member ? `/athlete/${wid}/messages/groupe/${n.team_id}` : x?.coach ? `/coach/${wid}/messages/groupe/${n.team_id}` : null;
+    }
     const aid = n.athlete_id;
     if (!aid) return null;
     const who = await tx.query<{ own: boolean; assigned: boolean }>('select private.own_athlete($1, $2) as own, private.assigned($1, $2) as assigned', [wid, aid]);

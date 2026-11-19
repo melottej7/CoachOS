@@ -7,14 +7,16 @@ describe('bibliothèque Foulée (D-068)', () => {
   const lib = fouleeLibrary();
   const fam = (id: string) => lib.filter((s) => s.family === id);
 
-  it('324 séances en 79 familles, toutes lisibles, titres uniques, paliers intermédiaires signalés', () => {
+  it('324 séances en 79 familles, toutes lisibles, titres uniques, paliers calculés marqués pour le coach seulement', () => {
     expect(FOULEE_FAMILY_COUNT).toBe(79);
     expect(lib).toHaveLength(324);
     expect(lib.filter((s) => s.errors)).toEqual([]);
     expect(new Set(lib.map((s) => s.workout.title.toLowerCase())).size).toBe(324);
     expect(lib.every((s) => s.workout.intervals.length > 0 && s.workout.sport === 'running')).toBe(true);
-    expect(lib.filter((s) => s.interpolated).every((s) => s.workout.instructions!.includes('Palier recalculé'))).toBe(true);
-    expect(lib.filter((s) => !s.interpolated).every((s) => !s.workout.instructions!.includes('recalculé'))).toBe(true);
+    // D-077 : aucune note dans les consignes (l’élève les lirait) ; repères du coach dans meta.
+    expect(lib.every((s) => s.workout.instructions === null)).toBe(true);
+    expect(lib.filter((s) => s.meta.calculated)).toHaveLength(168);
+    expect(lib.filter((s) => s.interpolated).every((s) => s.meta.calculated)).toBe(true);
   });
 
   it('premier et dernier paliers : titres de Foulée (annexe F)', () => {

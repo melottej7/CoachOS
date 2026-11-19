@@ -8,7 +8,7 @@ import {
 } from '@coachos/domain';
 import { mutate, newKey } from './api-client';
 
-export interface LibraryCard { id: string; revision: number; category: LibraryCategory; workout: LibraryWorkout }
+export interface LibraryCard { id: string; revision: number; category: LibraryCategory; workout: LibraryWorkout; meta?: { source: 'foulee'; tier: number; tiers: number; calculated?: boolean } | null }
 
 /** Bibliothèque : recherche, filtres, et pour chaque séance « Utiliser », « Modifier », « Dupliquer », « Archiver ». */
 export function LibraryBrowser({ wid, items, athletes, preselect, teams = [] }: {
@@ -59,6 +59,7 @@ export function LibraryBrowser({ wid, items, athletes, preselect, teams = [] }: 
               <li key={i.id} className="lib-card">
                 <div className="lib-top">
                   <span className="lib-cat">{LIBRARY_CATEGORY_LABELS[i.category]}</span>
+                  {i.meta?.source === 'foulee' ? <span className="lib-src" title="Repère pour toi seul, jamais montré à l’élève">Foulée · palier {i.meta.tier}/{i.meta.tiers}{i.meta.calculated ? ' · calculé' : ''}</span> : null}
                   <span className="muted">{SPORT_LABELS[i.workout.sport]}</span>
                 </div>
                 <h3>{i.workout.title}</h3>

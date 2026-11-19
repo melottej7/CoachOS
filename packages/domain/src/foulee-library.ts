@@ -7,15 +7,15 @@ import type { Block } from './structure';
  * Foulée », 19 novembre 2026). Source : FOULEE_DOSSIER_TRANSMISSION.md, annexe F (79 familles, 324 séances) et
  * annexe H (7 zones, notation « 15' Z1 + 8×(200m Z7 + R200m) + 10' Z1 »).
  * L’annexe donne, pour chaque famille, le premier et le dernier palier et leur nombre. Les paliers intermédiaires sont
- * recalculés par progression régulière (comme Foulée les avait interpolés depuis les programmes du coach) et le disent
- * dans leurs consignes ; ils seront remplacés par l’original si le fichier src/data/library.ts est fourni.
+ * calculés par progression régulière (comme Foulée les avait interpolés depuis les programmes du coach). Le fondateur
+ * a validé ces paliers calculés (D-077) ; ils sont marqués dans meta.calculated, jamais dans les consignes de l’élève.
  */
 
 export type FouleeLevel = 'D' | 'I' | 'C';
 export type FouleePhase = 'reprise' | 'base' | 'developpement' | 'specifique' | 'affutage';
 
-const LEVEL_WORDS: Record<FouleeLevel, string> = { D: 'débutant', I: 'intermédiaire', C: 'confirmé' };
-const PHASE_WORDS: Record<FouleePhase, string> = { reprise: 'reprise', base: 'base', developpement: 'développement', specifique: 'spécifique', affutage: 'affûtage' };
+export const FOULEE_LEVEL_WORDS: Record<FouleeLevel, string> = { D: 'débutant', I: 'intermédiaire', C: 'confirmé' };
+export const FOULEE_PHASE_WORDS: Record<FouleePhase, string> = { reprise: 'reprise', base: 'base', developpement: 'développement', specifique: 'spécifique', affutage: 'affûtage' };
 
 interface Family {
   id: string;
@@ -134,7 +134,11 @@ const F: Family[] = [
 ];
 
 /** Métadonnées gardées avec la séance (payload.meta) : le générateur respecte niveaux et phases (D-068). */
-export interface FouleeMeta { source: 'foulee'; family: string; tier: number; tiers: number; levels: FouleeLevel[]; phases: FouleePhase[] }
+export interface FouleeMeta {
+  source: 'foulee'; family: string; tier: number; tiers: number; levels: FouleeLevel[]; phases: FouleePhase[];
+  /** Palier calculé par CoachOS entre le premier et le dernier de la famille (validé par le fondateur, D-077). */
+  calculated?: boolean;
+}
 export interface FouleeSession { family: string; tier: number; tiers: number; interpolated: boolean; category: LibraryCategory; workout: LibraryWorkout; errors: number; meta: FouleeMeta }
 
 /** Les 324 séances, famille par famille, du palier le plus léger au plus chargé. */
@@ -145,15 +149,11 @@ export function fouleeLibrary(): FouleeSession[] {
       const [title, notation] = f.at(k, f.tiers);
       const parsed = parseNotation(notation, 'running');
       const interpolated = k > 0 && k < f.tiers - 1;
-      const instructions = [
-        `Bibliothèque Foulée · famille « ${f.id} » · palier ${k + 1} sur ${f.tiers}.`,
-        `Niveaux : ${f.levels.map((l) => LEVEL_WORDS[l]).join(', ')}. Phases : ${f.phases.map((p) => PHASE_WORDS[p]).join(', ')}.`,
-        interpolated ? 'Palier recalculé entre le premier et le dernier de la famille (le détail d’origine n’était pas disponible) : à vérifier.' : null,
-      ].filter(Boolean).join('\n');
       out.push({
         family: f.id, tier: k + 1, tiers: f.tiers, interpolated, category: f.category, errors: parsed.errors.length,
-        meta: { source: 'foulee', family: f.id, tier: k + 1, tiers: f.tiers, levels: f.levels, phases: f.phases },
-        workout: { sport: 'running', title, instructions, durationSeconds: null, distanceM: null, intervals: parsed.blocks as Block[] } as LibraryWorkout,
+        meta: { source: 'foulee', family: f.id, tier: k + 1, tiers: f.tiers, levels: f.levels, phases: f.phases, calculated: interpolated },
+        // Pas de consignes : l’élève lit les consignes d’une séance publiée ; les repères Foulée restent dans meta (D-077).
+        workout: { sport: 'running', title, instructions: null, durationSeconds: null, distanceM: null, intervals: parsed.blocks as Block[] } as LibraryWorkout,
       });
     }
   }

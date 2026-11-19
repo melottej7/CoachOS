@@ -3,7 +3,7 @@ import {
 } from '@coachos/domain';
 import { commandAs, type Tx } from '../db/client';
 import { invalid, notVisible } from '../errors';
-import { notify } from './notifications';
+import { notify, notifyTeam } from './notifications';
 import { audit, idempotent, type StoredResponse } from './idempotency';
 
 // Messagerie coach élève (CE-H-07, CE-E-02, CE-H-09, D-033).
@@ -161,6 +161,7 @@ async function insertTeam(tx: Tx, wid: string, tid: string, who: { role: 'coach'
      on conflict (workspace_id, team_id, user_id) do update set read_through_at = excluded.read_through_at`,
     [wid, tid, m.id],
   );
+  await notifyTeam(tx, wid, tid, m.id); // D-076 : sans contenu, dans l’application seulement
   return { id: m.id, createdAt: new Date(m.created_at).toISOString(), body, mine: true, voiceId: voice?.id ?? null, voiceDurationS: voice?.s ?? null, senderName: who.name };
 }
 

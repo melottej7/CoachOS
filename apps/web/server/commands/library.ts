@@ -104,12 +104,16 @@ export async function addFouleeLibrary(meta: Meta): Promise<StoredResponse> {
       let added = 0, skipped = 0;
       for (const s of fouleeLibrary()) {
         if (have.has(s.workout.title.toLowerCase())) {
-          // Déjà là : on complète seulement ses niveaux et phases si une version précédente de l’import les avait omis.
+          // Déjà là : repères complétés (meta) et note interne retirée des consignes d’un import précédent (D-077).
           await tx.query(
-            `update public.templates set payload = payload || jsonb_build_object('meta', $4::jsonb)
+            `update public.templates set
+               payload = jsonb_set(payload || jsonb_build_object('meta', $3::jsonb), '{workout,instructions}',
+                 case when payload->'workout'->>'instructions' like 'Bibliothèque Foulée%' then 'null'::jsonb else coalesce(payload->'workout'->'instructions', 'null'::jsonb) end),
+               revision = revision + 1
              where workspace_id = $1 and owner_id = auth.uid() and kind = 'workout' and lower(title) = lower($2) and not archived
-               and payload->'workout'->>'instructions' like $3 and not (payload ? 'meta')`,
-            [wid, s.workout.title, 'Bibliothèque Foulée%', JSON.stringify(s.meta)],
+               and (payload->'workout'->>'instructions' like 'Bibliothèque Foulée%' or coalesce(payload->'meta'->>'source', '') = 'foulee')
+               and (payload->'meta' is distinct from $3::jsonb or payload->'workout'->>'instructions' like 'Bibliothèque Foulée%')`,
+            [wid, s.workout.title, JSON.stringify(s.meta)],
           );
           skipped++; continue;
         }

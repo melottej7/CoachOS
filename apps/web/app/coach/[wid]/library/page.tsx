@@ -30,13 +30,13 @@ export default async function Library({ params, searchParams }: { params: Promis
           <p className="sub">Tes séances prêtes à l’emploi : crée-les une fois, utilise-les pour n’importe quel élève.</p></div>
         <span className="actions">
           {!items.length ? <StarterButton wid={wid} /> : null}
-          {items.filter((i) => i.workout.instructions?.startsWith('Bibliothèque Foulée')).length < 324 ? <FouleeButton wid={wid} /> : null}
+          {items.filter((i) => i.meta?.source === 'foulee').length < 324 ? <FouleeButton wid={wid} /> : null}
           <Link className="btn primary" href={`/coach/${wid}/library/new`}>+ Nouvelle séance</Link>
         </span>
       </div>
       <SessionsTabs wid={wid} current="library" toPlan={toPlanCount(p.roster)} />
       <section className="card">
-        <LibraryBrowser wid={wid} athletes={athletes} preselect={pour} teams={p.teams.filter((t) => !t.archived && t.members > 0).map((t) => ({ id: t.id, name: t.name }))} items={items.map((i) => ({ id: i.id, revision: i.revision, category: i.category, workout: i.workout }))} />
+        <LibraryBrowser wid={wid} athletes={athletes} preselect={pour} teams={p.teams.filter((t) => !t.archived && t.members > 0).map((t) => ({ id: t.id, name: t.name }))} items={items.map((i) => ({ id: i.id, revision: i.revision, category: i.category, workout: i.workout, meta: i.meta }))} />
         {!items.length ? <p className="muted foot-note">Pour démarrer, ajoute les séances de départ (fractionné, tempo, côtes, sortie longue, vélo, natation…) puis adapte-les. Tu peux aussi ajouter une séance déjà créée depuis sa page : « 📚 Ajouter à la bibliothèque ».</p> : null}
       </section>
       <section className="card" aria-labelledby="weeks-title" id="semaines">
@@ -47,7 +47,7 @@ export default async function Library({ params, searchParams }: { params: Promis
         <div className="card-head"><h2 id="blocs-title">Mes blocs</h2><span className="muted">Parties de séance à réutiliser (échauffement type, série type…)</span></div>
         <div className="card-body">
           {myBlocks.length ? (
-            <ul className="plain lib-blocks">
+            <ul className="plain my-blocks">
               {myBlocks.map((b) => (
                 <li key={b.id}>
                   <span><strong>{b.title}</strong> <span className="muted">· {b.sport ? SPORT_LABELS[b.sport] : 'tous les sports'} · {b.blocks.map((x) => describeBlock(x, b.sport ?? 'running')).join(' + ')}</span></span>
