@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { DevStyleRefresh } from '@/components/dev-style-refresh';
 
 export const metadata: Metadata = {
   title: { default: 'CoachOS', template: '%s · CoachOS' },
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <a className="skip" href="#contenu">Aller au contenu</a>
         {children}
+        {process.env.NODE_ENV === 'development' ? <DevStyleRefresh /> : null}
       </body>
     </html>
   );
