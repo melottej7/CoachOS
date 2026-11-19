@@ -44,6 +44,7 @@ export default async function CoachLayout({ children, params }: { children: Reac
               Notifications {notifs ? <span className="count" aria-label={`${notifs} non lue${notifs > 1 ? 's' : ''}`}>{notifs}</span> : null}
             </NavLink>
             <NavLink className="nav-link" href={`${base}/athletes`} match={`${base}/athletes`} tour="nav-athletes">Élèves</NavLink>
+            <NavLink className="nav-link" href={`${base}/methode`} match={`${base}/methode`}>Méthode</NavLink>
             <NavLink className="nav-link" href={`${base}/settings`} match={`${base}/settings`} tour="nav-settings">Paramètres</NavLink>
             <a className="nav-link tour-link" href={`${base}/planning?tour=start`}>Visite guidée</a>
           </nav>

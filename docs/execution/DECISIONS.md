@@ -998,3 +998,118 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Emma (espace du fondateur) : son objectif « Semi marathon en moins de 2h » est détecté.
   - Navigateur (démo, Noah) : la validation ouvre le générateur ; Séances montre le bandeau.
 
+## D-070 · CoachOS installable sur l’écran d’accueil du téléphone · 2026-11-19
+
+- **Source.** Story CE-E-06 : « Installation sur téléphone, rappels du matin et du soir, préférences par niveau ». Le journal du serveur montrait que l’iPhone demandait `/apple-touch-icon.png`, absente.
+- **Décision.**
+  - Manifeste `/manifest.webmanifest` : nom CoachOS, ouverture en plein écran (`standalone`), départ sur `/` (chacun retrouve son espace après connexion), langue fr-BE, couleurs de la marque.
+  - Icônes dessinées par Next.js à la demande (`next/og`), sans image ni bibliothèque ajoutée :
+    - 192 et 512 px, coins arrondis ;
+    - 512 px « maskable » avec marge de sécurité pour Android ;
+    - 180 px carrée pour l’iPhone, qui arrondit lui-même.
+  - Métadonnées : nom sur l’écran d’accueil, barre d’état standard (rien ne passe sous l’encoche), couleur de thème claire et sombre.
+- **Preuve.** Navigateur :
+  - manifeste servi (standalone, 3 icônes), icônes en PNG (200), adresse inconnue en 404 ;
+  - balises présentes : manifest, apple-touch-icon, theme-color, apple-mobile-web-app ;
+  - icône vérifiée visuellement.
+  - `npm test` : 231 passés.
+- **Non fait.** Fonctionnement hors ligne et rappels du matin et du soir : ils demandent un service d’arrière-plan et l’envoi de notifications push, soit des clés d’envoi et une bibliothèque à installer. Essai d’installation sur un vrai téléphone (par le fondateur).
+
+## D-071 · « Ajuster avec l’IA » : l’IA propose des réglages, le moteur construit, le coach décide · 2026-11-19
+
+- **Instruction du fondateur.** « et le générateur ia ? », puis « Oui, sur la démo » : construire la couche IA, d’abord sur les données fictives.
+- **Cadre.** docs/08_AI_ASSISTANT.md (module « adaptation » : le moteur calcule, l’IA explique ou propose ; brouillons internes ; décision humaine), D-026 (« entraîner l’IA comme le coach » sans réentraîner de modèle), CLAUDE.md (pas de données Strava, voie manuelle utilisable).
+- **Décision.**
+  - **Réglages bornés du générateur** (`programTweaksSchema`) :
+    - séances de qualité par semaine au plus (0 à 2) ;
+    - types de qualité à éviter (VMA, seuil, tempo) ;
+    - volume des séances autres que la longue (70 à 110 %) ;
+    - sorties longues progressives ;
+    - jour de la sortie longue ; jours d’entraînement.
+
+    Ils changent la façon d’atteindre l’objectif, jamais l’objectif : la séance longue nécessaire est gardée. Un volume réduit ou l’absence de qualité est signalé comme risque. Sans réglage, le programme est identique au précédent.
+  - **L’IA traduit la demande du coach en réglages, rien d’autre.**
+    - Sortie structurée validée par schéma.
+    - Abstention quand rien n’est reconnu, avec ce qu’il faut préciser.
+    - Elle ne crée aucune séance et ne publie rien. Le moteur recalcule, montre les différences et les risques ; le coach crée ou applique en brouillons.
+  - **Données envoyées** : faits structurés (sport, distance, semaines, niveau, jours, réglages actuels) et la demande du coach, prénom et nom de l’élève remplacés par « l’élève ». Jamais de message, santé, note privée ni donnée Strava.
+  - **Trace.** Chaque proposition est enregistrée dans `ai_suggestions` (module `adaptation`, modèle, version du prompt `tweaks-v1`, empreinte des faits, demande expurgée, réponse). Elle passe à « acceptée » quand le coach crée ou régénère avec elle. Les réglages sont gardés dans le programme et repris à la régénération.
+  - **Écran.**
+    - Carte « ✨ Ajuster avec l’IA » sur la page Programme et sur Régénérer, avec exemples cliquables.
+    - Le bandeau rappelle les réglages et l’explication de l’IA ; « Sans réglage » revient au calcul de base.
+    - Les réglages vivent dans l’adresse de la page (rien n’est enregistré avant « Créer » ou « Appliquer »).
+  - **Fournisseur.**
+    - Claude, avec le SDK officiel `@anthropic-ai/sdk` 1.10.0, version épinglée, installé avec l’accord du fondateur (« Oui, installe-le »), dès que `ANTHROPIC_API_KEY` est défini dans `apps/web/.env.local`. Ce fichier est ignoré par Git.
+    - Sinon, ou avec `COACHOS_AI=simulation`, l’IA simulée : règles de mots-clés en français, même format de réponse, même validation.
+    - La carte affiche « Claude » ou « IA simulée ».
+  - **Appel (`askModel`, seul point d’appel).**
+    - Modèle `claude-opus-5-5`, effort `low`, sortie structurée au schéma JSON des réglages (les bornes, non prises en charge par les sorties structurées, sont revérifiées par `aiProposalSchema`).
+    - Relance serveur sur un modèle de secours si le modèle décline (`fallbacks: "default"`).
+    - Délai de 20 s, une seule nouvelle tentative. `max_tokens` à 4000 parce que la réflexion de ce modèle ne se désactive pas ; docs/08 prévoyait 350 en sortie, la réponse utile reste courte.
+    - Refus : abstention. Réponse illisible ou hors bornes, clé refusée, saturation ou panne : erreur claire qui rappelle la voie manuelle. Journal sans contenu.
+  - Contrat : `proposeProgramTweaks` (POST `…/goals/{gid}/ai-tweaks`), `ProgramTweaks`, `tweaks` et `suggestionId` sur `createProgram` et `regenerateProgram`.
+- **Preuve.**
+  - 3 tests du domaine :
+    - sans réglage, programme identique ; réglages respectés (qualité, VMA écartée, jour et progressivité de la longue) ;
+    - volume réduit sans toucher la séance longue nécessaire, risque signalé ;
+    - simulation des demandes courantes, abstention, retrait du nom.
+  - 1 test serveur : proposition tracée sans le nom, élève refusé, demande trop courte refusée, abstention ; création avec réglages conforme à l’aperçu, réglages gardés, proposition « acceptée ».
+  - `npm test` : 235 passés (+3 PostgreSQL), typecheck OK.
+  - Navigateur (démo, Marine, objectif de Noah) : « Noah est fatigué : moins de fractionné et sortie longue le samedi » a donné :
+    - une séance de qualité par semaine au plus, volume à 85 %, longue le samedi ;
+    - séances de qualité passées de 29 à 18 ; explication affichée ;
+    - nom retiré dans la trace.
+- **Preuve du branchement (sans appel réel ni coût).** Test serveur avec un client remplacé :
+  - réponse validée et appliquée ; modèle `claude-opus-5-5`, secours activé, nom de l’élève absent du message envoyé ;
+  - refus traduit en abstention ;
+  - volume de 200 %, JSON tronqué et clé refusée rejetés avec un message clair.
+  - `npm test` : 236 passés.
+- **Reste au fondateur.**
+  1. Créer une clé sur console.anthropic.com et l’ajouter à `apps/web/.env.local` (`ANTHROPIC_API_KEY=…`), jamais dans le chat ; relancer le serveur.
+  2. Prévenir les élèves que des données d’entraînement anonymisées passent par ce service avant l’usage réel.
+- **Ensuite.** Apprendre la méthode du coach à partir de ses corrections (règles candidates à confirmer, Coach DNA) ; brouillons de messages.
+
+## D-072 · « Ma méthode » (Coach DNA) : règles du coach appliquées par le générateur, apprises de ses corrections · 2026-11-19
+
+- **Source.** docs/09_COACH_DNA.md (profil versionné, règles typées, candidates apprises des corrections confirmées) ; D-026 (« entraîner l’IA comme le coach » sans réentraîner de modèle) ; COUVERTURE § 9 (« méthode » absente de la navigation). Choisi par le fondateur (« vasy ») parmi les chantiers faisables sans argent ni accès.
+- **Décision.**
+  - **Profil** dans `coach_dna`, table du schéma initial jusqu’ici inutilisée. Une version active par coach et par espace (index unique existant). Chaque enregistrement crée une version immuable ; la précédente passe « retired ». Migration `20261119210000` : raison et auteur de la version.
+    - Contenu : philosophie (500 caractères), style (direct, encourageant ou pédagogique, sans effet sur les séances pour l’instant), règles typées, propositions écartées.
+    - Version attendue contrôlée (409 si modifiée ailleurs) ; coach seulement ; visible de lui seul.
+  - **Règles** : les cinq réglages bornés du générateur (D-071), avec une portée facultative (niveau ou sport) :
+    - éviter un type de qualité ;
+    - limiter la qualité par semaine ;
+    - volume par défaut ;
+    - jour de la sortie longue ;
+    - sorties longues progressives.
+
+    Aucun texte exécutable.
+  - **Application.** Le générateur part des règles qui s’appliquent à l’élève : la plus précise l’emporte, les types évités s’additionnent. Les réglages d’un programme précis (à la main ou par l’IA) restent prioritaires. La page Programme affiche « Ta méthode s’applique : … » ; la version de la méthode est notée dans le programme créé. Les programmes déjà créés ne changent pas.
+  - **Apprentissage (docs/09).**
+    - Observations : séances générées puis retouchées par le coach (sortie longue déplacée, qualité retirée ou adoucie, séance facile raccourcie d’au moins 10 %, longue rendue progressive) et réglages appliqués à un programme.
+    - Contre-exemples : séances générées publiées sans changement.
+    - Une observation par élève et par semaine ; 90 jours ; seulement les programmes créés par ce coach, élèves qui lui sont affectés.
+    - Proposition à partir de 5 observations, sur 2 semaines au moins, avec 80 % de concordance. Portée : le niveau ou le sport commun. Volume : médiane des réductions arrondie à 5 %.
+    - « Ajouter à ma méthode » crée une nouvelle version, règle marquée « apprise » avec son nombre d’observations. « Pas une règle » l’écarte pour de bon.
+    - Écart avec docs/09 : une seule action d’acceptation (pas brouillon puis activation) ; la simulation est la page Programme, qui montre l’effet aussitôt.
+  - **Écran** : entrée « Méthode » dans la navigation du coach (Mes règles, Appris de tes corrections, Ma philosophie, Historique).
+  - Contrat `saveCoachMethod` (PUT `/workspaces/{wid}/method`), `MethodRule`.
+- **Corrigé en route.**
+  - **Allure de course sans allure chiffrée** (vélo, natation, chrono inconnu) : le générateur retombait sur de la VMA ou de la PMA, même quand le coach l’écartait. La séance devient « Allure objectif n × 8′ » en Z4.
+  - **Téléphone en http** (adresse réseau du Mac, D-070) : `crypto.randomUUID` n’existe pas hors https, donc chaque action aurait échoué. `newKey` construit l’identifiant avec `getRandomValues`.
+- **Preuve.**
+  - 4 tests du domaine :
+    - règles appliquées, la plus précise l’emporte, le programme prime, bornes refusées, générateur conforme ;
+    - observations et contre-exemples ;
+    - candidates : seuils, doublons, concordance, portée, écartées ou déjà règles, médiane du volume ;
+    - VMA écartée en vélo avec chrono (allure objectif, ni VMA ni PMA).
+  - 3 tests serveur :
+    - versions, conflit, coach seulement, validation ;
+    - 6 retouches (longue déplacée au samedi, 2 élèves × 3 semaines) donnent une proposition « samedi, pour les intermédiaires en course à pied ». Acceptée, le générateur l’applique ; un réglage de programme reste prioritaire ;
+    - proposition écartée qui ne revient pas.
+  - `npm test` : 243 passés (+3 PostgreSQL), typecheck OK.
+  - Navigateur (démo, Marine) :
+    - règle « pas de séance de VMA / fractionné » ajoutée, version 1 dans l’historique ;
+    - page Programme de Noah : « Ta méthode s’applique : … », plus de PMA, « Allure objectif » à la place.
+    - La règle reste dans la démo comme exemple.
+

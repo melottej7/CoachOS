@@ -207,3 +207,26 @@ En démonstration : le programme de Camille (semi du 17 janvier) est créé en b
 3. **Notifications** (menu « Notifications ») : publie une semaine à un élève ou écris-lui. Lui voit la cloche 🔔 en haut de son espace. Quand il t’écrit ou envoie un retour, ton menu « Notifications » se met à jour. Chaque notification ouvre l’écran où agir.
 4. **E-mails** : en local, ils arrivent dans la boîte de test (Mailpit), jamais chez une vraie personne. Ils ne contiennent jamais le texte d’un message. Change le réglage « L’essentiel » / « Aucun e-mail » en bas de la page Notifications.
 
+## Installer CoachOS sur ton téléphone
+
+Sur le même réseau Wi-Fi que ton Mac, ouvre l’adresse réseau affichée par le serveur (« Network: http://… :3000 ») :
+- **iPhone** (Safari) : bouton Partager → **Sur l’écran d’accueil**. L’icône verte « CoachOS » apparaît ; elle ouvre l’application en plein écran.
+- **Android** (Chrome) : menu ⋮ → **Installer l’application**.
+
+Dis-moi si l’icône, le nom et l’ouverture te conviennent.
+
+## Ajuster un programme avec l’IA (simulée)
+
+1. Ouvre la page Programme d’un objectif validé (bouton « 📅 Générer le programme »), ou Régénérer pour un programme existant.
+2. Carte **✨ Ajuster avec l’IA** : écris par exemple « Emma est fatiguée : moins de fractionné, sortie longue le samedi et progressive », ou clique sur les exemples.
+3. **Proposer des réglages** : la page se recalcule. Le bandeau dit ce qui a été réglé et pourquoi, les risques sont mis à jour, les séances changent.
+4. **Créer** (ou **Appliquer**) si ça te convient, sinon **Sans réglage**.
+5. Dis-moi les demandes qu’elle ne comprend pas : la version simulée reconnaît des mots-clés ; la vraie IA (Claude) comprendra des demandes libres une fois la clé branchée.
+
+## Ma méthode (Coach DNA)
+
+1. Menu **Méthode** → **+ Ajouter une règle**, par exemple « Jour de la sortie longue : samedi » ou « Éviter VMA, niveau débutant ».
+2. Ouvre le programme d’un élève concerné : le bandeau « Ta méthode s’applique » le confirme et les séances suivent ta règle.
+3. Retouche plusieurs programmes générés de la même façon (au moins 5 fois sur 2 semaines, plusieurs élèves) : une proposition apparaît dans « Appris de tes corrections ». Accepte-la ou écarte-la.
+4. Note ce qui manque : quelles règles de ta méthode ne rentrent pas dans ces cinq types ?
+

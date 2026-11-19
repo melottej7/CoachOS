@@ -68,6 +68,37 @@ export interface ProgramInput {
   preferredLongDay?: number | null;
   /** Bilan (D-066) : temps disponible pour une séance du lundi au vendredi (min) ; au-delà, le coach est prévenu. */
   weekdayCapMin?: number | null;
+  /** Réglages du coach (D-071), écrits à la main ou proposés par l’IA à partir de sa demande. Le moteur reste seul à construire. */
+  tweaks?: ProgramTweaks | null;
+}
+
+export const QUALITY_KINDS = ['vma', 'threshold', 'tempo'] as const;
+export type QualityKind = (typeof QUALITY_KINDS)[number];
+export const QUALITY_KIND_LABELS: Record<QualityKind, string> = { vma: 'VMA / fractionné', threshold: 'seuil', tempo: 'tempo' };
+/**
+ * Réglages du générateur (D-071). Bornés : ils changent la façon d’atteindre l’objectif, jamais l’objectif lui-même.
+ * Un volume réduit ou l’absence de qualité est signalé au coach comme risque.
+ */
+export const programTweaksSchema = z.object({
+  maxQualityPerWeek: z.number().int().min(0).max(2).nullish().transform((v) => v ?? null),
+  avoidQuality: z.array(z.enum(QUALITY_KINDS)).max(3).default([]).transform((a) => [...new Set(a)]),
+  volumePct: z.number().int().min(70).max(110).nullish().transform((v) => v ?? null),
+  longProgressive: z.boolean().default(false),
+  longDay: z.number().int().min(1).max(7).nullish().transform((v) => v ?? null),
+}).strict();
+export type ProgramTweaks = z.output<typeof programTweaksSchema>;
+export const NO_TWEAKS: ProgramTweaks = { maxQualityPerWeek: null, avoidQuality: [], volumePct: null, longProgressive: false, longDay: null };
+export const hasTweaks = (t: ProgramTweaks | null | undefined) => Boolean(t && (t.maxQualityPerWeek !== null || t.avoidQuality.length || t.volumePct !== null || t.longProgressive || t.longDay));
+
+/** Réglages en français, pour l’écran et pour la trace du programme. */
+export function describeTweaks(t: ProgramTweaks, dayLabels: readonly string[]): string[] {
+  const out: string[] = [];
+  if (t.maxQualityPerWeek !== null) out.push(t.maxQualityPerWeek === 0 ? 'aucune séance de qualité' : `${t.maxQualityPerWeek} séance${t.maxQualityPerWeek > 1 ? 's' : ''} de qualité par semaine au plus`);
+  if (t.avoidQuality.length) out.push(`sans ${t.avoidQuality.map((k) => QUALITY_KIND_LABELS[k]).join(' ni ')}`);
+  if (t.volumePct !== null && t.volumePct !== 100) out.push(`volume à ${t.volumePct} %`);
+  if (t.longProgressive) out.push('sorties longues progressives');
+  if (t.longDay) out.push(`séance longue le ${(dayLabels[t.longDay - 1] ?? '').toLowerCase().replace(/\.$/, '')}`);
+  return out;
 }
 
 const STEP = (phase: Step['phase'], measure: Step['measure'], zone: number | null, note: string | null = null): Step => ({
@@ -107,6 +138,12 @@ function quality(sport: Sport, type: 'tempo' | 'threshold' | 'vma' | 'race', tot
       title: `Allure course ${n} × 2 km`,
       blocks: [wu, { type: 'repeat', times: n, steps: [{ ...STEP('work', { kind: 'distance', meters: 2000 }, null), intensity: { kind: 'pace', unit: 'per_km', min: pace - 3, max: pace + 3 } }, STEP('recovery', t(2), 1)] }, cd],
     };
+  }
+  // Allure de course sans allure chiffrée (vélo, natation, ou chrono inconnu) : blocs à l’allure de l’objectif en Z4.
+  // Avant D-072, ce cas retombait sur de la VMA / PMA, même quand le coach l’avait écartée.
+  if (type === 'race') {
+    const n = Math.max(2, Math.round(core / 10));
+    return { title: `Allure objectif ${n} × 8′`, blocks: [wu, { type: 'repeat', times: n, steps: [STEP('work', t(8), 4, 'Allure visée le jour de la course'), STEP('recovery', t(2), 1)] }, cd] };
   }
   // VMA : en course, des 400 m ; ailleurs, des 3 minutes.
   if (sport === 'running' || sport === 'trail') {
@@ -165,8 +202,17 @@ export function generateProgram(input: ProgramInput): Program {
 
   const pred = predictionOf(f);
   const racePace = f.targetSeconds ? f.targetSeconds / f.distanceKm : pred ? pred.seconds / f.distanceKm : null;
-  const ld = longDay(days, input.preferredLongDay);
-  const qualityTypes: ('threshold' | 'vma' | 'race' | 'tempo')[] = f.targetSeconds ? ['threshold', 'race', 'vma'] : ['threshold', 'tempo', 'vma'];
+  const tw = input.tweaks ?? NO_TWEAKS;
+  const ld = longDay(days, tw.longDay ?? input.preferredLongDay);
+  const avoid = new Set<string>(tw.avoidQuality);
+  const baseTypes: ('threshold' | 'vma' | 'race' | 'tempo')[] = f.targetSeconds ? ['threshold', 'race', 'vma'] : ['threshold', 'tempo', 'vma'];
+  // D-071 : types évités par le coach ; s’il les écarte tous, l’allure de course (ou le tempo) reste.
+  const kept = baseTypes.filter((x) => !avoid.has(x));
+  const qualityTypes = kept.length ? kept : [f.targetSeconds ? 'race' as const : 'tempo' as const];
+  const tremplinType: 'tempo' | 'threshold' | 'race' = !avoid.has('tempo') ? 'tempo' : !avoid.has('threshold') ? 'threshold' : 'race';
+  const volume = (tw.volumePct ?? 100) / 100;
+  if (tw.volumePct !== null && tw.volumePct < 100) risks.push({ level: 'risk', text: `Volume réglé à ${tw.volumePct} % de ce que demande l’objectif (séance longue gardée) : marge plus faible le jour de la course.` });
+  if (tw.maxQualityPerWeek === 0) risks.push({ level: 'watch', text: 'Aucune séance de qualité : l’allure visée n’est pas travaillée avant la course.' });
   // Bibliothèque du coach : même sport, même catégorie, durée à ±30 % de la cible ; la moins utilisée d’abord.
   const used = new Map<string, number>();
   const lib = (input.library ?? []).filter((x) => x.blocks.length).map((x) => ({ ...x, minutes: minutesOf(x.blocks, x.sport, input.refs) })).filter((x) => x.minutes > 0);
@@ -208,6 +254,9 @@ export function generateProgram(input: ProgramInput): Program {
     // Le pic est atteint à la dernière semaine de développement : le programme est à la hauteur de l’objectif.
     if (phase === 'developpement' && i === tremplin + devWeeks - 1) { weekly = peakWeekly; long = longNeed; w = peakWeekly; l = longNeed; }
     if (phase === 'tremplin' && !devWeeks && i === tremplin - 1) { weekly = peakWeekly; long = longNeed; }
+    // D-071 : réglages du coach. Le volume s’applique aux séances autres que la longue, qui reste à la hauteur de l’objectif.
+    if (tw.maxQualityPerWeek !== null) nQuality = Math.min(nQuality, tw.maxQualityPerWeek);
+    if (volume !== 1) weekly = Math.max(long + 20, weekly * volume);
 
     const list: ProgramSession[] = [];
     const isLast = i === nWeeks - 1;
@@ -234,12 +283,14 @@ export function generateProgram(input: ProgramInput): Program {
       const date = addDays(monday, d - 1);
       if (d === longD) {
         const why = `${phaseWhy(phase)} : séance longue de ${label(longMin)}, vers les ${label(r5(longNeed))} nécessaires pour la course.`;
-        const fromLib = pick(LIBRARY_CATEGORY.long, longMin, phase, 0.15);
-        list.push(fromLib
+        const fromLib = tw.longProgressive ? null : pick(LIBRARY_CATEGORY.long, longMin, phase, 0.15);
+        const prog = tw.longProgressive && longMin >= 40 ? r5(longMin / 3) : 0;
+        if (prog) list.push({ date, kind: 'long', title: `Sortie longue progressive ${label(longMin)}`, blocks: [STEP('work', t(longMin - prog), 2), STEP('work', t(prog), 3)], minutes: longMin, source: 'generated', why: `${why} Progressive à ta demande : le dernier tiers un cran plus vite.` });
+        else list.push(fromLib
           ? { date, kind: 'long', title: fromLib.title, blocks: fromLib.blocks, minutes: fromLib.minutes, source: 'library', libraryId: fromLib.id, instructions: fromLib.instructions, why: `${why} Choisie dans ta bibliothèque (${fromLib.minutes} min).` }
           : { date, kind: 'long', title: `Sortie longue ${label(longMin)}`, blocks: [STEP('work', t(longMin), 2)], minutes: longMin, source: 'generated', why });
       } else if (qDays.includes(d)) {
-        const type = phase === 'tremplin' ? 'tempo' : phase === 'affutage' && f.targetSeconds ? 'race' : qualityTypes[qi++ % qualityTypes.length]!;
+        const type = phase === 'tremplin' ? tremplinType : phase === 'affutage' && f.targetSeconds ? 'race' : qualityTypes[qi++ % qualityTypes.length]!;
         const why = `${phaseWhy(phase)} : ${TYPE_REASON[type]}${type === 'race' && racePace ? ` (${Math.floor(racePace / 60)}:${String(Math.round(racePace % 60)).padStart(2, '0')} /km)` : ''}, environ ${label(qMin)}.`;
         const fromLib = type === 'race' ? null : pick(LIBRARY_CATEGORY[type], qMin, phase);
         if (fromLib) list.push({ date, kind: 'quality', title: fromLib.title, blocks: fromLib.blocks, minutes: fromLib.minutes, source: 'library', libraryId: fromLib.id, instructions: fromLib.instructions, why: `${why} Choisie dans ta bibliothèque (${fromLib.minutes} min pour ${qMin} visées).` });
@@ -294,6 +345,9 @@ export const createProgramSchema = z
     days: z.array(z.number().int().min(1).max(7)).min(2, { message: 'Au moins 2 jours' }).max(6, { message: '6 jours au plus' })
       .refine((d) => new Set(d).size === d.length, { message: 'Jour en double' }),
     acceptRisks: z.boolean().default(false),
+    /** D-071 : réglages (à la main ou proposés par l’IA) et proposition IA appliquée, pour la trace. */
+    tweaks: programTweaksSchema.nullish().transform((v) => v ?? null),
+    suggestionId: z.string().uuid().nullish().transform((v) => v ?? null),
   })
   .strict();
 export type CreateProgramInput = z.output<typeof createProgramSchema>;

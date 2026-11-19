@@ -1094,4 +1094,14 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .notif-bell { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 2px; min-height: 32px; }
 .notif-settings label { justify-content: flex-start; }
 .banner.next-step { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; border-left: 4px solid var(--accent); }
+/* D-071 : ajuster avec l’IA. */
+.ai-card .card-head { gap: 8px; }
+.chip-btn { min-height: 36px; padding: 6px 12px; border-radius: 999px; border: 1px dashed var(--rule); background: transparent; color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; }
+.chip-btn:hover { border-style: solid; }
+/* D-072 : ma méthode. */
+.method-rules li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--rule); }
+.method-rules li:first-child { border-top: 0; }
+.method-candidate { padding: 12px 14px; border: 1px dashed var(--accent); border-radius: 12px; display: grid; gap: 6px; }
+.method-candidates { display: grid; gap: 10px; }
+.method-history li { padding: 4px 0; font-size: 14px; }
 

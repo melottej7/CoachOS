@@ -2,12 +2,14 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import type { ProgramTweaks } from '@coachos/domain';
 import { useIntent } from './use-intent';
 
 // D-061 : le coach lit les risques, les accepte s’il y en a, puis crée les séances en brouillons (rien n’est publié).
 
-export function ProgramCreate({ wid, aid, goalId, startMonday, days, sessions, needsAccept, validated }: {
+export function ProgramCreate({ wid, aid, goalId, startMonday, days, sessions, needsAccept, validated, tweaks = null, suggestionId = null }: {
   wid: string; aid: string; goalId: string; startMonday: string; days: number[]; sessions: number; needsAccept: boolean; validated: boolean;
+  tweaks?: ProgramTweaks | null; suggestionId?: string | null;
 }) {
   const router = useRouter();
   const { run, pending, error } = useIntent<{ planId: string; workouts: number }>();
@@ -23,7 +25,7 @@ export function ProgramCreate({ wid, aid, goalId, startMonday, days, sessions, n
       <div className="actions">
         <button type="button" className="btn primary" disabled={pending || (needsAccept && !accept)}
           onClick={async () => {
-            const r = await run('POST', `/api/v1/workspaces/${wid}/athletes/${aid}/goals/${goalId}/program`, { startMonday, days, acceptRisks: accept });
+            const r = await run('POST', `/api/v1/workspaces/${wid}/athletes/${aid}/goals/${goalId}/program`, { startMonday, days, acceptRisks: accept, tweaks, suggestionId });
             if (r) router.push(`/coach/${wid}/calendar?athlete=${aid}&week=${startMonday}&notice=program`);
           }}>
           {pending ? 'Création…' : `Créer les ${sessions} séances en brouillons`}

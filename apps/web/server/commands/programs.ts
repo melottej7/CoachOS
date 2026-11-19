@@ -1,8 +1,8 @@
 import {
-  addDays, createProgramSchema, generateProgram, parseWith, planRegeneration, programInstructions, programPhaseTitle, regenerateProgramSchema,
+  addDays, createProgramSchema, generateProgram, mergeTweaks, methodTweaksFor, ruleLabel, parseWith, planRegeneration, programInstructions, programPhaseTitle, regenerateProgramSchema,
   regenWeekCount, todayIn, weekStart, WEEKDAY_MINUTES_CAP,
   type Block, type CreateProgramInput, type FeasibilityInput, type LibrarySession, type PlannedSession, type Program, type ProgramSession,
-  type ProgramWeek, type RegenerateProgramInput, type Regeneration, type WorkoutInput,
+  type ProgramTweaks, type ProgramWeek, type RegenerateProgramInput, type Regeneration, type WorkoutInput,
 } from '@coachos/domain';
 import { commandAs, readAs, type Tx } from '../db/client';
 import { conflict, invalid, notVisible } from '../errors';
@@ -15,6 +15,7 @@ import { readPerformances } from './performances';
 import { readGoalDecisions, type GoalDecision } from './goal-decisions';
 import { athleteStats } from '../repo/stats';
 import { listLibrary } from '../repo/library';
+import { readCoachMethod } from './coach-method';
 
 // D-061 : générateur de programme. Entrées lues en base (jamais reprises du navigateur) ; programme créé en brouillons.
 
@@ -32,6 +33,10 @@ export interface ProgramContext {
   /** Bilan (D-066) : jour préféré pour la séance longue, temps disponible en semaine. */
   preferredLongDay: number | null;
   weekdayCapMin: number | null;
+  /** Méthode du coach connecté (D-072) : réglages par défaut pour cet élève, et leurs libellés. */
+  methodTweaks: ProgramTweaks | null;
+  methodLines: string[];
+  methodVersion: number;
   /** Séances de la bibliothèque du coach (D-062), choisies d’abord quand elles conviennent. */
   library: LibrarySession[];
 }
@@ -51,10 +56,12 @@ export async function programContext(userId: string, wid: string, aid: string, g
   });
   if (!base) return null;
   const today = todayIn(base.a.time_zone);
-  const [profile, refs, perfs, decisions, lib] = await Promise.all([
+  const [profile, refs, perfs, decisions, lib, method] = await Promise.all([
     readAthleteProfile(userId, wid, aid), readAthleteReferences(userId, wid, aid), readPerformances(userId, wid, aid), readGoalDecisions(userId, wid, aid),
-    listLibrary(userId, wid),
+    listLibrary(userId, wid), readCoachMethod(userId, wid),
   ]);
+  const who = { level: profile?.level ?? null, sport: base.g.sport_code };
+  const myRules = method.method.rules.filter((r) => (!r.scope.level || r.scope.level === who.level) && (!r.scope.sport || r.scope.sport === who.sport));
   const library: LibrarySession[] = lib
     .filter((x) => x.workout.intervals?.length)
     .map((x) => ({ id: x.id, title: x.workout.title, category: x.category, sport: x.workout.sport, blocks: x.workout.intervals as Block[], instructions: x.workout.instructions ?? null,
@@ -85,16 +92,19 @@ export async function programContext(userId: string, wid: string, aid: string, g
     decision, athlete: { name: base.a.display_name, timeZone: base.a.time_zone }, today,
     defaultDays: profile?.availableDays.length && profile.availableDays.length >= 2 ? profile.availableDays.slice(0, 6) : [2, 4, 6, 7],
     feasibility, currentWeeklyMin, refs, library,
+    methodTweaks: myRules.length ? methodTweaksFor(myRules, who) : null,
+    methodLines: myRules.map(ruleLabel),
+    methodVersion: method.version,
     preferredLongDay: profile?.longDay ?? null,
     weekdayCapMin: profile?.weekdayMinutes ? WEEKDAY_MINUTES_CAP[profile.weekdayMinutes] : null,
   };
 }
 
 /** Programme calculé pour un lundi de départ et des jours ; le premier lundi à venir par défaut. */
-export function buildProgram(ctx: ProgramContext, startMonday: string, days: number[]): Program | null {
+export function buildProgram(ctx: ProgramContext, startMonday: string, days: number[], tweaks: ProgramTweaks | null = null): Program | null {
   if (!ctx.feasibility) return null;
   return generateProgram({ feasibility: ctx.feasibility, startMonday, days, currentWeeklyMin: ctx.currentWeeklyMin, refs: ctx.refs, goalTitle: ctx.goal.title, library: ctx.library,
-    preferredLongDay: ctx.preferredLongDay, weekdayCapMin: ctx.weekdayCapMin });
+    preferredLongDay: ctx.preferredLongDay, weekdayCapMin: ctx.weekdayCapMin, tweaks: mergeTweaks(ctx.methodTweaks, tweaks) });
 }
 export const nextMonday = (today: string) => addDays(weekStart(today), 7);
 
@@ -129,7 +139,7 @@ export async function createProgram(meta: { actorId: string; idempotencyKey: str
   if (!ctx.feasibility) throw invalid([{ path: 'goalId', rule: 'Le bilan de l’élève est nécessaire' }]);
   if (weekStart(v.startMonday) !== v.startMonday || v.startMonday < weekStart(ctx.today)) throw invalid([{ path: 'startMonday', rule: 'Choisis un lundi à venir' }]);
   if (v.startMonday > ctx.feasibility.eventDate) throw invalid([{ path: 'startMonday', rule: 'Le programme doit commencer avant la course' }]);
-  const program = buildProgram(ctx, v.startMonday, v.days)!;
+  const program = buildProgram(ctx, v.startMonday, v.days, v.tweaks)!;
   if (program.risks.some((r) => r.level !== 'watch') && !v.acceptRisks) throw invalid([{ path: 'acceptRisks', rule: 'Lis et accepte les risques signalés avant de créer le programme' }]);
 
   return commandAs(meta.actorId, async (tx) => {
@@ -140,10 +150,11 @@ export async function createProgram(meta: { actorId: string; idempotencyKey: str
         `insert into public.plans(workspace_id, athlete_id, title, starts_on, ends_on, goal_id, generator, created_by)
          values ($1, $2, $3, $4::date, $5::date, $6, $7::jsonb, auth.uid()) returning id`,
         [wid, aid, `Programme · ${ctx.goal.title}`, v.startMonday, ends, goalId,
-          JSON.stringify({ version: 1, params: ctx.decision!.params, days: v.days, risks: program.risks, acceptedRisks: v.acceptRisks, startWeekly: program.startWeekly, peakWeekly: program.peakWeekly, longNeed: program.longNeed, currentWeeklyMin: ctx.currentWeeklyMin })],
+          JSON.stringify({ version: 1, params: ctx.decision!.params, days: v.days, risks: program.risks, acceptedRisks: v.acceptRisks, startWeekly: program.startWeekly, peakWeekly: program.peakWeekly, longNeed: program.longNeed, currentWeeklyMin: ctx.currentWeeklyMin, tweaks: v.tweaks, methodVersion: ctx.methodVersion || null })],
       );
       const planId = plan.rows[0]!.id;
       await insertBlocks(tx, wid, aid, planId, program);
+      await acceptSuggestion(tx, wid, v.suggestionId);
       let created = 0;
       for (const w of program.weeks) {
         const order = new Map<string, number>();
@@ -227,7 +238,7 @@ export async function readGoalPlans(userId: string, wid: string, aid: string, go
   });
 }
 
-interface PlanRow { id: string; goal_id: string; starts_on: string; generator: { days?: number[]; currentWeeklyMin?: number | null; startWeekly?: number; regenerations?: unknown[] } & Record<string, unknown> }
+interface PlanRow { id: string; goal_id: string; starts_on: string; generator: { days?: number[]; currentWeeklyMin?: number | null; startWeekly?: number; regenerations?: unknown[]; tweaks?: ProgramTweaks | null } & Record<string, unknown> }
 
 async function planRow(tx: Tx, wid: string, aid: string, planId: string): Promise<PlanRow | null> {
   const r = await tx.query<PlanRow>(
@@ -253,7 +264,7 @@ async function plannedSessions(tx: Tx, wid: string, aid: string, planId: string)
   }));
 }
 
-export interface RegenContext { ctx: ProgramContext; plan: { id: string; startMonday: string; days: number[]; currentWeeklyMin: number | null }; old: PlannedSession[] }
+export interface RegenContext { ctx: ProgramContext; plan: { id: string; startMonday: string; days: number[]; currentWeeklyMin: number | null; tweaks: ProgramTweaks | null }; old: PlannedSession[] }
 
 /** Tout ce qu’il faut pour régénérer une partie d’un programme. null si non visible. */
 export async function regenContext(userId: string, wid: string, aid: string, planId: string): Promise<RegenContext | null> {
@@ -267,7 +278,7 @@ export async function regenContext(userId: string, wid: string, aid: string, pla
   const g = got.p.generator;
   return {
     ctx, old: got.old,
-    plan: { id: got.p.id, startMonday: got.p.starts_on, days: g.days ?? ctx.defaultDays, currentWeeklyMin: 'currentWeeklyMin' in g ? g.currentWeeklyMin ?? null : g.startWeekly ?? null },
+    plan: { id: got.p.id, startMonday: got.p.starts_on, days: g.days ?? ctx.defaultDays, currentWeeklyMin: 'currentWeeklyMin' in g ? g.currentWeeklyMin ?? null : g.startWeekly ?? null, tweaks: g.tweaks ?? null },
   };
 }
 
@@ -275,12 +286,12 @@ export async function regenContext(userId: string, wid: string, aid: string, pla
  * Programme recalculé depuis le même lundi de départ et le même volume de départ que la création : les phases restent
  * alignées ; les paramètres validés, les jours et la bibliothèque sont ceux d’aujourd’hui.
  */
-export function buildRegeneration(rc: RegenContext, days: number[], fromWeek: number, toWeek: number): { program: Program; regen: Regeneration; weekCount: number } | null {
+export function buildRegeneration(rc: RegenContext, days: number[], fromWeek: number, toWeek: number, tweaks: ProgramTweaks | null = rc.plan.tweaks): { program: Program; regen: Regeneration; weekCount: number } | null {
   if (!rc.ctx.feasibility) return null;
   const program = generateProgram({
     feasibility: rc.ctx.feasibility, startMonday: rc.plan.startMonday, days, currentWeeklyMin: rc.plan.currentWeeklyMin,
     refs: rc.ctx.refs, goalTitle: rc.ctx.goal.title, library: rc.ctx.library,
-    preferredLongDay: rc.ctx.preferredLongDay, weekdayCapMin: rc.ctx.weekdayCapMin,
+    preferredLongDay: rc.ctx.preferredLongDay, weekdayCapMin: rc.ctx.weekdayCapMin, tweaks: mergeTweaks(rc.ctx.methodTweaks, tweaks),
   });
   const weekCount = regenWeekCount(rc.old, program, rc.plan.startMonday);
   const to = Math.min(toWeek, weekCount);
@@ -307,7 +318,7 @@ export async function regenerateProgram(meta: { actorId: string; idempotencyKey:
   if (!rc) throw notVisible();
   if (!rc.ctx.decision) throw invalid([{ path: 'planId', rule: 'Valide d’abord l’objectif (faisabilité, « Ta décision »)' }]);
   if (!rc.ctx.feasibility) throw invalid([{ path: 'planId', rule: 'Le bilan de l’élève est nécessaire' }]);
-  const built = buildRegeneration(rc, v.days, v.fromWeek, v.toWeek)!;
+  const built = buildRegeneration(rc, v.days, v.fromWeek, v.toWeek, v.tweaks)!;
   if (built.program.risks.some((r) => r.level !== 'watch') && !v.acceptRisks) throw invalid([{ path: 'acceptRisks', rule: 'Lis et accepte les risques signalés avant de régénérer' }]);
 
   return commandAs(meta.actorId, async (tx) => {
@@ -350,12 +361,13 @@ export async function regenerateProgram(meta: { actorId: string; idempotencyKey:
       }
       // Programme : jours, paramètres et risques du jour, trace de la régénération ; phases recalculées.
       const g = (await planRow(tx, wid, aid, planId))!.generator;
-      const entry = { at: new Date().toISOString(), by: meta.actorId, fromWeek: regen.weeks[0]?.index ?? v.fromWeek, toWeek: regen.weeks.at(-1)?.index ?? v.toWeek, days: v.days, counts: regen.counts, acceptedRisks: v.acceptRisks };
+      const entry = { at: new Date().toISOString(), by: meta.actorId, tweaks: v.tweaks, suggestionId: v.suggestionId, fromWeek: regen.weeks[0]?.index ?? v.fromWeek, toWeek: regen.weeks.at(-1)?.index ?? v.toWeek, days: v.days, counts: regen.counts, acceptedRisks: v.acceptRisks };
       const ends = built.program.weeks.at(-1)?.sessions.at(-1)?.date ?? rc.ctx.feasibility!.eventDate;
       await tx.query(
         `update public.plans set generator = $3::jsonb, ends_on = greatest(ends_on, $4::date) where workspace_id = $1 and id = $2`,
-        [wid, planId, JSON.stringify({ ...g, days: v.days, params: rc.ctx.decision!.params, risks: built.program.risks, regenerations: [...(g.regenerations ?? []), entry] }), ends],
+        [wid, planId, JSON.stringify({ ...g, days: v.days, tweaks: v.tweaks, params: rc.ctx.decision!.params, risks: built.program.risks, regenerations: [...(g.regenerations ?? []), entry] }), ends],
       );
+      await acceptSuggestion(tx, wid, v.suggestionId);
       await tx.query('delete from public.plan_blocks where workspace_id = $1 and plan_id = $2', [wid, planId]);
       await insertBlocks(tx, wid, aid, planId, built.program);
       await audit(tx, wid, meta.actorId, 'program.regenerate', planId, meta.requestId);
@@ -363,3 +375,10 @@ export async function regenerateProgram(meta: { actorId: string; idempotencyKey:
     });
   });
 }
+
+/** D-071 : la proposition de l’IA appliquée par le coach passe à « acceptée » (trace de la décision humaine). */
+async function acceptSuggestion(tx: Tx, wid: string, id: string | null) {
+  if (!id) return;
+  await tx.query(`update public.ai_suggestions set state = 'accepted', revision = revision + 1 where workspace_id = $1 and id = $2 and coach_id = auth.uid() and state = 'ready'`, [wid, id]);
+}
+

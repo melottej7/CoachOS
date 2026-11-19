@@ -29,3 +29,5 @@ export * from './program';
 export * from './program-regen';
 export * from './notifications';
 export * from './foulee-library';
+export * from './ai-coach';
+export * from './coach-method';

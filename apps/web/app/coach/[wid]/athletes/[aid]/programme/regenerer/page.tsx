@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { addDays, formatShortDate, PROGRAM_PHASE_LABELS, PROTECT_LABELS, weekIndexOf, WEEKDAY_SHORT, type RegenItem } from '@coachos/domain';
+import { addDays, DAY_LABELS, describeTweaks, formatShortDate, parseTweaksParam, PROGRAM_PHASE_LABELS, PROTECT_LABELS, weekIndexOf, WEEKDAY_SHORT, type RegenItem } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { isUuid } from '@/server/repo/context';
 import { buildRegeneration, regenContext, seenOf } from '@/server/commands/programs';
 import { ProgramRegenerate } from '@/components/program-regenerate';
+import { AiTweaks, TweaksBanner } from '@/components/ai-tweaks';
+import { aiSource } from '@/server/commands/ai';
 import { Pill } from '@/components/ui';
 
 export const metadata = { title: 'Régénérer le programme' };
@@ -38,7 +40,7 @@ function Item({ it }: { it: RegenItem }) {
  * séances passées, réalisées ou retouchées gardées. Paramètres en adresse : rien n’est modifié avant « Appliquer ».
  */
 export default async function RegeneratePage({ params, searchParams }: {
-  params: Promise<{ wid: string; aid: string }>; searchParams: Promise<{ plan?: string; de?: string; a?: string; jours?: string | string[] }>;
+  params: Promise<{ wid: string; aid: string }>; searchParams: Promise<{ plan?: string; de?: string; a?: string; jours?: string | string[]; reglages?: string; ia?: string }>;
 }) {
   const { wid, aid } = await params;
   const sp = await searchParams;
@@ -51,13 +53,17 @@ export default async function RegeneratePage({ params, searchParams }: {
   if (!ctx.feasibility) notFound();
   const raw = Array.isArray(sp.jours) ? sp.jours : sp.jours ? sp.jours.split(',') : null;
   const days = raw ? [...new Set(raw.map(Number).filter((d) => d >= 1 && d <= 7))].sort() : plan.days;
-  const probe = buildRegeneration(rc, days.length >= 2 ? days : plan.days, 1, 60)!;
+  // D-071 : réglages de l’adresse (proposés par l’IA ou retirés), sinon ceux du programme.
+  const tweaks = sp.reglages !== undefined ? parseTweaksParam(sp.reglages) : plan.tweaks;
+  const suggestionId = sp.reglages !== undefined && sp.ia && isUuid(sp.ia) ? sp.ia : null;
+  const probe = buildRegeneration(rc, days.length >= 2 ? days : plan.days, 1, 60, tweaks)!;
   const total = probe.weekCount;
   const idx = weekIndexOf(plan.startMonday, ctx.today);
   const current = idx >= 1 && idx <= total ? idx : null;
   const from = Math.min(total, Math.max(1, Number(sp.de) || current || 1));
   const to = Math.min(total, Math.max(from, Number(sp.a) || total));
-  const built = days.length >= 2 ? buildRegeneration(rc, days, from, to) : null;
+  const built = days.length >= 2 ? buildRegeneration(rc, days, from, to, tweaks) : null;
+  const here = `/coach/${wid}/athletes/${aid}/programme/regenerer?plan=${plan.id}&de=${from}&a=${to}${days.map((x) => `&jours=${x}`).join('')}${sp.reglages !== undefined && tweaks ? `&reglages=${encodeURIComponent(JSON.stringify(tweaks))}` : ''}${suggestionId ? `&ia=${suggestionId}` : ''}`;
   const weeks = Array.from({ length: total }, (_, i) => i + 1);
   const label = (n: number) => `Semaine ${n} · ${formatShortDate(addDays(plan.startMonday, (n - 1) * 7))}${n === current ? ' (en cours)' : ''}`;
 
@@ -73,6 +79,8 @@ export default async function RegeneratePage({ params, searchParams }: {
 
       <form className="card prog-params" method="get">
         <input type="hidden" name="plan" value={plan.id} />
+        {sp.reglages !== undefined && tweaks ? <input type="hidden" name="reglages" value={JSON.stringify(tweaks)} /> : null}
+        {suggestionId ? <input type="hidden" name="ia" value={suggestionId} /> : null}
         <div className="card-body form-row">
           <label className="field"><span>De</span>
             <select name="de" defaultValue={from} aria-label="Première semaine à régénérer">{weeks.map((n) => <option key={n} value={n}>{label(n)}</option>)}</select></label>
@@ -86,6 +94,9 @@ export default async function RegeneratePage({ params, searchParams }: {
           <div className="actions"><button className="btn" type="submit">Voir les différences</button></div>
         </div>
       </form>
+
+      {built ? <TweaksBanner lines={tweaks ? describeTweaks(tweaks, DAY_LABELS) : []} href={here} suggestionId={suggestionId} /> : null}
+      {built ? <AiTweaks wid={wid} aid={aid} goalId={ctx.goal.id} days={days} tweaks={tweaks} href={here} first={ctx.athlete.name.split(' ')[0] ?? ctx.athlete.name} source={aiSource()} /> : null}
 
       {!built ? <p className="banner warn">Choisis au moins 2 jours d’entraînement.</p> : (
         <>
@@ -102,7 +113,7 @@ export default async function RegeneratePage({ params, searchParams }: {
                   <ul className="plain">{built.program.risks.map((r, i) => <li key={i} className={`fz-c ${r.level}`}><span className="fz-mark" aria-hidden="true">{RISK_MARK[r.level]}</span><span>{r.text}</span></li>)}</ul>
                 </div>
               ) : null}
-              <ProgramRegenerate wid={wid} aid={aid} planId={plan.id} fromWeek={from} toWeek={to} days={days} seen={seenOf(built.regen)}
+              <ProgramRegenerate wid={wid} aid={aid} planId={plan.id} fromWeek={from} toWeek={to} days={days} seen={seenOf(built.regen)} tweaks={tweaks} suggestionId={suggestionId}
                 counts={built.regen.counts} needsAccept={built.program.risks.some((r) => r.level !== 'watch')} validated={Boolean(ctx.decision)}
                 calendarHref={`/coach/${wid}/calendar?athlete=${aid}&week=${addDays(plan.startMonday, (from - 1) * 7)}&notice=regenerated`} />
             </div>

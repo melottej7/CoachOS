@@ -251,7 +251,19 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
     - **Importée dans l’espace du fondateur** (324 séances ajoutées, aucune modifiée).
   - **D-069** (retour du fondateur sur Emma) : valider un objectif ouvre le générateur ; bandeau « Prochaine étape » sur la fiche et dans Séances.
   - `npm test` : **230 passés** (+3 PostgreSQL), typecheck OK.
-- Prochaines tranches : données du fondateur (ses séances de bibliothèque et anciens programmes pour régler le générateur) ; notifications ; choix séance par séance dans la régénération.
+- Commit `fa86509` (D-064 à D-069). Puis (non commité) :
+  - **D-070** (CE-E-06) : CoachOS installable sur l’écran d’accueil. Manifeste, icônes générées (Android, iPhone), couleurs de thème.
+  - `npm test` : **231 passés** (+3 PostgreSQL), typecheck OK.
+  - **D-071** (instruction du fondateur) : « Ajuster avec l’IA ».
+    - Le coach écrit sa demande ; l’IA (simulée pour l’instant) la traduit en réglages bornés du générateur ; le moteur recalcule avec les mêmes garde-fous ; le coach décide.
+    - Propositions tracées dans `ai_suggestions`, nom de l’élève retiré.
+    - Claude est branché (SDK officiel 1.10.0, installé avec l’accord du fondateur) : il est actif dès que la clé est dans `apps/web/.env.local`.
+  - `npm test` : **236 passés** (+3 PostgreSQL), typecheck OK.
+  - Clé Anthropic du fondateur en place ; compte sans crédit : l’IA répond « plus de crédit », la simulation reste possible avec `COACHOS_AI=simulation`.
+  - **D-072** : « Ma méthode » (Coach DNA). Règles du coach appliquées par défaut au générateur ; propositions apprises de ses retouches (5 observations, 2 semaines, 80 %). Migration `20261119210000`.
+    - Corrigé en route : allure de course sans allure chiffrée (plus de VMA ou de PMA par défaut) ; identifiants d’action sur téléphone en http.
+  - `npm test` : **243 passés** (+3 PostgreSQL), typecheck OK.
+- Prochaines tranches : résumé de la semaine sans IA (docs/08), blocs réutilisables (bibliothèque), fraîcheur des mesures ; données du fondateur (ses séances de bibliothèque et anciens programmes pour régler le générateur) ; notifications ; choix séance par séance dans la régénération.
 
 Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au micro réel (autorisation du micro non automatisable ici) ; visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
 

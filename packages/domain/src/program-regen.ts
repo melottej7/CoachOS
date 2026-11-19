@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { addDays, isLocalDate, type LocalDate } from './dates';
-import { PROGRAM_PHASE_LABELS, type Program, type ProgramPhase, type ProgramSession, type ProgramWeek } from './program';
+import { PROGRAM_PHASE_LABELS, programTweaksSchema, type Program, type ProgramPhase, type ProgramSession, type ProgramWeek } from './program';
 import { structureTotals, type Block } from './structure';
 
 /**
@@ -120,6 +120,8 @@ export const regenerateProgramSchema = z
       .refine((d) => new Set(d).size === d.length, { message: 'Jour en double' }),
     seen: z.array(z.object({ id: z.string().uuid(), revision: z.number().int().min(1) }).strict()).max(400),
     acceptRisks: z.boolean().default(false),
+    tweaks: programTweaksSchema.nullish().transform((v) => v ?? null),
+    suggestionId: z.string().uuid().nullish().transform((v) => v ?? null),
   })
   .strict()
   .refine((v) => v.fromWeek <= v.toWeek, { message: 'Semaines dans le désordre', path: ['toWeek'] });

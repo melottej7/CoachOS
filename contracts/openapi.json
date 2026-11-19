@@ -2794,6 +2794,162 @@
             "maximum": 1000000
           }
         }
+      },
+      "ProgramTweaks": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "maxQualityPerWeek": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "avoidQuality": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "string",
+              "enum": [
+                "vma",
+                "threshold",
+                "tempo"
+              ]
+            }
+          },
+          "volumePct": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 70,
+                "maximum": 110
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "longProgressive": {
+            "type": "boolean"
+          },
+          "longDay": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 7
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "MethodRule": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "scope",
+          "source"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "avoid_quality",
+              "max_quality",
+              "volume_pct",
+              "long_day",
+              "long_progressive"
+            ]
+          },
+          "scope": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "level": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "beginner",
+                      "intermediate",
+                      "advanced",
+                      "competitive"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sport": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "learned"
+            ]
+          },
+          "support": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "vma",
+              "threshold",
+              "tempo"
+            ]
+          },
+          "n": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "pct": {
+            "type": "integer",
+            "minimum": 70,
+            "maximum": 110
+          },
+          "day": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 7
+          }
+        },
+        "additionalProperties": false
       }
     }
   },
@@ -22967,6 +23123,27 @@
                   },
                   "acceptRisks": {
                     "type": "boolean"
+                  },
+                  "tweaks": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/ProgramTweaks"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "suggestionId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 }
               }
@@ -23222,6 +23399,27 @@
                   },
                   "acceptRisks": {
                     "type": "boolean"
+                  },
+                  "tweaks": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/ProgramTweaks"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "suggestionId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 }
               }
@@ -23694,6 +23892,500 @@
                       "essentials",
                       "none"
                     ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/athletes/{aid}/goals/{gid}/ai-tweaks": {
+      "post": {
+        "operationId": "proposeProgramTweaks",
+        "summary": "Ajuster avec l’IA : réglages du générateur proposés à partir de la demande du coach, tracés ; rien n’est modifié (D-071).",
+        "tags": [
+          "ai"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "suggestionId",
+                    "source",
+                    "proposal"
+                  ],
+                  "properties": {
+                    "suggestionId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "simulation",
+                        "claude"
+                      ]
+                    },
+                    "proposal": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "status",
+                        "tweaks",
+                        "days",
+                        "explanation",
+                        "uncertainty"
+                      ],
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "ready",
+                            "abstain"
+                          ]
+                        },
+                        "tweaks": {
+                          "$ref": "#/components/schemas/ProgramTweaks"
+                        },
+                        "days": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 7
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "explanation": {
+                          "type": "string",
+                          "maxLength": 300
+                        },
+                        "uncertainty": {
+                          "type": "string",
+                          "maxLength": 300
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "aid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "gid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "text",
+                  "days"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 500
+                  },
+                  "days": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 6,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 7
+                    }
+                  },
+                  "tweaks": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/ProgramTweaks"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/method": {
+      "put": {
+        "operationId": "saveCoachMethod",
+        "summary": "Ma méthode (Coach DNA) : nouvelle version active ; règles typées appliquées par défaut au générateur (D-072).",
+        "tags": [
+          "method"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "version"
+                  ],
+                  "properties": {
+                    "version": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "expectedVersion",
+                  "method"
+                ],
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "reason": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "method": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "schemaVersion": {
+                        "type": "integer",
+                        "enum": [
+                          1
+                        ]
+                      },
+                      "philosophy": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 500
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "style": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "direct",
+                              "encourageant",
+                              "pedagogique"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "rules": {
+                        "type": "array",
+                        "maxItems": 20,
+                        "items": {
+                          "$ref": "#/components/schemas/MethodRule"
+                        }
+                      },
+                      "dismissed": {
+                        "type": "array",
+                        "maxItems": 200,
+                        "items": {
+                          "type": "string",
+                          "maxLength": 60
+                        }
+                      }
+                    }
                   }
                 }
               }
