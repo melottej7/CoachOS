@@ -124,3 +124,12 @@ Avec ton compte coach :
 
 En démonstration : Camille a envoyé son bilan (confirmé par Marine) ; celui de Noah a été complété en entretien.
 
+## Repères FTP et CSS à essayer
+
+Avec ton compte coach :
+1. Fiche d’un élève → **Repères d’entraînement** : renseigne la FTP (vélo, en watts) ou la CSS (natation, par exemple 1:45). Le tableau traduit les 7 zones.
+2. Crée une séance de vélo ou de natation pour cet élève avec des zones : derrière chaque zone, les watts ou l’allure pour 100 m de l’élève.
+3. Dis-moi si les plages te conviennent, et si tu préfères d’autres noms de zones pour le vélo et la natation.
+
+En démonstration : Noah a une FTP de 250 W et une CSS de 1:45.
+

@@ -10,9 +10,11 @@ export interface AthleteReferences extends References {
   updatedAt: string;
 }
 
-type Row = { vma_kmh: string | number | null; revision: number; updated_at: Date };
+type Row = { vma_kmh: string | number | null; ftp_w: number | null; css_sec_per_100: number | null; revision: number; updated_at: Date };
 const toRefs = (r: Row): AthleteReferences => ({
   vmaKmh: r.vma_kmh === null ? null : Number(r.vma_kmh),
+  ftpW: r.ftp_w === null ? null : Number(r.ftp_w),
+  cssSecPer100: r.css_sec_per_100 === null ? null : Number(r.css_sec_per_100),
   revision: r.revision,
   updatedAt: new Date(r.updated_at).toISOString(),
 });
@@ -39,13 +41,16 @@ export async function saveAthleteReferences(
     await requireAssignedCoach(tx, wid, aid);
     return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'athlete.references', key: meta.idempotencyKey, body }, async () => {
       const r = await tx.query<Row>(
-        `insert into public.athlete_references(workspace_id, athlete_id, vma_kmh, updated_by)
-         values ($1, $2, $3, auth.uid())
+        `insert into public.athlete_references(workspace_id, athlete_id, vma_kmh, ftp_w, css_sec_per_100, updated_by)
+         values ($1, $2, $3, $5, $7, auth.uid())
          on conflict (workspace_id, athlete_id) do update set
-           vma_kmh = excluded.vma_kmh, updated_by = excluded.updated_by,
+           vma_kmh = excluded.vma_kmh,
+           ftp_w = case when $4::boolean then excluded.ftp_w else public.athlete_references.ftp_w end,
+           css_sec_per_100 = case when $6::boolean then excluded.css_sec_per_100 else public.athlete_references.css_sec_per_100 end,
+           updated_by = excluded.updated_by,
            revision = public.athlete_references.revision + 1, updated_at = now()
-         returning vma_kmh, revision, updated_at`,
-        [wid, aid, parsed.value.vmaKmh],
+         returning vma_kmh, ftp_w, css_sec_per_100, revision, updated_at`,
+        [wid, aid, parsed.value.vmaKmh, parsed.value.ftpW !== undefined, parsed.value.ftpW ?? null, parsed.value.cssSecPer100 !== undefined, parsed.value.cssSecPer100 ?? null],
       );
       await audit(tx, wid, meta.actorId, 'athlete.references', aid, meta.requestId);
       return { status: 200, body: { item: toRefs(r.rows[0]!) } };
@@ -56,7 +61,9 @@ export async function saveAthleteReferences(
 /** Lecture sous RLS : coach affecté ou athlète du dossier. Repères vides si absents ou non visibles. */
 export async function readAthleteReferences(userId: string, wid: string, aid: string): Promise<References> {
   return readAs(userId, async (tx) => {
-    const r = await tx.query<Row>(`select vma_kmh, revision, updated_at from public.athlete_references where workspace_id = $1 and athlete_id = $2`, [wid, aid]);
-    return r.rows[0] ? { vmaKmh: toRefs(r.rows[0]).vmaKmh } : { vmaKmh: null };
+    const r = await tx.query<Row>(`select vma_kmh, ftp_w, css_sec_per_100, revision, updated_at from public.athlete_references where workspace_id = $1 and athlete_id = $2`, [wid, aid]);
+    if (!r.rows[0]) return { vmaKmh: null, ftpW: null, cssSecPer100: null };
+    const x = toRefs(r.rows[0]);
+    return { vmaKmh: x.vmaKmh, ftpW: x.ftpW ?? null, cssSecPer100: x.cssSecPer100 ?? null };
   });
 }

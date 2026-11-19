@@ -544,3 +544,24 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
     - Marine complète en entretien le bilan de Noah : « Situation » manquante, « J’ai repris » conduit à la durée de l’arrêt puis à la reprise ; résultat « Confirmé » avec repères « Entretien ».
 - **Défaut trouvé et corrigé.** Un profil antérieur aux provenances voyait toutes ses réponses marquées « Entretien ». Une réponse inchangée reste désormais « déclarée ». La ligne de démonstration de Noah a été corrigée en base locale (une seule ligne, données de démonstration).
 - **Non fait.** Versions successives du bilan (Foulée garde l’historique) ; écran « Toi » (nom, fuseau) dans le premier parcours, toujours modifiables dans Profil ; tâche « Confirmer le bilan » dans le Planning (« Confirmer le niveau » existe).
+
+## D-055 · FTP et CSS : zones traduites pour le vélo et la natation (CE-B-03) · 2026-11-19
+
+- **Contexte.** CE-B-03 : les seuils de l’élève convertissent les zones à l’affichage. Seule la VMA existait (course, D-029). L’audit de Foulée recommande des seuils par élève et par sport.
+- **Décision.**
+  - Dans la fiche élève, « Repères d’entraînement » accueille trois champs : **VMA** (km/h, course), **FTP** (W, vélo), **CSS** (allure seuil de nage pour 100 m, saisie « 1:45 »). Un tableau traduit les 7 zones pour chaque repère renseigné.
+  - Plages (réversibles, à valider par le fondateur) :
+    - vélo, en % de FTP, alignées sur les 7 zones : 45-55, 56-75, 76-90, 91-105, 106-120, 121-150, 151-180, arrondies à 5 W ;
+    - natation, en % de la vitesse CSS : 70-78, 78-88, 88-94, 95-100, 100-105, 105-110, 110-118.
+  - Partout, derrière une zone, la cible propre à l’élève : « Z4 · seuil · 230 à 265 W », « 1:51 à 1:45 /100 m », « 6:09 à 5:43 /km » (`personalTarget`). C’est le cas dans le constructeur, la lecture coach et élève et la revue. Un % FTP s’affiche aussi en watts.
+  - En multisport, le sport de l’étape décide.
+  - La CSS estime aussi la durée et la distance des blocs de nage. Le graphique de séance situe les watts et les allures de nage dans les 7 niveaux.
+  - Le fichier FIT (D-044) reprend ces cibles : zone de vélo en watts, zone de nage en vitesse.
+  - Le constructeur signale le repère manquant selon le sport (VMA, FTP ou CSS), avec un lien vers la fiche.
+  - Migration additive `20261119090000` (`ftp_w`, `css_sec_per_100`). Un champ absent de la requête reste inchangé ; `null` l’efface. Contrat `saveAthleteReferences` étendu.
+  - **Pas de FC max ni de FC seuil** : la question des données de santé n’est pas tranchée (D11). Le schéma refuse `fcMax`.
+- **Preuve.**
+  - 6 tests du domaine : watts et allures par zone, cible personnelle par sport et en multisport, estimation de nage, niveaux du graphique, bornes FIT, saisie de la CSS.
+  - Test serveur : enregistrement, champ absent conservé, effacement, bornes, élève et autre espace refusés.
+  - Navigateur (Marine) : FTP 250 W et CSS 1:45 pour Noah, tableau des 7 zones en watts et en allures de nage. Dans le constructeur en Cyclisme, « 20' Z2 + 3×(8' Z4 + R3') + 10' Z1 » affiche 140 à 190 W, 230 à 265 W et 115 à 140 W (séance non enregistrée).
+- **À valider par le fondateur.** Les noms d’usage des zones viennent de la course (« VMA longue » pour Z5) ; pour le vélo et la natation, peut-être « PMA », « anaérobie » et « sprint ».

@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import {
   describeBlock, describeTotals, formatClock, formatKm, formatPace, PHASES, PHASE_LABELS, presetsFor, SPORTS, SPORT_LABELS, stepEstimate,
-  sessionProfile, structureTotals, usesVma, ZONE_NAMES, ZONES,
+  personalTarget, sessionProfile, structureTotals, usesCss, usesFtp, usesVma, ZONE_NAMES, ZONES,
   type Block, type Intensity, type Measure, type Phase, type References, type Sport, type Step, type Zone,
 } from '@coachos/domain';
 import { SessionChart } from './session-chart';
@@ -250,7 +250,7 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools }: { step:
   const est = stepEstimate(plain, sport, refs);
   const hint = [
     zone ? `Z${zone} · ${ZONE_NAMES[zone as Zone]}` : null,
-    est.pace && zone ? `${formatPace(est.pace[0]).replace(' /km', '')} à ${formatPace(est.pace[1])}` : null,
+    zone ? personalTarget(plain, sport, refs) : null,
     est.meters ? `environ ${formatKm(est.meters)}` : null,
     est.seconds ? `environ ${formatClock(est.seconds)}` : null,
   ].filter(Boolean);
@@ -508,6 +508,10 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
           {runSport && !refs?.vmaKmh ? (
             <p className="muted">Sans VMA, les kilomètres ne sont estimés que pour les blocs avec une allure.
               {vmaHref ? <> <a href={vmaHref}>Renseigner la VMA{athleteFirst ? ` de ${athleteFirst}` : ''}</a></> : null}</p>
+          ) : null}
+          {(usesFtp(sport) && !refs?.ftpW) || (usesCss(sport) && !refs?.cssSecPer100) ? (
+            <p className="muted">{usesFtp(sport) ? 'Sans FTP, les zones ne sont pas traduites en watts.' : 'Sans CSS, les zones ne sont pas traduites en allures de nage.'}
+              {vmaHref ? <> <a href={vmaHref}>Renseigner {usesFtp(sport) ? 'la FTP' : 'la CSS'}{athleteFirst ? ` de ${athleteFirst}` : ''}</a></> : null}</p>
           ) : null}
           {totals.unknownTime ? <p className="muted">Une partie du temps dépend de l’athlète (bloc libre ou distance sans allure).</p> : null}
           <p className="muted" style={{ marginTop: 6 }}>Ce que lira l’athlète :</p>

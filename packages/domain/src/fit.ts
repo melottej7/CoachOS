@@ -1,4 +1,4 @@
-import { usesVma, zonePace, PHASE_LABELS, ZONE_NAMES, type Block, type References, type Step, type Zone } from './structure';
+import { usesCss, usesFtp, usesVma, zonePace, zonePower, zoneSwimPace, PHASE_LABELS, ZONE_NAMES, type Block, type References, type Step, type Zone } from './structure';
 import type { Sport } from './sports';
 
 /**
@@ -151,6 +151,12 @@ function stepToFit(step: Step, index: number, session: Sport, multi: boolean, re
     if (refs?.vmaKmh && usesVma(sport)) {
       const [slow, fast] = zonePace(zone, refs.vmaKmh);
       targetType = TARGET.speed; low = mmps(slow, 1000); high = mmps(fast, 1000);
+    } else if (refs?.ftpW && usesFtp(sport)) {
+      const [lo, hi] = zonePower(zone, refs.ftpW);
+      targetType = TARGET.power; low = lo + 1000; high = hi + 1000;
+    } else if (refs?.cssSecPer100 && usesCss(sport)) {
+      const [slow, fast] = zoneSwimPace(zone, refs.cssSecPer100);
+      targetType = TARGET.speed; low = mmps(slow, 100); high = mmps(fast, 100);
     } else notes.push(`Zone ${zone} (${ZONE_NAMES[zone]})`);
   } else if (i.kind === 'pace') {
     const unit = i.unit === 'per_km' ? 1000 : 100;

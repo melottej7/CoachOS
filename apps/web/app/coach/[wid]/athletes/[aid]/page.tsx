@@ -214,7 +214,7 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
 
       <section className="card" aria-labelledby="refs-title">
         <div className="card-head"><h2 id="refs-title">Repères d’entraînement</h2><Pill tone="neutral">Fixés par toi</Pill></div>
-        <div className="card-body"><ReferencesForm wid={wid} aid={aid} first={first} vmaKmh={refs.vmaKmh} /></div>
+        <div className="card-body"><ReferencesForm wid={wid} aid={aid} first={first} vmaKmh={refs.vmaKmh} ftpW={refs.ftpW} cssSecPer100={refs.cssSecPer100} /></div>
       </section>
 
       {a.state === 'active' ? (

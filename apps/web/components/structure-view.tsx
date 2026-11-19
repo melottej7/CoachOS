@@ -1,5 +1,5 @@
 import {
-  describeIntensity, describeMeasure, formatClock, formatKm, formatPace, PHASE_LABELS, sessionProfile, SPORT_LABELS, stepEstimate, structureTotals,
+  describeIntensity, describeMeasure, formatClock, formatKm, personalTarget, PHASE_LABELS, sessionProfile, SPORT_LABELS, stepEstimate, structureTotals,
   type Block, type References, type Sport, type Step,
 } from '@coachos/domain';
 import { SessionChart } from './session-chart';
@@ -32,8 +32,8 @@ function StepRow({ s, sport, refs }: { s: Step; sport: Sport; refs?: References 
   const target = describeIntensity(s.intensity);
   const est = stepEstimate(s, sport, refs);
   const zone = s.intensity.kind === 'zone' ? s.intensity.zone : null;
-  // Allure propre à l’élève juste derrière la zone : « Z2 (endurance fondamentale) · 6:09 à 5:43 /km ».
-  const zonePace = est.pace && zone ? (est.pace[0] === est.pace[1] ? formatPace(est.pace[0]) : `${formatPace(est.pace[0]).replace(' /km', '')} à ${formatPace(est.pace[1])}`) : null;
+  // Cible propre à l’élève juste derrière la zone : « Z2 · 6:09 à 5:43 /km », « Z3 · 175 à 205 W », « Z4 · 1:50 à 1:45 /100 m » (D-055).
+  const zonePace = personalTarget(s, sport, refs);
   const extra = [
     est.meters ? `environ ${formatKm(est.meters)}` : null,
     est.seconds ? `environ ${formatClock(est.seconds)}` : null,

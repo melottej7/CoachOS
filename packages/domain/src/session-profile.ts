@@ -1,5 +1,5 @@
 import type { Sport } from './sports';
-import { describeIntensity, describeMeasure, PHASE_LABELS, stepEstimate, ZONE_TARGET_PCT, type Block, type Phase, type References, type Step, type Zone } from './structure';
+import { describeIntensity, describeMeasure, PHASE_LABELS, stepEstimate, ZONE_CSS_PCT, ZONE_TARGET_PCT, type Block, type Phase, type References, type Step, type Zone } from './structure';
 
 // CE-E-04 (D-040) : forme de la séance, une barre par étape dans l’ordre réel (répétitions dépliées).
 // Largeur = durée (estimée si la séance est en distance), hauteur = niveau d’intensité 1 à 7.
@@ -39,13 +39,20 @@ export function stepLevel(s: Step, sport: Sport, refs?: References): { level: nu
     case 'zone': return { level: i.zone, known: true };
     case 'rpe': return { level: Math.max(1, Math.min(7, Math.round(((i.max ?? i.min) / 10) * 7))), known: true };
     case 'hr': if (i.unit === 'pct_max') return { level: levelOfPct(i.max ?? i.min, [65, 72, 80, 87, 92, 96]), known: true }; break;
-    case 'power': if (i.unit === 'pct_ftp') return { level: levelOfPct(i.max ?? i.min, [56, 76, 91, 106, 121, 150]), known: true }; break;
+    case 'power':
+      if (i.unit === 'pct_ftp') return { level: levelOfPct(i.max ?? i.min, [56, 76, 91, 106, 121, 150]), known: true };
+      if (refs?.ftpW) return { level: levelOfPct(((i.max ?? i.min) / refs.ftpW) * 100, [56, 76, 91, 106, 121, 150]), known: true };
+      break;
     case 'pace':
       if (i.unit === 'per_km' && refs?.vmaKmh && (sport === 'running' || sport === 'trail' || s.sport === 'running' || s.sport === 'trail')) {
         const fastest = Math.min(i.min, i.max ?? i.min);
         const pct = (3600 / fastest / refs.vmaKmh) * 100;
         // Bornes basses des zones 2 à 7 (D-029).
         return { level: levelOfPct(pct, ([2, 3, 4, 5, 6, 7] as Zone[]).map((z) => ZONE_TARGET_PCT[z][0])), known: true };
+      }
+      if (i.unit === 'per_100m' && refs?.cssSecPer100) {
+        const pct = (refs.cssSecPer100 / Math.min(i.min, i.max ?? i.min)) * 100;
+        return { level: levelOfPct(pct, ([2, 3, 4, 5, 6, 7] as Zone[]).map((z) => ZONE_CSS_PCT[z][0])), known: true };
       }
       break;
     default: break;

@@ -2119,7 +2119,9 @@
         "required": [
           "vmaKmh",
           "revision",
-          "updatedAt"
+          "updatedAt",
+          "ftpW",
+          "cssSecPer100"
         ],
         "properties": {
           "vmaKmh": {
@@ -2135,6 +2137,30 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "ftpW": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 50,
+                "maximum": 600
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cssSecPer100": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 50,
+                "maximum": 300
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       },
@@ -15613,6 +15639,30 @@
                     "minimum": 6,
                     "maximum": 30,
                     "description": "VMA en km/h, une décimale ; null pour effacer"
+                  },
+                  "ftpW": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 50,
+                        "maximum": 600
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "cssSecPer100": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 50,
+                        "maximum": 300
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 }
               }

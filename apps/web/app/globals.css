@@ -979,3 +979,6 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .bf-foot { font-size: 13px; margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) { .bf-bar span { transition: none; } }
 .bilan-nudge { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin: 10px 0 16px; }
+
+/* Repères VMA, FTP, CSS (D-055) */
+.refs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px 16px; }

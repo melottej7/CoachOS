@@ -218,6 +218,9 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
 - Commit `44cc3a8` (D-051 à D-053). Puis (non commité) :
   - **D-054** : bilan d’arrivée inspiré de Foulée (une question par écran, questions conditionnelles, brouillon serveur et reprise, confirmation coach, entretien avec provenance) ; migration `20261119080000` appliquée.
   - `npm test` : **170 passés** (+3 PostgreSQL), typecheck OK.
+- Commit `3ca7ca6` (D-054). Puis (non commité) :
+  - **D-055** : FTP et CSS de l’élève, zones traduites en watts et en allures de nage partout, y compris dans le fichier FIT ; migration `20261119090000` appliquée.
+  - `npm test` : **177 passés** (+3 PostgreSQL), typecheck OK.
 
 Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au micro réel (autorisation du micro non automatisable ici) ; visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
 

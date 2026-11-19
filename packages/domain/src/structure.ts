@@ -111,6 +111,10 @@ export interface Totals {
 export interface References {
   /** Vitesse maximale aérobie, km/h (course à pied). */
   vmaKmh: number | null;
+  /** Puissance au seuil, W (vélo, D-055). */
+  ftpW?: number | null;
+  /** Vitesse critique de nage : secondes pour 100 m (natation, D-055). */
+  cssSecPer100?: number | null;
 }
 
 /** Plages cibles de l’échelle à 7 zones, en % de VMA (choix du fondateur, D-029). */
@@ -118,6 +122,33 @@ export const ZONE_TARGET_PCT: Record<Zone, readonly [number, number]> = {
   1: [60, 65], 2: [65, 70], 3: [72, 78], 4: [85, 90], 5: [90, 95], 6: [95, 100], 7: [100, 110],
 };
 const VMA_SPORTS: ReadonlySet<Sport> = new Set(['running', 'trail']);
+
+/**
+ * Vélo (D-055) : zones en % de FTP, alignées sur les 7 zones (récupération, endurance, tempo, seuil, PMA, anaérobie, sprint).
+ * Natation : zones en % de la vitesse CSS. Plages réversibles, à valider par le fondateur.
+ */
+export const ZONE_FTP_PCT: Record<Zone, readonly [number, number]> = {
+  1: [45, 55], 2: [56, 75], 3: [76, 90], 4: [91, 105], 5: [106, 120], 6: [121, 150], 7: [151, 180],
+};
+export const ZONE_CSS_PCT: Record<Zone, readonly [number, number]> = {
+  1: [70, 78], 2: [78, 88], 3: [88, 94], 4: [95, 100], 5: [100, 105], 6: [105, 110], 7: [110, 118],
+};
+const FTP_SPORTS: ReadonlySet<Sport> = new Set(['cycling']);
+const CSS_SPORTS: ReadonlySet<Sport> = new Set(['swimming']);
+export const usesFtp = (sport: Sport | null | undefined) => Boolean(sport && FTP_SPORTS.has(sport));
+export const usesCss = (sport: Sport | null | undefined) => Boolean(sport && CSS_SPORTS.has(sport));
+
+/** Puissance cible d’une zone, arrondie à 5 W : [basse, haute]. */
+export function zonePower(zone: Zone, ftpW: number): [number, number] {
+  const [lo, hi] = ZONE_FTP_PCT[zone];
+  return [Math.round((ftpW * lo) / 100 / 5) * 5, Math.round((ftpW * hi) / 100 / 5) * 5];
+}
+
+/** Allure de nage d’une zone en secondes pour 100 m : [la plus lente, la plus rapide]. */
+export function zoneSwimPace(zone: Zone, cssSecPer100: number): [number, number] {
+  const [lo, hi] = ZONE_CSS_PCT[zone];
+  return [Math.round((cssSecPer100 * 100) / lo), Math.round((cssSecPer100 * 100) / hi)];
+}
 
 /** Allure cible d’une zone en secondes par km : [la plus lente, la plus rapide]. */
 export function zonePace(zone: Zone, vmaKmh: number): [number, number] {
@@ -145,18 +176,32 @@ function speedOf(step: Step, sessionSport: Sport | undefined, refs: References |
     const [lo, hi] = ZONE_TARGET_PCT[step.intensity.zone as Zone];
     return (refs.vmaKmh * ((lo + hi) / 2)) / 100 / 3.6;
   }
+  if (step.intensity.kind === 'zone' && refs?.cssSecPer100 && usesCss(sport)) {
+    const [lo, hi] = ZONE_CSS_PCT[step.intensity.zone as Zone];
+    return (100 / refs.cssSecPer100) * ((lo + hi) / 2 / 100);
+  }
   return null;
 }
 
 /** Estimation d’une étape : allure cible (s/km, course), durée ou distance déduite. */
-export function stepEstimate(step: Step, sessionSport?: Sport, refs?: References): { pace: [number, number] | null; seconds: number | null; meters: number | null } {
+export function stepEstimate(step: Step, sessionSport?: Sport, refs?: References): {
+  pace: [number, number] | null; swimPace: [number, number] | null; power: [number, number] | null; seconds: number | null; meters: number | null;
+} {
   const sport = step.sport ?? sessionSport;
+  const i = step.intensity;
   let pace: [number, number] | null = null;
-  if (step.intensity.kind === 'pace' && step.intensity.unit === 'per_km') pace = [step.intensity.min, step.intensity.max ?? step.intensity.min];
-  else if (step.intensity.kind === 'zone' && refs?.vmaKmh && usesVma(sport)) pace = zonePace(step.intensity.zone as Zone, refs.vmaKmh);
+  let swimPace: [number, number] | null = null;
+  let power: [number, number] | null = null;
+  if (i.kind === 'pace' && i.unit === 'per_km') pace = [i.min, i.max ?? i.min];
+  else if (i.kind === 'zone' && refs?.vmaKmh && usesVma(sport)) pace = zonePace(i.zone as Zone, refs.vmaKmh);
+  if (i.kind === 'zone' && refs?.cssSecPer100 && usesCss(sport)) swimPace = zoneSwimPace(i.zone as Zone, refs.cssSecPer100);
+  if (i.kind === 'zone' && refs?.ftpW && usesFtp(sport)) power = zonePower(i.zone as Zone, refs.ftpW);
+  if (i.kind === 'power' && i.unit === 'pct_ftp' && refs?.ftpW) {
+    power = [Math.round((refs.ftpW * i.min) / 100 / 5) * 5, Math.round((refs.ftpW * (i.max ?? i.min)) / 100 / 5) * 5];
+  }
   const v = speedOf(step, sessionSport, refs);
   return {
-    pace,
+    pace, swimPace, power,
     seconds: v && step.measure.kind === 'distance' ? Math.round(step.measure.meters / v) : null,
     meters: v && step.measure.kind === 'time' ? Math.round((step.measure.seconds * v) / 10) * 10 : null,
   };
@@ -265,6 +310,17 @@ export function describeTotals(t: Totals): string {
 export function formatKm(m: number): string {
   if (m < 1000) return `${Math.round(m / 10) * 10} m`;
   return `${(m / 1000).toLocaleString('fr-BE', { maximumFractionDigits: 1 })} km`;
+}
+
+/** Traduction personnelle d’une cible pour cet élève : « 6:09 à 5:43 /km », « 180 à 225 W », « 1:52 à 1:45 /100 m ». */
+export function personalTarget(step: Step, sessionSport?: Sport, refs?: References): string | null {
+  const e = stepEstimate(step, sessionSport, refs);
+  const two = (a: string, b: string, unit: string) => (a === b ? `${a} ${unit}` : `${a} à ${b} ${unit}`);
+  const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  if (step.intensity.kind === 'zone' && e.pace) return two(mmss(e.pace[0]), mmss(e.pace[1]), '/km');
+  if (e.swimPace) return two(mmss(e.swimPace[0]), mmss(e.swimPace[1]), '/100 m');
+  if (e.power) return two(String(e.power[0]), String(e.power[1]), 'W');
+  return null;
 }
 
 /** Allure « 5:43 /km ». */
