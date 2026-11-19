@@ -1275,3 +1275,18 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Serveur (client Claude simulé, aucun appel réel) : 1 500 + 300 jetons comptent 0,012 $ ; la réserve revient à 0 ; avec un budget de 0,01 $, la demande est refusée sans appel.
   - Navigateur (démo) : carte affichée dans Paramètres.
   - `npm test` : **264 passés** (+3 PostgreSQL), typecheck OK.
+
+## D-082 · File des retours : reporter un cas, filtre gardé (C09-08) · 2026-11-19
+
+- **Contexte.** Le § 24 du PRD dit : « le coach ouvre la source, lit le résultat et peut reporter ou clore. Reporter exige une date future. » La critère C09-08 dit : « le filtre reste actif lors du retour du détail ». Les deux figuraient dans les manques d’ETAT. L’opération `PATCH /reviews/{rid}` du contrat n’était pas encore implémentée.
+- **Décision.**
+  - Dans le détail d’un retour, **Reporter à** : Demain, Dans 3 jours ou Lundi prochain, à 7 h dans le fuseau du coach. La date doit être future, à 30 jours au plus.
+  - Le cas quitte la file et le compteur, puis revient seul à sa date (rien à planifier côté serveur). Section « Reportés » sur la page Retours, avec « Remettre maintenant ».
+  - Une correction du retour par l’élève remet le cas dans la file tout de suite.
+  - Clore reste « Marquer comme traité » (la version lue est vérifiée). La commande refuse donc `state: done` (écart de contrat consigné : l’énumération l’accepte, la règle le renvoie au bouton).
+  - Filtre de la file : élève, groupe, « avec commentaire » ou « effort 8/10 ou plus ». Il vit dans l’adresse et suit le détail, le retour à la file, « Retour suivant » (pris dans le filtre) et le report.
+  - Commande `updateReview` : coach affecté seulement, idempotente, auditée (`review.snooze`, `review.reopen`). Aucune migration : `review_items.state` et `due_at` existaient.
+- **Preuve.**
+  - Test du domaine et du serveur : date passée refusée ; élève refusé ; cas hors de la file puis de retour à sa date ; remis ; rouvert par une correction de l’élève. Contrat vérifié.
+  - Navigateur (démo, Marine) : filtre « Effort 8/10 ou plus », détail, lien de retour avec le filtre ; « Demain » → « Revient ven. 20 nov. à 07 h 00 » ; « Remettre maintenant » rétablit la démo.
+  - `npm test` : **266 passés** (+3 PostgreSQL), typecheck OK.

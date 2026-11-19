@@ -1,4 +1,4 @@
-import { activityFingerprint, canGiveFeedback, formatShortDate, markReviewedSchema, parseWith, saveFeedbackSchema, todayIn, type FeedbackActivity } from '@coachos/domain';
+import { activityFingerprint, canGiveFeedback, formatShortDate, markReviewedSchema, parseWith, saveFeedbackSchema, snoozeError, todayIn, updateReviewSchema, type UpdateReviewInput, type FeedbackActivity } from '@coachos/domain';
 import { commandAs, type Tx } from '../db/client';
 import { AppError, conflict, invalid, notVisible } from '../errors';
 import { audit, idempotent, type StoredResponse } from './idempotency';
@@ -103,7 +103,7 @@ export async function saveFeedback(meta: Meta, body: unknown): Promise<StoredRes
       await tx.query(
         `insert into public.review_items(workspace_id, athlete_id, kind, state, source_ref, rank)
          values ($1, $2, 'feedback', 'open', $3, 1)
-         on conflict (workspace_id, athlete_id, kind, source_ref) do update set state = 'open'`,
+         on conflict (workspace_id, athlete_id, kind, source_ref) do update set state = 'open', due_at = null`,
         [wid, aid, feedbackId],
       );
       await audit(tx, wid, meta.actorId, prev ? 'feedback.update' : 'feedback.create', feedbackId, meta.requestId);
@@ -206,6 +206,43 @@ export async function markFeedbackReviewed(meta: Meta, body: unknown): Promise<S
       );
       await audit(tx, wid, meta.actorId, 'feedback.reviewed', fb.id, meta.requestId);
       return { status: 200, body: { reviewedAt: done.rows[0]!.reviewed_at.toISOString() } };
+    });
+  });
+}
+
+/**
+ * updateReview · C : reporter un retour à une date future (il revient seul dans la file) ou le remettre tout de suite
+ * (D-082, § 24 du PRD). Clore passe par markFeedbackReviewed, qui vérifie la version lue.
+ */
+export async function updateReview(meta: { actorId: string; idempotencyKey: string; requestId: string; workspaceId: string; reviewId: string }, body: unknown): Promise<StoredResponse> {
+  const parsed = parseWith(updateReviewSchema, body);
+  if (!parsed.ok) throw invalid(parsed.fields);
+  const v = parsed.value as UpdateReviewInput;
+  const wid = meta.workspaceId;
+  if (v.state === 'snoozed') {
+    const err = snoozeError(new Date(v.snoozeUntil!), new Date());
+    if (err) throw invalid([{ path: 'snoozeUntil', rule: err }]);
+  }
+  return commandAs(meta.actorId, async (tx: Tx) => {
+    const it = await tx.query<{ athlete_id: string; state: string; reviewed: boolean }>(
+      `select ri.athlete_id, ri.state, (f.reviewed_at is not null) as reviewed from public.review_items ri
+       left join public.feedbacks f on f.workspace_id = ri.workspace_id and f.athlete_id = ri.athlete_id and f.id = ri.source_ref
+       where ri.workspace_id = $1 and ri.id = $2 and ri.kind = 'feedback' for update of ri`,
+      [wid, meta.reviewId],
+    );
+    const row = it.rows[0];
+    if (!row) throw notVisible();
+    const ok = await tx.query<{ ok: boolean }>('select private.assigned($1, $2) as ok', [wid, row.athlete_id]);
+    if (!ok.rows[0]?.ok) throw notVisible();
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'review.update', key: meta.idempotencyKey, body: { id: meta.reviewId, ...v } }, async () => {
+      if (row.state === 'done' || row.reviewed) throw conflict('Ce retour est déjà traité.', {});
+      const r = await tx.query<{ id: string; athlete_id: string; kind: string; rank: number; state: string; due_at: Date | null }>(
+        `update public.review_items set state = $3, due_at = $4 where workspace_id = $1 and id = $2 returning id, athlete_id, kind, rank, state, due_at`,
+        [wid, meta.reviewId, v.state, v.state === 'snoozed' ? v.snoozeUntil : null],
+      );
+      await audit(tx, wid, meta.actorId, v.state === 'snoozed' ? 'review.snooze' : 'review.reopen', meta.reviewId, meta.requestId);
+      const x = r.rows[0]!;
+      return { status: 200, body: { item: { id: x.id, athleteId: x.athlete_id, kind: x.kind, rank: x.rank, state: x.state, dueAt: x.due_at ? x.due_at.toISOString() : null } } };
     });
   });
 }

@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { CHANGE_LABELS, describeBlock, DIFFICULTY_LABELS, FEELING_LABELS, formatDistance, formatPace, formatDuration, formatLongDate, formatShortDate, weekStart, RESULT_STATE_LABELS, SPORT_LABELS } from '@coachos/domain';
+import { matchesReviewFilter, parseReviewFilter, reviewFilterQuery, snoozeChoices, todayIn, CHANGE_LABELS, describeBlock, DIFFICULTY_LABELS, FEELING_LABELS, formatDistance, formatPace, formatDuration, formatLongDate, formatShortDate, weekStart, RESULT_STATE_LABELS, SPORT_LABELS } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachWorkout, openReviews, reviewItem, revisionByNumber } from '@/server/repo/coach';
 import { MarkReviewedButton } from '@/components/review-button';
+import { ReviewSnooze } from '@/components/review-snooze';
+import { coachContext } from '@/server/repo/context';
 import { Notice, Pill } from '@/components/ui';
 import { StructureView } from '@/components/structure-view';
 import { QuickReply } from '@/components/messaging';
@@ -13,16 +15,21 @@ import { readAthleteReferences } from '@/server/commands/athlete-references';
 export const metadata = { title: 'Retour' };
 
 /** X11/X17 : prévu (version observée) contre réalisé, puis traitement. Le contexte d’origine est conservé. */
-export default async function ReviewDetail({ params, searchParams }: { params: Promise<{ wid: string; rid: string }>; searchParams: Promise<{ from?: string; notice?: string }> }) {
+export default async function ReviewDetail({ params, searchParams }: { params: Promise<{ wid: string; rid: string }>; searchParams: Promise<{ from?: string; notice?: string; eleve?: string; groupe?: string; seulement?: string }> }) {
   const { wid, rid } = await params;
-  const { from, notice } = await searchParams;
+  const sp = await searchParams;
+  const { from, notice } = sp;
+  // C09-08 (D-082) : le filtre de la file reste actif au retour du détail et pour le retour suivant.
+  const filter = parseReviewFilter(sp);
+  const fq = reviewFilterQuery(filter);
+  const keep = (extra: string) => { const s = [fq.slice(1), extra].filter(Boolean).join('&'); return s ? `?${s}` : ''; };
   const actor = await requireActor();
   const item = await reviewItem(actor.userId, wid, rid);
   if (!item) notFound();
   const base = `/coach/${wid}`;
   const w = item.workoutId ? await coachWorkout(actor.userId, wid, item.athleteId, item.workoutId) : null;
   const first = item.athleteName.split(' ')[0];
-  const queueHref = `${base}/review`;
+  const queueHref = `${base}/review${fq}`;
   const calendarHref = w ? `${base}/calendar?athlete=${item.athleteId}&week=${weekStart(w.working.localDate)}` : queueHref;
   const backHref = from === 'calendar' ? calendarHref : queueHref;
   const backLabel = from === 'calendar' ? `← Séances de ${item.athleteName}` : '← Retours';
@@ -41,8 +48,11 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
   const refs = await readAthleteReferences(actor.userId, wid, item.athleteId);
   const observed = await revisionByNumber(actor.userId, wid, item.athleteId, w.id, fb.observedRevision);
   const current = w.published;
-  const next = (await openReviews(actor.userId, wid)).find((r) => r.id !== rid);
-  const after = `${base}/review/${rid}?notice=reviewed${from ? `&from=${from}` : ''}`;
+  const next = (await openReviews(actor.userId, wid)).find((r) => r.id !== rid && matchesReviewFilter(r, filter));
+  const after = `${base}/review/${rid}${keep(`notice=reviewed${from ? `&from=${from}` : ''}`)}`;
+  const ctx = await coachContext(actor.userId, wid);
+  const tz = ctx?.workspace.timeZone ?? w.athlete.timeZone;
+  const snoozeAfter = from === 'calendar' ? calendarHref : `${base}/review${keep('notice=snoozed')}`;
   const done = fb.reviewedAt !== null;
 
   return (
@@ -135,10 +145,12 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
             <>
               <p className="muted">Marquer comme traité ferme ce cas dans la file. Aucun message n’est envoyé à {first}.</p>
               <MarkReviewedButton wid={wid} aid={item.athleteId} sid={w.id} expectedRevision={fb.revision} after={after} />
+              {item.snoozedUntil ? <p className="muted">Reporté : il reviendra dans la file à la date choisie.</p>
+                : <ReviewSnooze wid={wid} rid={rid} choices={snoozeChoices(todayIn(tz), tz)} after={snoozeAfter} />}
             </>
           )}
           <div className="actions">
-            {next ? <Link className="btn" href={`${base}/review/${next.id}${from ? `?from=${from}` : ''}`}>Retour suivant · {next.athleteName.split(' ')[0]}</Link> : null}
+            {next ? <Link className="btn" href={`${base}/review/${next.id}${keep(from ? `from=${from}` : '')}`}>Retour suivant · {next.athleteName.split(' ')[0]}</Link> : null}
             <Link className="link-btn" href={`${base}/athletes/${item.athleteId}/workouts/${w.id}`}>Voir la séance</Link>
           </div>
         </div>

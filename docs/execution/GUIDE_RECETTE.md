@@ -262,3 +262,8 @@ Dis-moi si l’icône, le nom et l’ouverture te conviennent.
 ## IA ce mois-ci
 
 Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et budget du mois (10 $ par défaut). Au budget, l’IA s’arrête jusqu’au mois suivant ; tout reste faisable à la main.
+
+## Reporter un retour, filtrer la file
+
+1. Menu **Retours** : filtre par élève, groupe, « avec commentaire » ou « effort 8/10 ou plus ». Ouvre un retour, puis reviens : le filtre est toujours là.
+2. Dans un retour, **Reporter à → Demain** : il quitte la file et revient seul demain à 7 h. Section « Reportés » : **Remettre maintenant** pour le reprendre plus tôt.

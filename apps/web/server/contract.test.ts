@@ -11,7 +11,7 @@ import { SEED_WORKOUTS } from './db/seed';
 import { setMailer } from './email/send';
 import { AppError } from './errors';
 import { errorPayload } from './http';
-import { markFeedbackReviewed, saveFeedback } from './commands/feedback';
+import { markFeedbackReviewed, saveFeedback, updateReview } from './commands/feedback';
 import { acceptInvitation, createAthlete, createWorkspace, issueInvitation, revokeInvitation } from './commands/invitations';
 import { createWorkout, publishWorkouts, updateWorkout } from './commands/workouts';
 import { confirmBilan, saveAthleteProfile, saveBilanByCoach, saveBilanDraft } from './commands/athlete-profile';
@@ -23,7 +23,7 @@ import { createGroupSession, publishGroupSession, updateGroupBase } from './comm
 import { openConversation, saveReceipt, saveTeamReceipt, sendMessage, sendTeamMessage, sendTeamVoice, sendVoice } from './commands/messages';
 import { deleteWorkspaceLogo, previewInvitation, saveWorkspaceProfile, setWorkspaceLogo } from './commands/workspace-profile';
 import { addDays, todayIn, weekStart } from '@coachos/domain';
-import { coachWorkout } from './repo/coach';
+import { coachWorkout, openReviews } from './repo/coach';
 import { decideGoal } from './commands/goal-decisions';
 import { buildRegeneration, createProgram, regenContext, regenerateProgram, seenOf } from './commands/programs';
 import { addPerformance, deletePerformance } from './commands/performances';
@@ -87,6 +87,12 @@ describe('réponses conformes au contrat OpenAPI', () => {
     await expect(saveFeedback({ ...m, idempotencyKey: randomUUID() }, { publishedRevision: 1, expectedRevision: 3, state: 'completed', measureFile: 'gpx' })).rejects.toMatchObject({ code: 'INVALID_FIELDS' });
     const manual = await saveFeedback({ ...m, idempotencyKey: randomUUID() }, { publishedRevision: 1, expectedRevision: 3, state: 'completed', durationSeconds: 2700 });
     expect((manual.body as { item: { measureFile: unknown } }).item.measureFile).toBeNull();
+    // D-082 : reporter puis remettre le retour dans la file.
+    const rid = (await openReviews(USERS.marine, WORKSPACE_A)).find((r) => r.workoutId === SEED_WORKOUTS.camilleToday)!.id;
+    const sn = await updateReview({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, reviewId: rid }, { state: 'snoozed', snoozeUntil: new Date(Date.now() + 86_400_000).toISOString() });
+    check('/workspaces/{wid}/reviews/{rid}', 'patch', sn.status, sn.body);
+    const op = await updateReview({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, reviewId: rid }, { state: 'open' });
+    check('/workspaces/{wid}/reviews/{rid}', 'patch', op.status, op.body);
     const rv = await markFeedbackReviewed({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille, workoutId: SEED_WORKOUTS.camilleToday }, { expectedRevision: 4 });
     check(`${W}/{sid}/feedback/review`, 'post', rv.status, rv.body);
   });

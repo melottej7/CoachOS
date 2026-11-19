@@ -157,7 +157,7 @@ Non prouvé à ce stade : lecteur d’écran et parcours clavier complet, vrai t
 
 ## Écarts et dette connus
 
-- Pas encore : annulation de séance, report d’un cas (snooze), publication par lot multi-séances (X22 limité à une séance), filtre persistant de la file (C09-08), routes GET pour Expo, E2E automatisé, CI.
+- Pas encore : publication par lot multi-séances (X22 limité à une séance), routes GET pour Expo, E2E automatisé, CI. (Report d’un cas et filtre de la file : D-082.)
 - Top bar mobile encore chargée côté athlète. À revoir après observation.
 - Le profil créé à la première connexion prend la partie avant @ comme nom ; le coach peut le corriger à la création d’espace ou dans `/profile`, l’athlète dans Profil.
 - Langue : le choix « English » est enregistré mais l’interface reste en français (V1).
@@ -281,12 +281,15 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
   - **D-080** : lecture hors ligne de l’espace élève (service worker, réseau d’abord, effacé à la déconnexion ; https seulement).
   - **D-081** : coût réel de chaque appel à Claude, budget mensuel par espace (10 $ par défaut), carte « IA ce mois-ci ».
   - `npm test` : **264 passés** (+3 PostgreSQL), typecheck OK. Aucune migration cette nuit.
+- Commit `1536c96` (D-078 à D-081). Puis :
+  - **D-082** : file des retours, reporter un cas (date future, retour seul dans la file) et filtre gardé au retour du détail (C09-08).
+  - `npm test` : **266 passés** (+3 PostgreSQL), typecheck OK.
 - Question du fondateur sur les données de santé (« faire signer un cookie ») : réponse donnée, décision toujours à prendre. Voir « Pour le fondateur ».
 - Prochaines tranches : tout ce qui reste demande le fondateur.
   - Recette, dont l’import avec sa vraie base, l’essai FIT sur la Fenix 8 et l’installation sur téléphone.
   - Crédit IA ; décision santé ; accès Garmin.
   - Commercial, après validation du parcours.
-  - Possibles sans lui : rappels push (clés et service d’envoi à choisir), report d’un cas (snooze), filtre persistant de la file des retours.
+  - Possibles sans lui : rappels push (clés et service d’envoi à choisir).
 
 Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au micro réel (autorisation du micro non automatisable ici) ; visite et glisser-déposer sur vrai téléphone (toucher), lecteur d’écran sur la bulle et l’annonce des déplacements, visite coach à 375 px.
 

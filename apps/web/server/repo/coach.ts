@@ -237,27 +237,36 @@ export interface ReviewRow {
   rpe: number | null;
   hasComment: boolean;
   createdAt: string;
+  /** Groupes de l’élève (filtre de la file, C09-08). */
+  teamIds: string[];
+  /** Reporté jusqu’à cette date (D-082) ; null dans la file active. */
+  snoozedUntil: string | null;
 }
 
 /** Cas ouverts, triés par rang, échéance puis id (PRD §24). Seuls les retours sans revue (C09-01). */
-export async function openReviews(userId: string, wid: string, athleteId?: string): Promise<ReviewRow[]> {
+export async function openReviews(userId: string, wid: string, athleteId?: string, which: 'active' | 'snoozed' = 'active'): Promise<ReviewRow[]> {
   return readAs(userId, async (tx) => {
     const r = await tx.query<{
       id: string; athlete_id: string; display_name: string; workout_id: string | null; title: string | null; local_date: string | null;
-      state: ResultState | null; rpe: number | null; has_comment: boolean; created_at: Date;
+      state: ResultState | null; rpe: number | null; has_comment: boolean; created_at: Date; team_ids: string[] | null; snoozed_until: Date | null;
     }>(
       `select ri.id, ri.athlete_id, a.display_name, res.workout_id, rev.title, to_char(rev.local_date, 'YYYY-MM-DD') as local_date,
-              res.state, f.rpe, (f.comment is not null) as has_comment, ri.created_at
+              res.state, f.rpe, (f.comment is not null) as has_comment, ri.created_at,
+              (select array_agg(ta.team_id) from public.team_athletes ta where ta.workspace_id = ri.workspace_id and ta.athlete_id = ri.athlete_id) as team_ids,
+              case when ri.state = 'snoozed' and ri.due_at > now() then ri.due_at end as snoozed_until
        from public.review_items ri
        join public.athletes a on a.workspace_id = ri.workspace_id and a.id = ri.athlete_id
        left join public.feedbacks f on f.workspace_id = ri.workspace_id and f.athlete_id = ri.athlete_id and f.id = ri.source_ref
        left join public.workout_results res on res.workspace_id = f.workspace_id and res.athlete_id = f.athlete_id and res.id = f.result_id
        left join public.workout_revisions rev on rev.workspace_id = res.workspace_id and rev.athlete_id = res.athlete_id
             and rev.workout_id = res.workout_id and rev.number = res.workout_revision
-       where ri.workspace_id = $1 and ri.state = 'open' and ri.kind = 'feedback' and f.reviewed_at is null
+       where ri.workspace_id = $1 and ri.kind = 'feedback' and f.reviewed_at is null
          and ($2::uuid is null or ri.athlete_id = $2::uuid)
+         -- D-082 : un cas reporté revient seul dans la file à sa date.
+         and (case when $3 = 'snoozed' then ri.state = 'snoozed' and ri.due_at > now()
+                   else ri.state = 'open' or (ri.state = 'snoozed' and ri.due_at <= now()) end)
        order by ri.rank, coalesce(ri.due_at, ri.created_at), ri.id`,
-      [wid, athleteId ?? null],
+      [wid, athleteId ?? null, which],
     );
     return r.rows.map((x) => ({
       id: x.id,
@@ -270,6 +279,8 @@ export async function openReviews(userId: string, wid: string, athleteId?: strin
       rpe: x.rpe,
       hasComment: x.has_comment,
       createdAt: x.created_at.toISOString(),
+      teamIds: x.team_ids ?? [],
+      snoozedUntil: x.snoozed_until ? x.snoozed_until.toISOString() : null,
     }));
   });
 }
@@ -284,13 +295,14 @@ export interface ReviewDetail {
   athleteId: string;
   athleteName: string;
   workoutId: string | null;
+  snoozedUntil: string | null;
 }
 
 /** Résout un cas vers sa source. null = cas non visible (404 uniforme). */
 export async function reviewItem(userId: string, wid: string, rid: string): Promise<ReviewDetail | null> {
   return readAs(userId, async (tx) => {
-    const r = await tx.query<{ id: string; state: ReviewDetail['state']; athlete_id: string; display_name: string; workout_id: string | null }>(
-      `select ri.id, ri.state, ri.athlete_id, a.display_name, res.workout_id
+    const r = await tx.query<{ id: string; state: ReviewDetail['state']; athlete_id: string; display_name: string; workout_id: string | null; due_at: Date | null }>(
+      `select ri.id, ri.state, ri.athlete_id, a.display_name, res.workout_id, ri.due_at
        from public.review_items ri
        join public.athletes a on a.workspace_id = ri.workspace_id and a.id = ri.athlete_id
        left join public.feedbacks f on f.workspace_id = ri.workspace_id and f.athlete_id = ri.athlete_id and f.id = ri.source_ref
@@ -299,7 +311,8 @@ export async function reviewItem(userId: string, wid: string, rid: string): Prom
       [wid, rid],
     );
     const x = r.rows[0];
-    return x ? { id: x.id, state: x.state, athleteId: x.athlete_id, athleteName: x.display_name, workoutId: x.workout_id } : null;
+    return x ? { id: x.id, state: x.state, athleteId: x.athlete_id, athleteName: x.display_name, workoutId: x.workout_id,
+      snoozedUntil: x.state === 'snoozed' && x.due_at && x.due_at.getTime() > Date.now() ? x.due_at.toISOString() : null } : null;
   });
 }
 

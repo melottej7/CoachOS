@@ -1148,3 +1148,8 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 /* D-081 : part du budget IA du mois. */
 .ai-meter { height: 8px; border-radius: 999px; background: var(--rule); overflow: hidden; }
 .ai-meter > span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+
+/* D-082 : file des retours, filtre et report. */
+.review-filter { margin-bottom: 14px; }
+.review-filter .form-row { align-items: end; }
+.review-snooze { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
