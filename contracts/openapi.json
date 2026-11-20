@@ -17773,7 +17773,8 @@
                       "vma_missing",
                       "message_reply",
                       "onboarding_call",
-                      "bilan_confirm"
+                      "bilan_confirm",
+                      "readiness_talk"
                     ]
                   },
                   "until": {
@@ -17817,7 +17818,8 @@
                         "vma_missing",
                         "message_reply",
                         "onboarding_call",
-                        "bilan_confirm"
+                        "bilan_confirm",
+                        "readiness_talk"
                       ]
                     },
                     "sourceRef": {
@@ -19948,7 +19950,8 @@
                             "vma_missing",
                             "message_reply",
                             "onboarding_call",
-                            "bilan_confirm"
+                            "bilan_confirm",
+                            "readiness_talk"
                           ]
                         },
                         "enabled": {
@@ -20008,7 +20011,8 @@
                               "vma_missing",
                               "message_reply",
                               "onboarding_call",
-                              "bilan_confirm"
+                              "bilan_confirm",
+                              "readiness_talk"
                             ]
                           },
                           "enabled": {
