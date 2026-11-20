@@ -1303,3 +1303,12 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Test serveur : bloc de 3 semaines enregistré depuis Camille, appliqué à Noah 4 semaines plus tard, chaque séance au bon jour ; 13 semaines refusées.
   - Navigateur : le choix « Semaines à garder » s’affiche dans Séances › Semaine (non enregistré, pour ne pas encombrer la démo).
   - `npm test` : **267 passés** (+3 PostgreSQL), typecheck OK.
+
+## D-084 · Données de santé : l’exclusion est maintenue · 2026-11-20
+
+- **Contexte.** La décision sur les données de santé (D11) était en attente depuis le début. La nuit du 19 novembre, le fondateur a proposé de faire signer un « cookie » (une case) disant que les données servent seulement à un usage professionnel. Réponse donnée : une telle case ne suffit pas pour des données de santé (RGPD, art. 9). Il faudrait un consentement explicite, propre à chaque usage et retirable, plus des garanties (accès limité au coach, durée de conservation, effacement) et un avis juridique.
+- **Décision (fondateur, 20 novembre).** « Gardons l’exclusion pour l’instant. »
+  - CoachOS ne recueille aucune donnée de santé : ni douleur, ni blessure, ni antécédent, ni poids, ni aptitude (PAR-Q), ni fréquence cardiaque, ni FC max ou FC seuil.
+  - Les garde-fous restent en place : schémas qui refusent les propriétés inconnues, retour sans champ libre « difficulté » (D-025), import FIT et TCX sans fréquence cardiaque, aucun capteur cardiaque proposé.
+  - Les écarts avec Foulée (douleur, aptitude, bilan de semaine) restent volontaires.
+- **Réexamen.** Sur une nouvelle instruction du fondateur. Ouvrir le jalon santé demandera un écran de consentement dans l’application, avec un consentement par élève et par usage, retirable, ainsi qu’un avis juridique.

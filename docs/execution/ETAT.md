@@ -287,10 +287,10 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
 - Commit `e9cd51a` (D-082). Puis :
   - **D-083** : blocs de 2 à 12 semaines (programmes types) enregistrés depuis un élève, appliqués en brouillons à un autre.
   - `npm test` : **267 passés** (+3 PostgreSQL), typecheck OK.
-- Question du fondateur sur les données de santé (« faire signer un cookie ») : réponse donnée, décision toujours à prendre. Voir « Pour le fondateur ».
+- Question du fondateur sur les données de santé (« faire signer un cookie ») : réponse donnée. Le 20 novembre, le fondateur garde l’exclusion (**D-084**).
 - Prochaines tranches : tout ce qui reste demande le fondateur.
   - Recette, dont l’import avec sa vraie base, l’essai FIT sur la Fenix 8 et l’installation sur téléphone.
-  - Crédit IA ; décision santé ; accès Garmin.
+  - Crédit IA ; accès Garmin.
   - Commercial, après validation du parcours.
   - Possibles sans lui : rappels push (clés et service d’envoi à choisir).
 
@@ -305,7 +305,6 @@ Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au mic
 3. Lot H, puis S, B, E, G2, P ; export FIT (CE-X-01) possible en parallèle.
 
 **Pour le fondateur** :
-- Décision sur les données de santé. Une case « usage professionnel seulement » ne suffit pas : il faut un consentement explicite, par finalité et retirable, plus des garanties (accès, durée, effacement) et un avis juridique.
 - Crédit Anthropic pour l’IA ; le budget mensuel est de 10 $ par espace par défaut.
 - Tes séances à importer et des exemples anonymisés de tes anciens programmes.
 - Accès Garmin reporté (D-026).
