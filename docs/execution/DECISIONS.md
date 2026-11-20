@@ -1511,3 +1511,21 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Cela vaut aussi quand les données de la semaine sont insuffisantes.
   - Aucune cause n’est demandée ; une réponse « Oui » plus récente efface l’alerte.
 - **Preuve.** Test du domaine : fait et question, cas « données insuffisantes », réponse « Oui » plus récente. `npm test` : **286 passés** (+3 PostgreSQL), typecheck OK.
+
+## D-093 · Base de séances : Foulée fait foi ; fractions courtes en Z6 · 2026-11-20
+
+- **Instruction du fondateur.** « La base de séance tu peux prendre chez foulée, il y a déjà tout. » Le tableur demandé n’est plus attendu. La bibliothèque Foulée (324 séances, D-068 et D-077) est déjà dans la démo et dans l’espace du fondateur.
+- **Écart trouvé.** Foulée comptait ses zones à sa façon : Z6 de 95 à 100 % et Z7 de 100 à 110 %. Elle mettait donc en Z7 les 30"/30", 200 m et 300 m. Avec l’échelle fusionnée (D-087), Z7 désigne la vitesse (105 à 120 %). Les programmes du fondateur et le générateur (D-086) font ces fractions en Z6 (VMA).
+- **Décision.**
+  - 23 séances de six familles passent de Z7 à Z6 : `30-30`, `30-30-series`, `200m`, `200m-series`, `300m` et la partie 200 m de `mixte-200-400`.
+  - Z7 reste pour les sprints en côte et les 30" après le seuil.
+  - Pour les séances déjà importées, le bouton devient « 🏃 Mettre à jour Foulée (n) ». Il demande confirmation, puis rejoue l’import.
+    - Seule change une séance dont la structure est encore exactement celle de l’import. Une séance modifiée par le coach reste intacte.
+    - Les programmes déjà donnés aux élèves ne changent pas, car ils sont copiés.
+  - Contrat `addFouleeLibrary` : champ `updated`.
+- **Preuve.**
+  - Test du domaine : aucune Z7 dans les six familles, l’ancienne structure est gardée, les sprints restent en Z7 et l’ordre des clés est sans effet.
+  - Test serveur : 22 séances mises à jour, la séance modifiée par le coach reste intacte.
+  - Navigateur (démo) : « Mettre à jour Foulée (23) », puis 23 séances en Z6 et le bouton disparaît.
+  - Espace du fondateur : non modifié (23 séances en attente de son clic).
+  - `npm test` : **288 passés** (+3 PostgreSQL), typecheck OK.

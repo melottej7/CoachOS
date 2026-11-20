@@ -23509,7 +23509,7 @@
     "/workspaces/{wid}/templates/foulee": {
       "post": {
         "operationId": "addFouleeLibrary",
-        "summary": "Importer la bibliothèque Foulée : 324 séances en 79 familles par paliers, sans doublon (D-068).",
+        "summary": "Importer la bibliothèque Foulée : 324 séances en 79 familles par paliers, sans doublon (D-068). Rejouer met à jour les fractions courtes non modifiées (Z7 → Z6, D-093).",
         "tags": [
           "library"
         ],
@@ -23531,7 +23531,8 @@
                   "additionalProperties": false,
                   "required": [
                     "added",
-                    "skipped"
+                    "skipped",
+                    "updated"
                   ],
                   "properties": {
                     "added": {
@@ -23539,6 +23540,10 @@
                       "minimum": 0
                     },
                     "skipped": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "updated": {
                       "type": "integer",
                       "minimum": 0
                     }

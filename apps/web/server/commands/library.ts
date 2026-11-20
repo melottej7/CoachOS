@@ -101,7 +101,7 @@ export async function addFouleeLibrary(meta: Meta): Promise<StoredResponse> {
       const have = new Set((await tx.query<{ title: string }>(
         `select lower(title) as title from public.templates where workspace_id = $1 and owner_id = auth.uid() and kind = 'workout' and not archived`, [wid],
       )).rows.map((r) => r.title));
-      let added = 0, skipped = 0;
+      let added = 0, skipped = 0, updated = 0;
       for (const s of fouleeLibrary()) {
         if (have.has(s.workout.title.toLowerCase())) {
           // Déjà là : repères complétés (meta) et note interne retirée des consignes d’un import précédent (D-077).
@@ -115,6 +115,16 @@ export async function addFouleeLibrary(meta: Meta): Promise<StoredResponse> {
                and (payload->'meta' is distinct from $3::jsonb or payload->'workout'->>'instructions' like 'Bibliothèque Foulée%')`,
             [wid, s.workout.title, JSON.stringify(s.meta)],
           );
+          // D-093 : fractions courtes de Z7 à Z6, seulement si la structure est encore celle de l’import (le coach n’y a pas touché).
+          if (s.previous) {
+            const r = await tx.query(
+              `update public.templates set payload = jsonb_set(payload, '{workout,intervals}', $4::jsonb), revision = revision + 1
+               where workspace_id = $1 and owner_id = auth.uid() and kind = 'workout' and lower(title) = lower($2) and not archived
+                 and payload->'meta'->>'source' = 'foulee' and payload->'workout'->'intervals' = $3::jsonb`,
+              [wid, s.workout.title, JSON.stringify(s.previous), JSON.stringify(s.workout.intervals)],
+            );
+            updated += r.affectedRows ?? 0;
+          }
           skipped++; continue;
         }
         await insertTemplate(tx, wid, s.category, s.workout, s.meta);
@@ -122,7 +132,7 @@ export async function addFouleeLibrary(meta: Meta): Promise<StoredResponse> {
         added++;
       }
       await audit(tx, wid, meta.actorId, 'template.foulee', wid, meta.requestId);
-      return { status: 200, body: { added, skipped } };
+      return { status: 200, body: { added, skipped, updated } };
     });
   });
 }

@@ -9,6 +9,8 @@ import type { Block } from './structure';
  * L’annexe donne, pour chaque famille, le premier et le dernier palier et leur nombre. Les paliers intermédiaires sont
  * calculés par progression régulière (comme Foulée les avait interpolés depuis les programmes du coach). Le fondateur
  * a validé ces paliers calculés (D-077) ; ils sont marqués dans meta.calculated, jamais dans les consignes de l’élève.
+ * D-093 : les fractions courtes (30"/30", 200 m, 300 m) passent de Z7 à Z6, la zone VMA de l’échelle fusionnée (D-087),
+ * comme dans les programmes du fondateur et le générateur. Z7 reste pour les sprints et les accélérations courtes.
  */
 
 export type FouleeLevel = 'D' | 'I' | 'C';
@@ -23,8 +25,10 @@ interface Family {
   levels: FouleeLevel[];
   phases: FouleePhase[];
   tiers: number;
-  /** Titre et notation du palier k (0 = premier, tiers − 1 = dernier). */
-  at: (k: number, n: number) => [title: string, notation: string];
+  /** Titre et notation du palier k (0 = premier, tiers − 1 = dernier). `vma` : zone des fractions courtes (D-093). */
+  at: (k: number, n: number, vma: string) => [title: string, notation: string];
+  /** Fractions courtes passées de Z7 à Z6 (D-093) : l’ancienne version sert à mettre à jour les imports non modifiés. */
+  vmaShort?: true;
 }
 
 /** Valeur au palier k entre a (premier) et b (dernier), arrondie au pas. */
@@ -68,17 +72,17 @@ const F: Family[] = [
   { id: 'marche-active', category: 'recovery', levels: ['D'], phases: ['reprise'], tiers: 4, at: (k, n) => { const m = lerp(20, 50, k, n, 5); return [`Marche active ${m}'`, `${m}' Z1 « marche active »`]; } },
   // ——— VMA courte ———
   { id: 'intro-20-40', category: 'intervals', levels: ['D'], phases: ['reprise', 'base'], tiers: 4, at: (k, n) => { const r = lerp(6, 12, k, n); return [`Intro fractionné ${r}×20"/40"`, q(`${r}×(20" Z6 + R40")`)]; } },
-  { id: '30-30', category: 'intervals', levels: ALL, phases: ['base', 'developpement'], tiers: 4, at: (k, n) => { const r = lerp(8, 15, k, n); return [`30"/30" · ${r} répétitions`, q(`${r}×(30" Z7 + R30")`)]; } },
-  { id: '30-30-series', category: 'intervals', levels: IC, phases: ['developpement'], tiers: 6, at: (k, n) => { const s = lerp(2, 3, k, n), r = lerp(6, 10, k, n); return [`30"/30" · ${s}×${r}`, q(series(s, `${r}×(30" Z7 + R30")`))]; } },
+  { id: '30-30', category: 'intervals', levels: ALL, phases: ['base', 'developpement'], tiers: 4, vmaShort: true, at: (k, n, v) => { const r = lerp(8, 15, k, n); return [`30"/30" · ${r} répétitions`, q(`${r}×(30" ${v} + R30")`)]; } },
+  { id: '30-30-series', category: 'intervals', levels: IC, phases: ['developpement'], tiers: 6, vmaShort: true, at: (k, n, v) => { const s = lerp(2, 3, k, n), r = lerp(6, 10, k, n); return [`30"/30" · ${s}×${r}`, q(series(s, `${r}×(30" ${v} + R30")`))]; } },
   { id: '45-45', category: 'intervals', levels: IC, phases: ['developpement'], tiers: 4, at: (k) => { const t = [8, 10, 12, 16][k]!; return t > 12 ? [`45"/45" · 2×${t / 2}`, q(series(2, `${t / 2}×(45" Z6 + R45")`))] : [`45"/45" · ${t}`, q(`${t}×(45" Z6 + R45")`)]; } },
-  { id: '200m', category: 'intervals', levels: ALL, phases: ['base', 'developpement'], tiers: 4, at: (k, n) => { const r = lerp(6, 12, k, n); return [`Fractionné ${r}×200 m`, q(`${r}×(200m Z7 + R200m)`)]; } },
-  { id: '200m-series', category: 'intervals', levels: IC, phases: ['developpement'], tiers: 3, at: (k, n) => { const r = lerp(6, 10, k, n); return [`Fractionné 2×${r}×200 m`, q(series(2, `${r}×(200m Z7 + R200m)`))]; } },
-  { id: '300m', category: 'intervals', levels: IC, phases: ['developpement'], tiers: 3, at: (k, n) => { const r = lerp(6, 10, k, n); return [`Fractionné ${r}×300 m`, q(`${r}×(300m Z7 + R200m)`)]; } },
+  { id: '200m', category: 'intervals', levels: ALL, phases: ['base', 'developpement'], tiers: 4, vmaShort: true, at: (k, n, v) => { const r = lerp(6, 12, k, n); return [`Fractionné ${r}×200 m`, q(`${r}×(200m ${v} + R200m)`)]; } },
+  { id: '200m-series', category: 'intervals', levels: IC, phases: ['developpement'], tiers: 3, vmaShort: true, at: (k, n, v) => { const r = lerp(6, 10, k, n); return [`Fractionné 2×${r}×200 m`, q(series(2, `${r}×(200m ${v} + R200m)`))]; } },
+  { id: '300m', category: 'intervals', levels: IC, phases: ['developpement'], tiers: 3, vmaShort: true, at: (k, n, v) => { const r = lerp(6, 10, k, n); return [`Fractionné ${r}×300 m`, q(`${r}×(300m ${v} + R200m)`)]; } },
   { id: '1-1', category: 'intervals', levels: ALL, phases: ['base', 'developpement'], tiers: 5, at: (k, n) => { const r = lerp(6, 15, k, n); return [`Fractionné ${r}×1'/1'`, q(`${r}×(1' Z6 + R1')`)]; } },
   { id: '400m', category: 'intervals', levels: ALL, phases: ['developpement'], tiers: 5, at: (k, n) => { const r = lerp(5, 12, k, n); return [`Fractionné ${r}×400 m`, q(`${r}×(400m Z6 + R1'30)`)]; } },
   { id: '400m-series', category: 'intervals', levels: IC, phases: ['developpement', 'specifique'], tiers: 3, at: (k, n) => { const r = lerp(5, 7, k, n); return [`Fractionné 2×${r}×400 m`, q(series(2, `${r}×(400m Z6 + R1'30)`))]; } },
   { id: '500m', category: 'intervals', levels: IC, phases: ['developpement'], tiers: 3, at: (k, n) => { const r = lerp(5, 8, k, n); return [`Fractionné ${r}×500 m`, q(`${r}×(500m Z6 + R1'30)`)]; } },
-  { id: 'mixte-200-400', category: 'intervals', levels: ALL, phases: ['developpement'], tiers: 3, at: (k, n) => { const r = lerp(4, 6, k, n); return [`Mixte ${r}×200 m + ${r}×400 m`, q(`${r}×(200m Z7 + R200m) + 3' Z1 + ${r}×(400m Z6 + R1'30)`)]; } },
+  { id: 'mixte-200-400', category: 'intervals', levels: ALL, phases: ['developpement'], tiers: 3, vmaShort: true, at: (k, n, v) => { const r = lerp(4, 6, k, n); return [`Mixte ${r}×200 m + ${r}×400 m`, q(`${r}×(200m ${v} + R200m) + 3' Z1 + ${r}×(400m Z6 + R1'30)`)]; } },
   // ——— VMA longue ———
   { id: '2min', category: 'intervals', levels: IC, phases: ['developpement'], tiers: 6, at: (k) => { const t = [5, 6, 7, 8, 10, 12][k]!; return t > 8 ? [`VMA moyenne 2×${Math.ceil(t / 2)}×2'`, q(series(2, `${Math.ceil(t / 2)}×(2' Z6 + R1'30)`))] : [`VMA moyenne ${t}×2'`, q(`${t}×(2' Z6 + R1'30)`)]; } },
   { id: '600m', category: 'intervals', levels: IC, phases: ['developpement'], tiers: 3, at: (k, n) => { const r = lerp(5, 8, k, n); return [`Fractionné ${r}×600 m`, q(`${r}×(600m Z5 + R2')`)]; } },
@@ -139,21 +143,27 @@ export interface FouleeMeta {
   /** Palier calculé par CoachOS entre le premier et le dernier de la famille (validé par le fondateur, D-077). */
   calculated?: boolean;
 }
-export interface FouleeSession { family: string; tier: number; tiers: number; interpolated: boolean; category: LibraryCategory; workout: LibraryWorkout; errors: number; meta: FouleeMeta }
+export interface FouleeSession {
+  family: string; tier: number; tiers: number; interpolated: boolean; category: LibraryCategory; workout: LibraryWorkout; errors: number; meta: FouleeMeta;
+  /** Structure importée avant D-093 (fractions courtes en Z7) : remplacée seulement si le coach n’y a pas touché. */
+  previous?: Block[];
+}
 
 /** Les 324 séances, famille par famille, du palier le plus léger au plus chargé. */
 export function fouleeLibrary(): FouleeSession[] {
   const out: FouleeSession[] = [];
   for (const f of F) {
     for (let k = 0; k < f.tiers; k++) {
-      const [title, notation] = f.at(k, f.tiers);
+      const [title, notation] = f.at(k, f.tiers, 'Z6');
       const parsed = parseNotation(notation, 'running');
+      const previous = f.vmaShort ? (parseNotation(f.at(k, f.tiers, 'Z7')[1], 'running').blocks as Block[]) : undefined;
       const interpolated = k > 0 && k < f.tiers - 1;
       out.push({
         family: f.id, tier: k + 1, tiers: f.tiers, interpolated, category: f.category, errors: parsed.errors.length,
         meta: { source: 'foulee', family: f.id, tier: k + 1, tiers: f.tiers, levels: f.levels, phases: f.phases, calculated: interpolated },
         // Pas de consignes : l’élève lit les consignes d’une séance publiée ; les repères Foulée restent dans meta (D-077).
         workout: { sport: 'running', title, instructions: null, durationSeconds: null, distanceM: null, intervals: parsed.blocks as Block[] } as LibraryWorkout,
+        ...(previous ? { previous } : {}),
       });
     }
   }
@@ -169,3 +179,14 @@ export const FOULEE_PHASES_OF: Record<'tremplin' | 'developpement' | 'recuperati
   tremplin: ['reprise', 'base'], developpement: ['base', 'developpement', 'specifique'], recuperation: ['base', 'developpement'], affutage: ['affutage', 'specifique'],
 };
 
+
+/** Écriture stable d’une structure (clés triées) : la base ne garde pas l’ordre des clés. */
+const stable = (v: unknown): string => (Array.isArray(v) ? `[${v.map(stable).join(',')}]`
+  : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${stable((v as Record<string, unknown>)[k])}`).join(',')}}`
+  : JSON.stringify(v ?? null));
+
+/** D-093 : séances Foulée importées avant le passage des fractions courtes en Z6, et que le coach n’a pas modifiées. */
+export function fouleeOutdated(items: { title: string; intervals: unknown }[]): number {
+  const before = new Map(fouleeLibrary().filter((s) => s.previous).map((s) => [s.workout.title.toLowerCase(), stable(s.previous)]));
+  return items.filter((i) => before.get(i.title.toLowerCase()) === stable(i.intervals)).length;
+}

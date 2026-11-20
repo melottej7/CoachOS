@@ -10,6 +10,7 @@ import { createTeam, setTeamMember } from './commands/portfolio';
 import { publishWorkouts } from './commands/workouts';
 import { saveFeedback } from './commands/feedback';
 import { addFouleeLibrary } from './commands/library';
+import { fouleeLibrary, fouleeOutdated } from '@coachos/domain';
 import {
   flushNotificationEmails, listNotifications, markAllNotificationsRead, markNotificationRead, resolveNotification, saveNotificationSettings, unreadNotificationCount,
 } from './commands/notifications';
@@ -108,7 +109,7 @@ describe('bibliothèque Foulée (D-068)', () => {
   it('324 séances ajoutées une fois ; rejouer n’ajoute rien ; réservé au coach', async () => {
     const r = await addFouleeLibrary(meta(USERS.marine));
     expect(r.body).toMatchObject({ added: 324 });
-    expect((await addFouleeLibrary(meta(USERS.marine))).body).toEqual({ added: 0, skipped: 324 });
+    expect((await addFouleeLibrary(meta(USERS.marine))).body).toEqual({ added: 0, skipped: 324, updated: 0 });
     let lib = await listLibrary(USERS.marine, WORKSPACE_A);
     const foulee = lib.filter((i) => i.meta?.source === 'foulee');
     expect(foulee).toHaveLength(324);
@@ -121,5 +122,25 @@ describe('bibliothèque Foulée (D-068)', () => {
     await addFouleeLibrary(meta(USERS.marine));
     lib = await listLibrary(USERS.marine, WORKSPACE_A);
     expect(lib.find((i) => i.id === old.id)).toMatchObject({ meta: { source: 'foulee' }, workout: { instructions: null } });
+  });
+
+  it('D-093 : rejouer passe en Z6 les fractions courtes importées en Z7, sauf celles modifiées par le coach', async () => {
+    await addFouleeLibrary(meta(USERS.marine));
+    const prev = fouleeLibrary().filter((s) => s.previous);
+    const [kept, ...rest] = prev;
+    // Import antérieur : structure en Z7 ; le coach a modifié une séance (une répétition de plus).
+    for (const s of rest) {
+      await systemTx((tx) => tx.query(`update public.templates set payload = jsonb_set(payload, '{workout,intervals}', $3::jsonb) where workspace_id = $1 and title = $2`, [WORKSPACE_A, s.workout.title, JSON.stringify(s.previous)]));
+    }
+    const edited = structuredClone(kept!.previous!) as Array<{ times?: number }>;
+    edited[1]!.times = (edited[1]!.times ?? 1) + 1;
+    await systemTx((tx) => tx.query(`update public.templates set payload = jsonb_set(payload, '{workout,intervals}', $3::jsonb) where workspace_id = $1 and title = $2`, [WORKSPACE_A, kept!.workout.title, JSON.stringify(edited)]));
+    let lib = await listLibrary(USERS.marine, WORKSPACE_A);
+    const mine = () => lib.filter((i) => i.meta?.source === 'foulee').map((i) => ({ title: i.workout.title, intervals: i.workout.intervals }));
+    expect(fouleeOutdated(mine())).toBe(22);
+    expect((await addFouleeLibrary(meta(USERS.marine))).body).toEqual({ added: 0, skipped: 324, updated: 22 });
+    lib = await listLibrary(USERS.marine, WORKSPACE_A);
+    expect(fouleeOutdated(mine())).toBe(0);
+    expect(JSON.stringify(lib.find((i) => i.workout.title === kept!.workout.title)!.workout.intervals)).toContain('"zone":7'); // modifiée : intacte
   });
 });

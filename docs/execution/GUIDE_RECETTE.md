@@ -317,3 +317,10 @@ Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et
 2. Sous le nom du programme, **Consignes générales** reprend ton objectif et tes règles importantes : relis-les et corrige-les si besoin.
 3. Enregistre. Dans Semaines types, ouvre **Consignes du programme**.
 4. Applique le programme à un élève : la première séance (en brouillon) commence par « Consignes du programme ».
+
+## Bibliothèque Foulée : fractions courtes en Z6 (D-093)
+
+1. Ouvre Séances › Bibliothèque. Le bouton « 🏃 Mettre à jour Foulée (23) » est affiché.
+2. Clique dessus, lis la question, puis confirme. Le bouton disparaît.
+3. Cherche « 30"/30" » ou « 200 m » : les fractions sont en Z6 (VMA). Les sprints en côte restent en Z7.
+4. Une séance que tu avais modifiée toi-même n’a pas changé. Les programmes déjà donnés à tes élèves non plus.

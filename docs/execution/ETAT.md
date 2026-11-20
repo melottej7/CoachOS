@@ -300,6 +300,7 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
   - **D-090** : test 5 km : l’élève saisit son chrono ; le coach voit la VMA estimée et décide (résultat de référence, nouvelle VMA). Non vérifié dans le navigateur (pas de séance « Test 5 km » dans la démo).
   - **D-091** : consignes générales d’un programme importé, gardées et ajoutées à la première séance appliquée.
   - **D-092** : le résumé de la semaine signale d’abord un élève qui n’est pas à 100 %. `npm test` : **286 passés**.
+  - **D-093** : base de séances = Foulée (instruction du fondateur). Fractions courtes Foulée (30"/30", 200 m, 300 m) en Z6 ; bouton « Mettre à jour Foulée » pour les séances déjà importées et non modifiées. Démo mise à jour ; espace du fondateur en attente de son clic. `npm test` : **288 passés**.
   - Migrations appliquées en local : `20261120100000`, `20261120110000`, `20261120120000`. `npm test` : **285 passés** (+3 PostgreSQL), typecheck OK.
 - Prochaines tranches : tout ce qui reste demande le fondateur.
   - Recette, dont l’import avec sa vraie base, l’essai FIT sur la Fenix 8 et l’installation sur téléphone.
@@ -319,5 +320,5 @@ Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au mic
 
 **Pour le fondateur** :
 - Crédit Anthropic pour l’IA ; le budget mensuel est de 10 $ par espace par défaut.
-- Tes séances à importer (tableur). Tes programmes sont reçus et lus (D-085).
+- Base de séances : celle de Foulée fait foi (D-093), plus de tableur attendu. Dans Bibliothèque, clique « 🏃 Mettre à jour Foulée (23) » pour passer tes fractions courtes en Z6. Tes programmes sont reçus et lus (D-085).
 - Accès Garmin reporté (D-026).

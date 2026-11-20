@@ -114,18 +114,23 @@ export function StarterButton({ wid }: { wid: string }) {
 }
 
 /** D-068 : importer la bibliothèque Foulée (324 séances en 79 familles, par paliers). Rien n’est doublé. */
-export function FouleeButton({ wid }: { wid: string }) {
+export function FouleeButton({ wid, outdated = 0 }: { wid: string; outdated?: number }) {
   const router = useRouter();
   const [state, setState] = useState<'idle' | 'busy' | string>('idle');
+  const ask = outdated
+    ? `Mettre à jour ${outdated} séance${outdated > 1 ? 's' : ''} Foulée de fractionné court (30"/30", 200 m, 300 m) : la zone passe de Z7 (vitesse) à Z6 (VMA), comme dans tes programmes ? Seules les séances que tu n’as pas modifiées changent ; les programmes déjà donnés aux élèves ne bougent pas.`
+    : 'Importer la bibliothèque Foulée (324 séances de course en 79 familles, par paliers) dans ta bibliothèque ? Les séances déjà présentes ne sont pas doublées.';
   return (
     <span className="actions">
       <button type="button" className="btn" disabled={state === 'busy'} onClick={async () => {
-        if (!window.confirm('Importer la bibliothèque Foulée (324 séances de course en 79 familles, par paliers) dans ta bibliothèque ? Les séances déjà présentes ne sont pas doublées.')) return;
+        if (!window.confirm(ask)) return;
         setState('busy');
-        const r = await mutate<{ added: number; skipped: number }>('POST', `/api/v1/workspaces/${wid}/templates/foulee`, {}, newKey());
-        setState(r.ok ? `${r.data.added} séance${r.data.added > 1 ? 's' : ''} ajoutée${r.data.added > 1 ? 's' : ''}${r.data.skipped ? `, ${r.data.skipped} déjà là` : ''}.` : 'Import impossible. Réessaie.');
+        const r = await mutate<{ added: number; skipped: number; updated: number }>('POST', `/api/v1/workspaces/${wid}/templates/foulee`, {}, newKey());
+        const s = (n: number) => (n > 1 ? 's' : '');
+        setState(!r.ok ? 'Import impossible. Réessaie.'
+          : [r.data.added ? `${r.data.added} séance${s(r.data.added)} ajoutée${s(r.data.added)}` : '', r.data.updated ? `${r.data.updated} mise${s(r.data.updated)} à jour` : '', r.data.skipped && !r.data.updated ? `${r.data.skipped} déjà là` : ''].filter(Boolean).join(', ') + '.');
         router.refresh();
-      }}>{state === 'busy' ? 'Import…' : '🏃 Importer la bibliothèque Foulée'}</button>
+      }}>{state === 'busy' ? 'Import…' : outdated ? `🏃 Mettre à jour Foulée (${outdated})` : '🏃 Importer la bibliothèque Foulée'}</button>
       {state !== 'idle' && state !== 'busy' ? <span className="muted" role="status">{state}</span> : null}
     </span>
   );

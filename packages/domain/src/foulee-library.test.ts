@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FOULEE_FAMILY_COUNT, fouleeLibrary, structureTotals } from './index';
+import { FOULEE_FAMILY_COUNT, fouleeLibrary, fouleeOutdated, structureTotals } from './index';
 
 // D-068 : bibliothèque Foulée, annexe F du dossier de transmission (79 familles, 324 séances).
 
@@ -44,5 +44,23 @@ describe('bibliothèque Foulée (D-068)', () => {
     expect(fam('400m')[0]!.category).toBe('intervals');
     expect(fam('sortie-longue')[0]!.category).toBe('long');
     expect(fam('allure-temps')[0]!.category).toBe('race'); // jamais prise pour l’allure de course du générateur
+  });
+  it('D-093 : fractions courtes en Z6 (VMA), sprints en Z7 ; ancienne structure gardée pour la mise à jour', () => {
+    const zones = (s: { workout: { intervals: unknown } }) => [...JSON.stringify(s.workout.intervals).matchAll(/"zone":(\d)/g)].map((m) => Number(m[1]));
+    for (const id of ['30-30', '30-30-series', '200m', '200m-series', '300m', 'mixte-200-400']) {
+      for (const s of fam(id)) {
+        expect(zones(s)).not.toContain(7);
+        expect(JSON.stringify(s.previous)).toContain('"zone":7');
+      }
+    }
+    expect(zones(fam('sprints-cote')[0]!)).toContain(7);
+    expect(fam('400m')[0]!.previous).toBeUndefined();
+    const lib = fouleeLibrary();
+    expect(lib.filter((s) => s.previous)).toHaveLength(23);
+    // Compté seulement si la structure est encore celle de l’import, quel que soit l’ordre des clés.
+    const old = lib.find((s) => s.previous)!;
+    const reordered = JSON.parse(JSON.stringify(old.previous), (_k, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).reverse()) : v));
+    expect(fouleeOutdated([{ title: old.workout.title, intervals: reordered }])).toBe(1);
+    expect(fouleeOutdated([{ title: old.workout.title, intervals: old.workout.intervals }])).toBe(0);
   });
 });

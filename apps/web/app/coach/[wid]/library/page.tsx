@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { listBlockTemplates, listLibrary, listWeekTemplates } from '@/server/repo/library';
-import { describeBlock, SPORT_LABELS } from '@coachos/domain';
+import { describeBlock, fouleeOutdated, SPORT_LABELS } from '@coachos/domain';
 import { ActionButton } from '@/components/portfolio-forms';
 import { WeekTemplateList } from '@/components/week-template-list';
 import { portfolio } from '@/server/repo/portfolio';
@@ -23,6 +23,8 @@ export default async function Library({ params, searchParams }: { params: Promis
   const weeks = await listWeekTemplates(actor.userId, wid);
   const myBlocks = await listBlockTemplates(actor.userId, wid);
   const athletes = p.roster.map((a) => ({ id: a.id, name: a.name, timeZone: a.timeZone }));
+  // D-093 : fractions courtes Foulée encore en Z7 (import antérieur, non modifiées par le coach).
+  const outdated = fouleeOutdated(items.filter((i) => i.meta?.source === 'foulee').map((i) => ({ title: i.workout.title, intervals: i.workout.intervals })));
   return (
     <>
       <div className="head">
@@ -30,7 +32,7 @@ export default async function Library({ params, searchParams }: { params: Promis
           <p className="sub">Tes séances prêtes à l’emploi : crée-les une fois, utilise-les pour n’importe quel élève.</p></div>
         <span className="actions">
           {!items.length ? <StarterButton wid={wid} /> : null}
-          {items.filter((i) => i.meta?.source === 'foulee').length < 324 ? <FouleeButton wid={wid} /> : null}
+          {items.filter((i) => i.meta?.source === 'foulee').length < 324 || outdated ? <FouleeButton wid={wid} outdated={outdated} /> : null}
           <Link className="btn" href={`/coach/${wid}/library/import`}>Importer mes séances</Link>
           <Link className="btn" href={`/coach/${wid}/library/import?mode=programme`}>Importer un programme</Link>
           <Link className="btn primary" href={`/coach/${wid}/library/new`}>+ Nouvelle séance</Link>
