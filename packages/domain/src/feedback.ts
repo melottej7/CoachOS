@@ -92,6 +92,8 @@ export const saveFeedbackSchema = z
       }),
     overallFeeling: z.number().int().min(1).max(5).nullish().transform((v) => v ?? null),
     readiness: z.enum(READINESS).nullish().transform((v) => v ?? null),
+    /** D-090 : chrono d’un test (« Test 5 km »), en secondes. */
+    testSeconds: z.number().int().min(60, { message: 'Chrono trop court' }).max(86400).nullish().transform((v) => v ?? null),
     difficulties: z.array(z.enum(DIFFICULTIES)).max(7).default([]).transform((a) => [...new Set(a)]),
     changes: z.array(z.enum(CHANGES)).max(7).default([]).transform((a) => [...new Set(a)]),
     actualSport: z.enum(SPORTS).nullish().transform((v) => v ?? null),
@@ -113,6 +115,9 @@ export const saveFeedbackSchema = z
     }
     if ((value.state === 'missed' || value.state === 'postponed') && (value.changes.length || value.actualSport !== null || value.repeatsDone.length)) {
       ctx.addIssue({ code: 'custom', path: ['changes'], message: 'Une séance non réalisée ou reportée ne décrit pas ce qui a changé' });
+    }
+    if ((value.state === 'missed' || value.state === 'postponed') && value.testSeconds !== null) {
+      ctx.addIssue({ code: 'custom', path: ['testSeconds'], message: 'Une séance non réalisée ou reportée n’a pas de chrono' });
     }
     if ((value.state === 'missed' || value.state === 'postponed') && value.activities.length) {
       ctx.addIssue({ code: 'custom', path: ['activities'], message: 'Une séance non réalisée ou reportée ne porte pas d’activité' });

@@ -563,6 +563,19 @@
               }
             ],
             "description": "D-088 : « Peux-tu faire tes séances à 100 % en ce moment ? » Oui, pas tout à fait, non ; aucune cause demandée."
+          },
+          "testSeconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 60,
+                "maximum": 86400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "D-090 : chrono d’un test (« Test 5 km »), en secondes."
           }
         }
       },
@@ -7703,6 +7716,19 @@
                       }
                     ],
                     "description": "D-088 : « Peux-tu faire tes séances à 100 % en ce moment ? » Oui, pas tout à fait, non ; aucune cause demandée."
+                  },
+                  "testSeconds": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 60,
+                        "maximum": 86400
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "D-090 : chrono d’un test (« Test 5 km »), en secondes."
                   }
                 }
               }

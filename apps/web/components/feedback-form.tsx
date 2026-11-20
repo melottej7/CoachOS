@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import {
-  activityTotals, CHANGES, CHANGE_LABELS, describeBlock, DIFFICULTIES, DIFFICULTY_LABELS, FEELING_LABELS, READINESS, READINESS_LABELS, READINESS_QUESTION, type Readiness, RESULT_STATES, RESULT_STATE_LABELS, SPORTS, SPORT_LABELS,
+  activityTotals, CHANGES, formatDuration2, parseDuration, testDistanceOf, CHANGE_LABELS, describeBlock, DIFFICULTIES, DIFFICULTY_LABELS, FEELING_LABELS, READINESS, READINESS_LABELS, READINESS_QUESTION, type Readiness, RESULT_STATES, RESULT_STATE_LABELS, SPORTS, SPORT_LABELS,
   type Block, type Change, type Difficulty, type FeedbackActivity, type ResultState, type Sport,
 } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
@@ -19,6 +19,8 @@ interface Props {
   workspaceName: string;
   /** Déroulé prévu : sert à demander les répétitions faites par série. */
   intervals: Block[];
+  /** Titre de la séance : « Test 5 km » demande le chrono (D-090). */
+  title?: string;
   sport: Sport;
   /** Date prévue et fuseau de l’élève : vérifier qu’une activité importée est la bonne (D-048). */
   plannedDate: string;
@@ -28,6 +30,7 @@ interface Props {
     overallFeeling: number | null; readiness?: Readiness | null; difficulties: Difficulty[]; changes: Change[]; actualSport: Sport | null; repeatsDone: number[];
     measureFile: 'fit' | 'tcx' | 'gpx' | null;
     activities: FeedbackActivity[];
+    testSeconds?: number | null;
   } | null;
 }
 
@@ -35,7 +38,7 @@ interface Props {
  * X43 : retour en quelques gestes, à une main. Seul l’état est requis.
  * La saisie reste en mémoire si le réseau coupe ; « Réessayer » rejoue avec la même clé.
  */
-export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes, workspaceName, intervals, sport, plannedDate, timeZone, existing }: Props) {
+export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes, workspaceName, intervals, title, sport, plannedDate, timeZone, existing }: Props) {
   const router = useRouter();
   const [state, setState] = useState<ResultState | ''>(existing?.state ?? '');
   const [minutes, setMinutes] = useState(existing?.durationSeconds ? String(Math.round(existing.durationSeconds / 60)) : '');
@@ -43,6 +46,10 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
   const [comment, setComment] = useState(existing?.comment ?? '');
   const [feeling, setFeeling] = useState<number | null>(existing?.overallFeeling ?? null);
   const [readiness, setReadiness] = useState<Readiness | null>(existing?.readiness ?? null);
+  // D-090 : chrono d’un test (« Test 5 km »).
+  const testMeters = title ? testDistanceOf(title, intervals) : null;
+  const [testText, setTestText] = useState(existing?.testSeconds ? formatDuration2(existing.testSeconds) : '');
+  const testSeconds = testText.trim() ? parseDuration(testText) : null;
   const [difficulties, setDifficulties] = useState<Difficulty[]>(existing?.difficulties ?? []);
   const [km, setKm] = useState(existing?.distanceM ? String(existing.distanceM / 1000).replace('.', ',') : '');
   const [changes, setChanges] = useState<Change[]>(existing?.changes ?? []);
@@ -93,6 +100,7 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
       comment,
       overallFeeling: feeling,
       readiness,
+      testSeconds: done && testMeters && testSeconds ? testSeconds : null,
       difficulties,
       changes: done ? changes : [],
       actualSport: done && changes.includes('other_sport') && actualSport ? actualSport : null,
@@ -133,6 +141,15 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
 
       {state === 'completed' || state === 'partial' ? (
         <>
+          {testMeters ? (
+            <div className="field">
+              <label htmlFor="test-time">Ton chrono sur le {testMeters >= 1000 ? `${String(testMeters / 1000).replace('.', ',')} km` : `${testMeters} m`} <span className="hint">Le temps du test seul, sans échauffement (ex. 27:45)</span></label>
+              <input id="test-time" className="num" inputMode="text" placeholder="27:45" value={testText} onChange={(e) => setTestText(e.target.value)}
+                aria-invalid={Boolean(testText.trim() && !testSeconds)} />
+              {testText.trim() && !testSeconds ? <span className="field-error">Écris le temps ainsi : 27:45 ou 1:02:30</span> : null}
+              {err('testSeconds') ? <span className="field-error">{err('testSeconds')}</span> : null}
+            </div>
+          ) : null}
           <ActivityImport plannedDate={plannedDate} plannedSport={sport} timeZone={timeZone} items={activities} onChange={changeActivities} />
           {err('activities') ? <span className="field-error">{err('activities')}</span> : null}
           <div className="form-row">

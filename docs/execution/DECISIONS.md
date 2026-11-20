@@ -1465,3 +1465,24 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
 - **Preuve.**
   - Test serveur : un message du coach envoyé avant la réponse ne clôt pas le suivi ; le suivi apparaît en urgent avec « Non » ; le repère s’affiche dans Élèves ; un message après la réponse le clôt.
   - `npm test` : **283 passés** (+3 PostgreSQL), typecheck OK.
+
+## D-090 · Test 5 km : chrono de l’élève, VMA proposée au coach · 2026-11-20
+
+- **Contexte.**
+  - La méthode du fondateur (D-086) place un test 5 km en semaine 3 « pour caler les allures ».
+  - Jusqu’ici, le résultat restait dans le retour : le coach devait recalculer la VMA à la main.
+  - Le fondateur a dit « continue sans moi ».
+- **Décision.**
+  - **Élève :** dans le retour d’une séance dont le titre commence par « Test » et qui contient une seule étape d’effort en distance (de 1 à 21,1 km), un champ facultatif « Ton chrono sur le 5 km » s’ajoute (le temps du test seul, par exemple 27:45).
+  - **Coach :** dans le retour, la carte « Résultat du test » affiche le chrono, l’allure et une VMA estimée. Le calcul tient compte de la durée : on tient environ 95 % de sa VMA sur 15 min, 90 % sur 30 min et 85 % au-delà. La VMA actuelle est affichée à côté.
+    - Deux gestes explicites, le coach décide : « Ajouter aux résultats de référence » (faisabilité, équivalences, D-060) et « Mettre la VMA à x km/h » (zones et allures, D-087).
+    - Rien n’est changé sans son clic.
+  - **Migration additive** `20261120120000` : `feedbacks.test_seconds`, appliquée en local. Le contrat (`feedback`) est mis à jour.
+- **Preuve.**
+  - Tests du domaine :
+    - distance du test reconnue (pas dans une répétition ni hors d’une séance « Test ») ;
+    - 25:00 au 5 km → VMA 13,1 ; 20:00 → 16,1 ;
+    - la séance « Test 5 km » générée est reconnue.
+  - Test serveur : le chrono est enregistré, puis lu par le coach ; il est refusé pour une séance non réalisée.
+  - `npm test` : **285 passés** (+3 PostgreSQL), typecheck OK.
+- **Non vérifié dans le navigateur.** La démo n’a pas de séance « Test 5 km » publiée, et je n’en ai pas créé pour ne pas modifier la démo.

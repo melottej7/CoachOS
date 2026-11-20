@@ -304,3 +304,9 @@ Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et
 2. Côté coach, ouvre **Retours** : ce retour est en tête de la file, avec un repère « Pas tout à fait à 100 % ». Le filtre **Seulement › Pas à 100 %** le retrouve.
 3. Ouvre le retour : la réponse est affichée, avec la suggestion d’en parler avec l’élève.
 4. Corrige le retour côté élève en **Oui** : il reprend sa place normale dans la file.
+
+## Test 5 km : chrono et VMA (D-090)
+
+1. Publie à un élève une séance appelée « Test 5 km » (générée par le programme en S3, ou écrite à la main : `10' Z1 + 5km + 5' Z1`).
+2. Côté élève, envoie le retour « Réalisée » : le champ **Ton chrono sur le 5 km** apparaît ; écris par exemple 25:00.
+3. Côté coach, ouvre le retour : la carte **Résultat du test** affiche le chrono, l’allure et la VMA estimée, avec deux boutons : l’ajouter aux résultats de référence, ou mettre la VMA à jour.

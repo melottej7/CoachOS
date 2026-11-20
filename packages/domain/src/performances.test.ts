@@ -52,3 +52,22 @@ describe('résultats de référence', () => {
     expect(assessGoal(mid.input).facts.eventMin).toBeCloseTo(3000 / 60);
   });
 });
+
+// D-090 : test 5 km du générateur (D-086) : distance reconnue, VMA estimée d’après la durée.
+describe('test 5 km → VMA (D-090)', () => {
+  it('distance du test reconnue seulement dans une séance « Test … » ; VMA selon la durée', async () => {
+    const { generateProgram, testDistanceOf, vmaFromRace, parseNotation } = await import('./index');
+    const blocks = parseNotation("10' Z1 + 5km + 5' Z1", 'running').blocks;
+    expect(testDistanceOf('Test 5 km', blocks)).toBe(5000);
+    expect(testDistanceOf('Footing', blocks)).toBeNull();
+    expect(testDistanceOf('Test 5 km', parseNotation("10' Z1 + 2×(1km Z5 + R2')", 'running').blocks)).toBeNull();
+    // 25:00 sur 5 km = 12 km/h tenus ≈ 91,7 % → VMA ≈ 13,1 ; 20:00 = 15 km/h ≈ 93,4 % → 16,1.
+    expect(vmaFromRace(5000, 25 * 60)).toBe(13.1);
+    expect(vmaFromRace(5000, 20 * 60)).toBe(16.1);
+    expect(vmaFromRace(800, 180)).toBeNull();
+    // La séance générée par le programme est reconnue.
+    const p = generateProgram({ feasibility: { sport: 'running', distanceKm: 10, eventDate: '2027-01-17', targetSeconds: null, level: 'beginner', practiceStatus: 'regular', longestRecent: '30to45', weeklySessions: '2to3', weeklyHours: null, today: '2026-11-08' }, startMonday: '2026-11-09', days: [2, 4, 7], currentWeeklyMin: 105, goalTitle: '10 km' });
+    const t = p.weeks.flatMap((w) => w.sessions).find((s) => s.title === 'Test 5 km')!;
+    expect(testDistanceOf(t.title, t.blocks)).toBe(5000);
+  });
+});

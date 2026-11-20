@@ -6,7 +6,7 @@ import { ATHLETES, USERS, WORKSPACE_A } from './db/fixtures';
 import { SEED_WORKOUTS } from './db/seed';
 import { AppError } from './errors';
 import { saveFeedback, updateReview } from './commands/feedback';
-import { openReviewCount, openReviews } from './repo/coach';
+import { coachWorkout, openReviewCount, openReviews } from './repo/coach';
 import { home, portfolio } from './repo/portfolio';
 import { openConversation, sendMessage } from './commands/messages';
 import { TIME_ZONE } from './db/fixtures';
@@ -99,5 +99,14 @@ describe('file des retours (D-082)', () => {
     await sendMessage({ actorId: USERS.marine, idempotencyKey: randomUUID(), requestId: randomUUID(), workspaceId: WORKSPACE_A, conversationId: cid.id } as never, { body: 'On en parle ce soir ?' });
     h = await home(USERS.marine, WORKSPACE_A, TIME_ZONE, monday);
     expect(h.tasks.some((x) => x.rule === 'readiness_talk' && x.athlete?.id === ATHLETES.camille)).toBe(false);
+  });
+
+  // D-090 : chrono d’un test saisi par l’élève, lu par le coach ; refusé pour une séance non réalisée.
+  it('chrono du test enregistré avec le retour et lu par le coach', async () => {
+    const r = await saveFeedback(fbMeta(SEED_WORKOUTS.camilleToday), { publishedRevision: 1, expectedRevision: 5, state: 'completed', testSeconds: 1500 });
+    expect(r.body).toMatchObject({ item: { testSeconds: 1500 } });
+    const w = await coachWorkout(USERS.marine, WORKSPACE_A, ATHLETES.camille, SEED_WORKOUTS.camilleToday);
+    expect(w?.feedback?.testSeconds).toBe(1500);
+    expect(await codeOf(saveFeedback(fbMeta(SEED_WORKOUTS.camilleToday), { publishedRevision: 1, expectedRevision: 6, state: 'missed', testSeconds: 1500 }))).toBe('INVALID_FIELDS');
   });
 });

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { matchesReviewFilter, parseReviewFilter, reviewFilterQuery, snoozeChoices, todayIn, CHANGE_LABELS, describeBlock, DIFFICULTY_LABELS, FEELING_LABELS, READINESS_LABELS, READINESS_QUESTION, readinessAlert, formatDistance, formatPace, formatDuration, formatLongDate, formatShortDate, weekStart, RESULT_STATE_LABELS, SPORT_LABELS } from '@coachos/domain';
+import { matchesReviewFilter, parseReviewFilter, reviewFilterQuery, snoozeChoices, todayIn, CHANGE_LABELS, describeBlock, DIFFICULTY_LABELS, FEELING_LABELS, READINESS_LABELS, READINESS_QUESTION, readinessAlert, formatDistance, formatPace, formatDuration, formatLongDate, formatShortDate, weekStart, RESULT_STATE_LABELS, SPORT_LABELS, testDistanceOf, vmaFromRace, formatDuration2 } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachWorkout, openReviews, reviewItem, revisionByNumber } from '@/server/repo/coach';
 import { MarkReviewedButton } from '@/components/review-button';
@@ -10,6 +10,7 @@ import { Notice, Pill } from '@/components/ui';
 import { StructureView } from '@/components/structure-view';
 import { QuickReply } from '@/components/messaging';
 import { readAthleteReferences } from '@/server/commands/athlete-references';
+import { TestResultActions } from '@/components/test-result';
 
 
 export const metadata = { title: 'Retour' };
@@ -54,6 +55,10 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
   const tz = ctx?.workspace.timeZone ?? w.athlete.timeZone;
   const snoozeAfter = from === 'calendar' ? calendarHref : `${base}/review${keep('notice=snoozed')}`;
   const done = fb.reviewedAt !== null;
+  // D-090 : résultat d’un test (« Test 5 km »).
+  const testMeters = observed ? testDistanceOf(observed.title, observed.intervals) : null;
+  const test = testMeters && fb.testSeconds && (fb.state === 'completed' || fb.state === 'partial')
+    ? { meters: testMeters, seconds: fb.testSeconds, vma: observed && (observed.sport === 'running' || observed.sport === 'trail') ? vmaFromRace(testMeters, fb.testSeconds) : null } : null;
 
   return (
     <>
@@ -69,6 +74,19 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
           </p>
         </div>
       </div>
+
+      {test && observed ? (
+        <section className="card" aria-labelledby="test-title">
+          <div className="card-head"><h2 id="test-title">Résultat du test</h2><span className="muted">Saisi par {first}</span></div>
+          <div className="card-body stack">
+            <p><strong>{formatDuration2(test.seconds)}</strong> sur {formatDistance(test.meters)} · {formatPace(Math.round(test.seconds / (test.meters / 1000)))}
+              {test.vma ? <> · VMA estimée <strong>{String(test.vma).replace('.', ',')} km/h</strong>{refs?.vmaKmh ? <span className="muted"> (actuelle : {String(refs.vmaKmh).replace('.', ',')} km/h)</span> : <span className="muted"> (aucune VMA renseignée)</span>}</> : null}</p>
+            {test.vma ? <p className="muted">Estimation : sur un test de cette durée, on tient environ {Math.round((test.meters / test.seconds) * 3.6 / test.vma * 100)} % de sa VMA. Les zones et les allures de {first} suivent la VMA que tu choisis.</p> : null}
+            <TestResultActions wid={wid} aid={item.athleteId} sport={observed.sport} name={observed.title} meters={test.meters} seconds={test.seconds}
+              doneOn={observed.localDate} vmaKmh={test.vma} currentVma={refs?.vmaKmh ?? null} />
+          </div>
+        </section>
+      ) : null}
 
       <div className="compare">
         <section className="card" aria-labelledby="planned">

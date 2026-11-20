@@ -88,3 +88,27 @@ export function vmaFromTest(p: Performance): number | null {
   if (p.kind !== 'test' || (p.sport !== 'running' && p.sport !== 'trail') || p.durationS < 300 || p.durationS > 420) return null;
   return Math.round((p.distanceM / p.durationS) * 3.6 * 10) / 10;
 }
+
+/**
+ * D-090 : distance d’un test (« Test 5 km », D-086) : séance dont le titre commence par « Test » et qui contient une
+ * étape d’effort en distance (de 1 à 21,1 km). null sinon.
+ */
+export function testDistanceOf(title: string, blocks: readonly unknown[]): number | null {
+  if (!/^test\b/i.test(title.trim())) return null;
+  // Étapes du premier niveau seulement : une répétition n’est pas un test.
+  const steps = (blocks as { type?: string; phase?: string; measure?: { kind?: string; meters?: number } }[]).filter((b) => b?.type === 'step');
+  const work = steps.filter((s) => s.phase === 'work' && s.measure?.kind === 'distance' && (s.measure.meters ?? 0) >= 1000 && (s.measure.meters ?? 0) <= 21100);
+  return work.length === 1 ? work[0]!.measure!.meters! : null;
+}
+
+/**
+ * D-090 : VMA estimée d’une course ou d’un test en course à pied, de 3 à 21,1 km : la part de VMA tenue baisse avec la
+ * durée (≈ 95 % sur 15 min, ≈ 90 % sur 30 min, 85 % au-delà d’1 h 15). Repère pour le coach, à confirmer.
+ */
+export function vmaFromRace(meters: number, seconds: number): number | null {
+  if (meters < 3000 || meters > 21100 || seconds < 300) return null;
+  const min = seconds / 60;
+  const pct = Math.max(0.85, Math.min(0.95, 0.95 - (min - 15) * 0.0033));
+  const v = (meters / seconds) * 3.6 / pct;
+  return v >= 6 && v <= 30 ? Math.round(v * 10) / 10 : null;
+}
