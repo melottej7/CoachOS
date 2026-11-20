@@ -300,6 +300,7 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
   - **D-090** : test 5 km : l’élève saisit son chrono ; le coach voit la VMA estimée et décide (résultat de référence, nouvelle VMA). Non vérifié dans le navigateur (pas de séance « Test 5 km » dans la démo).
   - **D-091** : consignes générales d’un programme importé, gardées et ajoutées à la première séance appliquée.
   - **D-092** : le résumé de la semaine signale d’abord un élève qui n’est pas à 100 %. `npm test` : **286 passés**.
+  - **D-094** : « Ajouter des blocs à ma bibliothèque » (au lieu de « garder ») ; saisie rapide renommée « Écrire la séance en texte », avec principe expliqué, aperçu bloc par bloc et exemples.
   - **D-093** : base de séances = Foulée (instruction du fondateur). Fractions courtes Foulée (30"/30", 200 m, 300 m) en Z6 ; bouton « Mettre à jour Foulée » pour les séances déjà importées et non modifiées. Démo mise à jour ; espace du fondateur en attente de son clic. `npm test` : **288 passés**.
   - Migrations appliquées en local : `20261120100000`, `20261120110000`, `20261120120000`. `npm test` : **285 passés** (+3 PostgreSQL), typecheck OK.
 - Prochaines tranches : tout ce qui reste demande le fondateur.

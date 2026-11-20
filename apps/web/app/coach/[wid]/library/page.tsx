@@ -59,7 +59,7 @@ export default async function Library({ params, searchParams }: { params: Promis
                 </li>
               ))}
             </ul>
-          ) : <p className="empty">Aucun bloc pour l’instant. Dans l’éditeur d’une séance, « 💾 Garder des blocs dans ma bibliothèque » enregistre un échauffement ou une série ; « + Mon bloc… » l’ajoute ensuite à n’importe quelle séance.</p>}
+          ) : <p className="empty">Aucun bloc pour l’instant. Dans l’éditeur d’une séance, « 💾 Ajouter des blocs à ma bibliothèque » enregistre un échauffement ou une série ; « + Mon bloc… » l’ajoute ensuite à n’importe quelle séance.</p>}
         </div>
       </section>
     </>

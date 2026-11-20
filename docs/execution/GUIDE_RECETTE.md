@@ -64,7 +64,7 @@ Avec ton compte coach :
 2. Ouvre la **fiche** d’un élève : nouvelle section **Suivi de l’entraînement** (4, 8 ou 12 semaines, graphique par semaine, « Voir le tableau »).
 3. Quand un élève a rempli son questionnaire, le **Planning** propose **Planifier l’appel de bienvenue** : le bouton « 📅 Planifier l’appel » ouvre la planification dans la tâche. « Plus tard → Pas besoin d’appel » la retire.
 4. **Séances → Groupes** : « 📅 Nouvelle séance pour le groupe ». Coche les élèves, crée les brouillons, clique **Adapter** pour un élève, puis **Publier** : les exceptions sont rappelées avant l’envoi. **Semaine du groupe** montre chaque élève jour par jour.
-5. Dans le constructeur d’une séance : **✍️ Saisie rapide en texte**. Essaie `15' Z1 + 8×(400m Z5 + R200m) + 10' Z1`, puis **Remplacer le déroulé**. Sous le total, le **graphique de la séance** se met à jour.
+5. Dans le constructeur d’une séance : **✍️ Écrire la séance en texte**. Essaie `15' Z1 + 8×(400m Z6 + R200m) + 10' Z1` : la liste « CoachOS a compris » montre chaque bloc, puis **Remplacer la séance par ces blocs**. Sous le total, le **graphique de la séance** se met à jour.
 
 Avec ton compte élève (sur téléphone si possible) :
 1. **Aujourd’hui** : sous la séance du jour, « Ta séance d’aujourd’hui ? » → **Faite**, puis ton ressenti. Le message compare ton ressenti à ce que visait ton coach.
@@ -238,7 +238,7 @@ Dis-moi si l’icône, le nom et l’ouverture te conviennent.
 
 ## Blocs réutilisables et fraîcheur des mesures
 
-1. Dans une séance (ou une séance de bibliothèque), construis un échauffement, puis **💾 Garder des blocs dans ma bibliothèque** : coche-le, nomme-le, **Garder ce bloc**.
+1. Dans une séance (ou une séance de bibliothèque), construis un échauffement, puis **💾 Ajouter des blocs à ma bibliothèque** : coche-le, nomme-le, **Ajouter le bloc à ma bibliothèque**.
 2. Dans une autre séance, **+ Mon bloc…** l’ajoute d’un geste. Bibliothèque › **Mes blocs** les liste ; **Retirer** ne touche pas aux séances déjà faites.
 3. Fiche d’un élève › **Suivi** : d’où viennent les chiffres (montre ou saisie) et depuis quand ; un avertissement apparaît après 14 jours sans nouvelle mesure.
 

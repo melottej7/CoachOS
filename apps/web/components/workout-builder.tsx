@@ -14,7 +14,7 @@ import { mutate, newKey } from './api-client';
 /** Bloc réutilisable de la bibliothèque du coach (D-074). */
 export interface SavedBlock { id: string; title: string; sport: Sport | null; blocks: Block[] }
 
-/** D-074 : garder une partie de la séance comme bloc réutilisable (échauffement type, série type…). */
+/** D-074 : ajouter une partie de la séance à la bibliothèque comme bloc réutilisable (échauffement type, série type…). D-094 : « ajouter », pas « garder ». */
 function KeepBlocks({ wid, sport, blocks, onSaved }: { wid: string; sport: Sport; blocks: Block[]; onSaved: (b: SavedBlock) => void }) {
   const [picked, setPicked] = useState<number[]>([]);
   const [title, setTitle] = useState('');
@@ -24,11 +24,11 @@ function KeepBlocks({ wid, sport, blocks, onSaved }: { wid: string; sport: Sport
   if (!blocks.length) return null;
   return (
     <details className="b-keep" ref={ref}>
-      <summary className="link-btn">💾 Garder des blocs dans ma bibliothèque</summary>
+      <summary className="link-btn">💾 Ajouter des blocs à ma bibliothèque</summary>
       <div className="stack">
-        <fieldset className="choice"><legend>Blocs à garder</legend>
+        <fieldset className="choice"><legend>Blocs à ajouter</legend>
           {blocks.map((b, i) => (
-            <label key={i} className="check"><input type="checkbox" aria-label={`Garder : ${describeBlock(b, sport)}`} checked={picked.includes(i)} onChange={() => setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i].sort((a, z) => a - z)))} /> <span>{describeBlock(b, sport)}</span></label>
+            <label key={i} className="check"><input type="checkbox" aria-label={`Ajouter : ${describeBlock(b, sport)}`} checked={picked.includes(i)} onChange={() => setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i].sort((a, z) => a - z)))} /> <span>{describeBlock(b, sport)}</span></label>
           ))}
         </fieldset>
         <label className="field"><span>Nom du bloc</span><input aria-label="Nom du bloc" maxLength={80} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex. Échauffement piste avec gammes" /></label>
@@ -41,8 +41,8 @@ function KeepBlocks({ wid, sport, blocks, onSaved }: { wid: string; sport: Sport
             const r = await mutate<{ id: string }>('POST', `/api/v1/workspaces/${wid}/block-templates`, body, newKey());
             if (!r.ok) { setState(r.kind === 'error' ? (r.fields[0]?.rule ?? r.message) : 'Connexion perdue. Réessaie.'); return; }
             onSaved({ id: r.data.id, title: body.title, sport: body.sport, blocks: chosen });
-            setPicked([]); setTitle(''); setState('Bloc gardé dans ta bibliothèque.');
-          }}>Garder ce bloc</button>
+            setPicked([]); setTitle(''); setState(chosen.length > 1 ? 'Blocs ajoutés à ta bibliothèque.' : 'Bloc ajouté à ta bibliothèque.');
+          }}>{picked.length > 1 ? 'Ajouter les blocs à ma bibliothèque' : 'Ajouter le bloc à ma bibliothèque'}</button>
           {state !== 'idle' && state !== 'saving' ? <span className="muted" role="status">{state}</span> : null}
         </div>
       </div>

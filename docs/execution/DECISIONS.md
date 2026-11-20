@@ -1529,3 +1529,30 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Navigateur (démo) : « Mettre à jour Foulée (23) », puis 23 séances en Z6 et le bouton disparaît.
   - Espace du fondateur : non modifié (23 séances en attente de son clic).
   - `npm test` : **288 passés** (+3 PostgreSQL), typecheck OK.
+
+## D-094 · « Ajouter à ma bibliothèque » et écriture en texte expliquée · 2026-11-20
+
+- **Retour du fondateur.**
+  - « "ajouter les blocs à ma bibliothèque" pas "garder" ».
+  - « je ne comprends le principe de saisie rapide en texte ».
+- **Décision.**
+  - **Blocs réutilisables (D-074).** Le mot « garder » est remplacé par « ajouter » :
+    - « 💾 Ajouter des blocs à ma bibliothèque » et « Blocs à ajouter » ;
+    - bouton « Ajouter le bloc à ma bibliothèque » (ou « les blocs » quand plusieurs sont cochés) ;
+    - confirmation « Bloc ajouté à ta bibliothèque. » ;
+    - le texte de l’onglet Blocs vide est aligné.
+  - **Saisie rapide (D-041).** Elle devient « ✍️ Écrire la séance en texte ».
+    - Une phrase explique le principe : « Plus rapide que les boutons : écris toute la séance d’un coup, comme dans tes programmes. CoachOS la découpe en blocs et te montre ce qu’il a compris avant que tu l’appliques. » Une seconde phrase dit, s’il y a lieu, que le texte reprend la séance actuelle.
+    - L’aperçu « CoachOS a compris n blocs » liste chaque bloc en clair, avec ses consignes « … ».
+    - L’aide est repliée sous « Comment l’écrire ? ». C’est un tableau « Tu écris / Ça donne » de 7 exemples, au lieu d’une ligne de codes.
+    - Boutons : « Créer ces blocs » (séance vide), ou « Remplacer la séance par ces blocs » et « Ajouter ces blocs à la fin ».
+    - La zone de texte s’agrandit avec le texte, jusqu’à 6 lignes.
+- **Preuve.**
+  - Les 5 exemples d’écriture de l’aide sont lus sans erreur, dont `8x(…)`, `3*(…)` et un enchaînement vélo + course.
+  - Navigateur (démo, nouvelle séance de bibliothèque) :
+    - la séance du fondateur avec deux consignes est comprise en 3 blocs, consignes affichées ;
+    - le tableau d’aide est complet ;
+    - « Créer ces blocs » fonctionne, puis « Ajouter les blocs à ma bibliothèque » apparaît avec 2 blocs cochés ;
+    - à 375 px, rien ne dépasse (le tableau débordait avant correction) ;
+    - rien n’a été enregistré.
+  - Typecheck OK.

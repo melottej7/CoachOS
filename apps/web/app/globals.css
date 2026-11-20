@@ -856,7 +856,18 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .qn-help { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.7; }
 .qn-help code { font-size: 12px; padding: 1px 4px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 7%, var(--surface)); }
 .qn-errors { margin: 0; padding-left: 18px; color: var(--danger, #d9534f); font-size: 13.5px; }
-.qn-ok { margin: 0; font-weight: 600; }
+.qn-ok p { margin: 0; font-weight: 600; }
+.qn-note { color: var(--muted); font-style: italic; }
+.qn-intro { margin: 0; font-size: 14px; color: var(--muted); }
+.qn-blocks { margin: 6px 0 0; padding-left: 22px; display: grid; gap: 2px; font-size: 14px; }
+.qn-how > summary { cursor: pointer; font-weight: 600; font-size: 13.5px; color: var(--accent); }
+.qn-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 6px; }
+.qn-table th, .qn-table td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.qn-table th { color: var(--muted); font-weight: 600; }
+.qn-table code, .qn-help code { font-size: 12.5px; padding: 1px 4px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 7%, var(--surface)); overflow-wrap: anywhere; }
+.qn-table { table-layout: fixed; }
+.qn-table td:first-child, .qn-table th:first-child { width: 44%; }
+.qn-body > * { min-width: 0; }
 /* Séance de groupe (lot G2, D-042) */
 .gs-team { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .gs-recipients { border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px; display: grid; gap: 8px; }
