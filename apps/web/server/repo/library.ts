@@ -33,7 +33,7 @@ export async function readTemplate(userId: string, wid: string, tid: string): Pr
 }
 
 /** Semaines types de l’auteur (D-051). */
-export interface WeekTemplateItem { id: string; revision: number; title: string; archived: boolean; days: WeekDay[]; weeks: number }
+export interface WeekTemplateItem { id: string; revision: number; title: string; archived: boolean; days: WeekDay[]; weeks: number; notes: string | null }
 
 export async function listWeekTemplates(userId: string, wid: string, archived = false): Promise<WeekTemplateItem[]> {
   return readAs(userId, async (tx) => {
@@ -42,7 +42,7 @@ export async function listWeekTemplates(userId: string, wid: string, archived = 
        where workspace_id = $1 and kind = 'week' and owner_id = auth.uid() and archived = $2 order by lower(title), id`,
       [wid, archived],
     );
-    return r.rows.map((x) => ({ id: x.id, revision: x.revision, title: x.title, archived: x.archived, days: [...(x.payload.days ?? [])].sort((a, b) => a.offset - b.offset), weeks: templateWeeks({ days: x.payload.days ?? [], weeks: x.payload.weeks }) }));
+    return r.rows.map((x) => ({ id: x.id, revision: x.revision, title: x.title, archived: x.archived, days: [...(x.payload.days ?? [])].sort((a, b) => a.offset - b.offset), weeks: templateWeeks({ days: x.payload.days ?? [], weeks: x.payload.weeks }), notes: x.payload.notes ?? null }));
   });
 }
 

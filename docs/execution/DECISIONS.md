@@ -1486,3 +1486,20 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Test serveur : le chrono est enregistré, puis lu par le coach ; il est refusé pour une séance non réalisée.
   - `npm test` : **285 passés** (+3 PostgreSQL), typecheck OK.
 - **Non vérifié dans le navigateur.** La démo n’a pas de séance « Test 5 km » publiée, et je n’en ai pas créé pour ne pas modifier la démo.
+
+## D-091 · Consignes générales d’un programme importé · 2026-11-20
+
+- **Contexte.**
+  - Limite notée en D-085 : l’objectif, les repères et les règles importantes écrits en tête des documents du fondateur se perdaient à l’import.
+  - Ces règles s’adressent à l’élève (« Si une séance saute, c’est le footing », consigne d’arrêt…).
+- **Décision.**
+  - **Import d’un programme :** le texte écrit entre le titre et la première semaine devient les **consignes générales**. Sont exclus les tableaux (repères, vue d’ensemble) et le plan des semaines (« S1–S2 · … »).
+    - Elles sont modifiables dans l’aperçu (4 000 caractères au plus) et enregistrées avec le programme type.
+  - **Bibliothèque › Semaines types :** « Consignes du programme » s’ouvre sous le programme.
+  - **Appliquer à un élève :** les consignes sont ajoutées en tête de la **première séance seulement** (« Consignes du programme »). Tout reste en brouillon : le coach relit avant de publier.
+  - Contrat `importProgram` : champ `notes`. Aucune migration (charge utile du modèle).
+- **Preuve.**
+  - Test du domaine : l’objectif est gardé, sans les tableaux ni le plan.
+  - Test serveur : consignes enregistrées, présentes dans la première séance appliquée et absentes de la deuxième.
+  - Navigateur (démo) : aperçu d’un programme avec objectif et règles ; consignes reprises ; zones « tes documents » détectées (1 km Z4 → Z5). Rien n’a été enregistré.
+  - `npm test` : **285 passés** (+3 PostgreSQL), typecheck OK.

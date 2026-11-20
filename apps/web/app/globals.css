@@ -1163,3 +1163,6 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .pimp-week h3 { font-size: 15px; margin: 0 0 4px; }
 .pimp-notation { font-family: var(--mono, ui-monospace, monospace); font-size: 12.5px; }
 .pimp-notes { font-size: 13px; white-space: pre-line; }
+.wt-notes { margin: 4px 0; font-size: 14px; }
+.wt-notes summary { cursor: pointer; font-weight: 600; }
+.wt-notes .prose { white-space: pre-line; }

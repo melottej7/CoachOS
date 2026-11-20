@@ -45,7 +45,7 @@ describe('import d’un ancien programme (D-085)', () => {
     const { ATHLETES } = await import('./db/fixtures');
     const text = "Programme 10 km\nS1\nMar · Footing 30' Z1-2\nDim · Sortie longue 45' Z1-2\nS2\nJeu · Fract : 15' Z1 + 3*(2km 4'40 + 400m Z1) + 10' Z1\nDim · Sortie longue 50'";
     const g = previewProgramImport(text, { defaultSport: 'running' }).programs[0]!;
-    const body = { title: g.title, weeks: g.weeks.length, days: programTemplateDays(g) };
+    const body = { title: g.title, weeks: g.weeks.length, days: programTemplateDays(g), notes: 'Facile = parler. Douleur qui augmente : tu coupes.' };
     const r = await importProgram(meta(USERS.marine), body);
     expect(r.status).toBe(201);
     expect(r.body).toMatchObject({ sessions: 4, weeks: 2 });
@@ -57,6 +57,14 @@ describe('import d’un ancien programme (D-085)', () => {
     const ap = await applyWeekTemplate({ ...(meta(USERS.marine) as object), templateId: tid } as never, { athleteId: ATHLETES.noah, monday });
     const created = (ap.body as { created: { localDate: string }[] }).created.map((c) => c.localDate);
     expect(created).toEqual([addDays(monday, 1), addDays(monday, 6), addDays(monday, 10), addDays(monday, 13)]);
+    // D-091 : consignes du programme ajoutées à la première séance seulement.
+    expect(tpl.notes).toBe('Facile = parler. Douleur qui augmente : tu coupes.');
+    const { coachWorkout } = await import('./repo/coach');
+    const ids = (ap.body as { created: { workoutId: string }[] }).created.map((c) => c.workoutId);
+    const first = await coachWorkout(USERS.marine, WORKSPACE_A, ATHLETES.noah, ids[0]!);
+    const second = await coachWorkout(USERS.marine, WORKSPACE_A, ATHLETES.noah, ids[1]!);
+    expect(first?.working?.instructions ?? first?.published?.instructions ?? '').toContain('Consignes du programme\nFacile = parler.');
+    expect(second?.working?.instructions ?? '').not.toContain('Consignes du programme');
     expect(await codeOf(importProgram(meta(USERS.camille), body))).not.toBe('OK');
     expect(await codeOf(importProgram(meta(USERS.marine), { ...body, weeks: 1 }))).toBe('INVALID_FIELDS');
     expect(await codeOf(importProgram(meta(USERS.marine), { ...body, days: [] }))).toBe('INVALID_FIELDS');

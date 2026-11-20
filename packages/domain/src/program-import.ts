@@ -26,7 +26,11 @@ export interface ImportedSession {
   minutes: number | null;
 }
 export interface ImportedWeek { number: number; label: string; line: number; sessions: ImportedSession[] }
-export interface ImportedProgram { title: string; line: number; weeks: ImportedWeek[]; sessions: number; errors: string[] }
+export interface ImportedProgram {
+  title: string; line: number; weeks: ImportedWeek[]; sessions: number; errors: string[];
+  /** D-091 : consignes générales écrites avant la première semaine (objectif, repères, règles), sans les tableaux. */
+  notes: string | null;
+}
 export interface ProgramImportPreview { programs: ImportedProgram[]; errors: string[] }
 
 export const PROGRAM_IMPORT_MAX_CHARS = 200_000;
@@ -268,7 +272,14 @@ export function previewProgramImport(text: string, opts: { defaultSport: Sport; 
     if (span > WEEK_TEMPLATE_MAX_WEEKS) errors.push(`${span} semaines : un programme type en compte ${WEEK_TEMPLATE_MAX_WEEKS} au plus. Coupe-le en deux imports.`);
     const own = g.titleLine ? norm(lines[g.titleLine - 1] ?? '').replace(/^#+\s*/, '') : '';
     const titleText = !programs.length && docTitle && docTitle.n < g.weeks[0]!.line ? docTitle.text : own;
-    programs.push({ title: (titleText || `Programme importé · ${weeks.length} semaines`).slice(0, 120), line: g.titleLine || weeks[0]!.line, weeks, sessions, errors });
+    // D-091 : texte d’introduction (après le titre, avant la première semaine) : objectif, repères, règles importantes.
+    const introFrom = g.titleLine || (groups.indexOf(g) === 0 ? 0 : g.weeks[0]!.line - 1);
+    const intro = lines.slice(introFrom, g.weeks[0]!.line - 1)
+      .filter((l) => l.trim() && !/\t/.test(l.trim()) && !l.trim().startsWith('|') && !WEEK_HEAD.test(norm(l)) && !/^s\d+\s*[-–—]\s*s?\d/i.test(norm(l)))
+      .map((l) => norm(l).replace(/^#+\s*/, ''))
+      .filter((l) => l !== titleText);
+    const notes = intro.join('\n').slice(0, 4000).trim() || null;
+    programs.push({ title: (titleText || `Programme importé · ${weeks.length} semaines`).slice(0, 120), line: g.titleLine || weeks[0]!.line, weeks, sessions, errors, notes });
   }
   const errors = programs.length ? [] : ['Aucune semaine trouvée : chaque semaine doit commencer par une ligne « S1 », « Semaine 1 »…'];
   return { programs, errors };
@@ -291,6 +302,8 @@ export const importProgramSchema = z.object({
   title: z.string().trim().min(1, { message: 'Donne un nom au programme' }).max(120, { message: '120 caractères au plus' }),
   weeks: z.number().int().min(1).max(WEEK_TEMPLATE_MAX_WEEKS, { message: `${WEEK_TEMPLATE_MAX_WEEKS} semaines au plus` }),
   days: z.array(weekDaySchema).min(1, { message: 'Choisis au moins une séance' }).max(200),
+  /** D-091 : consignes générales du programme, ajoutées à la première séance quand il est appliqué. */
+  notes: z.string().trim().max(4000, { message: '4000 caractères au plus' }).nullish().transform((v) => (v ? v : null)),
 }).strict().superRefine((v, ctx) => {
   if (v.days.some((d) => d.offset >= v.weeks * 7)) ctx.addIssue({ code: 'custom', path: ['days'], message: 'Une séance dépasse la dernière semaine' });
 });

@@ -171,7 +171,7 @@ export async function importProgram(meta: Meta, body: unknown): Promise<StoredRe
       const days = [...v.days].sort((a, b) => a.offset - b.offset);
       const t = await tx.query<{ id: string; revision: number }>(
         `insert into public.templates(workspace_id, owner_id, kind, title, payload) values ($1, auth.uid(), 'week', $2, $3::jsonb) returning id, revision`,
-        [wid, v.title, JSON.stringify({ days, weeks: v.weeks, meta: { source: 'import', importedAt: new Date().toISOString() } })],
+        [wid, v.title, JSON.stringify({ days, weeks: v.weeks, notes: v.notes, meta: { source: 'import', importedAt: new Date().toISOString() } })],
       );
       await audit(tx, wid, meta.actorId, 'template.import-program', t.rows[0]!.id, meta.requestId);
       return { status: 201, body: { ...t.rows[0]!, sessions: days.length, weeks: v.weeks } };
@@ -262,6 +262,9 @@ export async function applyWeekTemplate(meta: Meta & { templateId: string }, bod
       if (!a.rows[0] || a.rows[0].state === 'archived') throw notVisible();
       const created: { workoutId: string; localDate: string }[] = [];
       const order = new Map<number, number>();
+      // D-091 : les consignes générales du programme arrivent avec la première séance.
+      const firstOffset = Math.min(...tpl.payload.days.map((d) => d.offset));
+      let notesGiven = false;
       for (const d of tpl.payload.days) {
         const localDate = addDays(v.monday, d.offset);
         const sortOrder = order.get(d.offset) ?? 0;
@@ -269,7 +272,10 @@ export async function applyWeekTemplate(meta: Meta & { templateId: string }, bod
         const w = await tx.query<{ id: string }>(
           'insert into public.workouts(workspace_id, athlete_id, working_revision) values ($1, $2, 1) returning id', [wid, v.athleteId],
         );
-        await insertRevision(tx, wid, v.athleteId, w.rows[0]!.id, 1, { ...d.workout, localDate, timeZone: a.rows[0].time_zone, sortOrder });
+        const withNotes = tpl.payload.notes && !notesGiven && d.offset === firstOffset;
+        if (withNotes) notesGiven = true;
+        const instructions = withNotes ? [`Consignes du programme\n${tpl.payload.notes}`, d.workout.instructions].filter(Boolean).join('\n\n').slice(0, 5000) : d.workout.instructions;
+        await insertRevision(tx, wid, v.athleteId, w.rows[0]!.id, 1, { ...d.workout, instructions, localDate, timeZone: a.rows[0].time_zone, sortOrder });
         created.push({ workoutId: w.rows[0]!.id, localDate });
       }
       await audit(tx, wid, meta.actorId, 'template.week-apply', meta.templateId, meta.requestId);

@@ -96,6 +96,9 @@ describe('import d’un ancien programme (D-085)', () => {
     expect(p.programs).toHaveLength(1);
     const g = p.programs[0]!;
     expect(g.title).toBe('Programme 10 km – 4 semaines');
+    // D-091 : consignes générales (objectif, repères…) gardées, sans les tableaux ni le plan des semaines.
+    expect(g.notes).toContain('Objectif : finir le 10 km du dimanche, en forme.');
+    expect(g.notes).not.toMatch(/6:45|S1–S2|footing 30'\tSL/);
     expect(g.weeks.map((w) => w.number)).toEqual([1, 2, 3, 4]);
     expect(g.weeks.map((w) => w.sessions.length)).toEqual([3, 3, 4, 2]);
     const [s1, s2, s3, s4] = g.weeks;

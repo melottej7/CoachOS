@@ -43,7 +43,7 @@ export default async function Library({ params, searchParams }: { params: Promis
       </section>
       <section className="card" aria-labelledby="weeks-title" id="semaines">
         <div className="card-head"><h2 id="weeks-title">Semaines types</h2><span className="muted">Une semaine ou un bloc de plusieurs semaines ; s’appliquent depuis la semaine d’un élève</span></div>
-        <div className="card-body"><WeekTemplateList wid={wid} items={weeks.map((w) => ({ id: w.id, revision: w.revision, title: w.title, days: w.days, weeks: w.weeks }))} /></div>
+        <div className="card-body"><WeekTemplateList wid={wid} items={weeks.map((w) => ({ id: w.id, revision: w.revision, title: w.title, days: w.days, weeks: w.weeks, notes: w.notes }))} /></div>
       </section>
       <section className="card" aria-labelledby="blocs-title" id="blocs">
         <div className="card-head"><h2 id="blocs-title">Mes blocs</h2><span className="muted">Parties de séance à réutiliser (échauffement type, série type…)</span></div>

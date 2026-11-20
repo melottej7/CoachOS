@@ -29,6 +29,7 @@ export function ProgramImport({ wid }: { wid: string }) {
   const [zones, setZones] = useState<'auto' | 'coachos' | 'shifted'>('auto');
   const [pick, setPick] = useState(0);
   const [title, setTitle] = useState<string | null>(null);
+  const [notes, setNotes] = useState<string | null>(null);
   const [off, setOff] = useState<Set<number>>(new Set());
   const [days, setDays] = useState<Map<number, number>>(new Map());
   const [done, setDone] = useState<{ sessions: number; weeks: number } | null>(null);
@@ -37,7 +38,7 @@ export function ProgramImport({ wid }: { wid: string }) {
   const shifted = zones === 'auto' ? detected : zones === 'shifted';
   const preview = useMemo(() => (text.trim() ? previewProgramImport(text, { defaultSport: sport, shiftedZones: shifted }) : null), [text, sport, shifted]);
   const program = preview?.programs[Math.min(pick, (preview?.programs.length ?? 1) - 1)] ?? null;
-  const reset = () => { setOff(new Set()); setDays(new Map()); setTitle(null); setDone(null); };
+  const reset = () => { setOff(new Set()); setDays(new Map()); setTitle(null); setNotes(null); setDone(null); };
   const first = program ? Math.min(...program.weeks.map((w) => w.number)) : 1;
   const span = program ? Math.max(...program.weeks.map((w) => w.number)) - first + 1 : 0;
   const chosen = program ? program.weeks.flatMap((w) => w.sessions.filter((s) => !off.has(s.line)).map((s) => ({ w, s }))) : [];
@@ -85,6 +86,8 @@ export function ProgramImport({ wid }: { wid: string }) {
                 {program.errors.map((e) => <p key={e} className="banner warn">{e}</p>)}
                 <label className="field"><span>Nom du programme type</span>
                   <input value={title ?? program.title} maxLength={120} onChange={(e) => setTitle(e.target.value)} /></label>
+                <label className="field"><span>Consignes générales <span className="hint">Objectif, repères, règles… ajoutées à la première séance quand tu appliques le programme à un élève</span></span>
+                  <textarea rows={4} maxLength={4000} value={notes ?? program.notes ?? ''} onChange={(e) => setNotes(e.target.value)} /></label>
                 <div className="pimp-weeks">
                   {program.weeks.map((w) => (
                     <div key={w.line} className="pimp-week">
@@ -123,7 +126,7 @@ export function ProgramImport({ wid }: { wid: string }) {
                   <button type="button" className="btn primary" disabled={pending || !chosen.length || !name || span > WEEK_TEMPLATE_MAX_WEEKS || Boolean(done)}
                     onClick={async () => {
                       const r = await run('POST', `/api/v1/workspaces/${wid}/templates/import-program`, {
-                        title: name, weeks: span,
+                        title: name, weeks: span, notes: (notes ?? program.notes ?? '').trim() || null,
                         days: chosen.map(({ w, s }) => ({
                           offset: (w.number - first) * 7 + (days.get(s.line) ?? s.day) - 1,
                           workout: { sport: s.sport, title: s.title, instructions: s.instructions, durationSeconds: null, distanceM: null, intervals: s.blocks },

@@ -25085,6 +25085,18 @@
                         }
                       }
                     }
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 4000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "D-091 : consignes générales du programme, ajoutées à la première séance quand il est appliqué."
                   }
                 }
               }

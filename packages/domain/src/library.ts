@@ -123,7 +123,7 @@ export const WEEK_TEMPLATE_MAX_WEEKS = 12;
 export const weekDaySchema = z.object({ offset: z.number().int().min(0).max(WEEK_TEMPLATE_MAX_WEEKS * 7 - 1), workout: libraryWorkoutSchema }).strict();
 export type WeekDay = z.output<typeof weekDaySchema>;
 /** `weeks` absent = une semaine (semaines types d’avant D-083). */
-export interface WeekTemplatePayload { days: WeekDay[]; weeks?: number }
+export interface WeekTemplatePayload { days: WeekDay[]; weeks?: number; /** D-091 : consignes générales (programme importé). */ notes?: string | null }
 /** Nombre de semaines couvertes : celui enregistré, sinon d’après les jours. */
 export function templateWeeks(p: WeekTemplatePayload): number {
   return Math.max(p.weeks ?? 1, ...p.days.map((d) => Math.floor(d.offset / 7) + 1));

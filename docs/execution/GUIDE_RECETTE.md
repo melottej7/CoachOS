@@ -310,3 +310,10 @@ Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et
 1. Publie à un élève une séance appelée « Test 5 km » (générée par le programme en S3, ou écrite à la main : `10' Z1 + 5km + 5' Z1`).
 2. Côté élève, envoie le retour « Réalisée » : le champ **Ton chrono sur le 5 km** apparaît ; écris par exemple 25:00.
 3. Côté coach, ouvre le retour : la carte **Résultat du test** affiche le chrono, l’allure et la VMA estimée, avec deux boutons : l’ajouter aux résultats de référence, ou mettre la VMA à jour.
+
+## Consignes générales d’un programme importé (D-091)
+
+1. Bibliothèque › Importer un programme : colle un de tes documents en entier.
+2. Sous le nom du programme, **Consignes générales** reprend ton objectif et tes règles importantes : relis-les et corrige-les si besoin.
+3. Enregistre. Dans Semaines types, ouvre **Consignes du programme**.
+4. Applique le programme à un élève : la première séance (en brouillon) commence par « Consignes du programme ».

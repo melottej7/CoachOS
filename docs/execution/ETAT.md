@@ -295,6 +295,11 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
   - **D-086** (« Oui, aligne-le ») : générateur aligné sur sa méthode. Course/marche, lignes droites, qualité du court au long, test 5 km, rappel d’allure, puis veille ; risques en minutes ; consignes types. `npm test` : **280 passés**.
   - **D-087** (« mixer les deux ») : 7 zones de CoachOS avec ses repères (Z2 endurance, Z3 endurance active, Z4 seuil, Z5 allure 5 km, Z6 VMA, Z7 vitesse) ; ses documents traduits un cran plus haut à l’import. `npm test` : **281 passés**.
   - **D-088** (« sans le corps ») : « Peux-tu faire tes séances à 100 % ? » dans le retour ; le coach voit « Pas à 100 % » en tête de file, avec un filtre. Migration `20261120090000` appliquée en local. `npm test` : **282 passés**.
+- 20 novembre, « continue sans moi » :
+  - **D-089** : suivi automatique « En parler avec l’élève » (urgent) quand il n’est pas à 100 % ; il se clôt par un message du coach. Repère « Pas à 100 % » dans Élèves.
+  - **D-090** : test 5 km : l’élève saisit son chrono ; le coach voit la VMA estimée et décide (résultat de référence, nouvelle VMA). Non vérifié dans le navigateur (pas de séance « Test 5 km » dans la démo).
+  - **D-091** : consignes générales d’un programme importé, gardées et ajoutées à la première séance appliquée.
+  - Migrations appliquées en local : `20261120100000`, `20261120110000`, `20261120120000`. `npm test` : **285 passés** (+3 PostgreSQL), typecheck OK.
 - Prochaines tranches : tout ce qui reste demande le fondateur.
   - Recette, dont l’import avec sa vraie base, l’essai FIT sur la Fenix 8 et l’installation sur téléphone.
   - Crédit IA ; accès Garmin.

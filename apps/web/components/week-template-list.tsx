@@ -8,7 +8,7 @@ import { useIntent } from './use-intent';
 
 // D-051 : semaines types de la bibliothèque. On les applique depuis la semaine d’un élève (Séances → Semaine).
 
-export interface WeekTemplateRow { id: string; revision: number; title: string; days: WeekDay[]; weeks: number }
+export interface WeekTemplateRow { id: string; revision: number; title: string; days: WeekDay[]; weeks: number; notes?: string | null }
 
 function minutes(d: WeekDay): number {
   const t = structureTotals(d.workout.intervals ?? [], { sport: d.workout.sport });
@@ -44,6 +44,7 @@ export function WeekTemplateList({ wid, items }: { wid: string; items: WeekTempl
               </form>
             ) : <h3>{t.title}</h3>}
             <p className="muted">{t.weeks > 1 ? `${t.weeks} semaines · ` : ''}{t.days.length} séance{t.days.length > 1 ? 's' : ''}{total ? ` · ${formatClock(Math.round(total / 60) * 60)} prévues` : ''}</p>
+            {t.notes ? <details className="wt-notes"><summary>Consignes du programme</summary><p className="prose">{t.notes}</p><p className="muted">Ajoutées à la première séance quand tu l’appliques à un élève.</p></details> : null}
             <ol className="wtl-days" aria-label={`Séances de « ${t.title} »`}>
               {t.days.map((d, i) => <li key={i}><strong>{templateDayLabel(d.offset, t.weeks > 1)}</strong> {d.workout.title}</li>)}
             </ol>
