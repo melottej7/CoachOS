@@ -43,7 +43,7 @@ Ce document ne contient aucun nom ni aucune donnée d’élève. Les documents d
 
 ## Écarts avec le générateur de CoachOS (D-061 à D-072)
 
-À décider avec le fondateur avant toute modification du générateur :
+**Points 1 à 7 alignés le 20 novembre, à la demande du fondateur (D-086).** État avant l’alignement :
 
 1. **Course/marche absente.** Le générateur démarre par des footings de 20' minimum. Le fondateur commence ses débutants et ses reprises lourdes en course/marche. C’est l’écart le plus visible.
 2. **Lignes droites avant le fractionné.** Le premier contact avec la vitesse se fait par 4 à 8×20" en fin de footing, avant tout fractionné ; le générateur commence par un tempo.

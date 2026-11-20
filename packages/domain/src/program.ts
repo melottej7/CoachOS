@@ -156,6 +156,85 @@ function quality(sport: Sport, type: 'tempo' | 'threshold' | 'vma' | 'race', tot
 
 const dowOf = (date: string) => ((new Date(`${date}T12:00:00Z`).getUTCDay() + 6) % 7) + 1;
 
+// ---------- Méthode du fondateur (D-086, docs/execution/METHODE_FONDATEUR.md) ----------
+
+/** Consignes types, dans le style des programmes du fondateur. */
+export const COACH_CUES = {
+  easy: 'Facile : tu dois pouvoir parler en phrases complètes. Si une séance saute cette semaine, c’est celle-ci.',
+  long: 'Tortue mood : lent du début à la fin, la vitesse ce n’est pas cette séance. Les 10 premières minutes encore plus lentes, c’est ton échauffement.',
+  runWalk: 'Cours lentement et marche activement. La marche n’est pas un échec : c’est ce qui permet d’aller au bout sans te blesser. Même si c’est facile, respecte les temps de marche.',
+  strides: 'Lignes droites : accélère progressivement jusqu’à aller vite, sans sprinter, en restant relâché. Récupère en trottinant.',
+  intervals: 'Pars en dedans sur les 2 ou 3 premières : la première ne peut pas être plus rapide que les suivantes. Mieux vaut finir fort que d’exploser. Prépare la séance sur ta montre.',
+  hills: 'Une côte régulière, pas trop raide. Monte en poussant fort, petits pas, buste droit, regard devant ; la descente sert de récupération.',
+  pace: 'Mémorise l’allure du jour J : régulière, ni plus vite ni plus lente.',
+  test: 'Pars prudent les 2 premiers km, accélère à partir de la moitié si tu peux et donne tout sur le dernier. Note ton chrono et ton parcours : il cale tes allures.',
+  taper: 'Moins de volume, un peu de rythme pour garder les jambes vives.',
+  eve: 'Veille de course : juste de quoi se mettre en confiance, ça ne changera plus rien à la course.',
+  stop: 'Douleur qui reste et augmente en courant : tu coupes la séance et tu me préviens.',
+} as const;
+
+/** Course/marche : portions de course de la semaine (min), de 1′ jusqu’à 20′ d’une traite. */
+const RUN_PORTIONS = [1, 1.5, 2, 3, 4, 5, 7, 10, 15, 20];
+const mm = (min: number) => (Number.isInteger(min) ? `${min}′` : `${Math.floor(min)}′${String(Math.round((min % 1) * 60)).padStart(2, '0')}`);
+function runWalkSession(target: number, run: number): { title: string; blocks: Block[]; minutes: number } {
+  const walk = run < 4 ? 1.5 : run <= 10 ? 1 : 2;
+  const wu = run <= 3 ? 10 : 5;
+  const n = Math.max(2, Math.min(20, Math.round((target - wu) / (run + walk))));
+  const sec = (m: number) => ({ kind: 'time' as const, seconds: Math.round(m * 60) });
+  return {
+    title: `Course/marche ${n} × (${mm(run)} + ${mm(walk)} marche)`,
+    blocks: [STEP('warmup', sec(wu), null, 'marche active'), { type: 'repeat', times: n, steps: [STEP('work', sec(run), 2), STEP('recovery', sec(walk), null, 'marche')] }],
+    minutes: Math.round(wu + n * (run + walk)),
+  };
+}
+
+/** Lignes droites en fin de footing : 4 à 8 × (20″ + R40″), sans zone (ce n’est pas une séance de qualité). */
+function stridesBlock(n: number, work = 20, rec = 40): Block {
+  return { type: 'repeat', times: n, steps: [STEP('work', { kind: 'time', seconds: work }, null, 'accélération progressive'), STEP('recovery', { kind: 'time', seconds: rec }, null, 'en trottinant')] };
+}
+
+/** Séances de qualité de la course à pied, du court au long, comme dans les programmes du fondateur. */
+type ProgKey = 's200' | 'hills' | 'pyramid' | 's400' | 'k1' | 'k2' | 'pace' | 'race';
+const PROG: Record<ProgKey, { kind: QualityKind | 'race'; category: string; reason: string; cue: string }> = {
+  s200: { kind: 'vma', category: 'intervals', reason: 'premier fractionné, sur des distances courtes', cue: COACH_CUES.intervals },
+  hills: { kind: 'vma', category: 'hills', reason: 'côtes : du renforcement déguisé, pour la force et la foulée', cue: COACH_CUES.hills },
+  pyramid: { kind: 'threshold', category: 'threshold', reason: 'pyramide : tenir la même allure sur des efforts qui changent', cue: COACH_CUES.intervals },
+  s400: { kind: 'vma', category: 'intervals', reason: 'les fractions s’allongent', cue: COACH_CUES.intervals },
+  k1: { kind: 'threshold', category: 'threshold', reason: 'fractions longues, vers l’allure de course', cue: COACH_CUES.intervals },
+  k2: { kind: 'threshold', category: 'threshold', reason: 'fractions longues pour tenir l’allure longtemps', cue: COACH_CUES.intervals },
+  pace: { kind: 'tempo', category: 'tempo', reason: 's’habituer à l’allure visée le jour de la course', cue: COACH_CUES.pace },
+  race: { kind: 'race', category: 'race', reason: 's’habituer à l’allure visée le jour de la course', cue: COACH_CUES.pace },
+};
+const clampN = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, Math.round(v)));
+function progSession(key: ProgKey, total: number, racePace: number | null): { title: string; blocks: Block[] } {
+  const short = total < 45;
+  const core = Math.max(8, total - (short ? 15 : 25));
+  const wu = STEP('warmup', t(short ? 10 : 15), 1), cd = STEP('cooldown', t(short ? 5 : 10), 1);
+  const rep = (n: number, steps: Step[]): Block => ({ type: 'repeat', times: n, steps });
+  const dist = (m: number) => ({ kind: 'distance' as const, meters: m });
+  switch (key) {
+    case 's200': { const n = clampN(core / 2.2, 6, 12); return { title: `Fractionné ${n} × 200 m`, blocks: [wu, rep(n, [STEP('work', dist(200), 5), STEP('recovery', dist(200), null)]), cd] }; }
+    case 'hills': { const n = clampN(core / 1.5, 6, 12); return { title: `Côtes ${n} × 30″`, blocks: [wu, rep(n, [STEP('work', { kind: 'time', seconds: 30 }, 6, 'en côte'), STEP('recovery', t(1), null, 'descente en trottinant')]), cd] }; }
+    case 'pyramid': {
+      const parts = [1, 2, 3, 2, 1];
+      const steps: Block[] = parts.flatMap((m, i) => [STEP('work', t(m), 4), ...(i < parts.length - 1 ? [STEP('recovery', t(1), null)] : [])]);
+      return { title: 'Pyramide 1-2-3-2-1′', blocks: [wu, ...steps, cd] };
+    }
+    case 's400': { const n = clampN(core / 3.5, 5, 10); return { title: `Fractionné ${n} × 400 m`, blocks: [wu, rep(n, [STEP('work', dist(400), 5), STEP('recovery', dist(200), null)]), cd] }; }
+    case 'k1': { const n = clampN(core / 6.5, 3, 6); return { title: `Fractionné ${n} × 1 km`, blocks: [wu, rep(n, [STEP('work', dist(1000), 4), STEP('recovery', t(n >= 5 ? 1.5 : 2), null)]), cd] }; }
+    case 'k2': { const n = clampN(core / 11, 2, 5); return { title: `Fractionné long ${n} × 2 km`, blocks: [wu, rep(n, [STEP('work', dist(2000), 3), STEP('recovery', t(3), null)]), cd] }; }
+    case 'pace': { const n = clampN(core / 12, 2, 4); return { title: `Allure course ${n} × 10′`, blocks: [wu, rep(n, [STEP('work', t(10), 3, 'allure visée le jour de la course'), STEP('recovery', t(2), null)]), cd] }; }
+    case 'race': return quality('running', 'race', total, racePace);
+  }
+}
+/** Rappel d’allure de la dernière semaine : 15′ + 4 × (3′ allure + R1′) + 10′. */
+function paceReminder(racePace: number | null): { title: string; blocks: Block[] } {
+  const work: Step = racePace
+    ? { ...STEP('work', t(3), null), intensity: { kind: 'pace', unit: 'per_km', min: Math.round(racePace) - 3, max: Math.round(racePace) + 3 } }
+    : STEP('work', t(3), 3, 'allure visée le jour de la course');
+  return { title: 'Rappel d’allure 4 × 3′', blocks: [STEP('warmup', t(15), 1), { type: 'repeat', times: 4, steps: [work, STEP('recovery', t(1), null)] }, STEP('cooldown', t(10), 1)] };
+}
+
 /** Jour de la séance longue : celui préféré par l’élève s’il est choisi, sinon le dernier jour du week-end, sinon le dernier de la semaine. */
 function longDay(days: number[], preferred?: number | null): number {
   if (preferred && days.includes(preferred)) return preferred;
@@ -228,6 +307,26 @@ export function generateProgram(input: ProgramInput): Program {
   const phaseWhy = (p: ProgramPhase) => ({
     tremplin: 'Tremplin', developpement: 'Développement', recuperation: 'Semaine allégée (−25 % pour assimiler)', affutage: 'Affûtage (moins de volume, un rappel d’intensité)',
   })[p];
+  // D-086 : méthode du fondateur pour la course à pied.
+  const isRun = sport === 'running' || sport === 'trail';
+  // Course/marche tant que l’élève ne court pas 20′ d’une traite ; la portion de course monte chaque semaine.
+  // Débutant ou longue coupure : on repart d’1′ de course, comme le fondateur.
+  const rwStart = f.practiceStatus === 'beginner' || f.practiceStatus === 'stopped' || currentLong < 5 ? 0 : currentLong < 10 ? 1 : currentLong < 15 ? 2 : 3;
+  const runPortion = (i: number, isLong: boolean) => (isRun && currentLong < 20 ? RUN_PORTIONS[Math.min(RUN_PORTIONS.length - 1, rwStart + Math.floor(i * 1.5) + (isLong ? 1 : 0))]! : 20);
+  const runWalkWeek = (i: number) => runPortion(i, false) < 20;
+  // Qualité du court au long, puis rotation vers l’allure de course ; types écartés par le coach respectés.
+  const chrono = Boolean(f.targetSeconds && racePace);
+  const rotation: ProgKey[] = longNeed >= 90 ? [chrono ? 'race' : 'pace', 'k2', 'k1', 's400'] : [chrono ? 'race' : 'pace', 'k1', 's400'];
+  const allowed = (k: ProgKey) => PROG[k].kind === 'race' || !avoid.has(PROG[k].kind);
+  const firstSteps = (['s200', 'hills', 'pyramid', 's400', 'k1'] as ProgKey[]).filter(allowed);
+  const cycle = rotation.filter(allowed).length ? rotation.filter(allowed) : [chrono ? 'race' as const : 'pace' as const];
+  let pi = 0;
+  const nextProg = (): ProgKey => (pi < firstSteps.length ? firstSteps[pi++]! : cycle[(pi++ - firstSteps.length) % cycle.length]!);
+  const paceKey: ProgKey = chrono ? 'race' : allowed('pace') ? 'pace' : cycle[0]!;
+  // Test 5 km en semaine 3 (après les premières semaines faciles) pour caler les allures : course jusqu’au semi.
+  const testWeek = isRun && f.distanceKm <= 21.1 && nWeeks >= 8 && tremplin >= 3 && currentLong >= 30 && !runWalkWeek(2) ? 2 : -1;
+  const estPerKm = eventMin / f.distanceKm;
+
   const weeks: ProgramWeek[] = [];
   let w = startWeekly, l = currentLong;
   let devIndex = 0, qi = 0;
@@ -240,8 +339,8 @@ export function generateProgram(input: ProgramInput): Program {
       phase = 'tremplin';
       w = i === 0 ? startWeekly : w * gT; l = i === 0 ? Math.max(currentLong, Math.min(longTremplinEnd, currentLong * lT)) : l * lT;
       weekly = w; long = l;
-      // Tremplin : endurance d’abord, une qualité légère à partir de la 3e semaine.
-      nQuality = i >= 2 ? Math.min(1, qualityCount) : 0;
+      // Tremplin : endurance d’abord, une qualité légère à partir de la 3e semaine (pas en course/marche ni la semaine du test).
+      nQuality = i >= 2 && !runWalkWeek(i) && i !== testWeek ? Math.min(1, qualityCount) : 0;
     } else if (i < tremplin + devWeeks) {
       devIndex++;
       if (devIndex % 4 === 0) { phase = 'recuperation'; weekly = w * 0.75; long = l * 0.75; nQuality = Math.min(1, qualityCount); }
@@ -256,6 +355,7 @@ export function generateProgram(input: ProgramInput): Program {
     if (phase === 'tremplin' && !devWeeks && i === tremplin - 1) { weekly = peakWeekly; long = longNeed; }
     // D-071 : réglages du coach. Le volume s’applique aux séances autres que la longue, qui reste à la hauteur de l’objectif.
     if (tw.maxQualityPerWeek !== null) nQuality = Math.min(nQuality, tw.maxQualityPerWeek);
+    if (runWalkWeek(i) && phase !== 'affutage') nQuality = 0;
     if (volume !== 1) weekly = Math.max(long + 20, weekly * volume);
 
     const list: ProgramSession[] = [];
@@ -265,7 +365,8 @@ export function generateProgram(input: ProgramInput): Program {
     const longD = isLast ? null : weekDays.includes(ld) ? ld : weekDays[weekDays.length - 1] ?? null;
     const others = weekDays.filter((d) => d !== longD);
     // Qualités espacées : premiers jours disponibles, jamais la veille de la séance longue si possible.
-    const qDays = others.filter((d) => !longD || d !== longD - 1).slice(0, nQuality);
+    // Fondateur : jamais une séance de qualité la veille ni le lendemain de la séance longue.
+    const qDays = others.filter((d) => !longD || (d !== longD - 1 && d !== longD + 1)).slice(0, nQuality);
     while (qDays.length < Math.min(nQuality, others.length)) qDays.push(others.find((d) => !qDays.includes(d))!);
     const easyDays = others.filter((d) => !qDays.includes(d));
     const longMin = longD ? r5(long) : 0;
@@ -279,16 +380,55 @@ export function generateProgram(input: ProgramInput): Program {
     // Tremplin : des séances faciles courtes pour partir vraiment de ce que l’élève fait aujourd’hui.
     const easyEach = easyDays.length ? r5(Math.max(easyFloor, (weekly - longMin - qualityMin) / easyDays.length)) : 0;
 
+    const fmtPace = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, '0')} /km`;
+    const firstEasy = weekDays.filter((d) => d !== longD && !qDays.includes(d))[0];
+    const eve = isLast ? raceDow - 1 : null;
+    let weekQ = 0;
     for (const d of weekDays.sort()) {
       const date = addDays(monday, d - 1);
-      if (d === longD) {
+      // D-086 : course/marche tant que l’élève ne court pas 20′ d’une traite.
+      const rw = (target: number, isLong: boolean) => {
+        const run = runPortion(i, isLong);
+        return run < 20 ? runWalkSession(target, run) : null;
+      };
+      if (d === longD && i === testWeek) {
+        const minutes = r5(15 + 5 * estPerKm);
+        list.push({ date, kind: 'quality', title: 'Test 5 km', minutes, source: 'generated', instructions: COACH_CUES.test,
+          blocks: [STEP('warmup', t(10), 1), STEP('work', { kind: 'distance', meters: 5000 }, null, 'le plus vite possible en restant régulier'), STEP('cooldown', t(5), 1)],
+          why: `${phaseWhy(phase)} : test 5 km pour caler tes allures de la suite du programme, à la place de la séance longue cette semaine.` });
+      } else if (d === longD) {
         const why = `${phaseWhy(phase)} : séance longue de ${label(longMin)}, vers les ${label(r5(longNeed))} nécessaires pour la course.`;
-        const fromLib = tw.longProgressive ? null : pick(LIBRARY_CATEGORY.long, longMin, phase, 0.15);
-        const prog = tw.longProgressive && longMin >= 40 ? r5(longMin / 3) : 0;
-        if (prog) list.push({ date, kind: 'long', title: `Sortie longue progressive ${label(longMin)}`, blocks: [STEP('work', t(longMin - prog), 2), STEP('work', t(prog), 3)], minutes: longMin, source: 'generated', why: `${why} Progressive à ta demande : le dernier tiers un cran plus vite.` });
+        // En course/marche, la sortie du week-end reste la plus longue de la semaine.
+        const walk = rw(Math.max(longMin, easyEach + 5), true);
+        const fromLib = tw.longProgressive || walk ? null : pick(LIBRARY_CATEGORY.long, longMin, phase, 0.15);
+        const prog = tw.longProgressive && longMin >= 40 && !walk ? r5(longMin / 3) : 0;
+        if (walk) list.push({ date, kind: 'long', title: walk.title, blocks: walk.blocks, minutes: walk.minutes, source: 'generated', instructions: COACH_CUES.runWalk, why: `${why} En course/marche : la portion de course s’allonge chaque semaine.` });
+        else if (prog) list.push({ date, kind: 'long', title: `Sortie longue progressive ${label(longMin)}`, blocks: [STEP('work', t(longMin - prog), 2), STEP('work', t(prog), 3)], minutes: longMin, source: 'generated', instructions: isRun ? `${COACH_CUES.long}\n\n${COACH_CUES.stop}` : null, why: `${why} Progressive à ta demande : le dernier tiers un cran plus vite.` });
         else list.push(fromLib
           ? { date, kind: 'long', title: fromLib.title, blocks: fromLib.blocks, minutes: fromLib.minutes, source: 'library', libraryId: fromLib.id, instructions: fromLib.instructions, why: `${why} Choisie dans ta bibliothèque (${fromLib.minutes} min).` }
-          : { date, kind: 'long', title: `Sortie longue ${label(longMin)}`, blocks: [STEP('work', t(longMin), 2)], minutes: longMin, source: 'generated', why });
+          : { date, kind: 'long', title: `Sortie longue ${label(longMin)}`, blocks: [STEP('work', t(longMin), 2)], minutes: longMin, source: 'generated', instructions: isRun ? `${COACH_CUES.long}\n\n${COACH_CUES.stop}` : null, why });
+      } else if (qDays.includes(d) && isRun) {
+        // Dernière semaine : un rappel d’allure, tôt dans la semaine.
+        if (isLast) {
+          const q = paceReminder(racePace);
+          list.push({ date, kind: 'quality', title: q.title, blocks: q.blocks, minutes: minutesOf(q.blocks, sport, input.refs) || 40, source: 'generated', instructions: `${COACH_CUES.taper} ${COACH_CUES.pace}`,
+            why: `${phaseWhy(phase)} : rappel de l’allure de course${racePace ? ` (${fmtPace(racePace)})` : ''}, au plus tard trois jours avant.` });
+          weekQ++;
+          continue;
+        }
+        let key: ProgKey = weekQ === 1 ? paceKey : phase === 'affutage' && chrono ? 'race' : nextProg();
+        // Deux séances de qualité : vitesse puis allure, jamais deux fois l’allure la même semaine.
+        if (weekQ === 0 && qDays.length >= 2 && key === paceKey && cycle.length > 1) key = nextProg();
+        weekQ++;
+        const item = PROG[key];
+        const why = `${phaseWhy(phase)} : ${item.reason}${key === 'race' && racePace ? ` (${fmtPace(racePace)})` : ''}, environ ${label(qMin)}.`;
+        const fromLib = key === 'race' ? null : pick(item.category, qMin, phase);
+        if (fromLib) list.push({ date, kind: 'quality', title: fromLib.title, blocks: fromLib.blocks, minutes: fromLib.minutes, source: 'library', libraryId: fromLib.id, instructions: fromLib.instructions, why: `${why} Choisie dans ta bibliothèque (${fromLib.minutes} min pour ${qMin} visées).` });
+        else {
+          const q = progSession(key, qMin, racePace);
+          // Sans VMA connue, les fractions en distance ne se chiffrent pas : la durée visée sert d’estimation.
+          list.push({ date, kind: 'quality', title: q.title, blocks: q.blocks, minutes: input.refs?.vmaKmh ? minutesOf(q.blocks, sport, input.refs) || qMin : qMin, source: 'generated', instructions: `${item.cue}\n\n${COACH_CUES.stop}`, why });
+        }
       } else if (qDays.includes(d)) {
         const type = phase === 'tremplin' ? tremplinType : phase === 'affutage' && f.targetSeconds ? 'race' : qualityTypes[qi++ % qualityTypes.length]!;
         const why = `${phaseWhy(phase)} : ${TYPE_REASON[type]}${type === 'race' && racePace ? ` (${Math.floor(racePace / 60)}:${String(Math.round(racePace % 60)).padStart(2, '0')} /km)` : ''}, environ ${label(qMin)}.`;
@@ -298,9 +438,19 @@ export function generateProgram(input: ProgramInput): Program {
           const q = quality(sport, type, qMin, racePace);
           list.push({ date, kind: 'quality', title: q.title, blocks: q.blocks, minutes: minutesOf(q.blocks, sport, input.refs) || qMin, source: 'generated', why });
         }
+      } else if (isRun && d === eve) {
+        // Veille de course : 15′ et quelques lignes droites.
+        list.push({ date, kind: 'easy', title: 'Footing 15′ + lignes droites', blocks: [STEP('work', t(15), 2), stridesBlock(4, 30, 30)], minutes: 19, source: 'generated', instructions: `${COACH_CUES.eve} ${COACH_CUES.strides}`,
+          why: `${phaseWhy(phase)} : veille de course, pour se mettre en confiance.` });
       } else {
         const why = `${phaseWhy(phase)} : ${phase === 'tremplin' ? 'endurance facile pour installer la régularité depuis ce qui est fait aujourd’hui' : 'endurance facile pour compléter le volume de la semaine'}.`;
-        list.push({ date, kind: 'easy', title: `${easyName(sport)} ${label(easyEach)}`, blocks: [STEP('work', t(easyEach), 2)], minutes: easyEach, source: 'generated', why });
+        const walk = rw(easyEach, false);
+        // Lignes droites : premier contact avec la vitesse, en fin de footing, les semaines sans qualité (avant le premier fractionné).
+        const strides = isRun && !walk && d === firstEasy && nQuality === 0 && phase === 'tremplin';
+        if (walk) list.push({ date, kind: 'easy', title: walk.title, blocks: walk.blocks, minutes: walk.minutes, source: 'generated', instructions: COACH_CUES.runWalk, why: `${why} En course/marche, pour habituer le corps aux impacts.` });
+        else if (strides) list.push({ date, kind: 'easy', title: `${easyName(sport)} ${label(easyEach)} + lignes droites`, blocks: [STEP('work', t(easyEach), 2), stridesBlock(i === 0 ? 4 : 6)], minutes: easyEach + (i === 0 ? 4 : 6), source: 'generated',
+          instructions: `${COACH_CUES.easy}\n\n${COACH_CUES.strides}`, why: `${why} Avec des lignes droites : premier contact avec la vitesse, avant le fractionné.` });
+        else list.push({ date, kind: 'easy', title: `${easyName(sport)} ${label(easyEach)}`, blocks: [STEP('work', t(easyEach), 2)], minutes: easyEach, source: 'generated', instructions: isRun ? COACH_CUES.easy : null, why });
       }
     }
     if (isLast) {
@@ -312,20 +462,22 @@ export function generateProgram(input: ProgramInput): Program {
   // puis hausses d’une semaine à l’autre (hors reprise après une semaine allégée), volume et séance longue.
   const progressionRisks: ProgramRisk[] = [];
   const w1 = weeks[0];
-  if (w1 && w1.minutes > startWeekly * 1.1 && input.currentWeeklyMin) {
+  // D-086 : seuils en minutes aussi (pratique du fondateur : +15 à 30′ par semaine aux petits volumes sans souci).
+  if (w1 && w1.minutes > startWeekly * 1.1 && w1.minutes - startWeekly > 20 && input.currentWeeklyMin) {
     const g = w1.minutes / startWeekly;
-    progressionRisks.push({ level: g > 1.3 ? 'block' : 'risk', text: `Semaine 1 : ${label(r5(w1.minutes))} prévues pour ${label(r5(startWeekly))} faites en moyenne ces 4 dernières semaines (+${pct(g)} %).` });
+    progressionRisks.push({ level: g > 1.3 && w1.minutes - startWeekly > 45 ? 'block' : 'risk', text: `Semaine 1 : ${label(r5(w1.minutes))} prévues pour ${label(r5(startWeekly))} faites en moyenne ces 4 dernières semaines (+${pct(g)} %).` });
   }
-  let worst: { week: number; g: number; what: string } | null = null;
+  let worst: { week: number; g: number; what: string; delta: number; block: boolean } | null = null;
   for (let k = 1; k < weeks.length; k++) {
     const prev = weeks[k - 1]!, cur = weeks[k]!;
     if (prev.phase === 'recuperation' || cur.phase === 'affutage') continue;
-    const gv = prev.minutes ? cur.minutes / prev.minutes : 1;
-    const gl = prev.longMinutes ? cur.longMinutes / prev.longMinutes : 1;
-    if (gv > 1.1 && (!worst || gv > worst.g)) worst = { week: cur.index, g: gv, what: 'le volume' };
-    if (gl > 1.12 && (!worst || gl > worst.g)) worst = { week: cur.index, g: gl, what: 'la séance longue' };
+    const gv = prev.minutes ? cur.minutes / prev.minutes : 1, dv = cur.minutes - prev.minutes;
+    const gl = prev.longMinutes ? cur.longMinutes / prev.longMinutes : 1, dl = cur.longMinutes - prev.longMinutes;
+    // Volume : risque au-delà de +10 % et de +30′ ; séance longue : au-delà de +12 % et de +10′.
+    if (gv > 1.1 && dv > 30 && (!worst || gv > worst.g)) worst = { week: cur.index, g: gv, what: 'le volume', delta: dv, block: gv > 1.3 && dv > 45 };
+    if (gl > 1.12 && dl > 10 && (!worst || gl > worst.g)) worst = { week: cur.index, g: gl, what: 'la séance longue', delta: dl, block: gl > 1.3 && dl > 20 };
   }
-  if (worst) progressionRisks.push({ level: worst.g > 1.2 ? 'block' : 'risk', text: `Semaine ${worst.week} : ${worst.what} augmente de ${pct(worst.g)} % par rapport à la semaine précédente (10 % conseillés).` });
+  if (worst) progressionRisks.push({ level: worst.block ? 'block' : 'risk', text: `Semaine ${worst.week} : ${worst.what} augmente de ${pct(worst.g)} % (+${Math.round(worst.delta)}′) par rapport à la semaine précédente.` });
   // D-066 : séances plus longues que le temps disponible en semaine (bilan). Le coach décide : déplacer ou raccourcir.
   const cap = input.weekdayCapMin;
   if (cap) {

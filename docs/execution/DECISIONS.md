@@ -1352,3 +1352,47 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - La durée affichée d’une séance en distance sans allure ne compte que ses parties en temps.
   - Les consignes générales du programme (objectif, règles) ne sont pas encore enregistrées avec le programme type.
 - **Suite proposée.** Aligner le générateur sur la méthode du fondateur (course/marche, lignes droites, ordre de la qualité, test 5 km, seuils de risque en minutes) : voir METHODE_FONDATEUR.md, après son accord.
+
+## D-086 · Générateur aligné sur la méthode du fondateur · 2026-11-20
+
+- **Instruction du fondateur.** « Oui, aligne-le », en réponse aux écarts relevés dans [METHODE_FONDATEUR.md](METHODE_FONDATEUR.md) (D-085).
+- **Décision (course à pied et trail ; vélo et natation inchangés).**
+  - **Course/marche** tant que l’élève ne court pas 20′ d’une traite.
+    - Départ : 1′ de course pour un débutant ou après une longue coupure.
+    - Progression : 8 × (1′ + 1′30 marche) après 10′ de marche active, puis 1′30, 2′, 3′, 4′, 5′, 7′, 10′ et 15′.
+    - La sortie du week-end reste la plus longue de la semaine.
+    - Aucune séance de qualité pendant la course/marche.
+  - **Lignes droites** (4 à 6 × 20″ en fin de footing, sans zone) les semaines du tremplin sans qualité, avant le premier fractionné.
+  - **Qualité du court au long** :
+    - ordre : 200 m → côtes 30″ → pyramide 1-2-3-2-1′ → 400 m → 1 km ;
+    - ensuite, rotation allure de course (2 km au chrono visé, ou 10′ sans chrono), 1 km, 400 m ; 2 km longs à partir du semi ;
+    - avec deux qualités par semaine : la vitesse d’abord, puis l’allure, jamais deux fois l’allure ;
+    - les types écartés par le coach (D-071, D-072) restent respectés.
+  - **Test 5 km en semaine 3**, à la place de la séance longue, pour caler les allures. Conditions : course jusqu’au semi, au moins 8 semaines, élève qui court déjà 30′.
+  - **Placement** : jamais de qualité la veille ni le lendemain de la séance longue.
+  - **Dernière semaine** : rappel d’allure 4 × 3′ tôt dans la semaine ; veille en footing 15′ et 4 lignes droites.
+  - **Risques en minutes aussi** :
+    - volume signalé au-delà de +10 % **et** de +30′ (bloquant au-delà de +30 % et de +45′) ;
+    - séance longue au-delà de +12 % et de +10′ ;
+    - semaine 1 au-delà de +10 % et de +20′.
+
+    Les hausses de 15 à 30′ des petits volumes, courantes chez le fondateur, ne sont plus signalées.
+  - **Consignes types** dans chaque séance générée, dans son style :
+    - facile = parler ; « Tortue mood » ; la marche n’est pas un échec ;
+    - la première répétition pas plus rapide que les suivantes ; côtes ; test ; veille ;
+    - consigne d’arrêt en cas de douleur qui augmente.
+- **Inchangé.** Le programme reste à la hauteur de l’objectif validé ; tremplin, développement avec une semaine allégée sur quatre, affûtage ; bibliothèque du coach d’abord ; « Ma méthode » prioritaire ; tout est créé en brouillons.
+- **Preuve.**
+  - 4 tests du domaine :
+    - reprise lourde en course/marche ;
+    - débutante (lignes droites, test 5 km, ordre de la qualité) ;
+    - dernière semaine et placement ;
+    - types écartés, vélo inchangé, seuils en minutes.
+
+    Les tests antérieurs passent sans changement.
+  - Programmes types vérifiés pour 4 profils (reprise lourde, débutante active, régulière 12 km, semi).
+  - Navigateur (démo, Camille, semi) : lignes droites en S1 et S2, test 5 km en S3, pyramide d’abord (la méthode de Marine écarte la VMA), rappel d’allure, puis veille.
+  - `npm test` : **280 passés** (+3 PostgreSQL), typecheck OK.
+- **Limites.**
+  - La durée d’une séance en distance sans VMA connue est estimée à la durée visée.
+  - Le passage de la course/marche à la course continue peut être brusque sur une préparation courte : le risque d’endurance est alors signalé au coach.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fouleeLibrary, generateProgram, parseNotation, type Block, type FeasibilityInput, type ProgramInput } from './index';
+import { fouleeLibrary, generateProgram, NO_TWEAKS, parseNotation, type Block, type FeasibilityInput, type ProgramInput } from './index';
 
 // D-061 : règle du fondateur — à la hauteur de l’objectif, 4 semaines de tremplin, risques signalés au coach.
 
@@ -113,3 +113,67 @@ describe('générateur de programme', () => {
   });
 });
 
+
+// D-086 : méthode du fondateur (docs/execution/METHODE_FONDATEUR.md).
+describe('générateur aligné sur la méthode du fondateur (D-086)', () => {
+  const run = (p: ReturnType<typeof generateProgram>) => p.weeks.flatMap((w) => w.sessions.map((s) => ({ w, s })));
+  const tenK = (over: Partial<FeasibilityInput>): FeasibilityInput => ({
+    sport: 'running', distanceKm: 10, eventDate: '2027-01-17', targetSeconds: null, level: 'beginner', practiceStatus: 'regular',
+    longestRecent: '30to45', weeklySessions: '2to3', weeklyHours: null, today: '2026-11-08', ...over,
+  });
+  const at = (f2: FeasibilityInput, days = [2, 4, 7], cur: number | null = 105) =>
+    generateProgram({ feasibility: f2, startMonday: '2026-11-09', days, currentWeeklyMin: cur, goalTitle: '10 km' });
+
+  it('reprise lourde : course/marche dès 1′, portions qui s’allongent, sortie du week-end la plus longue, pas de qualité', () => {
+    const p = at(tenK({ practiceStatus: 'stopped', longestRecent: null, weeklySessions: '0to1' }), [2, 4, 7], null);
+    const w1 = p.weeks[0]!.sessions;
+    expect(w1.every((s) => s.title.startsWith('Course/marche'))).toBe(true);
+    expect(w1[0]!.title).toBe('Course/marche 8 × (1′ + 1′30 marche)');
+    expect(w1[0]!.blocks[0]).toMatchObject({ phase: 'warmup', note: 'marche active' });
+    expect(w1[0]!.instructions).toMatch(/La marche n’est pas un échec/);
+    expect(w1.at(-1)!.minutes).toBeGreaterThan(w1[0]!.minutes);
+    const portions = p.weeks.map((w) => Number(/\((\d+)/.exec(w.sessions[0]!.title)?.[1] ?? 99));
+    expect(portions.slice(0, 5)).toEqual([...portions.slice(0, 5)].sort((a, b) => a - b));
+    // Pas de qualité tant que l’élève court/marche.
+    expect(run(p).filter(({ s }) => s.title.startsWith('Course/marche')).every(({ w }) => w.sessions.every((x) => x.kind !== 'quality'))).toBe(true);
+    expect(run(p).some(({ s }) => s.title.startsWith('Sortie longue'))).toBe(true);
+  });
+
+  it('débutante active : lignes droites d’abord, test 5 km en semaine 3, puis 200 m → côtes → pyramide → 400 m → 1 km', () => {
+    const p = at(tenK({}));
+    expect(p.weeks[0]!.sessions[0]!.title).toMatch(/\+ lignes droites$/);
+    expect(p.weeks[0]!.sessions[0]!.kind).toBe('easy');
+    expect(p.weeks.slice(0, 3).every((w) => w.sessions.every((s) => s.kind !== 'quality' || s.title === 'Test 5 km'))).toBe(true);
+    const test = p.weeks[2]!.sessions.find((s) => s.title === 'Test 5 km')!;
+    expect(test.blocks[1]).toMatchObject({ measure: { kind: 'distance', meters: 5000 } });
+    expect(test.instructions).toMatch(/Pars prudent/);
+    const q = run(p).filter(({ s }) => s.kind === 'quality' && s.title !== 'Test 5 km').map(({ s }) => s.title);
+    expect(q.slice(0, 5).map((x) => x.replace(/\d+ × /, ''))).toEqual(['Fractionné 200 m', 'Côtes 30″', 'Pyramide 1-2-3-2-1′', 'Fractionné 400 m', 'Fractionné 1 km']);
+    expect(run(p).find(({ s }) => s.title.startsWith('Fractionné'))!.s.instructions).toMatch(/la première ne peut pas être plus rapide/);
+  });
+
+  it('dernière semaine : rappel d’allure tôt, veille en footing + lignes droites ; jamais de qualité autour de la sortie longue', () => {
+    const p = at(tenK({ eventDate: '2027-01-30', targetSeconds: 75 * 60, level: 'intermediate', longestRecent: '45to60' }), [1, 3, 5, 7], 150);
+    const last = p.weeks.at(-1)!.sessions;
+    expect(last[0]!.title).toBe('Rappel d’allure 4 × 3′');
+    expect(last.find((s) => s.date === '2027-01-29')!.title).toBe('Footing 15′ + lignes droites');
+    const dow = (d: string) => ((new Date(`${d}T12:00:00Z`).getUTCDay() + 6) % 7) + 1;
+    for (const w of p.weeks) {
+      const long = w.sessions.find((s) => s.kind === 'long');
+      if (!long) continue;
+      for (const s of w.sessions.filter((x) => x.kind === 'quality')) expect(Math.abs(dow(s.date) - dow(long.date))).toBeGreaterThan(1);
+    }
+    // Deux qualités par semaine : vitesse puis allure, jamais deux fois l’allure.
+    for (const w of p.weeks) expect(w.sessions.filter((s) => s.title.startsWith('Allure course')).length).toBeLessThanOrEqual(1);
+  });
+
+  it('types écartés par le coach respectés ; vélo inchangé ; risques en minutes (+15 à 30′ aux petits volumes acceptés)', () => {
+    const noVma = generateProgram({ feasibility: tenK({}), startMonday: '2026-11-09', days: [2, 4, 7], currentWeeklyMin: 105, goalTitle: '10 km', tweaks: { ...NO_TWEAKS, avoidQuality: ['vma'] } });
+    const titles = run(noVma).map(({ s }) => s.title);
+    expect(titles.some((x) => /200 m|400 m|Côtes/.test(x))).toBe(false);
+    expect(titles.some((x) => x.startsWith('Pyramide'))).toBe(true);
+    const bike = generateProgram({ ...base, feasibility: { ...f, sport: 'cycling', distanceKm: 100, targetSeconds: null, longestRecent: 'gt120' }, days: [3, 6, 7] });
+    expect(run(bike).some(({ s }) => /Course\/marche|lignes droites|Test 5 km/.test(s.title))).toBe(false);
+    expect(at(tenK({})).risks.some((r) => /augmente/.test(r.text))).toBe(false);
+  });
+});

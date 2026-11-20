@@ -287,3 +287,13 @@ Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et
 6. Pour le donner à un élève : ouvre sa semaine dans Séances, puis applique le programme type. Tout arrive en brouillons, rien n’est publié.
 
 À me signaler : une séance mal lue (copie-moi la ligne), une semaine manquante, ou un jour mal placé.
+
+## Programme généré selon ta méthode (D-086)
+
+1. Ouvre la fiche d’un élève qui a un objectif validé en course à pied, puis **Générer le programme**.
+2. Vérifie :
+   - un débutant ou une reprise lourde part en course/marche (8 × (1′ + 1′30 marche)), avec des portions qui s’allongent chaque semaine ;
+   - sinon : des lignes droites en S1 et S2, un **Test 5 km** en S3, puis 200 m → côtes → pyramide → 400 m → 1 km ;
+   - dernière semaine : un rappel d’allure 4 × 3′, puis la veille un footing de 15′ avec des lignes droites ;
+   - ouvre une séance : sa consigne est écrite dans ton style.
+3. Dis-moi ce qui ne ressemble pas à ce que tu aurais écrit.
