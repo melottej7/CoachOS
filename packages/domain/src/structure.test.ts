@@ -39,12 +39,12 @@ describe('séance structurée', () => {
     const one = (zone: number) => [{ type: 'step', phase: 'work', measure: { kind: 'time', seconds: 60 }, intensity: { kind: 'zone', zone } }];
     expect(parseWith(structureSchema, one(7)).ok).toBe(true);
     expect(parseWith(structureSchema, one(8)).ok).toBe(false);
-    expect(describeBlock(blocks(one(6))[0]!)).toBe('Effort · 1 min · Z6 (VMA moyenne)');
+    expect(describeBlock(blocks(one(6))[0]!)).toBe('Effort · 1 min · Z6 (VMA)');
   });
 
   it('estime distance et durée avec la VMA (zones) ou l’allure donnée', () => {
-    // VMA 15 km/h : Z2 = 65-70 %, allure 6:09 à 5:43 /km.
-    expect(zonePace(2, 15)).toEqual([369, 343]);
+    // VMA 15 km/h : Z2 = 65-75 % (D-087), allure 6:09 à 5:20 /km.
+    expect(zonePace(2, 15)).toEqual([369, 320]);
     const run = blocks([
       { type: 'step', phase: 'warmup', measure: { kind: 'time', seconds: 1200 }, intensity: { kind: 'zone', zone: 2 } },
       { type: 'repeat', times: 5, steps: [{ type: 'step', phase: 'work', measure: { kind: 'distance', meters: 400 }, intensity: { kind: 'zone', zone: 6 } }] },
@@ -54,10 +54,10 @@ describe('séance structurée', () => {
     expect(without.unknownDistance).toBe(true);
     expect(without.unknownTime).toBe(true);
     const withVma = structureTotals(run, { sport: 'running', refs: { vmaKmh: 15 } });
-    // 20 min à 67,5 % de 15 km/h ≈ 3 375 m ; 5 × 400 m à 97,5 % ≈ 98 s chacun.
-    expect(withVma.totalMeters).toBe(2000 + 3380);
-    expect(withVma.seconds).toBe(1200 + 5 * 98);
-    expect(describeTotals(withVma)).toBe('environ 28 min 10 s · environ 5,4 km');
+    // D-087 : 20 min à 70 % de 15 km/h = 3 500 m ; 5 × 400 m à 101 % ≈ 95 s chacun.
+    expect(withVma.totalMeters).toBe(2000 + 3500);
+    expect(withVma.seconds).toBe(1200 + 5 * 95);
+    expect(describeTotals(withVma)).toBe('environ 27 min 55 s · environ 5,5 km');
     // Cyclisme : les zones ne se convertissent pas avec la VMA.
     expect(structureTotals(run, { sport: 'cycling', refs: { vmaKmh: 15 } }).unknownDistance).toBe(true);
     // Allure donnée : estimation sans VMA.

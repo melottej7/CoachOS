@@ -161,7 +161,7 @@ interface Raw { line: number; title: string; sport: string; category: string; st
  * Aperçu de l’import. `existing` : titres déjà dans la bibliothèque (minuscules). `defaultSport` : sport quand la
  * ligne n’en dit rien.
  */
-export function previewImport(text: string, opts: { defaultSport: Sport; existing?: Iterable<string> }): ImportPreview {
+export function previewImport(text: string, opts: { defaultSport: Sport; existing?: Iterable<string>; shiftedZones?: boolean }): ImportPreview {
   const errors: string[] = [];
   const src = text.replace(/^﻿/, '').replace(/\r\n?/g, '\n');
   if (!src.trim()) return { format: 'lines', separator: null, columns: [], rows: [], errors: ['Rien à importer : colle tes séances ou choisis un fichier.'] };
@@ -229,7 +229,7 @@ export function previewImport(text: string, opts: { defaultSport: Sport; existin
       // D-085 : écriture libre d’un coach (« Footing 45' Z1-2 », « 3*(2km 4'40 + 400m Z1) ») lue de façon tolérante ;
       // le texte d’origine reste dans les consignes.
       if (n.errors.length) {
-        const loose = parseNotation(r.structure, sport, { lenient: true });
+        const loose = parseNotation(r.structure, sport, { lenient: true, shiftedZones: opts.shiftedZones });
         if (!loose.errors.length && loose.blocks.length && /\d/.test(r.structure)) {
           n = loose;
           instructions = [`Texte d’origine : ${r.structure.trim()}`, instructions].filter(Boolean).join('\n\n');

@@ -18,7 +18,7 @@ describe('seuils FTP et CSS', () => {
     const refs = { vmaKmh: 15, ftpW: 250, cssSecPer100: 105 };
     expect(personalTarget(step({ intensity: { kind: 'zone', zone: 4 } }), 'cycling', refs)).toBe('230 à 265 W');
     expect(personalTarget(step({ intensity: { kind: 'zone', zone: 4 } }), 'swimming', refs)).toBe('1:51 à 1:45 /100 m');
-    expect(personalTarget(step({ intensity: { kind: 'zone', zone: 2 } }), 'running', refs)).toBe('6:09 à 5:43 /km');
+    expect(personalTarget(step({ intensity: { kind: 'zone', zone: 2 } }), 'running', refs)).toBe('6:09 à 5:20 /km');
     expect(personalTarget(step({ intensity: { kind: 'zone', zone: 4 } }), 'cycling', { vmaKmh: 15 })).toBeNull();
     expect(personalTarget(step({ intensity: { kind: 'power', unit: 'pct_ftp', min: 88, max: 94 } }), 'cycling', refs)).toBe('220 à 235 W');
     // Multisport : le sport de l’étape décide.

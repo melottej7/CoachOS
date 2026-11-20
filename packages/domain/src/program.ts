@@ -198,40 +198,41 @@ type ProgKey = 's200' | 'hills' | 'pyramid' | 's400' | 'k1' | 'k2' | 'pace' | 'r
 const PROG: Record<ProgKey, { kind: QualityKind | 'race'; category: string; reason: string; cue: string }> = {
   s200: { kind: 'vma', category: 'intervals', reason: 'premier fractionné, sur des distances courtes', cue: COACH_CUES.intervals },
   hills: { kind: 'vma', category: 'hills', reason: 'côtes : du renforcement déguisé, pour la force et la foulée', cue: COACH_CUES.hills },
-  pyramid: { kind: 'threshold', category: 'threshold', reason: 'pyramide : tenir la même allure sur des efforts qui changent', cue: COACH_CUES.intervals },
+  pyramid: { kind: 'vma', category: 'intervals', reason: 'pyramide : tenir la même allure sur des efforts qui changent', cue: COACH_CUES.intervals },
   s400: { kind: 'vma', category: 'intervals', reason: 'les fractions s’allongent', cue: COACH_CUES.intervals },
-  k1: { kind: 'threshold', category: 'threshold', reason: 'fractions longues, vers l’allure de course', cue: COACH_CUES.intervals },
+  k1: { kind: 'vma', category: 'intervals', reason: 'fractions longues, vers l’allure de course', cue: COACH_CUES.intervals },
   k2: { kind: 'threshold', category: 'threshold', reason: 'fractions longues pour tenir l’allure longtemps', cue: COACH_CUES.intervals },
   pace: { kind: 'tempo', category: 'tempo', reason: 's’habituer à l’allure visée le jour de la course', cue: COACH_CUES.pace },
   race: { kind: 'race', category: 'race', reason: 's’habituer à l’allure visée le jour de la course', cue: COACH_CUES.pace },
 };
 const clampN = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, Math.round(v)));
-function progSession(key: ProgKey, total: number, racePace: number | null): { title: string; blocks: Block[] } {
+// D-087 : zones de l’échelle mêlée (200 et 400 m = VMA Z6 ; 1 km et pyramide = allure 5 km Z5 ; 2 km = seuil Z4).
+function progSession(key: ProgKey, total: number, racePace: number | null, paceZone = 4): { title: string; blocks: Block[] } {
   const short = total < 45;
   const core = Math.max(8, total - (short ? 15 : 25));
   const wu = STEP('warmup', t(short ? 10 : 15), 1), cd = STEP('cooldown', t(short ? 5 : 10), 1);
   const rep = (n: number, steps: Step[]): Block => ({ type: 'repeat', times: n, steps });
   const dist = (m: number) => ({ kind: 'distance' as const, meters: m });
   switch (key) {
-    case 's200': { const n = clampN(core / 2.2, 6, 12); return { title: `Fractionné ${n} × 200 m`, blocks: [wu, rep(n, [STEP('work', dist(200), 5), STEP('recovery', dist(200), null)]), cd] }; }
+    case 's200': { const n = clampN(core / 2.2, 6, 12); return { title: `Fractionné ${n} × 200 m`, blocks: [wu, rep(n, [STEP('work', dist(200), 6), STEP('recovery', dist(200), null)]), cd] }; }
     case 'hills': { const n = clampN(core / 1.5, 6, 12); return { title: `Côtes ${n} × 30″`, blocks: [wu, rep(n, [STEP('work', { kind: 'time', seconds: 30 }, 6, 'en côte'), STEP('recovery', t(1), null, 'descente en trottinant')]), cd] }; }
     case 'pyramid': {
       const parts = [1, 2, 3, 2, 1];
-      const steps: Block[] = parts.flatMap((m, i) => [STEP('work', t(m), 4), ...(i < parts.length - 1 ? [STEP('recovery', t(1), null)] : [])]);
+      const steps: Block[] = parts.flatMap((m, i) => [STEP('work', t(m), 5), ...(i < parts.length - 1 ? [STEP('recovery', t(1), null)] : [])]);
       return { title: 'Pyramide 1-2-3-2-1′', blocks: [wu, ...steps, cd] };
     }
-    case 's400': { const n = clampN(core / 3.5, 5, 10); return { title: `Fractionné ${n} × 400 m`, blocks: [wu, rep(n, [STEP('work', dist(400), 5), STEP('recovery', dist(200), null)]), cd] }; }
-    case 'k1': { const n = clampN(core / 6.5, 3, 6); return { title: `Fractionné ${n} × 1 km`, blocks: [wu, rep(n, [STEP('work', dist(1000), 4), STEP('recovery', t(n >= 5 ? 1.5 : 2), null)]), cd] }; }
-    case 'k2': { const n = clampN(core / 11, 2, 5); return { title: `Fractionné long ${n} × 2 km`, blocks: [wu, rep(n, [STEP('work', dist(2000), 3), STEP('recovery', t(3), null)]), cd] }; }
-    case 'pace': { const n = clampN(core / 12, 2, 4); return { title: `Allure course ${n} × 10′`, blocks: [wu, rep(n, [STEP('work', t(10), 3, 'allure visée le jour de la course'), STEP('recovery', t(2), null)]), cd] }; }
+    case 's400': { const n = clampN(core / 3.5, 5, 10); return { title: `Fractionné ${n} × 400 m`, blocks: [wu, rep(n, [STEP('work', dist(400), 6), STEP('recovery', dist(200), null)]), cd] }; }
+    case 'k1': { const n = clampN(core / 6.5, 3, 6); return { title: `Fractionné ${n} × 1 km`, blocks: [wu, rep(n, [STEP('work', dist(1000), 5), STEP('recovery', t(n >= 5 ? 1.5 : 2), null)]), cd] }; }
+    case 'k2': { const n = clampN(core / 11, 2, 5); return { title: `Fractionné long ${n} × 2 km`, blocks: [wu, rep(n, [STEP('work', dist(2000), 4), STEP('recovery', t(3), null)]), cd] }; }
+    case 'pace': { const n = clampN(core / 12, 2, 4); return { title: `Allure course ${n} × 10′`, blocks: [wu, rep(n, [STEP('work', t(10), paceZone, 'allure visée le jour de la course'), STEP('recovery', t(2), null)]), cd] }; }
     case 'race': return quality('running', 'race', total, racePace);
   }
 }
 /** Rappel d’allure de la dernière semaine : 15′ + 4 × (3′ allure + R1′) + 10′. */
-function paceReminder(racePace: number | null): { title: string; blocks: Block[] } {
+function paceReminder(racePace: number | null, paceZone = 4): { title: string; blocks: Block[] } {
   const work: Step = racePace
     ? { ...STEP('work', t(3), null), intensity: { kind: 'pace', unit: 'per_km', min: Math.round(racePace) - 3, max: Math.round(racePace) + 3 } }
-    : STEP('work', t(3), 3, 'allure visée le jour de la course');
+    : STEP('work', t(3), paceZone, 'allure visée le jour de la course');
   return { title: 'Rappel d’allure 4 × 3′', blocks: [STEP('warmup', t(15), 1), { type: 'repeat', times: 4, steps: [work, STEP('recovery', t(1), null)] }, STEP('cooldown', t(10), 1)] };
 }
 
@@ -316,7 +317,7 @@ export function generateProgram(input: ProgramInput): Program {
   const runWalkWeek = (i: number) => runPortion(i, false) < 20;
   // Qualité du court au long, puis rotation vers l’allure de course ; types écartés par le coach respectés.
   const chrono = Boolean(f.targetSeconds && racePace);
-  const rotation: ProgKey[] = longNeed >= 90 ? [chrono ? 'race' : 'pace', 'k2', 'k1', 's400'] : [chrono ? 'race' : 'pace', 'k1', 's400'];
+  const rotation: ProgKey[] = f.distanceKm >= 15 ? [chrono ? 'race' : 'pace', 'k2', 'k1', 's400'] : [chrono ? 'race' : 'pace', 'k1', 's400'];
   const allowed = (k: ProgKey) => PROG[k].kind === 'race' || !avoid.has(PROG[k].kind);
   const firstSteps = (['s200', 'hills', 'pyramid', 's400', 'k1'] as ProgKey[]).filter(allowed);
   const cycle = rotation.filter(allowed).length ? rotation.filter(allowed) : [chrono ? 'race' as const : 'pace' as const];
@@ -326,6 +327,8 @@ export function generateProgram(input: ProgramInput): Program {
   // Test 5 km en semaine 3 (après les premières semaines faciles) pour caler les allures : course jusqu’au semi.
   const testWeek = isRun && f.distanceKm <= 21.1 && nWeeks >= 8 && tremplin >= 3 && currentLong >= 30 && !runWalkWeek(2) ? 2 : -1;
   const estPerKm = eventMin / f.distanceKm;
+  // Allure de course sans chrono : seuil (Z4) jusqu’au semi, endurance active (Z3) au-delà.
+  const paceZone = f.distanceKm >= 30 ? 3 : 4;
 
   const weeks: ProgramWeek[] = [];
   let w = startWeekly, l = currentLong;
@@ -410,7 +413,7 @@ export function generateProgram(input: ProgramInput): Program {
       } else if (qDays.includes(d) && isRun) {
         // Dernière semaine : un rappel d’allure, tôt dans la semaine.
         if (isLast) {
-          const q = paceReminder(racePace);
+          const q = paceReminder(racePace, paceZone);
           list.push({ date, kind: 'quality', title: q.title, blocks: q.blocks, minutes: minutesOf(q.blocks, sport, input.refs) || 40, source: 'generated', instructions: `${COACH_CUES.taper} ${COACH_CUES.pace}`,
             why: `${phaseWhy(phase)} : rappel de l’allure de course${racePace ? ` (${fmtPace(racePace)})` : ''}, au plus tard trois jours avant.` });
           weekQ++;
@@ -425,7 +428,7 @@ export function generateProgram(input: ProgramInput): Program {
         const fromLib = key === 'race' ? null : pick(item.category, qMin, phase);
         if (fromLib) list.push({ date, kind: 'quality', title: fromLib.title, blocks: fromLib.blocks, minutes: fromLib.minutes, source: 'library', libraryId: fromLib.id, instructions: fromLib.instructions, why: `${why} Choisie dans ta bibliothèque (${fromLib.minutes} min pour ${qMin} visées).` });
         else {
-          const q = progSession(key, qMin, racePace);
+          const q = progSession(key, qMin, racePace, paceZone);
           // Sans VMA connue, les fractions en distance ne se chiffrent pas : la durée visée sert d’estimation.
           list.push({ date, kind: 'quality', title: q.title, blocks: q.blocks, minutes: input.refs?.vmaKmh ? minutesOf(q.blocks, sport, input.refs) || qMin : qMin, source: 'generated', instructions: `${item.cue}\n\n${COACH_CUES.stop}`, why });
         }

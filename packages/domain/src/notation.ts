@@ -238,13 +238,20 @@ export interface NotationOptions {
    * Réservée à l’import ; l’éditeur reste strict.
    */
   lenient?: boolean;
+  /** D-087 : zones écrites dans l’échelle des documents du fondateur (un cran plus bas que CoachOS). */
+  shiftedZones?: boolean;
+}
+
+/** D-087 : « Z1-2 » ou « Z1-Z2 » dans un texte = l’échelle des documents du fondateur. */
+export function detectShiftedZones(text: string): boolean {
+  return /\bZ\s*1\s*-\s*Z?\s*2\b/i.test(text);
 }
 
 /** Texte → blocs, avec les erreurs à corriger (aucune perte silencieuse). */
 export function parseNotation(text: string, sport: Sport, opts: NotationOptions = {}): NotationResult {
   const errors: NotationError[] = [];
   const lenient = Boolean(opts.lenient);
-  const clean = (lenient ? normalizeCoachWriting(text) : text).replace(/\s+/g, ' ').trim();
+  const clean = (lenient ? normalizeCoachWriting(text, { shiftedZones: opts.shiftedZones }) : text).replace(/\s+/g, ' ').trim();
   if (!clean) return { blocks: [], errors };
   const parsed = parseSeq(clean, 0, errors, lenient);
   return { blocks: settle(parsed, sport, false), errors };
@@ -260,7 +267,7 @@ function paceText(a: string, b: string, c?: string, d?: string): string {
  * D-085 : écriture libre d’un coach → notation de l’éditeur. Chaque règle vient de programmes réels du fondateur.
  * Ce qui reste incompris est gardé en note par la lecture tolérante.
  */
-export function normalizeCoachWriting(text: string): string {
+export function normalizeCoachWriting(text: string, opts: { shiftedZones?: boolean } = {}): string {
   let s = ` ${text} `
     .replace(/[’‘´`]/g, "'").replace(/[”“]/g, '"').replace(/''/g, '"').replace(/\t/g, ' ').replace(/\u00a0/g, ' ');
   // Pyramide : « 1' – 2' – 3' – 2' – 1' Z4 avec R1' entre chaque ».
@@ -282,7 +289,12 @@ export function normalizeCoachWriting(text: string): string {
   // Distances : « 1k » → 1km, « 2km5 » → 2,5km.
   s = s.replace(/(\d)\s*k(?![a-zà-ÿ])/gi, '$1km').replace(/(\d+)km(\d)(?![\d'":,.])/gi, '$1,$2km');
   // Zones en fourchette : « Z1-2 », « Z1-Z2 » → la plus haute ; « EF » = endurance fondamentale (Z2).
-  s = s.replace(/\bZ\s*(\d)\s*-\s*Z?\s*(\d)\b/gi, 'Z$2')
+  // D-087 : dans l’échelle des documents du fondateur, « Z1-2 » et « Z1 » = Z2 (endurance), puis un cran plus haut.
+  s = s.replace(/\bZ\s*(\d)(?:\s*-\s*Z?\s*(\d))?\b/gi, (_m, a: string, b?: string) => {
+    const top = Number(b ?? a);
+    if (!opts.shiftedZones) return `Z${top}`;
+    return `Z${Math.min(7, top <= 2 && Number(a) === 1 ? 2 : top + 1)}`;
+  })
     .replace(/(?<![a-zà-ÿ])(?:ef|e\.f\.?)\s+(?=[^+]*?\bZ\s*\d)/gi, '').replace(/(?<![a-zà-ÿ])(?:ef|e\.f\.?)(?![a-zà-ÿ])/gi, 'Z2');
   // Durée en fourchette « 30-35' » : la plus courte, l’autre en note.
   s = s.replace(/(?<![\d':])(\d+)\s*-\s*(\d+)\s*'(?!\d)/g, "$1' jusqu'à $2'");

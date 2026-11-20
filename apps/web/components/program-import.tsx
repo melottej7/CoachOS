@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { previewProgramImport, SPORT_LABELS, SPORTS, toNotation, WEEK_TEMPLATE_MAX_WEEKS, WEEKDAY_SHORT, type Sport } from '@coachos/domain';
+import { detectShiftedZones, previewProgramImport, SPORT_LABELS, SPORTS, toNotation, WEEK_TEMPLATE_MAX_WEEKS, WEEKDAY_SHORT, type Sport } from '@coachos/domain';
 import { useIntent } from './use-intent';
 
 // D-085 : un ancien programme (copié depuis Google Docs ou Word) devient un programme type de la bibliothèque.
@@ -26,13 +26,16 @@ export function ProgramImport({ wid }: { wid: string }) {
   const { run, pending, error } = useIntent<{ id: string; sessions: number; weeks: number }>();
   const [text, setText] = useState('');
   const [sport, setSport] = useState<Sport>('running');
+  const [zones, setZones] = useState<'auto' | 'coachos' | 'shifted'>('auto');
   const [pick, setPick] = useState(0);
   const [title, setTitle] = useState<string | null>(null);
   const [off, setOff] = useState<Set<number>>(new Set());
   const [days, setDays] = useState<Map<number, number>>(new Map());
   const [done, setDone] = useState<{ sessions: number; weeks: number } | null>(null);
 
-  const preview = useMemo(() => (text.trim() ? previewProgramImport(text, { defaultSport: sport }) : null), [text, sport]);
+  const detected = detectShiftedZones(text);
+  const shifted = zones === 'auto' ? detected : zones === 'shifted';
+  const preview = useMemo(() => (text.trim() ? previewProgramImport(text, { defaultSport: sport, shiftedZones: shifted }) : null), [text, sport, shifted]);
   const program = preview?.programs[Math.min(pick, (preview?.programs.length ?? 1) - 1)] ?? null;
   const reset = () => { setOff(new Set()); setDays(new Map()); setTitle(null); setDone(null); };
   const first = program ? Math.min(...program.weeks.map((w) => w.number)) : 1;
@@ -53,6 +56,7 @@ export function ProgramImport({ wid }: { wid: string }) {
               <select value={sport} onChange={(e) => { setSport(e.target.value as Sport); reset(); }}>
                 {SPORTS.map((s) => <option key={s} value={s}>{SPORT_LABELS[s]}</option>)}
               </select></label>
+            <ZoneScale value={zones} detected={detected} onChange={(v) => { setZones(v); reset(); }} />
             <div className="actions">
               <button type="button" className="btn small ghost" onClick={() => { setText(EXAMPLE); setPick(0); reset(); }}>Voir un exemple</button>
               {text ? <button type="button" className="btn small ghost" onClick={() => { setText(''); reset(); }}>Effacer</button> : null}
@@ -137,5 +141,17 @@ export function ProgramImport({ wid }: { wid: string }) {
         </section>
       ) : null}
     </div>
+  );
+}
+
+/** D-087 : échelle des zones du texte collé. Tes documents comptent un cran plus bas que CoachOS. */
+export function ZoneScale({ value, detected, onChange }: { value: 'auto' | 'coachos' | 'shifted'; detected: boolean; onChange: (v: 'auto' | 'coachos' | 'shifted') => void }) {
+  return (
+    <label className="field"><span>Zones du texte</span>
+      <select value={value} onChange={(e) => onChange(e.target.value as 'auto' | 'coachos' | 'shifted')}>
+        <option value="auto">Détecter ({detected ? 'tes documents' : 'CoachOS'})</option>
+        <option value="shifted">Tes documents : Z1-2 endurance, Z3 seuil, Z4 allure 5 km, Z5 VMA</option>
+        <option value="coachos">CoachOS : Z2 endurance, Z4 seuil, Z5 allure 5 km, Z6 VMA</option>
+      </select></label>
   );
 }

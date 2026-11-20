@@ -78,7 +78,7 @@ function takeDay(t: string): { day: number | null; rest: string } {
 }
 
 /** Une ligne est-elle une séance ? Si oui, son titre, sa structure et la prose qui la suit sur la ligne. */
-export function readSessionLine(raw: string, sport: Sport): { day: number | null; title: string; sport: Sport; blocks: Block[]; prose: string | null; optional: boolean } | null {
+export function readSessionLine(raw: string, sport: Sport, shiftedZones = false): { day: number | null; title: string; sport: Sport; blocks: Block[]; prose: string | null; optional: boolean } | null {
   // Ligne de tableau (repères, vue d’ensemble) : séance seulement si « Footing | 30' | Z1-2 ».
   const cells = raw.trim().split(/\t+/).map((x) => x.trim()).filter(Boolean);
   if (cells.length >= 3 && !(SESSION_START.test(cells[0]!) && cells.slice(1).some((x) => /^\d+(?:[.,]\d+)?\s*(?:'|’|min|h\b|h\d|km|m\b)/i.test(x)))) return null;
@@ -124,7 +124,7 @@ export function readSessionLine(raw: string, sport: Sport): { day: number | null
   const sp = sportOfTitle(`${title} ${structure}`, sport);
   const label = structure.match(/^([^\d(]{2,40}?)\s+(?=\d)/)?.[1]?.trim() ?? '';
   const isRace = RACE_LINE.test(t) && !/[+×*]/.test(structure);
-  const n = parseNotation(isRace ? structure.replace(/^[^\d]*/, '') : structure, sp, { lenient: true });
+  const n = parseNotation(isRace ? structure.replace(/^[^\d]*/, '') : structure, sp, { lenient: true, shiftedZones });
   let blocks = n.errors.length ? [] : n.blocks;
   // Séance d’un seul bloc sans intensité : facile (footing, endurance), récupération si dite.
   if (blocks.length === 1 && blocks[0]!.type === 'step' && blocks[0]!.intensity.kind === 'none' && !isRace) {
@@ -178,7 +178,7 @@ interface RawWeek { number: number | null; explicit: boolean; label: string; lin
 const WEEK_PHASE_LINE = /^\d\s+semaines?\s+(?:de|d’|d')\s*\S/i;
 
 /** Aperçu de l’import d’un programme : un ou plusieurs programmes trouvés, semaine par semaine. */
-export function previewProgramImport(text: string, opts: { defaultSport: Sport }): ProgramImportPreview {
+export function previewProgramImport(text: string, opts: { defaultSport: Sport; shiftedZones?: boolean }): ProgramImportPreview {
   const src = text.replace(/^﻿/, '').replace(/\r\n?/g, '\n');
   if (!src.trim()) return { programs: [], errors: ['Rien à importer : colle ton programme.'] };
   if (src.length > PROGRAM_IMPORT_MAX_CHARS) return { programs: [], errors: [`Texte trop long (${PROGRAM_IMPORT_MAX_CHARS / 1000} 000 caractères au plus) : importe un programme à la fois.`] };
@@ -233,7 +233,7 @@ export function previewProgramImport(text: string, opts: { defaultSport: Sport }
       const intro: string[] = [];
       for (const l of w.lines) {
         if (l.n >= nextTitle) break;
-        const s = readSessionLine(l.text, opts.defaultSport);
+        const s = readSessionLine(l.text, opts.defaultSport, Boolean(opts.shiftedZones));
         if (s) {
           found.push({ line: l.n, day: s.day, title: s.title, sport: s.sport, blocks: s.blocks, optional: s.optional, notes: s.prose ? [s.prose] : [] });
         } else {

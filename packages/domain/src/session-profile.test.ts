@@ -34,7 +34,7 @@ describe('forme de la séance (D-040)', () => {
     expect(stepLevel(step('work', { kind: 'time', seconds: 60 }, { kind: 'hr', unit: 'pct_max', min: 88, max: 90 }), 'running').level).toBe(5);
     expect(stepLevel(step('work', { kind: 'time', seconds: 60 }, { kind: 'power', unit: 'pct_ftp', min: 95, max: 100 }), 'cycling').level).toBe(4);
     expect(stepLevel(step('work', { kind: 'time', seconds: 60 }, { kind: 'pace', unit: 'per_km', min: 240, max: null }), 'running', { vmaKmh: 16 })).toEqual({ level: 5, known: true }); // 94 % de VMA
-    expect(stepLevel(step('work', { kind: 'time', seconds: 60 }, { kind: 'pace', unit: 'per_km', min: 220, max: null }), 'running', { vmaKmh: 16 }).level).toBe(7); // 102 %
+    expect(stepLevel(step('work', { kind: 'time', seconds: 60 }, { kind: 'pace', unit: 'per_km', min: 220, max: null }), 'running', { vmaKmh: 16 }).level).toBe(6); // 102 % : VMA (D-087)
     expect(stepLevel(step('recovery', { kind: 'open' }), 'running')).toEqual({ level: 1, known: false });
   });
 });

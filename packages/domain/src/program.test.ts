@@ -170,8 +170,8 @@ describe('générateur aligné sur la méthode du fondateur (D-086)', () => {
   it('types écartés par le coach respectés ; vélo inchangé ; risques en minutes (+15 à 30′ aux petits volumes acceptés)', () => {
     const noVma = generateProgram({ feasibility: tenK({}), startMonday: '2026-11-09', days: [2, 4, 7], currentWeeklyMin: 105, goalTitle: '10 km', tweaks: { ...NO_TWEAKS, avoidQuality: ['vma'] } });
     const titles = run(noVma).map(({ s }) => s.title);
-    expect(titles.some((x) => /200 m|400 m|Côtes/.test(x))).toBe(false);
-    expect(titles.some((x) => x.startsWith('Pyramide'))).toBe(true);
+    expect(titles.some((x) => /200 m|400 m|1 km|Côtes|Pyramide/.test(x))).toBe(false);
+    expect(titles.some((x) => x.startsWith('Allure course'))).toBe(true);
     const bike = generateProgram({ ...base, feasibility: { ...f, sport: 'cycling', distanceKm: 100, targetSeconds: null, longestRecent: 'gt120' }, days: [3, 6, 7] });
     expect(run(bike).some(({ s }) => /Course\/marche|lignes droites|Test 5 km/.test(s.title))).toBe(false);
     expect(at(tenK({})).risks.some((r) => /augmente/.test(r.text))).toBe(false);

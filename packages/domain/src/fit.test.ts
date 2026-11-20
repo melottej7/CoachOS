@@ -99,7 +99,7 @@ describe('export FIT (CE-X-01)', () => {
       { type: 'step', phase: 'rest', sport: null, measure: { kind: 'time', seconds: 60 }, intensity: { kind: 'none' }, cadence: { min: 85, max: 95 }, note: null },
     ];
     const s = steps(decode(workoutToFit({ title: 'x', sport: 'cycling', blocks, refs: { vmaKmh: 15 } })));
-    expect(s[0]).toMatchObject({ 0: 'Effort Z3', 3: 2, 8: 'Zone 3 (tempo)' });
+    expect(s[0]).toMatchObject({ 0: 'Effort Z3', 3: 2, 8: 'Zone 3 (endurance active)' });
     expect(s[0]![5]).toBeUndefined();
     expect(s[1]).toMatchObject({ 3: 1, 5: 250, 6: 260 });
     expect(s[2]).toMatchObject({ 3: 1, 5: 80, 6: 85 });

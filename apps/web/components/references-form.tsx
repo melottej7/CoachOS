@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { formatPace, parseSwimPace, ZONE_NAMES, zonePace, zonePower, zoneSwimPace, ZONES } from '@coachos/domain';
+import { formatPace, parseSwimPace, ZONE_GUIDE, ZONE_NAMES, zonePace, zonePower, zoneSwimPace, ZONES } from '@coachos/domain';
 import { useIntent } from './use-intent';
 
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -73,7 +73,7 @@ export function ReferencesForm({ wid, aid, first, vmaKmh, ftpW, cssSecPer100 }: 
         <div className="table-scroll">
           <table className="zones-table">
             <caption className="visually-hidden">Cibles par zone pour {first}</caption>
-            <thead><tr><th scope="col">Zone</th><th scope="col">Usage</th>
+            <thead><tr><th scope="col">Zone</th><th scope="col">Usage</th><th scope="col">Sensation</th>
               {showVma ? <th scope="col">Course</th> : null}{showFtp ? <th scope="col">Vélo</th> : null}{showCss ? <th scope="col">Natation</th> : null}</tr></thead>
             <tbody>
               {ZONES.map((z) => {
@@ -83,7 +83,8 @@ export function ReferencesForm({ wid, aid, first, vmaKmh, ftpW, cssSecPer100 }: 
                 return (
                   <tr key={z}>
                     <th scope="row"><span className={`zone-dot z${z}`} aria-hidden="true" />Z{z}</th>
-                    <td>{ZONE_NAMES[z]}</td>
+                    <td>{ZONE_NAMES[z]}<span className="muted zone-use"> · {ZONE_GUIDE[z].use}</span></td>
+                    <td className="muted">{ZONE_GUIDE[z].feel}</td>
                     {p ? <td>{formatPace(p[0]).replace(' /km', '')} à {formatPace(p[1])}</td> : null}
                     {w ? <td>{w[0]} à {w[1]} W</td> : null}
                     {s ? <td>{mmss(s[0])} à {mmss(s[1])} /100 m</td> : null}

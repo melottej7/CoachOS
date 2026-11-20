@@ -1396,3 +1396,38 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
 - **Limites.**
   - La durée d’une séance en distance sans VMA connue est estimée à la durée visée.
   - Le passage de la course/marche à la course continue peut être brusque sur une préparation courte : le risque d’endurance est alors signalé au coach.
+
+## D-087 · Échelle des zones : les 7 zones de CoachOS, avec les repères du fondateur · 2026-11-20
+
+- **Instruction du fondateur.** « Mixer les deux, extrapoler la mienne avec CoachOS. »
+- **Constat.**
+  - Ses documents utilisent une échelle plus courte : Z1-2 endurance, Z3 seuil ou allure 10 km, Z4 allure 5 km (fractionné 1 km), Z5 VMA (200 à 400 m), Z6 vitesse.
+  - CoachOS utilisait 7 zones reprises de Foulée : récupération, endurance fondamentale, tempo, seuil, VMA longue, moyenne et courte.
+- **Décision.**
+  - **Les 7 zones gardent leur finesse et prennent ses repères** (nom, usage, sensation) :
+
+    | Zone | Nom | % de VMA | Usage | Ses documents |
+    |---|---|---|---|---|
+    | Z1 | récupération | 55 à 65 | trot entre deux efforts | « récup » |
+    | Z2 | endurance fondamentale | 65 à 75 | footing, sortie longue | Z1-2, EF |
+    | Z3 | endurance active | 75 à 85 | allure marathon | Z2 |
+    | Z4 | seuil | 85 à 92 | tempo, allure semi à 10 km | Z3 |
+    | Z5 | allure 5 km | 92 à 97 | fractionné 1 km, pyramide | Z4 |
+    | Z6 | VMA | 97 à 105 | 200 à 400 m | Z5 |
+    | Z7 | vitesse | 105 à 120 | lignes droites, côtes courtes | Z6 |
+
+    Les plages sont recalées sur les allures de course : marathon ≈ 80 %, semi ≈ 85 %, 10 km ≈ 90 %, 5 km ≈ 95 %. Les zones vélo et natation sont inchangées.
+  - **Import** (séances et programmes) : choix « Zones du texte », détecté automatiquement (« Z1-2 » ou « Z1-Z2 » = ses documents).
+    - Ses zones sont traduites un cran plus haut : Z1 et Z1-2 → Z2, Z3 → Z4, Z4 → Z5, Z5 → Z6.
+    - EF reste en Z2.
+  - **Générateur (D-086)** :
+    - 200 m, 400 m et côtes en Z6 ;
+    - 1 km et pyramide en Z5 (comptés comme fractionné, « VMA / fractionné ») ;
+    - 2 km en Z4 ;
+    - allure sans chrono en Z4 jusqu’au semi, Z3 au-delà.
+  - **Fiche élève** : le tableau des zones montre l’usage et la sensation de chaque zone, avec les allures calculées depuis la VMA.
+- **Effet sur l’existant.** Les numéros de zone des séances déjà écrites ne changent pas. Leurs allures estimées bougent un peu : la Z2 va maintenant jusqu’à 75 % de VMA, au lieu de 70 %.
+- **Preuve.**
+  - Tests du domaine : traduction de ses zones, détection, EF ; tests d’allures et de niveaux mis à jour sur les nouvelles plages.
+  - Navigateur : tableau des zones de Camille (VMA 15) : Z2 6:09 à 5:20 /km, Z4 4:42 à 4:21, Z6 4:07 à 3:49.
+  - `npm test` : **281 passés** (+3 PostgreSQL), typecheck OK.

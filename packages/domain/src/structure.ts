@@ -13,11 +13,25 @@ export const PHASE_LABELS: Record<Phase, string> = {
   warmup: 'Échauffement', work: 'Effort', recovery: 'Récupération', cooldown: 'Retour au calme', rest: 'Repos', other: 'Autre',
 };
 
-/** Échelle de référence à 7 zones du fondateur (D-029, reprise de Foulée). */
+/**
+ * Échelle à 7 zones (D-029), mêlée à celle des programmes du fondateur (D-087) : les 7 zones de CoachOS gardent leur
+ * finesse, leurs repères viennent de ses documents (allure de course et sensation). Ses documents comptent un cran
+ * plus bas : sa « Z1-2 » = Z2, sa Z3 (seuil, allure 10 km) = Z4, sa Z4 (allure 5 km) = Z5, sa Z5 (VMA) = Z6.
+ */
 export const ZONES = [1, 2, 3, 4, 5, 6, 7] as const;
 export type Zone = (typeof ZONES)[number];
 export const ZONE_NAMES: Record<Zone, string> = {
-  1: 'récupération', 2: 'endurance fondamentale', 3: 'tempo', 4: 'seuil', 5: 'VMA longue', 6: 'VMA moyenne', 7: 'VMA courte',
+  1: 'récupération', 2: 'endurance fondamentale', 3: 'endurance active', 4: 'seuil', 5: 'allure 5 km', 6: 'VMA', 7: 'vitesse',
+};
+/** Repères de chaque zone (D-087) : à quoi elle sert et ce qu’on ressent, tirés des programmes du fondateur. */
+export const ZONE_GUIDE: Record<Zone, { use: string; feel: string; doc: string }> = {
+  1: { use: 'trot entre deux efforts, footing de récup', feel: 'très facile', doc: 'récup' },
+  2: { use: 'footing, sortie longue', feel: 'tu parles en phrases complètes', doc: 'Z1-2, EF' },
+  3: { use: 'allure marathon, sortie longue avec allures', feel: 'tu parles par bouts de phrase', doc: 'Z2' },
+  4: { use: 'tempo, allure semi à 10 km', feel: 'soutenu mais tenable, quelques mots', doc: 'Z3' },
+  5: { use: 'fractionné 1 km, pyramide', feel: 'dur mais tenable', doc: 'Z4' },
+  6: { use: 'fractionné 200 à 400 m', feel: 'intense, jamais un sprint', doc: 'Z5' },
+  7: { use: 'lignes droites, côtes courtes', feel: 'vite mais relâché', doc: 'Z6' },
 };
 export const ZONE_LABELS: Record<Zone, string> = Object.fromEntries(
   ZONES.map((z) => [z, `Z${z} (${ZONE_NAMES[z]})`]),
@@ -117,9 +131,12 @@ export interface References {
   cssSecPer100?: number | null;
 }
 
-/** Plages cibles de l’échelle à 7 zones, en % de VMA (choix du fondateur, D-029). */
+/**
+ * Plages cibles en % de VMA (D-029, recalées D-087 sur les allures de course : marathon ≈ 80 %, semi ≈ 85 %,
+ * 10 km ≈ 90 %, 5 km ≈ 95 %, VMA = 100 %).
+ */
 export const ZONE_TARGET_PCT: Record<Zone, readonly [number, number]> = {
-  1: [60, 65], 2: [65, 70], 3: [72, 78], 4: [85, 90], 5: [90, 95], 6: [95, 100], 7: [100, 110],
+  1: [55, 65], 2: [65, 75], 3: [75, 85], 4: [85, 92], 5: [92, 97], 6: [97, 105], 7: [105, 120],
 };
 const VMA_SPORTS: ReadonlySet<Sport> = new Set(['running', 'trail']);
 

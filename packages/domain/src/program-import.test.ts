@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeCoachWriting, parseNotation, previewImport, previewProgramImport, programTemplateDays, structureSchema, toNotation } from './index';
+import { detectShiftedZones, normalizeCoachWriting, parseNotation, previewImport, previewProgramImport, programTemplateDays, structureSchema, toNotation } from './index';
 
 // D-085 : écriture libre du coach et import d’un ancien programme. Exemples tirés de programmes réels du fondateur
 // (structures de séances seulement, sans nom ni donnée d’élève).
@@ -130,5 +130,19 @@ describe('import d’un ancien programme (D-085)', () => {
     expect(previewProgramImport(long, { defaultSport: 'running' }).programs[0]!.errors[0]).toMatch(/12 au plus/);
     expect(previewProgramImport("Footing 30'", { defaultSport: 'running' }).errors[0]).toMatch(/Aucune semaine/);
     expect(previewProgramImport('', { defaultSport: 'running' }).errors[0]).toMatch(/Rien à importer/);
+  });
+});
+
+describe('échelle des zones des documents du fondateur (D-087)', () => {
+  it('Z1-2 = endurance (Z2), puis un cran plus haut ; détectée ; EF reste Z2 ; CoachOS inchangé', () => {
+    const r = (s: string, shiftedZones: boolean) => toNotation(parseNotation(s, 'running', { lenient: true, shiftedZones }).blocks, 'running');
+    expect(r("Footing 45' Z1-2", true)).toBe("45' Z2");
+    expect(r("15' Z1 + 6*(1km Z3 + 3' Z1) + 10' Z1", true)).toBe("15' Z2 + 6×(1km Z4 + 3' Z2) + 10' Z2");
+    expect(r("15' Z1 + 4×(1 km Z4 + R2') + 8×(400m Z5 + R200m) + 10' Z1", true)).toBe("15' Z2 + 4×(1km Z5 + R2') + 8×(400m Z6 + R200m) + 10' Z2");
+    expect(r('Ef 20’ + 3*2km 4:50 R400m + 10’ Ef', true)).toBe("20' Z2 + 3×(2km @4'50/km + R400m) + 10' Z2");
+    expect(r("15' Z1 + 3×(8' Z4 + R2')", false)).toBe("15' Z1 + 3×(8' Z4 + R2')");
+    expect([detectShiftedZones("Footing 30' Z1-2"), detectShiftedZones("Footing 30' Z1-Z2"), detectShiftedZones("Footing 30' Z2")]).toEqual([true, true, false]);
+    const p = previewProgramImport("S1\nFractionné : 15' Z1 + 4×(1 km Z4 + R2') + 10' Z1", { defaultSport: 'running', shiftedZones: true });
+    expect(toNotation(p.programs[0]!.weeks[0]!.sessions[0]!.blocks, 'running')).toBe("15' Z2 + 4×(1km Z5 + R2') + 10' Z2");
   });
 });

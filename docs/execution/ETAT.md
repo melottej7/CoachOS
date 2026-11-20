@@ -293,6 +293,7 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
   - Sa méthode et les écarts avec le générateur : [METHODE_FONDATEUR.md](METHODE_FONDATEUR.md).
   - `npm test` : **276 passés** (+3 PostgreSQL), typecheck OK.
   - **D-086** (« Oui, aligne-le ») : générateur aligné sur sa méthode. Course/marche, lignes droites, qualité du court au long, test 5 km, rappel d’allure, puis veille ; risques en minutes ; consignes types. `npm test` : **280 passés**.
+  - **D-087** (« mixer les deux ») : 7 zones de CoachOS avec ses repères (Z2 endurance, Z3 endurance active, Z4 seuil, Z5 allure 5 km, Z6 VMA, Z7 vitesse) ; ses documents traduits un cran plus haut à l’import. `npm test` : **281 passés**.
 - Prochaines tranches : tout ce qui reste demande le fondateur.
   - Recette, dont l’import avec sa vraie base, l’essai FIT sur la Fenix 8 et l’installation sur téléphone.
   - Crédit IA ; accès Garmin.
@@ -312,6 +313,5 @@ Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au mic
 **Pour le fondateur** :
 - Crédit Anthropic pour l’IA ; le budget mensuel est de 10 $ par espace par défaut.
 - Tes séances à importer (tableur). Tes programmes sont reçus et lus (D-085).
-- Échelle des zones : tes documents mettent l’endurance en Z1-2 et le seuil en Z3, CoachOS met l’endurance en Z2 et le seuil en Z4. Laquelle garder ?
 - Question « gêne » sur le retour de l’élève : version sans le corps (« Peux-tu faire tes séances à 100 % ? ») ou version « gêne physique » (consentement et juriste, D-084) ?
 - Accès Garmin reporté (D-026).

@@ -3,9 +3,10 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import {
-  describeTotals, IMPORT_EXAMPLE, IMPORT_ROLE_LABELS, LIBRARY_CATEGORIES, LIBRARY_CATEGORY_LABELS, previewImport, SPORT_LABELS, SPORTS,
+  describeTotals, detectShiftedZones, IMPORT_EXAMPLE, IMPORT_ROLE_LABELS, LIBRARY_CATEGORIES, LIBRARY_CATEGORY_LABELS, previewImport, SPORT_LABELS, SPORTS,
   structureTotals, type LibraryCategory, type Sport,
 } from '@coachos/domain';
+import { ZoneScale } from './program-import';
 import { useIntent } from './use-intent';
 
 // D-079 : import de la base du coach. Lecture et vérification dans le navigateur, aperçu ligne par ligne,
@@ -24,11 +25,14 @@ export function LibraryImport({ wid, existing }: { wid: string; existing: string
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [sport, setSport] = useState<Sport>('running');
+  const [zones, setZones] = useState<'auto' | 'coachos' | 'shifted'>('auto');
   const [off, setOff] = useState<Set<number>>(new Set());
   const [cats, setCats] = useState<Map<number, LibraryCategory>>(new Map());
   const [done, setDone] = useState<{ added: number; skipped: number } | null>(null);
 
-  const preview = useMemo(() => (text.trim() ? previewImport(text, { defaultSport: sport, existing }) : null), [text, sport, existing]);
+  const detected = detectShiftedZones(text);
+  const shifted = zones === 'auto' ? detected : zones === 'shifted';
+  const preview = useMemo(() => (text.trim() ? previewImport(text, { defaultSport: sport, existing, shiftedZones: shifted }) : null), [text, sport, existing, shifted]);
   const usable = preview?.rows.filter((r) => r.workout && r.duplicate === null) ?? [];
   const chosen = usable.filter((r) => !off.has(r.line));
   const reset = () => { setOff(new Set()); setCats(new Map()); setDone(null); };
@@ -51,6 +55,7 @@ export function LibraryImport({ wid, existing }: { wid: string; existing: string
               <select value={sport} onChange={(e) => { setSport(e.target.value as Sport); reset(); }}>
                 {SPORTS.map((s) => <option key={s} value={s}>{SPORT_LABELS[s]}</option>)}
               </select></label>
+            <ZoneScale value={zones} detected={detected} onChange={(v) => { setZones(v); reset(); }} />
           </div>
           {fileError ? <p className="field-error" role="alert">{fileError}</p> : null}
           <label className="field"><span>Ou colle tes séances{fileName ? ` (lu : ${fileName})` : ''}</span>
