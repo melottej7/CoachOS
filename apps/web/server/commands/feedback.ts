@@ -1,4 +1,4 @@
-import { activityFingerprint, canGiveFeedback, formatShortDate, markReviewedSchema, parseWith, saveFeedbackSchema, snoozeError, todayIn, updateReviewSchema, type UpdateReviewInput, type FeedbackActivity } from '@coachos/domain';
+import { activityFingerprint, canGiveFeedback, formatShortDate, markReviewedSchema, parseWith, readinessAlert, saveFeedbackSchema, snoozeError, todayIn, updateReviewSchema, type UpdateReviewInput, type FeedbackActivity } from '@coachos/domain';
 import { commandAs, type Tx } from '../db/client';
 import { AppError, conflict, invalid, notVisible } from '../errors';
 import { audit, idempotent, type StoredResponse } from './idempotency';
@@ -68,9 +68,9 @@ export async function saveFeedback(meta: Meta, body: unknown): Promise<StoredRes
           [wid, aid, sid, input.publishedRevision, input.state, input.durationSeconds, input.distanceM, input.measureFile],
         );
         const fb = await tx.query<{ id: string }>(
-          `insert into public.feedbacks(workspace_id, athlete_id, result_id, rpe, comment, overall_feeling, difficulties, changes, actual_sport, repeats_done)
-           values ($1, $2, $3, $4, $5, $6, $7::text[], $8::text[], $9, $10::smallint[]) returning id`,
-          [wid, aid, res.rows[0]!.id, input.rpe, input.comment, input.overallFeeling, input.difficulties, input.changes, input.actualSport, input.repeatsDone],
+          `insert into public.feedbacks(workspace_id, athlete_id, result_id, rpe, comment, overall_feeling, difficulties, changes, actual_sport, repeats_done, readiness)
+           values ($1, $2, $3, $4, $5, $6, $7::text[], $8::text[], $9, $10::smallint[], $11) returning id`,
+          [wid, aid, res.rows[0]!.id, input.rpe, input.comment, input.overallFeeling, input.difficulties, input.changes, input.actualSport, input.repeatsDone, input.readiness],
         );
         feedbackId = fb.rows[0]!.id;
         revision = 1;
@@ -91,20 +91,22 @@ export async function saveFeedback(meta: Meta, body: unknown): Promise<StoredRes
         );
         await tx.query(
           `update public.feedbacks set rpe = $4, comment = $5, revision = $6, reviewed_at = null, overall_feeling = $7, difficulties = $8::text[],
-             changes = $9::text[], actual_sport = $10, repeats_done = $11::smallint[]
+             changes = $9::text[], actual_sport = $10, repeats_done = $11::smallint[], readiness = $12
            where workspace_id = $1 and athlete_id = $2 and id = $3`,
-          [wid, aid, feedbackId, input.rpe, input.comment, revision, input.overallFeeling, input.difficulties, input.changes, input.actualSport, input.repeatsDone],
+          [wid, aid, feedbackId, input.rpe, input.comment, revision, input.overallFeeling, input.difficulties, input.changes, input.actualSport, input.repeatsDone, input.readiness],
         );
       }
 
       await syncActivities(tx, wid, aid, sid, input.activities);
 
       // Un seul cas par retour (unique kind + source_ref) ; une correction le rouvre.
+      // D-088 : un élève qui n’est pas à 100 % passe en tête de la file (rang 0).
+      const rank = readinessAlert(input.readiness) ? 0 : 1;
       await tx.query(
         `insert into public.review_items(workspace_id, athlete_id, kind, state, source_ref, rank)
-         values ($1, $2, 'feedback', 'open', $3, 1)
-         on conflict (workspace_id, athlete_id, kind, source_ref) do update set state = 'open', due_at = null`,
-        [wid, aid, feedbackId],
+         values ($1, $2, 'feedback', 'open', $3, $4)
+         on conflict (workspace_id, athlete_id, kind, source_ref) do update set state = 'open', due_at = null, rank = excluded.rank`,
+        [wid, aid, feedbackId, rank],
       );
       await audit(tx, wid, meta.actorId, prev ? 'feedback.update' : 'feedback.create', feedbackId, meta.requestId);
 
@@ -121,6 +123,7 @@ export async function saveFeedback(meta: Meta, body: unknown): Promise<StoredRes
             rpe: input.rpe,
             comment: input.comment,
             overallFeeling: input.overallFeeling,
+            readiness: input.readiness,
             difficulties: input.difficulties,
             changes: input.changes,
             actualSport: input.actualSport,

@@ -1,4 +1,4 @@
-import { workoutStatus, type Block, type Change, type Difficulty, type FeedbackActivity, type ResultState, type Sport, type WorkoutStatus } from '@coachos/domain';
+import { workoutStatus, type Block, type Change, type Difficulty, type FeedbackActivity, type Readiness, type ResultState, type Sport, type WorkoutStatus } from '@coachos/domain';
 import { readAs, type Tx } from '../db/client';
 
 // Lectures du coach, toutes sous RLS (affectation active obligatoire).
@@ -122,6 +122,8 @@ export interface FeedbackView {
   reviewedAt: string | null;
   createdAt: string;
   overallFeeling: number | null;
+  /** D-088 : « à 100 % en ce moment ? » ; null = pas répondu. */
+  readiness: Readiness | null;
   difficulties: Difficulty[];
   changes: Change[];
   actualSport: Sport | null;
@@ -186,11 +188,11 @@ export async function readFeedback(
   const r = await tx.query<{
     id: string; revision: number; workout_revision: number; state: ResultState; duration_seconds: number | null;
     distance_m: number | null; rpe: number | null; comment: string | null; reviewed_at: Date | null; created_at: Date;
-    overall_feeling: number | null; difficulties: Difficulty[] | null;
+    overall_feeling: number | null; difficulties: Difficulty[] | null; readiness: Readiness | null;
     changes: Change[] | null; actual_sport: Sport | null; repeats_done: number[] | null; measure_file: 'fit' | 'tcx' | 'gpx' | null;
   }>(
     `select f.id, f.revision, res.workout_revision, res.state, res.duration_seconds, res.distance_m, f.rpe, f.comment,
-            f.reviewed_at, f.created_at, f.overall_feeling, f.difficulties, f.changes, f.actual_sport, f.repeats_done, res.measure_file
+            f.reviewed_at, f.created_at, f.overall_feeling, f.difficulties, f.changes, f.actual_sport, f.repeats_done, res.measure_file, f.readiness
      from public.workout_results res
      join public.feedbacks f on f.workspace_id = res.workspace_id and f.athlete_id = res.athlete_id and f.result_id = res.id
      where res.workspace_id = $1 and res.athlete_id = $2 and res.workout_id = $3`,
@@ -216,6 +218,7 @@ export async function readFeedback(
     reviewedAt: x.reviewed_at?.toISOString() ?? null,
     createdAt: x.created_at.toISOString(),
     overallFeeling: x.overall_feeling,
+    readiness: x.readiness,
     difficulties: x.difficulties ?? [],
     changes: x.changes ?? [],
     actualSport: x.actual_sport,
@@ -241,6 +244,8 @@ export interface ReviewRow {
   teamIds: string[];
   /** Reporté jusqu’à cette date (D-082) ; null dans la file active. */
   snoozedUntil: string | null;
+  /** D-088 : réponse à « à 100 % en ce moment ? ». */
+  readiness: Readiness | null;
 }
 
 /** Cas ouverts, triés par rang, échéance puis id (PRD §24). Seuls les retours sans revue (C09-01). */
@@ -248,10 +253,10 @@ export async function openReviews(userId: string, wid: string, athleteId?: strin
   return readAs(userId, async (tx) => {
     const r = await tx.query<{
       id: string; athlete_id: string; display_name: string; workout_id: string | null; title: string | null; local_date: string | null;
-      state: ResultState | null; rpe: number | null; has_comment: boolean; created_at: Date; team_ids: string[] | null; snoozed_until: Date | null;
+      state: ResultState | null; rpe: number | null; has_comment: boolean; created_at: Date; team_ids: string[] | null; snoozed_until: Date | null; readiness: Readiness | null;
     }>(
       `select ri.id, ri.athlete_id, a.display_name, res.workout_id, rev.title, to_char(rev.local_date, 'YYYY-MM-DD') as local_date,
-              res.state, f.rpe, (f.comment is not null) as has_comment, ri.created_at,
+              res.state, f.rpe, (f.comment is not null) as has_comment, ri.created_at, f.readiness,
               (select array_agg(ta.team_id) from public.team_athletes ta where ta.workspace_id = ri.workspace_id and ta.athlete_id = ri.athlete_id) as team_ids,
               case when ri.state = 'snoozed' and ri.due_at > now() then ri.due_at end as snoozed_until
        from public.review_items ri
@@ -281,6 +286,7 @@ export async function openReviews(userId: string, wid: string, athleteId?: strin
       createdAt: x.created_at.toISOString(),
       teamIds: x.team_ids ?? [],
       snoozedUntil: x.snoozed_until ? x.snoozed_until.toISOString() : null,
+      readiness: x.readiness,
     }));
   });
 }

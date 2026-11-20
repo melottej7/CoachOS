@@ -30,7 +30,7 @@ export default async function FeedbackPage({ params }: { params: Promise<{ wid: 
         <FeedbackForm wid={wid} aid={ctx.athlete.id} sid={sid} publishedRevision={w.revision} workspaceName={ctx.workspace.name}
           plannedMinutes={w.durationSeconds ? Math.round(w.durationSeconds / 60) : null}
           intervals={w.intervals} sport={w.sport} plannedDate={w.localDate} timeZone={ctx.athlete.timeZone}
-          existing={feedback ? { revision: feedback.revision, state: feedback.state, durationSeconds: feedback.durationSeconds, distanceM: feedback.distanceM, rpe: feedback.rpe, comment: feedback.comment, overallFeeling: feedback.overallFeeling, difficulties: feedback.difficulties, changes: feedback.changes, actualSport: feedback.actualSport, repeatsDone: feedback.repeatsDone, measureFile: feedback.measureFile, activities: feedback.activities } : null} />
+          existing={feedback ? { revision: feedback.revision, state: feedback.state, durationSeconds: feedback.durationSeconds, distanceM: feedback.distanceM, rpe: feedback.rpe, comment: feedback.comment, overallFeeling: feedback.overallFeeling, readiness: feedback.readiness, difficulties: feedback.difficulties, changes: feedback.changes, actualSport: feedback.actualSport, repeatsDone: feedback.repeatsDone, measureFile: feedback.measureFile, activities: feedback.activities } : null} />
       </div>
     </>
   );

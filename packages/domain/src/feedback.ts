@@ -21,6 +21,18 @@ export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   fatigue: 'Fatigue', weather: 'Météo', terrain: 'Terrain, parcours', gear: 'Matériel', time: 'Manque de temps', motivation: 'Motivation', other: 'Autre',
 };
 
+/**
+ * D-088 (instruction du fondateur, version « sans le corps ») : « Peux-tu faire tes séances à 100 % en ce moment ? »
+ * Trois réponses fermées, sans cause : le coach en parle avec l’élève. Aucune donnée de santé n’est demandée (D-084).
+ */
+export const READINESS = ['full', 'not_quite', 'no'] as const;
+export type Readiness = (typeof READINESS)[number];
+export const READINESS_QUESTION = 'Peux-tu faire tes séances à 100 % en ce moment ?';
+export const READINESS_LABELS: Record<Readiness, string> = { full: 'Oui', not_quite: 'Pas tout à fait', no: 'Non' };
+/** Vu par le coach : la réponse en clair. */
+export const READINESS_COACH: Record<Readiness, string> = { full: 'À 100 %', not_quite: 'Pas tout à fait à 100 %', no: 'Pas à 100 %' };
+export const readinessAlert = (r: Readiness | null | undefined) => r === 'not_quite' || r === 'no';
+
 /** Ce qui a changé par rapport au prévu (CE-E-05, D-031). Catégories fermées, non médicales. */
 export const CHANGES = ['shorter', 'fewer_reps', 'easier', 'harder', 'other_route', 'other_sport', 'stopped'] as const;
 export type Change = (typeof CHANGES)[number];
@@ -79,6 +91,7 @@ export const saveFeedbackSchema = z
         return t === '' ? null : t;
       }),
     overallFeeling: z.number().int().min(1).max(5).nullish().transform((v) => v ?? null),
+    readiness: z.enum(READINESS).nullish().transform((v) => v ?? null),
     difficulties: z.array(z.enum(DIFFICULTIES)).max(7).default([]).transform((a) => [...new Set(a)]),
     changes: z.array(z.enum(CHANGES)).max(7).default([]).transform((a) => [...new Set(a)]),
     actualSport: z.enum(SPORTS).nullish().transform((v) => v ?? null),

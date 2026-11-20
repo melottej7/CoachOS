@@ -297,3 +297,10 @@ Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et
    - dernière semaine : un rappel d’allure 4 × 3′, puis la veille un footing de 15′ avec des lignes droites ;
    - ouvre une séance : sa consigne est écrite dans ton style.
 3. Dis-moi ce qui ne ressemble pas à ce que tu aurais écrit.
+
+## « Peux-tu faire tes séances à 100 % ? » (D-088)
+
+1. Côté élève, ouvre le retour d’une séance. Sous « Ressenti général », réponds **Pas tout à fait**, puis envoie le retour.
+2. Côté coach, ouvre **Retours** : ce retour est en tête de la file, avec un repère « Pas tout à fait à 100 % ». Le filtre **Seulement › Pas à 100 %** le retrouve.
+3. Ouvre le retour : la réponse est affichée, avec la suggestion d’en parler avec l’élève.
+4. Corrige le retour côté élève en **Oui** : il reprend sa place normale dans la file.

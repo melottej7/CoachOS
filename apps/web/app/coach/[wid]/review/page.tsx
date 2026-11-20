@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { formatShortDate, matchesReviewFilter, parseReviewFilter, RESULT_STATE_LABELS, reviewFilterQuery, utcToLocal, WEEKDAY_SHORT } from '@coachos/domain';
+import { formatShortDate, matchesReviewFilter, parseReviewFilter, READINESS_COACH, readinessAlert, RESULT_STATE_LABELS, reviewFilterQuery, utcToLocal, WEEKDAY_SHORT } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { openReviews } from '@/server/repo/coach';
@@ -37,7 +37,7 @@ export default async function ReviewQueue({ params, searchParams }: { params: Pr
         <div>
           <div className="kicker">Suivi des athlètes</div>
           <h1>Retours</h1>
-          <p className="sub">{all.length ? `${all.length} retour${all.length > 1 ? 's' : ''} à traiter, du plus ancien au plus récent${filtered ? ` · ${items.length} avec ce filtre` : ''}.` : 'Tout est traité.'}</p>
+          <p className="sub">{all.length ? `${all.length} retour${all.length > 1 ? 's' : ''} à traiter, du plus ancien au plus récent${all.some((r) => readinessAlert(r.readiness)) ? " (les élèves pas à 100 % d’abord)" : ""}${filtered ? ` · ${items.length} avec ce filtre` : ''}.` : 'Tout est traité.'}</p>
         </div>
       </div>
       {all.length || snoozed.length ? (
@@ -50,8 +50,8 @@ export default async function ReviewQueue({ params, searchParams }: { params: Pr
                 <select name="groupe" defaultValue={filter.teamId ?? ''}><option value="">Tous</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
             ) : null}
             <label className="field"><span>Seulement</span>
-              <select name="seulement" defaultValue={filter.only === 'comment' ? 'commentaire' : filter.only === 'hard' ? 'effort' : ''}>
-                <option value="">Tous les retours</option><option value="commentaire">Avec commentaire</option><option value="effort">Effort 8/10 ou plus</option>
+              <select name="seulement" defaultValue={filter.only === 'comment' ? 'commentaire' : filter.only === 'hard' ? 'effort' : filter.only === 'readiness' ? 'pas-a-100' : ''}>
+                <option value="">Tous les retours</option><option value="commentaire">Avec commentaire</option><option value="effort">Effort 8/10 ou plus</option><option value="pas-a-100">Pas à 100 %</option>
               </select></label>
             <div className="actions"><button className="btn" type="submit">Filtrer</button>{filtered ? <Link className="btn ghost" href={`/coach/${wid}/review`}>Tout voir</Link> : null}</div>
           </div>
@@ -62,7 +62,7 @@ export default async function ReviewQueue({ params, searchParams }: { params: Pr
           <div className="row" key={r.id}>
             <span className="avatar" aria-hidden="true">{initials(r.athleteName)}</span>
             <div className="row-text">
-              <h3>{r.athleteName} · {r.title ?? 'Séance indisponible'}</h3>
+              <h3>{r.athleteName} · {r.title ?? 'Séance indisponible'}{readinessAlert(r.readiness) ? <> <span className="pill attn">{READINESS_COACH[r.readiness!]}</span></> : null}</h3>
               <p>
                 {r.localDate ? formatShortDate(r.localDate) + ' · ' : ''}
                 Nouveau retour : {r.resultState ? RESULT_STATE_LABELS[r.resultState] : 'état inconnu'}

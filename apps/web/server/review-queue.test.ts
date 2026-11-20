@@ -64,4 +64,20 @@ describe('file des retours (D-082)', () => {
     await saveFeedback(fbMeta(SEED_WORKOUTS.camilleToday), { publishedRevision: 1, expectedRevision: 1, state: 'completed', rpe: 7, comment: 'Finalement ça allait' });
     expect((await openReviews(USERS.marine, WORKSPACE_A)).some((x) => x.id === item.id)).toBe(true);
   });
+
+  // D-088 : « Peux-tu faire tes séances à 100 % en ce moment ? », sans le corps.
+  it('pas à 100 % : retour en tête de la file, repère et filtre ; « oui » le remet à sa place ; réponse fermée', async () => {
+    const r = await saveFeedback(fbMeta(SEED_WORKOUTS.camilleToday), { publishedRevision: 1, expectedRevision: 2, state: 'completed', rpe: 5, readiness: 'not_quite' });
+    expect(r.body).toMatchObject({ item: { readiness: 'not_quite' } });
+    const q = await openReviews(USERS.marine, WORKSPACE_A);
+    expect(q[0]).toMatchObject({ workoutId: SEED_WORKOUTS.camilleToday, readiness: 'not_quite' });
+    const f = parseReviewFilter({ seulement: 'pas-a-100' });
+    expect(q.filter((x) => matchesReviewFilter(x, f)).map((x) => x.workoutId)).toEqual([SEED_WORKOUTS.camilleToday]);
+    expect(reviewFilterQuery(f)).toBe('?seulement=pas-a-100');
+    await saveFeedback(fbMeta(SEED_WORKOUTS.camilleToday), { publishedRevision: 1, expectedRevision: 3, state: 'completed', rpe: 5, readiness: 'full' });
+    const after = await openReviews(USERS.marine, WORKSPACE_A);
+    expect(after.find((x) => x.workoutId === SEED_WORKOUTS.camilleToday)!.readiness).toBe('full');
+    expect(after.filter((x) => matchesReviewFilter(x, f))).toEqual([]);
+    expect(await codeOf(saveFeedback(fbMeta(SEED_WORKOUTS.camilleToday), { publishedRevision: 1, expectedRevision: 4, state: 'completed', readiness: 'genou' }))).toBe('INVALID_FIELDS');
+  });
 });

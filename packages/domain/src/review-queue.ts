@@ -39,13 +39,13 @@ export function snoozeChoices(today: LocalDate, timeZone: string): { label: stri
 }
 
 /** Filtre de la file, gardé dans l’adresse (C09-08) : élève, groupe, ou retours avec commentaire / effort élevé. */
-export interface ReviewFilter { athleteId: string | null; teamId: string | null; only: 'comment' | 'hard' | null }
+export interface ReviewFilter { athleteId: string | null; teamId: string | null; only: 'comment' | 'hard' | 'readiness' | null }
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function parseReviewFilter(sp: { eleve?: string; groupe?: string; seulement?: string }): ReviewFilter {
   return {
     athleteId: sp.eleve && UUID.test(sp.eleve) ? sp.eleve : null,
     teamId: sp.groupe && UUID.test(sp.groupe) ? sp.groupe : null,
-    only: sp.seulement === 'commentaire' ? 'comment' : sp.seulement === 'effort' ? 'hard' : null,
+    only: sp.seulement === 'commentaire' ? 'comment' : sp.seulement === 'effort' ? 'hard' : sp.seulement === 'pas-a-100' ? 'readiness' : null,
   };
 }
 /** Partie « ?… » de l’adresse pour retrouver le même filtre. */
@@ -53,14 +53,16 @@ export function reviewFilterQuery(f: ReviewFilter): string {
   const p = new URLSearchParams();
   if (f.athleteId) p.set('eleve', f.athleteId);
   if (f.teamId) p.set('groupe', f.teamId);
-  if (f.only) p.set('seulement', f.only === 'comment' ? 'commentaire' : 'effort');
+  if (f.only) p.set('seulement', f.only === 'comment' ? 'commentaire' : f.only === 'hard' ? 'effort' : 'pas-a-100');
   const s = p.toString();
   return s ? `?${s}` : '';
 }
-export function matchesReviewFilter(r: { athleteId: string; teamIds: string[]; hasComment: boolean; rpe: number | null }, f: ReviewFilter): boolean {
+export function matchesReviewFilter(r: { athleteId: string; teamIds: string[]; hasComment: boolean; rpe: number | null; readiness?: string | null }, f: ReviewFilter): boolean {
   if (f.athleteId && r.athleteId !== f.athleteId) return false;
   if (f.teamId && !r.teamIds.includes(f.teamId)) return false;
   if (f.only === 'comment' && !r.hasComment) return false;
   if (f.only === 'hard' && !(r.rpe !== null && r.rpe >= 8)) return false;
+  // D-088 : élèves qui ne sont pas à 100 %.
+  if (f.only === 'readiness' && !(r.readiness === 'not_quite' || r.readiness === 'no')) return false;
   return true;
 }

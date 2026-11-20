@@ -1431,3 +1431,22 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Tests du domaine : traduction de ses zones, détection, EF ; tests d’allures et de niveaux mis à jour sur les nouvelles plages.
   - Navigateur : tableau des zones de Camille (VMA 15) : Z2 6:09 à 5:20 /km, Z4 4:42 à 4:21, Z6 4:07 à 3:49.
   - `npm test` : **281 passés** (+3 PostgreSQL), typecheck OK.
+
+## D-088 · « Peux-tu faire tes séances à 100 % en ce moment ? » · 2026-11-20
+
+- **Instruction du fondateur.** Il veut pouvoir demander à l’élève s’il a une gêne qui l’empêche de courir ou de s’entraîner à 100 %. Il a choisi la version « sans le corps », pour rester dans l’exclusion des données de santé (D-084).
+- **Décision.**
+  - **Retour de séance :** question facultative « Peux-tu faire tes séances à 100 % en ce moment ? », avec trois réponses fermées : Oui, Pas tout à fait, Non.
+    - Aucune cause n’est demandée ni enregistrée.
+    - Après « Pas tout à fait » ou « Non », l’élève lit : « Merci, ton coach est prévenu et en parlera avec toi. Pas besoin d’expliquer pourquoi ici. »
+  - **Coach :**
+    - le retour passe en tête de la file (rang 0), avec un repère « Pas tout à fait à 100 % » ou « Pas à 100 % » ;
+    - filtre « Pas à 100 % » (`?seulement=pas-a-100`), gardé dans l’adresse ;
+    - dans le détail du retour : la réponse et « Parles-en avec l’élève (message ou de vive voix) avant d’ajuster la suite ».
+    - Une correction en « Oui » remet le retour à son rang normal.
+  - **Données :** migration additive `20261120090000` : `feedbacks.readiness` (`full`, `not_quite`, `no`, ou vide). Elle est appliquée au Supabase local, sans toucher aux données existantes. Le contrat (`feedback`) est mis à jour.
+- **Preuve.**
+  - Test serveur : retour en tête de file avec son repère, filtre, retour au rang normal après « Oui », valeur hors liste refusée.
+  - Navigateur (démo) : la question s’affiche dans le retour de Camille, avec le message après « Pas tout à fait » (rien envoyé) ; le filtre apparaît dans la file de Marine.
+  - `npm test` : **282 passés** (+3 PostgreSQL), typecheck OK.
+- **Réexamen.** Si le fondateur ouvre le jalon santé : précision de la gêne, avec consentement par élève et avis juridique.

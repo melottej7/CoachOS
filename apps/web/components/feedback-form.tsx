@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import {
-  activityTotals, CHANGES, CHANGE_LABELS, describeBlock, DIFFICULTIES, DIFFICULTY_LABELS, FEELING_LABELS, RESULT_STATES, RESULT_STATE_LABELS, SPORTS, SPORT_LABELS,
+  activityTotals, CHANGES, CHANGE_LABELS, describeBlock, DIFFICULTIES, DIFFICULTY_LABELS, FEELING_LABELS, READINESS, READINESS_LABELS, READINESS_QUESTION, type Readiness, RESULT_STATES, RESULT_STATE_LABELS, SPORTS, SPORT_LABELS,
   type Block, type Change, type Difficulty, type FeedbackActivity, type ResultState, type Sport,
 } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
@@ -25,7 +25,7 @@ interface Props {
   timeZone: string;
   existing: {
     revision: number; state: ResultState; durationSeconds: number | null; distanceM: number | null; rpe: number | null; comment: string | null;
-    overallFeeling: number | null; difficulties: Difficulty[]; changes: Change[]; actualSport: Sport | null; repeatsDone: number[];
+    overallFeeling: number | null; readiness?: Readiness | null; difficulties: Difficulty[]; changes: Change[]; actualSport: Sport | null; repeatsDone: number[];
     measureFile: 'fit' | 'tcx' | 'gpx' | null;
     activities: FeedbackActivity[];
   } | null;
@@ -42,6 +42,7 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
   const [rpe, setRpe] = useState(existing?.rpe === null || existing?.rpe === undefined ? '' : String(existing.rpe));
   const [comment, setComment] = useState(existing?.comment ?? '');
   const [feeling, setFeeling] = useState<number | null>(existing?.overallFeeling ?? null);
+  const [readiness, setReadiness] = useState<Readiness | null>(existing?.readiness ?? null);
   const [difficulties, setDifficulties] = useState<Difficulty[]>(existing?.difficulties ?? []);
   const [km, setKm] = useState(existing?.distanceM ? String(existing.distanceM / 1000).replace('.', ',') : '');
   const [changes, setChanges] = useState<Change[]>(existing?.changes ?? []);
@@ -91,6 +92,7 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
       rpe: rpe === '' ? null : Number(rpe),
       comment,
       overallFeeling: feeling,
+      readiness,
       difficulties,
       changes: done ? changes : [],
       actualSport: done && changes.includes('other_sport') && actualSport ? actualSport : null,
@@ -211,6 +213,20 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
           ))}
           {feeling !== null ? <button type="button" className="link-btn" onClick={() => setFeeling(null)}>Effacer</button> : null}
         </div>
+      </fieldset>
+
+      {/* D-088 : question du fondateur, sans parler du corps ; le coach en parle ensuite avec l’élève. */}
+      <fieldset className="choice">
+        <legend>{READINESS_QUESTION} <span className="hint">Facultatif</span></legend>
+        <div className="chips">
+          {READINESS.map((v) => (
+            <label key={v}><input type="radio" name="readiness" checked={readiness === v} onChange={() => setReadiness(v)} /> {READINESS_LABELS[v]}</label>
+          ))}
+          {readiness !== null ? <button type="button" className="link-btn" onClick={() => setReadiness(null)}>Effacer</button> : null}
+        </div>
+        {readiness === 'not_quite' || readiness === 'no' ? (
+          <p className="hint" role="status">Merci, ton coach est prévenu et en parlera avec toi. Pas besoin d’expliquer pourquoi ici.</p>
+        ) : null}
       </fieldset>
 
       <fieldset className="choice">

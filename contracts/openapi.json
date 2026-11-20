@@ -547,6 +547,22 @@
             "items": {
               "$ref": "#/components/schemas/FeedbackActivity"
             }
+          },
+          "readiness": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "full",
+                  "not_quite",
+                  "no"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "D-088 : « Peux-tu faire tes séances à 100 % en ce moment ? » Oui, pas tout à fait, non ; aucune cause demandée."
           }
         }
       },
@@ -7671,6 +7687,22 @@
                     "items": {
                       "$ref": "#/components/schemas/FeedbackActivity"
                     }
+                  },
+                  "readiness": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "full",
+                          "not_quite",
+                          "no"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "D-088 : « Peux-tu faire tes séances à 100 % en ce moment ? » Oui, pas tout à fait, non ; aucune cause demandée."
                   }
                 }
               }
