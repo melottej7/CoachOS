@@ -1,5 +1,5 @@
 import {
-  addDays, applyWeekSchema, importLibrarySchema, type ImportLibraryInput, createBlockTemplateSchema, createTemplateSchema, fouleeLibrary, type FouleeMeta, parseWith, starterLibrary, updateTemplateSchema, updateWeekTemplateSchema, weekFromAthleteSchema, weekStart,
+  addDays, applyWeekSchema, importLibrarySchema, type ImportLibraryInput, importProgramSchema, type ImportProgramInput, createBlockTemplateSchema, createTemplateSchema, fouleeLibrary, type FouleeMeta, parseWith, starterLibrary, updateTemplateSchema, updateWeekTemplateSchema, weekFromAthleteSchema, weekStart,
   type BlockTemplatePayload, type LibraryCategory, type LibraryWorkout, type WeekDay, type WeekTemplatePayload,
 } from '@coachos/domain';
 import { commandAs, type Tx } from '../db/client';
@@ -154,6 +154,27 @@ export async function importLibrary(meta: Meta, body: unknown): Promise<StoredRe
       }
       await audit(tx, wid, meta.actorId, 'template.import', wid, meta.requestId);
       return { status: 200, body: { added, skipped } };
+    });
+  });
+}
+
+/**
+ * importProgram · C (D-085) : un ancien programme du coach, lu et vérifié dans l’aperçu, devient un programme type
+ * (semaine type de plusieurs semaines, D-083). Rien n’est appliqué à un élève ; provenance « import » gardée.
+ */
+export async function importProgram(meta: Meta, body: unknown): Promise<StoredResponse> {
+  const v = parse<ImportProgramInput>(importProgramSchema, body);
+  const wid = meta.workspaceId;
+  return commandAs(meta.actorId, async (tx) => {
+    await requireCoach(tx, wid);
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'template.import-program', key: meta.idempotencyKey, body: v }, async () => {
+      const days = [...v.days].sort((a, b) => a.offset - b.offset);
+      const t = await tx.query<{ id: string; revision: number }>(
+        `insert into public.templates(workspace_id, owner_id, kind, title, payload) values ($1, auth.uid(), 'week', $2, $3::jsonb) returning id, revision`,
+        [wid, v.title, JSON.stringify({ days, weeks: v.weeks, meta: { source: 'import', importedAt: new Date().toISOString() } })],
+      );
+      await audit(tx, wid, meta.actorId, 'template.import-program', t.rows[0]!.id, meta.requestId);
+      return { status: 201, body: { ...t.rows[0]!, sessions: days.length, weeks: v.weeks } };
     });
   });
 }

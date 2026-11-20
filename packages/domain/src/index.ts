@@ -28,6 +28,7 @@ export * from './performances';
 export * from './program';
 export * from './program-regen';
 export * from './library-import';
+export * from './program-import';
 export * from './notifications';
 export * from './foulee-library';
 export * from './ai-coach';

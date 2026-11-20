@@ -1153,3 +1153,13 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .review-filter { margin-bottom: 14px; }
 .review-filter .form-row { align-items: end; }
 .review-snooze { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+/* D-085 : import d’un programme entier */
+.seg-links { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.seg-links a { border: 1px solid var(--control-border); border-radius: 16px; padding: 6px 12px; font-weight: 600; font-size: 14px; text-decoration: none; color: inherit; }
+.seg-links a[aria-current=page] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.pimp-pick { border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px; display: grid; gap: 6px; }
+.pimp-pick legend { font-weight: 600; padding: 0 4px; }
+.pimp-weeks { display: grid; gap: 14px; }
+.pimp-week h3 { font-size: 15px; margin: 0 0 4px; }
+.pimp-notation { font-family: var(--mono, ui-monospace, monospace); font-size: 12.5px; }
+.pimp-notes { font-size: 13px; white-space: pre-line; }

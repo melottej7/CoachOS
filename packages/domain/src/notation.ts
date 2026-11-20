@@ -13,18 +13,18 @@ export interface NotationError { item: string; message: string }
 export interface NotationResult { blocks: Block[]; errors: NotationError[] }
 
 const SPORT_WORDS: [RegExp, Sport][] = [
-  [/^(?:vélo|velo)\b/i, 'cycling'],
-  [/^(?:course|cap)\b/i, 'running'],
-  [/^trail\b/i, 'trail'],
-  [/^(?:natation|nat)\b/i, 'swimming'],
+  [/^(?:vélo|velo)(?![a-zà-ÿ])/i, 'cycling'],
+  [/^(?:course|cap)(?![a-zà-ÿ])/i, 'running'],
+  [/^trail(?![a-zà-ÿ])/i, 'trail'],
+  [/^(?:natation|nat)(?![a-zà-ÿ])/i, 'swimming'],
 ];
 const SPORT_WORD: Partial<Record<Sport, string>> = { cycling: 'vélo', running: 'course', trail: 'trail', swimming: 'natation' };
 const PHASE_WORDS: [RegExp, Phase][] = [
-  [/^(?:échauffement|echauffement|échauf|echauf)\b/i, 'warmup'],
-  [/^(?:retour au calme|calme|rac)\b/i, 'cooldown'],
-  [/^(?:récupération|recuperation|récup|recup)\b/i, 'recovery'],
-  [/^repos\b/i, 'rest'],
-  [/^(?:effort)\b/i, 'work'],
+  [/^(?:échauffement|echauffement|échauf|echauf)(?![a-zà-ÿ])/i, 'warmup'],
+  [/^(?:retour au calme|calme|rac)(?![a-zà-ÿ])/i, 'cooldown'],
+  [/^(?:récupération|recuperation|récup|recup)(?![a-zà-ÿ])/i, 'recovery'],
+  [/^repos(?![a-zà-ÿ])/i, 'rest'],
+  [/^(?:effort)(?![a-zà-ÿ])/i, 'work'],
 ];
 const PHASE_WORD: Record<Phase, string> = { warmup: 'échauffement', cooldown: 'calme', recovery: 'récup', rest: 'repos', work: 'effort', other: 'effort' };
 
@@ -55,8 +55,8 @@ function parseMeasure(t: string): { measure: Measure; rest: string } | null {
     const v = Number(m[1]!.replace(',', '.'));
     return { measure: { kind: 'distance', meters: Math.round(m[2]!.toLowerCase() === 'km' ? v * 1000 : v) }, rest: t.slice(m[0].length) };
   }
-  if ((m = t.match(/^(\d+)\s*(?:'|’|min|mn)\s*(\d{1,2})?\s*(?:"|”|s\b)?/i))) {
-    return { measure: { kind: 'time', seconds: mmss(m[1]!, m[2] ?? '0') }, rest: t.slice(m[0].length) };
+  if ((m = t.match(/^(\d+)\s*(?:'|’|min|mn)(?:(\d{1,2})(?![\d.,]*\s*k?m\b)|\s+(\d{1,2})(?=\s*["”]))?\s*(?:"|”|s\b)?/i))) {
+    return { measure: { kind: 'time', seconds: mmss(m[1]!, m[2] ?? m[3] ?? '0') }, rest: t.slice(m[0].length) };
   }
   if ((m = t.match(/^(\d+)\s*(?:"|”|s\b|sec\b)/i))) return { measure: { kind: 'time', seconds: Number(m[1]) }, rest: t.slice(m[0].length) };
   return null;
@@ -78,52 +78,136 @@ function parseIntensity(t: string): { intensity: Intensity; rest: string } {
   return { intensity: { kind: 'none' }, rest: t };
 }
 
+/** Lecture tolérante : « 1:30 » vaut aussi une durée en tête d’étape. */
+function parseMeasureLenient(t: string): { measure: Measure; rest: string } | null {
+  const m = t.match(/^(\d{1,2}):(\d{2})(?![\d:])/);
+  if (m) return { measure: { kind: 'time', seconds: mmss(m[1]!, m[2]!) }, rest: t.slice(m[0].length) };
+  const r = parseMeasure(t);
+  if (r) return r;
+  // « 15 Z1 » : un nombre sans unité suivi d’une zone ou d’une allure vaut des minutes.
+  const b = t.match(/^(\d{1,3})(?=\s+(?:z\s*\d|@)|\s*$)/i);
+  return b ? { measure: { kind: 'time', seconds: Number(b[1]) * 60 }, rest: t.slice(b[0].length) } : null;
+}
+
+/** Lecture tolérante : la première durée ou distance de l’étape, avec les mots qui la précèdent. */
+function findMeasure(t: string): { prefix: string; measure: Measure; rest: string } | null {
+  const direct = parseMeasureLenient(t);
+  if (direct) return { prefix: '', ...direct };
+  const re = /(^|[\s(/])(?=\d)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(t))) {
+    const at = m.index + m[1]!.length;
+    const r = parseMeasureLenient(t.slice(at));
+    if (r) return { prefix: t.slice(0, at), ...r };
+    re.lastIndex = at + 1;
+  }
+  return null;
+}
+
+/** Mots sans valeur dans une étape (« de footing », « ok ») ; ceux qui disent l’intensité facile. */
+const EASY_WORDS = /\b(?:footing|endurance|sortie longue|sl)\b/i;
+const FILLER = /(?<!allure\s)\b(?:de\s+|d')?(?:course|run|footing|endurance|sortie longue|ok)\b|^\s*(?:de|d'|du|à|en|:)\s+/gi;
+
+type ParsedStep = Step & { implicit: boolean; walk?: boolean; recup?: boolean };
+/** Lecture tolérante : texte sans durée ni distance (« lignes droites », « renfo »), rattaché à l’étape voisine. */
+type LooseText = { type: 'text'; text: string };
+
 /** Une étape ; `phase` est null quand elle doit être déduite de sa place. */
-function parseStep(raw: string, errors: NotationError[]): (Step & { implicit: boolean }) | null {
+function parseStep(raw: string, errors: NotationError[], lenient = false, inRepeat = false): ParsedStep | LooseText | null {
   let t = raw.trim();
   let note: string | null = null;
   const q = t.match(/[«"]\s*([^»"]*?)\s*[»"]\s*$/);
-  if (q) { note = q[1]!.slice(0, 200) || null; t = t.slice(0, q.index).trim(); }
+  if (q && !(lenient && /\d\s*"\s*$/.test(t))) { note = q[1]!.slice(0, 200) || null; t = t.slice(0, q.index).trim(); }
   let sport: Sport | null = null;
   for (const [re, s] of SPORT_WORDS) { const m = t.match(re); if (m) { sport = s; t = t.slice(m[0].length).replace(/^\s*:?\s*/, ''); break; } }
   let phase: Phase | null = null;
   for (const [re, p] of PHASE_WORDS) { const m = t.match(re); if (m) { phase = p; t = t.slice(m[0].length).replace(/^\s*:?\s*/, ''); break; } }
   if (!phase && /^r\s*(?=\d)/i.test(t)) { phase = 'recovery'; t = t.replace(/^r\s*/i, ''); }
-  const meas = parseMeasure(t);
-  if (!meas) {
+  if (lenient && !phase && /^r\b\s*/i.test(t)) { phase = 'recovery'; t = t.replace(/^r\b\s*/i, ''); }
+  const found = lenient ? findMeasure(t) : (() => { const r = parseMeasure(t); return r ? { prefix: '', ...r } : null; })();
+  if (!found) {
+    // Lecture tolérante : « R descente en trottinant » = récupération libre, la consigne en note.
+    if (lenient && phase === 'recovery') {
+      return { type: 'step', phase, implicit: false, sport, measure: { kind: 'open' }, intensity: { kind: 'none' }, cadence: null, note: [t, note].filter(Boolean).join(' · ').slice(0, 200) || null };
+    }
+    // Dans une répétition : effort libre avec sa consigne (« montée up ») ; ailleurs : note de l’étape voisine.
+    if (lenient && t) {
+      if (inRepeat) return { type: 'step', phase: phase ?? 'work', implicit: phase === null, sport, measure: { kind: 'open' }, intensity: { kind: 'none' }, cadence: null, note: [t, note].filter(Boolean).join(' · ').slice(0, 200) };
+      return { type: 'text', text: [t, note].filter(Boolean).join(' · ') };
+    }
     errors.push({ item: raw, message: `« ${raw || '…'} » : durée ou distance attendue au début (ex. 15', 1h30, 400m, 10km)` });
     return null;
   }
-  const { intensity, rest } = parseIntensity(meas.rest);
+  const meas = found;
+  let body = `${meas.prefix} ${meas.rest}`;
+  // D-084 : un plafond cardiaque (« < 160 bpm ») reste une consigne écrite, pas une intensité enregistrée.
+  const cap = lenient ? body.match(/(?:<|sous|max\.?|moins de)\s*(\d{2,3})\s*bpm/i) : null;
+  if (cap) { body = body.replace(cap[0], ' '); note = [`sous ${cap[1]} bpm`, note].filter(Boolean).join(' · '); }
+  let { intensity, rest } = parseIntensity(body);
+  let walk = false, recup = false;
+  if (lenient) {
+    // Les mots restants deviennent la note de l’étape : rien n’est perdu, rien n’est refusé.
+    walk = /\bmarche\b/i.test(rest);
+    recup = /\br[ée]cup/i.test(rest);
+    if (intensity.kind === 'none' && EASY_WORDS.test(rest)) intensity = { kind: 'zone', zone: 2 };
+    if (intensity.kind === 'none' && /\br[ée]cup/i.test(rest)) intensity = { kind: 'zone', zone: 1 };
+    let words = rest.replace(FILLER, ' ').replace(/[\s,;·]+/g, ' ').replace(/^[\s:–-]+|[\s:–-]+$/g, '').trim();
+    if (/^(?:(?:en|de|à|du|d'|et|avec|ou|la|le|les|au)\s*)+$/i.test(words)) words = '';
+    if (words) note = [words, note].filter(Boolean).join(' · ').slice(0, 200);
+    rest = '';
+  }
   const left = rest.replace(/[\s,;·]+/g, ' ').trim();
   if (left) errors.push({ item: raw, message: `« ${left} » non compris dans « ${raw} » (une note s’écrit entre « »)` });
   if (meas.measure.kind === 'time' && (meas.measure.seconds < 1 || meas.measure.seconds > 86400)) errors.push({ item: raw, message: `« ${raw} » : durée hors limites` });
   if (meas.measure.kind === 'distance' && (meas.measure.meters < 1 || meas.measure.meters > 1_000_000)) errors.push({ item: raw, message: `« ${raw} » : distance hors limites` });
-  return { type: 'step', phase: phase ?? 'work', implicit: phase === null, sport, measure: meas.measure, intensity, cadence: null, note };
+  return { type: 'step', phase: phase ?? 'work', implicit: phase === null, ...(walk ? { walk } : {}), ...(recup ? { recup } : {}), sport, measure: meas.measure, intensity, cadence: null, note };
 }
 
-type Parsed = (Step & { implicit: boolean }) | { type: 'repeat'; times: number; steps: Parsed[] };
+type Parsed = ParsedStep | { type: 'repeat'; times: number; steps: Parsed[] };
 
-function parseSeq(text: string, depth: number, errors: NotationError[]): Parsed[] {
+function parseSeq(text: string, depth: number, errors: NotationError[], lenient = false): Parsed[] {
   const parts = splitTop(text);
   if (!parts) { errors.push({ item: text, message: 'Parenthèses mal fermées' }); return []; }
   const out: Parsed[] = [];
-  for (const part of parts) {
-    if (!part) { errors.push({ item: text, message: 'Étape vide : un « + » en trop ?' }); continue; }
+  const loose: { at: number; text: string }[] = [];
+  for (let part of parts) {
+    if (!part) {
+      if (lenient) continue;
+      errors.push({ item: text, message: 'Étape vide : un « + » en trop ?' }); continue;
+    }
+    // Lecture tolérante : « à la fin, 4×(20" + R40") » → la répétition, sans les mots devant.
+    if (lenient) { const pre = part.match(/^[^\d()]*?(?=\d+\s*[x×*]\s*[\d(])/i); if (pre && pre[0]) part = part.slice(pre[0].length); }
     const r = part.match(/^(\d+)\s*[x×*]\s*([\s\S]+)$/i);
     if (r) {
       const times = Number(r[1]);
       if (times < 2 || times > 50) errors.push({ item: part, message: `« ${part} » : de 2 à 50 répétitions` });
       if (depth >= 2) { errors.push({ item: part, message: 'Une répétition peut en contenir une autre, pas davantage' }); continue; }
       let inner = r[2]!.trim();
+      // Lecture tolérante : « 8×(20" + R40") à la fin » → la répétition, les mots qui suivent en note.
+      if (lenient && inner.startsWith('(')) {
+        let dep = 0, close = -1;
+        for (let k = 0; k < inner.length; k++) { if (inner[k] === '(') dep++; if (inner[k] === ')' && --dep === 0) { close = k; break; } }
+        const tail = close > 0 ? inner.slice(close + 1).replace(/^[\s.,;]+/, '').trim() : '';
+        if (close > 0 && tail) { loose.push({ at: out.length + 1, text: tail }); inner = inner.slice(0, close + 1); }
+      }
       if (inner.startsWith('(') && inner.endsWith(')') && splitTop(inner.slice(1, -1)) !== null) inner = inner.slice(1, -1);
-      const steps = parseSeq(inner, depth + 1, errors);
+      const steps = parseSeq(inner, depth + 1, errors, lenient);
       if (steps.length) out.push({ type: 'repeat', times: Math.max(2, Math.min(50, times)), steps });
       continue;
     }
-    if (part.startsWith('(') && part.endsWith(')')) { out.push(...parseSeq(part.slice(1, -1), depth, errors)); continue; }
-    const s = parseStep(part, errors);
+    if (part.startsWith('(') && part.endsWith(')')) { out.push(...parseSeq(part.slice(1, -1), depth, errors, lenient)); continue; }
+    const s = parseStep(part, errors, lenient, depth > 0);
+    if (s?.type === 'text') { loose.push({ at: out.length, text: s.text }); continue; }
     if (s) out.push(s);
+  }
+  // Textes sans durée : en note de l’étape précédente (ou suivante en tête).
+  for (const l of loose) {
+    const target = out[l.at - 1] ?? out[l.at];
+    if (target && target.type === 'step') target.note = [target.note, l.text].filter(Boolean).join(' + ').slice(0, 200);
+    else if (target && target.type === 'repeat') {
+      const st = target.steps[target.steps.length - 1];
+      if (st && st.type === 'step') st.note = [st.note, l.text].filter(Boolean).join(' + ').slice(0, 200);
+    } else errors.push({ item: l.text, message: `« ${l.text} » : durée ou distance attendue (ex. 15', 1h30, 400m, 10km)` });
   }
   return out;
 }
@@ -135,7 +219,10 @@ const levelOf = (b: Parsed, sport: Sport): number =>
 function settle(items: Parsed[], sport: Sport, inRepeat: boolean): Block[] {
   return items.map((b, i) => {
     if (b.type === 'repeat') return { type: 'repeat', times: b.times, steps: settle(b.steps, sport, true) };
-    const { implicit, ...step } = b;
+    const { implicit, walk, recup, ...step } = b;
+    if (implicit && recup && inRepeat) return { ...step, phase: 'recovery' };
+    // Lecture tolérante : la marche est un échauffement en tête, un retour au calme en fin, sinon une récupération.
+    if (implicit && walk && (inRepeat || items.length > 1)) return { ...step, phase: inRepeat ? 'recovery' : i === 0 ? 'warmup' : i === items.length - 1 ? 'cooldown' : 'recovery' };
     if (!implicit || inRepeat || items.length < 2) return step;
     const me = levelOf(b, sport);
     if (i === 0 && Math.max(...items.slice(1).map((x) => levelOf(x, sport))) > me) return { ...step, phase: 'warmup' };
@@ -144,13 +231,90 @@ function settle(items: Parsed[], sport: Sport, inRepeat: boolean): Block[] {
   });
 }
 
+export interface NotationOptions {
+  /**
+   * Lecture tolérante (D-085) : l’écriture libre d’un coach (« Footing 45' Z1-2 », « 3*(2km 4'40 + 400m Z1) »,
+   * « 6x800m à 4:30/km (récup 1'30) »). Les mots non compris deviennent des notes au lieu d’erreurs.
+   * Réservée à l’import ; l’éditeur reste strict.
+   */
+  lenient?: boolean;
+}
+
 /** Texte → blocs, avec les erreurs à corriger (aucune perte silencieuse). */
-export function parseNotation(text: string, sport: Sport): NotationResult {
+export function parseNotation(text: string, sport: Sport, opts: NotationOptions = {}): NotationResult {
   const errors: NotationError[] = [];
-  const clean = text.replace(/\s+/g, ' ').trim();
+  const lenient = Boolean(opts.lenient);
+  const clean = (lenient ? normalizeCoachWriting(text) : text).replace(/\s+/g, ' ').trim();
   if (!clean) return { blocks: [], errors };
-  const parsed = parseSeq(clean, 0, errors);
+  const parsed = parseSeq(clean, 0, errors, lenient);
   return { blocks: settle(parsed, sport, false), errors };
+}
+
+const p2 = (n: number) => String(n).padStart(2, '0');
+/** « 4'40 » ou « 4'15-4'25 » (la seconde minute peut manquer : « 4:15-25 »). */
+function paceText(a: string, b: string, c?: string, d?: string): string {
+  return `@${Number(a)}'${b}${d ? `-${Number(c ?? a)}'${d}` : ''}/km`;
+}
+
+/**
+ * D-085 : écriture libre d’un coach → notation de l’éditeur. Chaque règle vient de programmes réels du fondateur.
+ * Ce qui reste incompris est gardé en note par la lecture tolérante.
+ */
+export function normalizeCoachWriting(text: string): string {
+  let s = ` ${text} `
+    .replace(/[’‘´`]/g, "'").replace(/[”“]/g, '"').replace(/''/g, '"').replace(/\t/g, ' ').replace(/\u00a0/g, ' ');
+  // Pyramide : « 1' – 2' – 3' – 2' – 1' Z4 avec R1' entre chaque ».
+  s = s.replace(/((?:\d+'\d*\s*[-–—]\s*){2,}\d+'\d*)\s*(Z\s*\d(?:\s*-\s*Z?\d)?)?\s*(?:avec\s+)?(R\s*[\d'"]+(?:k?m)?)\s*entre\s+chaque/gi,
+    (_m, list: string, z: string | undefined, r: string) => list.split(/\s*[-–—]\s*/).map((d, i, a) => `${d}${z ? ` ${z}` : ''}${i < a.length - 1 ? ` + ${r}` : ''}`).join(' + '));
+  s = s.replace(/[–—]/g, '-');
+  // « 2ou3*( » : la première valeur ; « 25' min » → 25'.
+  s = s.replace(/(\d+)\s*ou\s*\d+\s*([x×*])/gi, '$1$2').replace(/'\s*mins?\b/gi, "'");
+  // « 15'' Z1 + … + 10'' Z1 » en tête ou en fin de séance construite : des minutes (coquille fréquente).
+  s = s.replace(/^([^\d+]*?)(\d{2})"\s*(z\s*[12])(?=\s*\+)/i, "$1$2' $3").replace(/(\+\s*)(\d{2})"\s*(z\s*[12])\s*$/i, "$1$2' $3");
+  // Séance d’une seule étape « Footing 45'' Z1 » : des minutes.
+  if (!/[+×*]/.test(s)) s = s.replace(/(^|\s)([1-9]\d)"(?=\s*(?:z\s*\d|[a-zà-ÿ]|$))/i, "$1$2'");
+  // Allure entre parenthèses : « (8:30-9:00) ».
+  s = s.replace(/\(\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\s*(?:\/\s*km)?\s*\)/g, (_m, a, b, c, d) => paceText(a, b, c, d));
+  // Estimations et totaux entre parenthèses : « (~7 km) », « (≈ 45') », « (20') », « (1h04) ».
+  s = s.replace(/\(\s*[~≈][^()]*\)/g, ' ').replace(/\(\s*\d+\s*(?:'|min|h\d*)\s*\)/gi, ' ');
+  // Séparateurs écrits en toutes lettres.
+  s = s.replace(/,?\s+puis\s+/gi, ' + ');
+  // Distances : « 1k » → 1km, « 2km5 » → 2,5km.
+  s = s.replace(/(\d)\s*k(?![a-zà-ÿ])/gi, '$1km').replace(/(\d+)km(\d)(?![\d'":,.])/gi, '$1,$2km');
+  // Zones en fourchette : « Z1-2 », « Z1-Z2 » → la plus haute ; « EF » = endurance fondamentale (Z2).
+  s = s.replace(/\bZ\s*(\d)\s*-\s*Z?\s*(\d)\b/gi, 'Z$2')
+    .replace(/(?<![a-zà-ÿ])(?:ef|e\.f\.?)\s+(?=[^+]*?\bZ\s*\d)/gi, '').replace(/(?<![a-zà-ÿ])(?:ef|e\.f\.?)(?![a-zà-ÿ])/gi, 'Z2');
+  // Durée en fourchette « 30-35' » : la plus courte, l’autre en note.
+  s = s.replace(/(?<![\d':])(\d+)\s*-\s*(\d+)\s*'(?!\d)/g, "$1' jusqu'à $2'");
+  // Allures écrites « 4:50/km », « à 7:45-8:00/km », « à 4:50 ».
+  s = s.replace(/(?:(?<![a-zà-ÿ])à\s*|@\s*)?(\d{1,2})[:'](\d{2})(?:\s*-\s*(?:(\d{1,2})[:'])?(\d{2}))?\s*(?:min)?\s*\/\s*km/gi, (_m, a, b, c, d) => paceText(a, b, c, d));
+  s = s.replace(/(?<![a-zà-ÿ])à\s*(\d{1,2})[:'](\d{2})(?:\s*-\s*(?:(\d{1,2})[:'])?(\d{2}))?(?![\d\/])/gi, (_m, a, b, c, d) => paceText(a, b, c, d));
+  // Distance suivie d’un temps : allure (« 2km 4'40 ») ou temps de passage d’une fraction courte (« 400m 1'25" »).
+  s = s.replace(/(\d+(?:[.,]\d+)?)\s*(km|m)((?:\s+(?:up|down|en\s+côte|côte|montée))?)\s+(\d{1,2})[:'](\d{2})"?(?:\s*-\s*(?:(\d{1,2})[:'])?(\d{2}))?(?![\d'"])/gi,
+    (_m, v: string, u: string, w: string, a: string, b: string, c?: string, d?: string) => {
+      const meters = u.toLowerCase() === 'km' ? Number(v.replace(',', '.')) * 1000 : Number(v);
+      const t1 = Number(a) * 60 + Number(b);
+      if (meters > 0 && meters < 1000 && t1 < 150) {
+        const per = Math.round((t1 * 1000) / meters);
+        return `${v}${u}${w} @${Math.floor(per / 60)}'${p2(per % 60)}/km`;
+      }
+      return `${v}${u}${w} ${paceText(a, b, c, d)}`;
+    });
+  // Durée suivie d’une allure : « 12' 4:55 ».
+  s = s.replace(/(\d+\s*(?:'|"|min|h\d*))\s+(\d{1,2}):(\d{2})(?:\s*-\s*(?:(\d{1,2}):)?(\d{2}))?(?![\d'"\/])/gi, (_m, t, a, b, c, d) => `${t} ${paceText(a, b, c, d)}`);
+  // Récupération en fin de répétition : « 6x800m @… (récup 1'30) », « 2×30' séparés par R2' », « 4*1500m @… R2' ».
+  s = s.replace(/(\d+)\s*[x×*]\s*([^()+]+?)\s*\(\s*(?:récup(?:ération)?|recup|r)\s*:?\s*([^()]+?)\s*\)/gi, '$1×($2 + R$3)');
+  s = s.replace(/(\d+)\s*[x×*]\s*([^()+]+?)\s+séparée?s?\s+par\s+(R\s*[\d'",.]+(?:k?m)?)/gi, '$1×($2 + $3)');
+  s = s.replace(/(\d+)\s*[x×*]\s*(\d[^()+]*?)\s+(R\s*\d[\d'",.]*(?:k?m)?)(?=\s*(?:\+|\)|$))/gi, '$1×($2 + $3)');
+  // Récupération collée à l’effort : « (4km @… R500m) » → « (4km @… + R500m) ».
+  s = s.replace(/([^+(\s])\s+(R\s*\d[\d'",.]*(?:k?m)?)(?=\s*(?:\)|$))/g, '$1 + $2');
+  // Répétition collée à l’étape précédente : « 15' Z2 4*1500m » → « 15' Z2 + 4*1500m ».
+  s = s.replace(/([^\s+(,])\s+(\d+\s*[x×*]\s*[\d(])/g, '$1 + $2');
+  // « R1 » sans unité = minutes.
+  s = s.replace(/\bR\s*(\d+)(?=\s*(?:\+|\)|$))/g, "R$1'");
+  // Marques de suivi et jours en fin de ligne : « ok », « Mardi ».
+  for (let i = 0; i < 2; i++) s = s.replace(/[\s.!?]+(?:ok|lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)[\s.!?]*$/i, ' ');
+  return s.replace(/\s+/g, ' ').trim().replace(/[.;,]+$/, '');
 }
 
 // ---------- Blocs → texte ----------

@@ -18,7 +18,7 @@ import { confirmBilan, saveAthleteProfile, saveBilanByCoach, saveBilanDraft } fr
 import { saveAthleteReferences } from './commands/athlete-references';
 import { confirmLevel, createGoal, createNote, createTeam, deleteNote, setTeamMember, updateGoal, updateTeam } from './commands/portfolio';
 import { createAppointment, createTask, saveAutoRuleSettings, snoozeAutoTask, updateAppointment, updateTask } from './commands/tasks';
-import { addStarterLibrary, applyWeekTemplate, importLibrary, createTemplate, templateFromWorkout, updateTemplate, updateWeekTemplate, weekFromAthlete } from './commands/library';
+import { addStarterLibrary, applyWeekTemplate, importLibrary, importProgram, createTemplate, templateFromWorkout, updateTemplate, updateWeekTemplate, weekFromAthlete } from './commands/library';
 import { createGroupSession, publishGroupSession, updateGroupBase } from './commands/group-sessions';
 import { openConversation, saveReceipt, saveTeamReceipt, sendMessage, sendTeamMessage, sendTeamVoice, sendVoice } from './commands/messages';
 import { deleteWorkspaceLogo, previewInvitation, saveWorkspaceProfile, setWorkspaceLogo } from './commands/workspace-profile';
@@ -225,6 +225,11 @@ describe('réponses conformes au contrat OpenAPI', () => {
     check('/workspaces/{wid}/templates/starter', 'post', st.status, st.body);
     const im = await importLibrary(m(), { items: [{ category: 'long', workout: { sport: 'running', title: 'Sortie longue importée', intervals: [], durationSeconds: 5400 } }] });
     check('/workspaces/{wid}/templates/import', 'post', im.status, im.body);
+    const ip = await importProgram(m(), { title: 'Programme importé', weeks: 2, days: [
+      { offset: 1, workout: { sport: 'running', title: 'Footing 30\'', intervals: [] } },
+      { offset: 13, workout: { sport: 'running', title: 'Sortie longue', intervals: [] } },
+    ] });
+    check('/workspaces/{wid}/templates/import-program', 'post', ip.status, ip.body);
     const fw = await templateFromWorkout({ ...m(), athleteId: ATHLETES.camille, workoutId: SEED_WORKOUTS.camilleLong }, { category: 'long' });
     check('/workspaces/{wid}/athletes/{aid}/workouts/{sid}/template', 'post', fw.status, fw.body);
     const monday = weekStart(todayIn(TIME_ZONE));

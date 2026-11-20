@@ -225,7 +225,16 @@ export function previewImport(text: string, opts: { defaultSport: Sport; existin
     let blocks: Block[] = [];
     let instructions = r.instructions.trim();
     if (r.structure.trim()) {
-      const n = parseNotation(r.structure, sport);
+      let n = parseNotation(r.structure, sport);
+      // D-085 : écriture libre d’un coach (« Footing 45' Z1-2 », « 3*(2km 4'40 + 400m Z1) ») lue de façon tolérante ;
+      // le texte d’origine reste dans les consignes.
+      if (n.errors.length) {
+        const loose = parseNotation(r.structure, sport, { lenient: true });
+        if (!loose.errors.length && loose.blocks.length && /\d/.test(r.structure)) {
+          n = loose;
+          instructions = [`Texte d’origine : ${r.structure.trim()}`, instructions].filter(Boolean).join('\n\n');
+        }
+      }
       if (n.errors.length) {
         // Séance en texte libre : gardée telle quelle dans les consignes, sans structure.
         if (format === 'lines' && r.structure === r.title) errs.push('Séance non reconnue : écris « Titre : séance » (ex. « Footing : 45\' Z2 ») ou la séance en notation de l’éditeur');

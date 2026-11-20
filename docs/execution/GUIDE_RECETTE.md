@@ -272,3 +272,18 @@ Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et
 
 1. Séances › Semaine d’un élève : **💾 Enregistrer comme semaine type**, puis **Semaines à garder → 4 semaines**.
 2. Chez un autre élève : **📋 Appliquer une semaine type**, choisis le bloc. Les brouillons couvrent les 4 semaines suivantes ; rien n’est publié.
+
+## Importer un ancien programme (D-085)
+
+1. Bibliothèque › **Importer un programme**.
+2. Ouvre un de tes programmes dans Google Docs, sélectionne tout (Cmd+A), copie (Cmd+C), puis colle dans la grande zone.
+3. Vérifie l’aperçu :
+   - semaines S1, S2… ;
+   - chaque séance avec sa structure lue ;
+   - ses consignes ;
+   - son jour (« proposé » quand ton texte n’en donnait pas).
+4. Décoche ce que tu ne veux pas, change un jour si besoin, puis donne un nom au programme.
+5. Clique sur **Enregistrer comme programme type**. Il apparaît dans Bibliothèque › Semaines types.
+6. Pour le donner à un élève : ouvre sa semaine dans Séances, puis applique le programme type. Tout arrive en brouillons, rien n’est publié.
+
+À me signaler : une séance mal lue (copie-moi la ligne), une semaine manquante, ou un jour mal placé.

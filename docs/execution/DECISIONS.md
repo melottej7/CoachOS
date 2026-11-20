@@ -1312,3 +1312,43 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Les garde-fous restent en place : schémas qui refusent les propriétés inconnues, retour sans champ libre « difficulté » (D-025), import FIT et TCX sans fréquence cardiaque, aucun capteur cardiaque proposé.
   - Les écarts avec Foulée (douleur, aptitude, bilan de semaine) restent volontaires.
 - **Réexamen.** Sur une nouvelle instruction du fondateur. Ouvrir le jalon santé demandera un écran de consentement dans l’application, avec un consentement par élève et par usage, retirable, ainsi qu’un avis juridique.
+
+## D-085 · Lecture de l’écriture du coach et import d’un ancien programme entier · 2026-11-20
+
+- **Source.**
+  - Le fondateur a partagé 7 programmes réels (Google Docs). Ils sont lus en entier ; l’analyse anonymisée est dans [METHODE_FONDATEUR.md](METHODE_FONDATEUR.md).
+  - Complément § « import progressif de mes anciens programmes […] avec prévisualisation […] et validation avant insertion ».
+- **Constat.** Le lecteur de notation (D-041) ne comprenait presque aucune séance écrite par le fondateur (10 lignes sur 385), par exemple « Footing 45' Z1-2 », « 3*(2km 4’40 + 400m Z1) », « 6x800m à 4:30/km (récup 1’30) » ou « 10’ marche + 8×(1' course + R1'30) ».
+- **Décision.**
+  - **Lecture tolérante** (`parseNotation(…, { lenient: true })`, réservée à l’import ; l’éditeur reste strict). Ce qu’elle comprend :
+    - zones en fourchette ; EF = Z2 ;
+    - allures sans « @ » ; temps de passage d’une fraction courte convertis en allure ;
+    - « (récup x) », « séparés par R2' », « R1 » = 1 minute ;
+    - pyramides « 1' – 2' – 3' … avec R1' entre chaque » ; course/marche, la marche devenant échauffement ou récupération ;
+    - « puis » ; durées en fourchette ; coquilles fréquentes (« 15'' Z1 » pour 15 minutes).
+
+    Les mots non compris deviennent des notes de l’étape : rien n’est perdu ni refusé. Un plafond « < 160 bpm » reste une consigne écrite, pas une intensité (D-084).
+  - **Import de séances (D-079)** : une écriture libre est désormais structurée, et le texte d’origine reste dans les consignes.
+  - **Import d’un programme entier** : Bibliothèque › « Importer un programme ». Le coach colle le texte.
+    - **Lecture :**
+      - semaines repérées par « S1 », « Semaine 2 », « Semaine 28/09 » ou « 1 semaine de diminution » ;
+      - plan, repères et tableaux de vue d’ensemble ignorés ;
+      - plusieurs programmes dans un même document : le coach choisit lequel importer.
+    - **Séances :**
+      - jour écrit gardé (« Mar · », « Dimanche ») ; « Séance 3 (week-end) » = dimanche ; sinon, ordre du document, la dernière séance le dimanche ;
+      - « repos » n’est pas une séance ; « bonus » ou « optionnel » = séance optionnelle ; vélo et natation reconnus ;
+      - le texte qui suit une séance devient ses consignes.
+    - **Aperçu** semaine par semaine : séances à cocher, jour modifiable, nom du programme.
+    - **Enregistrement** : programme type (semaine type de plusieurs semaines, D-083, 12 semaines au plus), provenance « import ». Il s’applique ensuite à un élève en brouillons, comme les autres semaines types ; rien n’est publié.
+  - Contrat `importProgram` (POST `/workspaces/{wid}/templates/import-program`), coach seulement. Aucune migration.
+- **Preuve.**
+  - Corpus de 71 séances réelles du fondateur : toutes lues sans erreur.
+  - Les 7 documents donnent 14 programmes, avec des semaines et des séances cohérentes (vérifié hors dépôt ; les documents ne sont pas copiés).
+  - Tests du domaine (programme fictif écrit dans son style) et test serveur : aperçu → programme type → brouillons aux bons jours pour Noah ; élève refusé, corps invalides refusés. Contrat vérifié.
+  - Navigateur (démo, Marine) : exemple importé, visible dans Semaines types (« S2 · Jeu Fractionné »), puis archivé ; aperçu lisible à 375 px.
+  - `npm test` : **276 passés** (+3 PostgreSQL), typecheck OK.
+- **Limites.**
+  - Les zones sont gardées telles qu’écrites ; l’échelle des documents ne suit pas toujours les 7 zones de CoachOS (à trancher).
+  - La durée affichée d’une séance en distance sans allure ne compte que ses parties en temps.
+  - Les consignes générales du programme (objectif, règles) ne sont pas encore enregistrées avec le programme type.
+- **Suite proposée.** Aligner le générateur sur la méthode du fondateur (course/marche, lignes droites, ordre de la qualité, test 5 km, seuils de risque en minutes) : voir METHODE_FONDATEUR.md, après son accord.
