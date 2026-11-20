@@ -40,3 +40,18 @@ describe('résumé de la semaine (D-073)', () => {
     expect(weekReview([s('2026-11-17'), s('2026-11-18'), s('2026-11-19', { state: null })], '2026-11-16', today).counts).toMatchObject({ planned: 2, noFeedback: 0 });
   });
 });
+
+// D-088 : « pas à 100 % » dans le résumé de la semaine, sans cause.
+describe('résumé de la semaine : pas à 100 %', () => {
+  it('fait et question en priorité, même avec peu de données', async () => {
+    const { weekReview } = await import('./week-review');
+    const s = (date: string, readiness: 'full' | 'not_quite' | 'no' | null) => ({ date, title: 'Footing', canceled: false, plannedSeconds: 1800, state: 'completed' as const, doneSeconds: 1800, rpe: 5, feeling: 4, difficulties: [], readiness });
+    const r = weekReview([s('2026-11-16', 'full'), s('2026-11-18', 'no'), s('2026-11-20', null)], '2026-11-16', '2026-11-23');
+    expect(r.facts.at(-1)).toBe('A répondu ne pas être à 100 % en ce moment.');
+    expect(r.question).toMatch(/pas être à 100 %/);
+    const one = weekReview([s('2026-11-18', 'not_quite')], '2026-11-16', '2026-11-23');
+    expect(one.status).toBe('insufficient');
+    expect(one.facts).toContain('A répondu ne pas être tout à fait à 100 % en ce moment.');
+    expect(weekReview([s('2026-11-16', 'no'), s('2026-11-18', 'full')], '2026-11-16', '2026-11-23').question).not.toMatch(/100 %/);
+  });
+});

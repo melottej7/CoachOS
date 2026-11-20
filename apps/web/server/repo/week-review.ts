@@ -1,4 +1,4 @@
-import { addDays, utcToLocal, weekReview, type Difficulty, type MeasureFacts, type ReviewSession, type WeekReview } from '@coachos/domain';
+import { addDays, utcToLocal, weekReview, type Difficulty, type MeasureFacts, type Readiness, type ReviewSession, type WeekReview } from '@coachos/domain';
 import { readAs } from '../db/client';
 
 /**
@@ -12,10 +12,10 @@ export async function athleteWeekReview(userId: string, wid: string, aid: string
     if (!ok.rows[0]?.ok) return null;
     const r = await tx.query<{
       local_date: string; title: string; canceled: boolean; duration_seconds: number | null; state: ReviewSession['state'];
-      done_seconds: number | null; rpe: number | null; overall_feeling: number | null; difficulties: Difficulty[] | null;
+      done_seconds: number | null; rpe: number | null; overall_feeling: number | null; difficulties: Difficulty[] | null; readiness: Readiness | null;
     }>(
       `select to_char(r.local_date, 'YYYY-MM-DD') as local_date, r.title, r.canceled, r.duration_seconds,
-              res.state, res.duration_seconds as done_seconds, f.rpe, f.overall_feeling, f.difficulties
+              res.state, res.duration_seconds as done_seconds, f.rpe, f.overall_feeling, f.difficulties, f.readiness
        from public.workouts w
        join public.workout_revisions r on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id and r.number = w.published_revision
        left join public.workout_results res on res.workspace_id = w.workspace_id and res.athlete_id = w.athlete_id and res.workout_id = w.id
@@ -27,7 +27,7 @@ export async function athleteWeekReview(userId: string, wid: string, aid: string
     );
     return weekReview(r.rows.map((x) => ({
       date: x.local_date, title: x.title, canceled: x.canceled, plannedSeconds: x.duration_seconds, state: x.state ?? null,
-      doneSeconds: x.done_seconds, rpe: x.rpe, feeling: x.overall_feeling, difficulties: x.difficulties ?? [],
+      doneSeconds: x.done_seconds, rpe: x.rpe, feeling: x.overall_feeling, difficulties: x.difficulties ?? [], readiness: x.readiness,
     })), monday, today);
   });
 }

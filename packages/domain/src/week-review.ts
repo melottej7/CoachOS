@@ -1,5 +1,5 @@
 import { addDays, type LocalDate } from './dates';
-import { DIFFICULTY_LABELS, type Difficulty } from './feedback';
+import { DIFFICULTY_LABELS, type Difficulty, type Readiness } from './feedback';
 
 /**
  * Résumé de la semaine d’un élève, sans IA (module « summary » de docs/08, version déterministe, D-073).
@@ -11,6 +11,8 @@ export interface ReviewSession {
   date: LocalDate; title: string; canceled: boolean; plannedSeconds: number | null;
   state: 'completed' | 'partial' | 'missed' | 'postponed' | null;
   doneSeconds: number | null; rpe: number | null; feeling: number | null; difficulties: Difficulty[];
+  /** D-088 : « à 100 % en ce moment ? » (facultatif). */
+  readiness?: Readiness | null;
 }
 
 export interface WeekReview {
@@ -41,8 +43,13 @@ export function weekReview(all: ReviewSession[], monday: LocalDate, today: Local
   const rpes = s.flatMap((x) => (x.rpe !== null && (x.state === 'completed' || x.state === 'partial') ? [x.rpe] : []));
   const avgRpe = rpes.length >= 2 ? Math.round((rpes.reduce((a, b) => a + b, 0) / rpes.length) * 10) / 10 : null;
   const base = { monday, counts, plannedMin, doneMin, avgRpe };
+  // D-088 : la dernière réponse de la semaine ; « pas à 100 % » passe avant tout le reste, sans en chercher la cause.
+  const lastReady = [...s].reverse().find((x) => x.readiness)?.readiness ?? null;
+  const notFull = lastReady === 'not_quite' || lastReady === 'no';
+  const readyFact = notFull ? `A répondu ne pas être ${lastReady === 'no' ? '' : 'tout à fait '}à 100 % en ce moment.` : null;
+  const readyQuestion = 'Tu m’as dit ne pas être à 100 % en ce moment : on en parle pour adapter la suite ?';
   if (s.length < 2) {
-    return { ...base, status: 'insufficient', facts: [`Données insuffisantes : ${s.length ? 'une seule séance' : 'aucune séance'} publiée sur la semaine.`], question: null };
+    return { ...base, status: 'insufficient', facts: [`Données insuffisantes : ${s.length ? 'une seule séance' : 'aucune séance'} publiée sur la semaine.`, ...(readyFact ? [readyFact] : [])], question: notFull ? readyQuestion : null };
   }
 
   const done = counts.completed + counts.partial;
@@ -68,11 +75,13 @@ export function weekReview(all: ReviewSession[], monday: LocalDate, today: Local
 
   // Une seule question, la plus utile : ce qui manque d’abord, puis ce qui a coûté, sinon la suite.
   const missed = by('missed')[0];
-  const question = missed ? `Qu’est-ce qui t’a empêché de faire « ${missed.title} » ? On adapte la semaine prochaine si besoin.`
+  const question = notFull ? readyQuestion : missed ? `Qu’est-ce qui t’a empêché de faire « ${missed.title} » ? On adapte la semaine prochaine si besoin.`
     : counts.noFeedback >= 2 ? 'Comment se sont passées tes séances de la semaine dont je n’ai pas eu de retour ?'
       : (avgRpe !== null && avgRpe >= 7.5) || hard >= 2 || low >= 2 ? 'Les séances t’ont semblé dures cette semaine : comment te sens-tu pour la suite ?'
         : topDiff ? `Tu as noté « ${DIFFICULTY_LABELS[topDiff[0]].toLowerCase()} » : on en parle pour ajuster ?`
           : done === counts.planned ? 'Belle régularité cette semaine ! Comment te sens-tu avant la suivante ?'
             : 'Comment s’est passée ta semaine ?';
-  return { ...base, status: 'ok', facts: facts.slice(0, 3), question };
+  // « Pas à 100 % » remplace le dernier fait si la place manque.
+  const kept = readyFact ? [...facts.slice(0, 2), readyFact] : facts.slice(0, 3);
+  return { ...base, status: 'ok', facts: kept, question };
 }

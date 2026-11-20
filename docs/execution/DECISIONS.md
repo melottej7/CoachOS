@@ -1503,3 +1503,11 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Test serveur : consignes enregistrées, présentes dans la première séance appliquée et absentes de la deuxième.
   - Navigateur (démo) : aperçu d’un programme avec objectif et règles ; consignes reprises ; zones « tes documents » détectées (1 km Z4 → Z5). Rien n’a été enregistré.
   - `npm test` : **285 passés** (+3 PostgreSQL), typecheck OK.
+
+## D-092 · Résumé de la semaine : « pas à 100 % » en premier · 2026-11-20
+
+- **Décision.**
+  - Le résumé de la semaine de chaque élève (D-073) reprend sa dernière réponse de la semaine à « à 100 % en ce moment ? » (D-088). Si c’est « Pas tout à fait » ou « Non », il ajoute le fait « A répondu ne pas être (tout à fait) à 100 % en ce moment. » et pose d’abord la question « Tu m’as dit ne pas être à 100 % en ce moment : on en parle pour adapter la suite ? ».
+  - Cela vaut aussi quand les données de la semaine sont insuffisantes.
+  - Aucune cause n’est demandée ; une réponse « Oui » plus récente efface l’alerte.
+- **Preuve.** Test du domaine : fait et question, cas « données insuffisantes », réponse « Oui » plus récente. `npm test` : **286 passés** (+3 PostgreSQL), typecheck OK.
