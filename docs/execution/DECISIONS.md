@@ -1450,3 +1450,18 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Navigateur (démo) : la question s’affiche dans le retour de Camille, avec le message après « Pas tout à fait » (rien envoyé) ; le filtre apparaît dans la file de Marine.
   - `npm test` : **282 passés** (+3 PostgreSQL), typecheck OK.
 - **Réexamen.** Si le fondateur ouvre le jalon santé : précision de la gêne, avec consentement par élève et avis juridique.
+
+## D-089 · Suivi « En parler avec l’élève » quand il n’est pas à 100 % · 2026-11-20
+
+- **Contexte.** Suite de D-088 : le fondateur veut que le coach parle avec l’élève qui n’est pas à 100 %. Le fondateur a dit « continue sans moi ».
+- **Décision.**
+  - **Nouveau suivi automatique (CE-H-03)** « En parler avec l’élève » : priorité urgente, type appel, avec le motif « A répondu ne pas être à 100 % en ce moment · réponse « Non » ».
+    - Il apparaît dans le Planning et dans « À faire » de la fiche, le jour du retour (délai réglable de 0 à 7 jours dans Paramètres › Suivis automatiques).
+    - Il se clôt seul dès que le coach écrit à l’élève après sa réponse, ou quand la dernière réponse redevient « Oui ». Le coach peut aussi le reporter.
+  - **Élèves** : repère « Pas à 100 % » à côté du nom, d’après la dernière réponse (la séance la plus récente).
+  - **Migrations additives**, appliquées en local :
+    - `20261120100000` : règle ajoutée aux contrôles ;
+    - `20261120110000` : `feedbacks.readiness_at`, le moment de la réponse, pour qu’un message plus ancien ne clôture pas le suivi.
+- **Preuve.**
+  - Test serveur : un message du coach envoyé avant la réponse ne clôt pas le suivi ; le suivi apparaît en urgent avec « Non » ; le repère s’affiche dans Élèves ; un message après la réponse le clôt.
+  - `npm test` : **283 passés** (+3 PostgreSQL), typecheck OK.

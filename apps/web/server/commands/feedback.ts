@@ -68,8 +68,8 @@ export async function saveFeedback(meta: Meta, body: unknown): Promise<StoredRes
           [wid, aid, sid, input.publishedRevision, input.state, input.durationSeconds, input.distanceM, input.measureFile],
         );
         const fb = await tx.query<{ id: string }>(
-          `insert into public.feedbacks(workspace_id, athlete_id, result_id, rpe, comment, overall_feeling, difficulties, changes, actual_sport, repeats_done, readiness)
-           values ($1, $2, $3, $4, $5, $6, $7::text[], $8::text[], $9, $10::smallint[], $11) returning id`,
+          `insert into public.feedbacks(workspace_id, athlete_id, result_id, rpe, comment, overall_feeling, difficulties, changes, actual_sport, repeats_done, readiness, readiness_at)
+           values ($1, $2, $3, $4, $5, $6, $7::text[], $8::text[], $9, $10::smallint[], $11, case when $11::text is null then null else now() end) returning id`,
           [wid, aid, res.rows[0]!.id, input.rpe, input.comment, input.overallFeeling, input.difficulties, input.changes, input.actualSport, input.repeatsDone, input.readiness],
         );
         feedbackId = fb.rows[0]!.id;
@@ -91,7 +91,8 @@ export async function saveFeedback(meta: Meta, body: unknown): Promise<StoredRes
         );
         await tx.query(
           `update public.feedbacks set rpe = $4, comment = $5, revision = $6, reviewed_at = null, overall_feeling = $7, difficulties = $8::text[],
-             changes = $9::text[], actual_sport = $10, repeats_done = $11::smallint[], readiness = $12
+             changes = $9::text[], actual_sport = $10, repeats_done = $11::smallint[], readiness = $12,
+             readiness_at = case when $12::text is null then null when readiness is distinct from $12::text then now() else readiness_at end
            where workspace_id = $1 and athlete_id = $2 and id = $3`,
           [wid, aid, feedbackId, input.rpe, input.comment, revision, input.overallFeeling, input.difficulties, input.changes, input.actualSport, input.repeatsDone, input.readiness],
         );

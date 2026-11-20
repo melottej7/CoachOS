@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { addDays, daysUntil, formatShortDate, formatWeekday, LEVEL_LABELS, LEVELS, SPORT_LABELS, SPORTS, urgencyLabel, type Level } from '@coachos/domain';
+import { addDays, daysUntil, formatShortDate, formatWeekday, LEVEL_LABELS, LEVELS, READINESS_COACH, readinessAlert, SPORT_LABELS, SPORTS, urgencyLabel, type Level } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { portfolio, type RosterEntry } from '@/server/repo/portfolio';
@@ -177,6 +177,7 @@ export default async function Roster({ params, searchParams }: { params: Promise
                       <Link href={`${base}/athletes/${a.id}?from=${encodeURIComponent(here)}`}>{a.name}</Link>{' '}
                       {a.state === 'invited' ? <Pill tone="neutral">Invité·e</Pill> : null}{' '}
                       <Pill tone={u === 'Urgent' ? 'attn' : u === 'À suivre' ? '' : 'neutral'}>{u}</Pill>
+                      {readinessAlert(a.readiness?.value) ? <>{' '}<Pill tone="attn">{READINESS_COACH[a.readiness!.value]}</Pill></> : null}
                     </h3>
                     <p>
                       {a.sport ? SPORT_LABELS[a.sport] : 'Sport non renseigné'}

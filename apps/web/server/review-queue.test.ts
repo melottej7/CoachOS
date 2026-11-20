@@ -7,6 +7,10 @@ import { SEED_WORKOUTS } from './db/seed';
 import { AppError } from './errors';
 import { saveFeedback, updateReview } from './commands/feedback';
 import { openReviewCount, openReviews } from './repo/coach';
+import { home, portfolio } from './repo/portfolio';
+import { openConversation, sendMessage } from './commands/messages';
+import { TIME_ZONE } from './db/fixtures';
+import { todayIn, weekStart } from '@coachos/domain';
 
 // D-082 : file des retours. Reporter (date future, retour seul dans la file), remettre, filtre gardé (C09-08).
 
@@ -79,5 +83,21 @@ describe('file des retours (D-082)', () => {
     expect(after.find((x) => x.workoutId === SEED_WORKOUTS.camilleToday)!.readiness).toBe('full');
     expect(after.filter((x) => matchesReviewFilter(x, f))).toEqual([]);
     expect(await codeOf(saveFeedback(fbMeta(SEED_WORKOUTS.camilleToday), { publishedRevision: 1, expectedRevision: 4, state: 'completed', readiness: 'genou' }))).toBe('INVALID_FIELDS');
+  });
+
+  // D-089 : suivi automatique « En parler avec l’élève », clos par un message du coach.
+  it('« pas à 100 % » → « En parler avec l’élève » dans le Planning et repère dans Élèves ; un message du coach le clôt', async () => {
+    const cid = (await openConversation({ actorId: USERS.marine, idempotencyKey: randomUUID(), requestId: randomUUID(), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille } as never)).body as { id: string };
+    await sendMessage({ actorId: USERS.marine, idempotencyKey: randomUUID(), requestId: randomUUID(), workspaceId: WORKSPACE_A, conversationId: cid.id } as never, { body: 'Avant ton retour' });
+    await saveFeedback(fbMeta(SEED_WORKOUTS.camilleToday), { publishedRevision: 1, expectedRevision: 4, state: 'completed', readiness: 'no' });
+    const monday = weekStart(todayIn(TIME_ZONE));
+    let h = await home(USERS.marine, WORKSPACE_A, TIME_ZONE, monday);
+    const t = h.tasks.find((x) => x.rule === 'readiness_talk' && x.athlete?.id === ATHLETES.camille);
+    expect(t).toMatchObject({ title: 'En parler avec l’élève', priority: 3 });
+    expect(t!.reason).toMatch(/« Non »/);
+    expect((await portfolio(USERS.marine, WORKSPACE_A, TIME_ZONE)).roster.find((a) => a.id === ATHLETES.camille)!.readiness).toMatchObject({ value: 'no' });
+    await sendMessage({ actorId: USERS.marine, idempotencyKey: randomUUID(), requestId: randomUUID(), workspaceId: WORKSPACE_A, conversationId: cid.id } as never, { body: 'On en parle ce soir ?' });
+    h = await home(USERS.marine, WORKSPACE_A, TIME_ZONE, monday);
+    expect(h.tasks.some((x) => x.rule === 'readiness_talk' && x.athlete?.id === ATHLETES.camille)).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
 import {
   addDays, AUTO_RULE_INFO, autoRuleReason, bilanCompletion, deriveBilan, excerpt, resolveRuleSettings, type BilanAnswers, rankTasks, todayIn, urgencyScore, usesVma, utcToLocal,
-  type AppointmentKind, type AppointmentStatus, type AutoRule, type AutoRuleSetting, type TaskRecurrence, type GoalState, type Level, type LocalDate, type Sport, type TaskKind, type TaskStatus,
+  type AppointmentKind, type AppointmentStatus, type AutoRule, type AutoRuleSetting, type TaskRecurrence, type GoalState, type Level, type LocalDate, type Readiness, type Sport, type TaskKind, type TaskStatus,
 } from '@coachos/domain';
 import { readAs, type Tx } from '../db/client';
 import { apptCols, toAppt, type AppointmentItem, type ApptRow } from '../commands/tasks';
@@ -58,6 +58,8 @@ export interface RosterEntry {
   upcoming7: number;
   /** Prochain objectif prévu (date à venir d’abord, puis sans date), pour filtrer et afficher (D-053). */
   nextGoal: { title: string; targetDate: string | null } | null;
+  /** D-088 : dernière réponse à « à 100 % en ce moment ? » ; null = jamais répondu. */
+  readiness: { value: Readiness; on: string } | null;
   todo: HomeTask[];
   urgency: number;
 }
@@ -173,6 +175,19 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
      where workspace_id = $1 and athlete_id = any($2::uuid[]) and state = 'planned' and (target_date is null or target_date >= $3::date)
      order by athlete_id, (target_date is null), target_date, created_at desc`, [today]);
   const goalBy = new Map(goals.map((g) => [g.athlete_id, { title: g.title, targetDate: g.target_date }]));
+  // D-089 : dernière réponse à « à 100 % ? » et dernier message du coach à l’élève (qui clôt « En parler avec l’élève »).
+  const readinessRows = await q<{ athlete_id: string; feedback_id: string; readiness: Readiness; created_at: Date; workout_id: string }>(
+    `select distinct on (f.athlete_id) f.athlete_id, f.id as feedback_id, f.readiness, coalesce(f.readiness_at, f.created_at) as created_at, res.workout_id
+     from public.feedbacks f join public.workout_results res on res.workspace_id = f.workspace_id and res.athlete_id = f.athlete_id and res.id = f.result_id
+     join public.workout_revisions rev on rev.workspace_id = res.workspace_id and rev.athlete_id = res.athlete_id and rev.workout_id = res.workout_id and rev.number = res.workout_revision
+     where f.workspace_id = $1 and f.athlete_id = any($2::uuid[]) and f.readiness is not null
+     order by f.athlete_id, rev.local_date desc, f.created_at desc, f.id`);
+  const readinessBy = new Map(readinessRows.map((x) => [x.athlete_id, x]));
+  const coachSpoke = new Map((await q<{ athlete_id: string; at: Date }>(
+    `select c.athlete_id, max(m.created_at) as at
+     from public.conversations c join public.messages m on m.workspace_id = c.workspace_id and m.conversation_id = c.id
+     join public.memberships mb on mb.workspace_id = c.workspace_id and mb.user_id = m.sender_id and mb.active
+     where c.workspace_id = $1 and c.athlete_id = any($2::uuid[]) group by c.athlete_id`)).map((x) => [x.athlete_id, x.at]));
   const met = new Set((await q<{ athlete_id: string }>(
     `select distinct athlete_id from public.appointments where workspace_id = $1 and athlete_id = any($2::uuid[]) and status <> 'canceled'`)).map((x) => x.athlete_id));
   const snooze = await snoozed(tx, wid);
@@ -209,6 +224,10 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
     };
     for (const m of msgBy.get(a.id) ?? []) push('message_reply', m.conversation_id, addDays(localDay(m.created_at), delay('message_reply')), `${base}/messages/${a.id}`, `« ${excerpt(m.body, 60)} »`);
     for (const rv of reviewsBy.get(a.id) ?? []) push('feedback_review', rv.id, addDays(localDay(rv.created_at), delay('feedback_review')), `${base}/review/${rv.id}`, rv.title);
+    const rd = readinessBy.get(a.id);
+    if (rd && (rd.readiness === 'not_quite' || rd.readiness === 'no') && !((coachSpoke.get(a.id)?.getTime() ?? 0) > rd.created_at.getTime())) {
+      push('readiness_talk', rd.feedback_id, addDays(localDay(rd.created_at), delay('readiness_talk')), `${base}/messages/${a.id}`, rd.readiness === 'no' ? 'réponse « Non »' : 'réponse « Pas tout à fait »');
+    }
     if (a.state === 'invited') push('invite_pending', a.id, addDays(localDay(a.created_at), delay('invite_pending')), `${base}/athletes/${a.id}#inv-title`);
     if (a.state === 'active') {
       if (!upcoming.some((d) => d <= horizonEnd)) push('no_upcoming', a.id, today, `${base}/calendar?athlete=${a.id}`);
@@ -234,6 +253,7 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
         return x ? { due: x.due, done: x.done, pct: x.due ? Math.round((x.done / x.due) * 100) : null, avgRpe: x.rpe === null ? null : Number(x.rpe) } : { due: 0, done: 0, pct: null, avgRpe: null };
       })(),
       nextWorkout: upcoming[0] ?? null, upcoming7, nextGoal: goalBy.get(a.id) ?? null, todo,
+      readiness: rd ? { value: rd.readiness, on: localDay(rd.created_at) } : null,
       urgency: urgencyScore(todo, today),
     };
   });
