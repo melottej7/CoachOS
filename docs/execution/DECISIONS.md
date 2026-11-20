@@ -1556,3 +1556,14 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
     - à 375 px, rien ne dépasse (le tableau débordait avant correction) ;
     - rien n’a été enregistré.
   - Typecheck OK.
+
+## D-095 · Ouvrir CoachOS depuis un téléphone du même Wi-Fi · 2026-11-20
+
+- **Question du fondateur.** « Quelle adresse ouvrir avec son téléphone pour installer l’app web ? »
+- **Constat.** Next.js 16 bloque en développement les ressources internes demandées depuis une autre adresse que localhost. Le journal du serveur montrait « Blocked cross-origin request … /_next/webpack-hmr from "192.168.65.68" ». Le téléphone aurait affiché les pages, mais sans rechargement en direct et avec un risque de boutons inactifs.
+- **Décision.**
+  - `allowedDevOrigins` autorise les réseaux privés (192.168.x.x, 10.x.x.x, 172.x.x.x, *.local), **en développement seulement**.
+  - L’adresse à ouvrir est celle que le serveur affiche (« Network »), aujourd’hui http://192.168.65.68:3000.
+  - La connexion par mot de passe passe par le serveur : elle marche depuis le téléphone.
+  - La lecture hors ligne (D-080) attend https, donc la mise en ligne.
+- **Preuve.** Navigateur à 375 px sur http://192.168.65.68:3000/demo : page chargée et active, sans erreur, et plus aucun blocage dans le journal du serveur.

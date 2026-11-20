@@ -209,7 +209,7 @@ En démonstration : le programme de Camille (semi du 17 janvier) est créé en b
 
 ## Installer CoachOS sur ton téléphone
 
-Sur le même réseau Wi-Fi que ton Mac, ouvre l’adresse réseau affichée par le serveur (« Network: http://… :3000 ») :
+Sur le même réseau Wi-Fi que ton Mac, et pendant que le serveur tourne sur le Mac, ouvre l’adresse réseau affichée par le serveur (« Network: http://… :3000 », aujourd’hui **http://192.168.65.68:3000**). Connecte-toi avec ton adresse et ton mot de passe, ou ouvre `/demo` pour la démonstration. Le serveur accepte les téléphones du réseau local (D-095). Sans https, la lecture hors ligne (D-080) ne fonctionne pas : elle viendra avec la mise en ligne.
 - **iPhone** (Safari) : bouton Partager → **Sur l’écran d’accueil**. L’icône verte « CoachOS » apparaît ; elle ouvre l’application en plein écran.
 - **Android** (Chrome) : menu ⋮ → **Installer l’application**.
 
