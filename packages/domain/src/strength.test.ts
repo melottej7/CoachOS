@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BASE_VIDEOS, describeBlock, describeTotals, detectVideoType, shownVideo, starterKey, exerciseIdsOf, fitSteps, followSequence, parseNotation, setLabel, presetsFor, STARTER_EXERCISES, structureSchema,
+  applyFollowLog, asDone, BASE_VIDEOS, compareSet, entryVerdict, loadProgress, progressText, strengthLogSchema, strengthPlan, describeBlock, describeTotals, detectVideoType, shownVideo, starterKey, exerciseIdsOf, fitSteps, followSequence, parseNotation, setLabel, presetsFor, STARTER_EXERCISES, structureSchema,
   structureTotals, toNotation, videoEmbed, type Block,
 } from './index';
 
@@ -132,5 +132,43 @@ describe('vidéo montrée à l’élève (D-099)', () => {
       expect(keys.has(k)).toBe(true);
       expect(v.url.startsWith('https://') && v.validatedBy && /^\d{4}-\d{2}-\d{2}$/.test(v.validatedOn)).toBeTruthy();
     }
+  });
+});
+
+describe('séries et charges réalisées (M4)', () => {
+  const blocks = parseNotation("8' RPE3 + 4×(10 squat goblet 16kg + repos 1'30) + 3×(12 fentes + 30\" planche + repos 45\")", 'strength').blocks;
+  it('le prévu, exercice par exercice, avec la place de chaque série dans « Suivre »', () => {
+    const plan = strengthPlan(blocks);
+    expect(plan.map((e) => [e.name, e.sets.length])).toEqual([['Squat goblet', 4], ['Fentes', 3], ['Planche', 3]]);
+    expect(plan[0]!.sets[0]).toEqual({ followIndex: 1, reps: 10, kg: 16, seconds: null });
+    expect(plan[2]!.sets[0]).toMatchObject({ reps: null, kg: null, seconds: 30 });
+    expect(strengthPlan(parseNotation("15' Z2 + 6×(400m Z6 + R200m)", 'running').blocks)).toEqual([]);
+  });
+  it('ce qui a été noté pendant « Suivre » corrige le prévu ; le schéma valide', () => {
+    const plan = strengthPlan(blocks);
+    const log = applyFollowLog(plan, { 5: { reps: 8, kg: 16 }, 7: { reps: 6, kg: 14 } });
+    expect(log[0]!.sets.map((x) => [x.reps, x.kg])).toEqual([[10, 16], [10, 16], [8, 16], [6, 14]]);
+    expect(strengthLogSchema.safeParse(log).success).toBe(true);
+    expect(strengthLogSchema.safeParse([{ name: 'Squat', sets: [{ reps: 10, kg: 16.3 }] }]).success).toBe(false);
+    expect(strengthLogSchema.safeParse([{ name: 'Squat', sets: [] }]).success).toBe(false);
+  });
+  it('comparaison au prévu : moins, autant, plus ; séries non faites', () => {
+    expect(compareSet({ reps: 10, kg: 16, seconds: null }, { reps: 8, kg: 16, seconds: null })).toBe('less');
+    expect(compareSet({ reps: 10, kg: 16, seconds: null }, { reps: 10, kg: 18, seconds: null })).toBe('more');
+    expect(compareSet({ reps: 10, kg: 16, seconds: null }, { reps: 10, kg: 16, seconds: null })).toBe('same');
+    const plan = strengthPlan(blocks)[0]!;
+    expect(entryVerdict(plan, { exerciseId: null, name: 'Squat goblet', sets: [{ reps: 10, kg: 16, seconds: null }, { reps: 8, kg: 16, seconds: null }, { reps: 0, kg: 16, seconds: null }] }))
+      .toEqual({ less: 1, more: 0, missing: 2 });
+    expect(entryVerdict(plan, asDone([plan])[0]!)).toEqual({ less: 0, more: 0, missing: 0 });
+  });
+  it('progression : meilleure série par séance, évolution lisible, sans charge en répétitions', () => {
+    const series = loadProgress([
+      { date: '2026-11-25', log: [{ exerciseId: null, name: 'Squat goblet', sets: [{ reps: 10, kg: 18, seconds: null }, { reps: 8, kg: 20, seconds: null }] }, { exerciseId: null, name: 'Pompes', sets: [{ reps: 12, kg: null, seconds: null }] }] },
+      { date: '2026-11-18', log: [{ exerciseId: null, name: 'Squat goblet', sets: [{ reps: 10, kg: 16, seconds: null }, { reps: 0, kg: 16, seconds: null }] }, { exerciseId: null, name: 'Pompes', sets: [{ reps: 8, kg: null, seconds: null }] }] },
+    ]);
+    const goblet = series.find((x) => x.name === 'Squat goblet')!;
+    expect(goblet.points.map((p) => [p.date, p.topKg, p.topReps, p.sets, p.volumeKg])).toEqual([['2026-11-18', 16, 10, 1, 160], ['2026-11-25', 20, 8, 2, 340]]);
+    expect(progressText(goblet)).toBe('16 kg → 20 kg (+4 kg)');
+    expect(progressText(series.find((x) => x.name === 'Pompes')!)).toBe('8 → 12 répétitions');
   });
 });

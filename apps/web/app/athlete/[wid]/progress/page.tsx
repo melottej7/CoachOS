@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { addDays, daysUntil, formatLongDate, SPORT_LABELS, todayIn, weekStart, equivalents, formatDuration2, PERFORMANCE_KIND_LABELS } from '@coachos/domain';
+import { addDays, daysUntil, formatLongDate, SPORT_LABELS, todayIn, weekStart, equivalents, formatDuration2, PERFORMANCE_KIND_LABELS , loadProgress } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { athleteContext } from '@/server/repo/context';
-import { athleteStats } from '@/server/repo/stats';
+import { athleteStats, strengthHistory } from '@/server/repo/stats';
+import { LoadProgress } from '@/components/load-progress';
 import { StatsPanel } from '@/components/stats-panel';
 import { readPerformances } from '@/server/commands/performances';
 
@@ -21,6 +22,7 @@ export default async function Progress({ params, searchParams }: { params: Promi
   const from = addDays(weekStart(today), -7 * (weeks - 1));
   const to = addDays(weekStart(today), 6);
   const data = await athleteStats(actor.userId, wid, ctx.athlete.id, from, to, today);
+  const loads = loadProgress(await strengthHistory(actor.userId, wid, ctx.athlete.id));
   if (!data) notFound();
   const { summary: s, goal } = data;
   const results = await readPerformances(actor.userId, wid, ctx.athlete.id);
@@ -46,6 +48,12 @@ export default async function Progress({ params, searchParams }: { params: Promi
       <section className="card" aria-label="Tes entraînements">
         <StatsPanel s={s} delta={data.delta} weeks={weeks} periodHref={(n) => `/athlete/${wid}/progress?periode=${n}`} you />
       </section>
+      {loads.length ? (
+        <section className="card" aria-labelledby="mes-charges" style={{ marginTop: 16 }}>
+          <div className="card-head"><h2 id="mes-charges">Tes charges</h2><span className="muted">D’après tes retours de musculation</span></div>
+          <div className="card-body"><LoadProgress series={loads} you /></div>
+        </section>
+      ) : null}
       {results.length ? (
         <section className="card" aria-labelledby="mes-resultats" style={{ marginTop: 16 }}>
           <div className="card-head"><h2 id="mes-resultats">Tes résultats de référence</h2></div>

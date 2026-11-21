@@ -1,4 +1,4 @@
-import { workoutStatus, type Block, type Change, type Difficulty, type FeedbackActivity, type Readiness, type ResultState, type Sport, type WorkoutStatus } from '@coachos/domain';
+import { workoutStatus, type Block, type Change, type Difficulty, type FeedbackActivity, type Readiness, type ResultState, type Sport, type WorkoutStatus , type StrengthEntry } from '@coachos/domain';
 import { readAs, type Tx } from '../db/client';
 
 // Lectures du coach, toutes sous RLS (affectation active obligatoire).
@@ -130,6 +130,8 @@ export interface FeedbackView {
   changes: Change[];
   actualSport: Sport | null;
   repeatsDone: number[];
+  /** D-096 (M4) : séries et charges réalisées. */
+  strengthLog: StrengthEntry[];
   /** Mesures lues dans un fichier de montre (D-048) ; null = saisies à la main. */
   measureFile: 'fit' | 'tcx' | 'gpx' | null;
   /** Activités de la montre rattachées (CE-X-03, D-064), dans l’ordre de début. */
@@ -191,10 +193,10 @@ export async function readFeedback(
     id: string; revision: number; workout_revision: number; state: ResultState; duration_seconds: number | null;
     distance_m: number | null; rpe: number | null; comment: string | null; reviewed_at: Date | null; created_at: Date;
     overall_feeling: number | null; difficulties: Difficulty[] | null; readiness: Readiness | null; test_seconds: number | null;
-    changes: Change[] | null; actual_sport: Sport | null; repeats_done: number[] | null; measure_file: 'fit' | 'tcx' | 'gpx' | null;
+    changes: Change[] | null; actual_sport: Sport | null; repeats_done: number[] | null; measure_file: 'fit' | 'tcx' | 'gpx' | null; strength_log: StrengthEntry[] | null;
   }>(
     `select f.id, f.revision, res.workout_revision, res.state, res.duration_seconds, res.distance_m, f.rpe, f.comment,
-            f.reviewed_at, f.created_at, f.overall_feeling, f.difficulties, f.changes, f.actual_sport, f.repeats_done, res.measure_file, f.readiness, f.test_seconds
+            f.reviewed_at, f.created_at, f.overall_feeling, f.difficulties, f.changes, f.actual_sport, f.repeats_done, res.measure_file, f.readiness, f.test_seconds, f.strength_log
      from public.workout_results res
      join public.feedbacks f on f.workspace_id = res.workspace_id and f.athlete_id = res.athlete_id and f.result_id = res.id
      where res.workspace_id = $1 and res.athlete_id = $2 and res.workout_id = $3`,
@@ -226,6 +228,7 @@ export async function readFeedback(
     changes: x.changes ?? [],
     actualSport: x.actual_sport,
     repeatsDone: (x.repeats_done ?? []).map(Number),
+    strengthLog: x.strength_log ?? [],
     measureFile: x.measure_file,
   };
 }

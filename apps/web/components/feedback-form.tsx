@@ -1,14 +1,16 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
-  activityTotals, CHANGES, formatDuration2, parseDuration, testDistanceOf, CHANGE_LABELS, describeBlock, DIFFICULTIES, DIFFICULTY_LABELS, FEELING_LABELS, READINESS, READINESS_LABELS, READINESS_QUESTION, type Readiness, RESULT_STATES, RESULT_STATE_LABELS, SPORTS, SPORT_LABELS,
+  activityTotals, applyFollowLog, asDone, strengthPlan, type StrengthEntry, CHANGES, formatDuration2, parseDuration, testDistanceOf, CHANGE_LABELS, describeBlock, DIFFICULTIES, DIFFICULTY_LABELS, FEELING_LABELS, READINESS, READINESS_LABELS, READINESS_QUESTION, type Readiness, RESULT_STATES, RESULT_STATE_LABELS, SPORTS, SPORT_LABELS,
   type Block, type Change, type Difficulty, type FeedbackActivity, type ResultState, type Sport,
 } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
 import { ActivityImport } from './activity-import';
 import { fieldError, useIntent } from './use-intent';
+import { StrengthLogEditor } from './strength-log-editor';
+import { followLogKey, readFollowLog } from './follow-session';
 
 interface Props {
   wid: string;
@@ -31,6 +33,7 @@ interface Props {
     measureFile: 'fit' | 'tcx' | 'gpx' | null;
     activities: FeedbackActivity[];
     testSeconds?: number | null;
+    strengthLog?: StrengthEntry[];
   } | null;
 }
 
@@ -57,6 +60,14 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
   const repeats = intervals.filter((b): b is Extract<Block, { type: 'repeat' }> => b.type === 'repeat');
   const [repsText, setRepsText] = useState<string[]>(() => repeats.map((_, i) => (existing?.repeatsDone[i] === undefined ? '' : String(existing.repeatsDone[i]))));
   const [missingState, setMissingState] = useState(false);
+  // D-096 (M4) : séries et charges d’une séance qui nomme des exercices ; reprend ce qui a été noté pendant « Suivre ».
+  const plan = useMemo(() => strengthPlan(intervals), [intervals]);
+  const [strength, setStrength] = useState<StrengthEntry[]>(() => (existing?.strengthLog?.length ? existing.strengthLog : asDone(plan)));
+  useEffect(() => {
+    if (existing?.strengthLog?.length || !plan.length) return;
+    const noted = readFollowLog(sid);
+    if (Object.keys(noted).length) setStrength(applyFollowLog(plan, noted));
+  }, [existing?.strengthLog?.length, plan, sid]);
   // Provenance (D-048) : mesures lues dans un fichier, tant que l’élève ne les modifie pas.
   const kmText = (m: number | null) => (m ? String(Math.round(m / 10) / 100).replace('.', ',') : '');
   const [imported, setImported] = useState<{ file: 'fit' | 'tcx' | 'gpx'; minutes: string; km: string } | null>(
@@ -105,11 +116,14 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
       changes: done ? changes : [],
       actualSport: done && changes.includes('other_sport') && actualSport ? actualSport : null,
       repeatsDone,
+      strengthLog: done && plan.length ? strength : [],
       measureFile: done && imported && imported.minutes === minutes && imported.km === km && (minutes || km) ? imported.file : null,
       activities: done ? activities : [],
     };
     const sent = await run('PUT', `/api/v1/workspaces/${wid}/athletes/${aid}/workouts/${sid}/feedback`, body);
     if (sent) {
+      // D-096 (M4) : ce qui a été noté pendant « Suivre » est maintenant chez le coach.
+      try { localStorage.removeItem(followLogKey(sid)); localStorage.removeItem(`coachos:suivre:${sid}`); } catch { /* stockage indisponible */ }
       router.push(`/athlete/${wid}/workouts/${sid}?notice=sent`);
       router.refresh();
     }
@@ -168,6 +182,12 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
             </div>
           </div>
 
+          {plan.length ? (
+            <>
+              <StrengthLogEditor plan={plan} value={strength} onChange={setStrength} onReset={() => setStrength(asDone(plan))} />
+              {err('strengthLog') ? <span className="field-error">{err('strengthLog')}</span> : null}
+            </>
+          ) : null}
           <details className="changed" open={state === 'partial' || changes.length > 0 || repsText.some((t) => t !== '')}>
             <summary>{state === 'partial' ? 'Qu’est-ce qui a changé ?' : 'Ma séance était différente du prévu'} <span className="hint">Facultatif · aide ton coach à ajuster</span></summary>
             <fieldset className="choice">
@@ -188,7 +208,7 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
                 </select>
               </div>
             ) : null}
-            {repeats.length ? (
+            {repeats.length && !plan.length ? (
               <fieldset className="choice">
                 <legend>Répétitions faites <span className="hint">Laisse vide si tout a été fait</span></legend>
                 {repeats.map((r, i) => (

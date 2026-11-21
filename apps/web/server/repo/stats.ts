@@ -1,4 +1,4 @@
-import { addDays, comparePeriods, summarize, type GoalState, type LocalDate, type PeriodDelta, type Sport, type StatItem, type StatsSummary } from '@coachos/domain';
+import { addDays, comparePeriods, summarize, type GoalState, type LocalDate, type PeriodDelta, type Sport, type StatItem, type StatsSummary , type StrengthEntry } from '@coachos/domain';
 import { commandAs } from '../db/client';
 
 // Statistiques d’un élève (D-037) : coach affecté ou élève lui-même. Séances publiées seulement (jamais les brouillons).
@@ -53,5 +53,27 @@ export async function athleteStats(userId: string, wid: string, aid: string, fro
         state: x.state, doneSeconds: x.done_seconds, doneMeters: x.done_meters, rpe: x.rpe,
       }));
     return { summary, previous, delta: comparePeriods(summary, previous), goal, history };
+  });
+}
+
+/**
+ * D-096 (M4) · Séances avec séries et charges réalisées (retours envoyés), pour la progression par exercice.
+ * Lecture réservée au coach affecté et à l’élève lui-même (contrôle explicite, comme les statistiques).
+ */
+export async function strengthHistory(userId: string, wid: string, aid: string): Promise<{ date: string; log: StrengthEntry[] }[]> {
+  return commandAs(userId, async (tx) => {
+    const ok = await tx.query<{ ok: boolean }>('select (private.assigned($1, $2) or private.own_athlete($1, $2)) as ok', [wid, aid]);
+    if (!ok.rows[0]?.ok) return [];
+    const r = await tx.query<{ local_date: string; strength_log: StrengthEntry[] }>(
+      `select to_char(r.local_date, 'YYYY-MM-DD') as local_date, f.strength_log
+       from public.feedbacks f
+       join public.workout_results res on res.workspace_id = f.workspace_id and res.athlete_id = f.athlete_id and res.id = f.result_id
+       join public.workout_revisions r on r.workspace_id = res.workspace_id and r.athlete_id = res.athlete_id and r.workout_id = res.workout_id and r.number = res.workout_revision
+       where f.workspace_id = $1 and f.athlete_id = $2 and jsonb_array_length(f.strength_log) > 0
+       order by r.local_date
+       limit 200`,
+      [wid, aid],
+    );
+    return r.rows.map((x) => ({ date: x.local_date, log: x.strength_log }));
   });
 }

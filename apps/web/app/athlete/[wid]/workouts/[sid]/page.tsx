@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { canGiveFeedback, formatDistance, formatDuration, formatLongDate, todayIn, RESULT_STATE_LABELS, SPORT_LABELS } from '@coachos/domain';
+import { canGiveFeedback, formatDistance, formatDuration, formatLongDate, todayIn, RESULT_STATE_LABELS, SPORT_LABELS, strengthPlan } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { athleteWorkout } from '@/server/repo/athlete';
 import { athleteContext, isUuid } from '@/server/repo/context';
@@ -9,6 +9,7 @@ import { StructureView } from '@/components/structure-view';
 import { FitDownload } from '@/components/fit-download';
 import { readAthleteReferences } from '@/server/commands/athlete-references';
 import { exerciseMap } from '@/server/repo/exercises';
+import { StrengthLogView } from '@/components/strength-log-view';
 
 
 export const metadata = { title: 'Séance' };
@@ -71,6 +72,7 @@ export default async function AthleteWorkoutPage({ params, searchParams }: { par
               {feedback.reviewedAt ? ' · lu par ton coach' : ''}
             </p>
           ) : null}
+          {feedback?.strengthLog.length ? <StrengthLogView plan={strengthPlan(w.intervals)} log={feedback.strengthLog} /> : null}
           {feedback && feedback.observedRevision !== w.revision ? (
             <p className="banner warn">Ton coach a mis à jour cette séance après ton retour. Ton retour porte sur la version précédente.</p>
           ) : null}

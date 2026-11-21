@@ -29,6 +29,14 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
     try { localStorage.setItem(storeKey, String(i)); } catch { /* stockage indisponible */ }
   }, [i, restored, storeKey]);
   useWakeLock();
+  // D-096 (M4) : ce que l’élève a vraiment fait, série par série, gardé sur ce téléphone jusqu’à son retour.
+  const [log, setLog] = useState<FollowLog>({});
+  useEffect(() => { setLog(readFollowLog(sid)); }, [sid]);
+  const note = (index: number, v: { reps: number | null; kg: number | null }) => setLog((l) => {
+    const next = { ...l, [index]: v };
+    try { localStorage.setItem(followLogKey(sid), JSON.stringify(next)); } catch { /* stockage indisponible */ }
+    return next;
+  });
 
   const done = i >= seq.length;
   const go = (n: number) => setI(Math.max(0, Math.min(seq.length, n)));
@@ -54,8 +62,8 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
           </div>
         </section>
       ) : (
-        <StepScreen key={i} wid={wid} f={seq[i]!} next={seq[i + 1] ?? null} exercises={exercises}
-          onNext={() => go(i + 1)} onPrev={i > 0 ? () => go(i - 1) : null} />
+        <StepScreen key={i} wid={wid} f={seq[i]!} next={seq[i + 1] ?? null} exercises={exercises} logged={log[i]}
+          onLog={(v) => note(i, v)} onNext={() => go(i + 1)} onPrev={i > 0 ? () => go(i - 1) : null} />
       )}
     </div>
   );
@@ -63,8 +71,10 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
 
 const isRest = (f: FollowStep) => f.step.phase === 'rest' || f.step.phase === 'recovery';
 
-function StepScreen({ wid, f, next, exercises, onNext, onPrev }: {
-  wid: string; f: FollowStep; next: FollowStep | null; exercises: Record<string, ExerciseInfo>; onNext: () => void; onPrev: (() => void) | null;
+function StepScreen({ wid, f, next, exercises, logged, onLog, onNext, onPrev }: {
+  wid: string; f: FollowStep; next: FollowStep | null; exercises: Record<string, ExerciseInfo>;
+  logged?: { reps: number | null; kg: number | null }; onLog: (v: { reps: number | null; kg: number | null }) => void;
+  onNext: () => void; onPrev: (() => void) | null;
 }) {
   const s = f.step;
   const ex = s.exercise?.id ? exercises[s.exercise.id] : undefined;
@@ -86,6 +96,9 @@ function StepScreen({ wid, f, next, exercises, onNext, onPrev }: {
           <ExerciseVideo wid={wid} exercise={ex} />
           {ex.instructions ? <details className="fw-howto" open={!hasVideo(ex)}><summary>Consignes</summary><p>{ex.instructions}</p></details> : null}
         </div>
+      ) : null}
+      {!rest && s.exercise && s.measure.kind === 'reps' ? (
+        <DoneInputs planned={{ reps: s.measure.reps, kg: s.intensity.kind === 'load' ? s.intensity.min : null }} value={logged} onChange={onLog} />
       ) : null}
       <div className="actions fw-actions">
         {onPrev ? <button type="button" className="btn" onClick={onPrev}>← Précédent</button> : null}
@@ -156,4 +169,29 @@ function useWakeLock() {
     document.addEventListener('visibilitychange', again);
     return () => { document.removeEventListener('visibilitychange', again); void lock?.release().catch(() => undefined); };
   }, []);
+}
+
+/** Ce qui a été noté pendant la séance, par étape du mode « Suivre » (D-096, M4). */
+export type FollowLog = Record<number, { reps: number | null; kg: number | null }>;
+export const followLogKey = (sid: string) => `coachos:suivre:${sid}:series`;
+export function readFollowLog(sid: string): FollowLog {
+  try { const v = JSON.parse(localStorage.getItem(followLogKey(sid)) ?? '{}') as unknown; return v && typeof v === 'object' ? (v as FollowLog) : {}; } catch { return {}; }
+}
+
+/** « Fait : 10 rép · 16 kg », prérempli avec le prévu ; l’élève corrige s’il a fait moins ou plus. */
+function DoneInputs({ planned, value, onChange }: { planned: { reps: number; kg: number | null }; value?: { reps: number | null; kg: number | null }; onChange: (v: { reps: number | null; kg: number | null }) => void }) {
+  const v = value ?? { reps: planned.reps, kg: planned.kg };
+  const num = (t: string, max: number, step = 1) => (t.trim() === '' ? null : Math.max(0, Math.min(max, Math.round(Number(t.replace(',', '.')) / step) * step)));
+  return (
+    <div className="fw-done">
+      <span className="fw-done-label">Fait :</span>
+      <label className="fw-done-field"><input type="number" inputMode="numeric" min={0} max={500} value={v.reps ?? ''} aria-label="Répétitions faites"
+        onChange={(e) => onChange({ ...v, reps: num(e.target.value, 500) })} /> rép</label>
+      {planned.kg !== null || v.kg !== null ? (
+        <label className="fw-done-field"><input type="number" inputMode="decimal" min={0} max={500} step={0.5} value={v.kg ?? ''} aria-label="Charge utilisée en kg"
+          onChange={(e) => onChange({ ...v, kg: num(e.target.value, 500, 0.5) })} /> kg</label>
+      ) : null}
+      {v.reps !== planned.reps || v.kg !== planned.kg ? <button type="button" className="link-btn" onClick={() => onChange({ reps: planned.reps, kg: planned.kg })}>Comme prévu</button> : null}
+    </div>
+  );
 }

@@ -6,7 +6,7 @@ import {
   addDays, LEVEL_LABELS, RESULT_STATE_LABELS, SPORT_LABELS, todayIn, weekStart, urgencyLabel, utcToLocal, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS_LABELS,
   EQUIPMENT_LABELS, PREFERRED_TIME_LABELS, WEEKDAY_MINUTES_LABELS,
   measureFreshness, assessGoal, BILAN_FIELD_LABELS, BILAN_STATUS_LABELS, chronoFromTitle, BREAK_LENGTH_LABELS, DEFAULT_GOAL_KM, distanceFromTitle, FEASIBILITY_LABELS, bilanCompletion, deriveBilan, LONGEST_RECENT_LABELS, PRACTICE_STATUS_LABELS, RESUMED_SINCE_LABELS,
-  type ResultState, type Sport,
+  type ResultState, type Sport, loadProgress,
 } from '@coachos/domain';
 import { readAthleteProfile, readBilanDraft, readBilanVersions } from '@/server/commands/athlete-profile';
 import { goalsAwaitingProgram } from '@/server/commands/programs';
@@ -14,7 +14,8 @@ import { readAthleteReferences } from '@/server/commands/athlete-references';
 import { latestInvitation } from '@/server/commands/invitations';
 import { coachContext } from '@/server/repo/context';
 import { athleteFile } from '@/server/repo/portfolio';
-import { athleteStats } from '@/server/repo/stats';
+import { athleteStats, strengthHistory } from '@/server/repo/stats';
+import { LoadProgress } from '@/components/load-progress';
 import { StatsPanel } from '@/components/stats-panel';
 import { HistoryTable } from '@/components/history-table';
 import { WeekReviewCard } from '@/components/week-review';
@@ -76,6 +77,8 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
     ?? (profile?.nextEventDate && profile.nextEventDate > goalToday ? { title: profile.nextEventName ?? 'Prochaine course', sport: profile.sport, targetDate: profile.nextEventDate } : null);
   // Passif (D-058) : ce que l’élève a vraiment fait ces 6 dernières semaines, sa régularité réelle et ses objectifs atteints.
   const past = profile && goalCandidate ? await athleteStats(actor.userId, wid, aid, addDays(goalToday, -41), goalToday, goalToday) : null;
+  // D-096 (M4) : progression des charges, exercice par exercice.
+  const loads = loadProgress(await strengthHistory(actor.userId, wid, aid));
   const done = (past?.history ?? []).filter((r) => !r.canceled && (r.state === 'completed' || r.state === 'partial'));
   const last4 = (past?.history ?? []).filter((r) => !r.canceled && r.localDate > addDays(goalToday, -28));
   const performances = await readPerformances(actor.userId, wid, aid);
@@ -265,6 +268,13 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
             <StatsPanel s={stats.summary} delta={stats.delta} weeks={weeks} periodHref={periodHref} you={false} />
             <HistoryTable rows={stats.history} weeks={weeks} href={(sid) => `${base}/athletes/${aid}/workouts/${sid}`} />
           </div>
+        </section>
+      ) : null}
+
+      {loads.length ? (
+        <section className="card" aria-labelledby="charges-title" id="charges">
+          <div className="card-head"><h2 id="charges-title">Charges en musculation</h2><span className="muted">Meilleure série par exercice, d’après ses retours</span></div>
+          <div className="card-body"><LoadProgress series={loads} limit={12} /></div>
         </section>
       ) : null}
 

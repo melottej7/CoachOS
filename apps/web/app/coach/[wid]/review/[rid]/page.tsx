@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { matchesReviewFilter, parseReviewFilter, reviewFilterQuery, snoozeChoices, todayIn, CHANGE_LABELS, describeBlock, DIFFICULTY_LABELS, FEELING_LABELS, READINESS_LABELS, READINESS_QUESTION, readinessAlert, formatDistance, formatPace, formatDuration, formatLongDate, formatShortDate, weekStart, RESULT_STATE_LABELS, SPORT_LABELS, testDistanceOf, vmaFromRace, formatDuration2 } from '@coachos/domain';
+import { matchesReviewFilter, parseReviewFilter, reviewFilterQuery, snoozeChoices, todayIn, CHANGE_LABELS, describeBlock, DIFFICULTY_LABELS, FEELING_LABELS, READINESS_LABELS, READINESS_QUESTION, readinessAlert, formatDistance, formatPace, formatDuration, formatLongDate, formatShortDate, weekStart, RESULT_STATE_LABELS, SPORT_LABELS, testDistanceOf, vmaFromRace, formatDuration2, strengthPlan } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachWorkout, openReviews, reviewItem, revisionByNumber } from '@/server/repo/coach';
 import { MarkReviewedButton } from '@/components/review-button';
@@ -12,6 +12,7 @@ import { QuickReply } from '@/components/messaging';
 import { readAthleteReferences } from '@/server/commands/athlete-references';
 import { TestResultActions } from '@/components/test-result';
 import { exerciseMap } from '@/server/repo/exercises';
+import { StrengthLogView } from '@/components/strength-log-view';
 
 
 export const metadata = { title: 'Retour' };
@@ -135,6 +136,7 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
               <div><dt>Ressenti général</dt><dd>{fb.overallFeeling ? FEELING_LABELS[fb.overallFeeling as 1 | 2 | 3 | 4 | 5] : 'Non renseigné'}</dd></div>
               {fb.difficulties.length ? <div><dt>Difficultés</dt><dd>{fb.difficulties.map((d) => DIFFICULTY_LABELS[d]).join(', ')}</dd></div> : null}
             </dl>
+            {fb.strengthLog.length && observed ? <StrengthLogView plan={strengthPlan(observed.intervals)} log={fb.strengthLog} /> : null}
             {fb.changes.length || fb.actualSport || fb.repeatsDone.length ? (
               <div className="changed-view">
                 <h3>Ce qui a changé</h3>

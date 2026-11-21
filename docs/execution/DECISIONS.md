@@ -1694,3 +1694,33 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Navigateur : fiche « Pompes », sans vidéo, qui annonce « Pas encore de vidéo CoachOS ».
 - **Non prouvé.** L’affichage d’une vraie vidéo de base : aucune n’est encore produite.
 
+
+## D-100 · Musculation, lot M4 : séries et charges réalisées, progression · 2026-11-21
+
+- **Décision.**
+  - **Pendant « Suivre »** :
+    - sous chaque série, « Fait : [10] rép · [16] kg » est prérempli avec le prévu ; l’élève corrige s’il a fait moins ou plus (« Comme prévu » pour revenir) ;
+    - ces notes restent sur son téléphone jusqu’à l’envoi du retour, puis sont effacées.
+  - **Retour** : section « Séries et charges » pour toute séance qui nomme des exercices.
+    - Elle est préremplie avec ce qui a été noté pendant « Suivre », sinon avec le prévu. L’élève ne corrige que ce qui a changé ; « Tout comme prévu » et « 0 = série non faite » sont disponibles.
+    - Elle remplace la question « Répétitions faites » pour ces séances. Elle est refusée pour une séance non réalisée ou reportée.
+  - **Coach (revue) et élève (sa séance)** :
+    - pour chaque exercice, les séries faites (« 8 × 12 kg ▾ ») sont comparées au prévu ;
+    - « 1 série en moins », « 2 séries non faites », « au-dessus du prévu » ou « comme prévu » s’affichent, en texte et pas seulement en couleur.
+  - **Progression des charges**, exercice par exercice :
+    - carte « Tes charges » dans l’onglet Progression de l’élève, carte « Charges en musculation » dans sa fiche côté coach ;
+    - on y lit la meilleure série de la dernière séance et l’évolution depuis la première (« 16 kg → 20 kg (+4 kg) », ou « 8 → 12 répétitions » sans charge).
+    - Elle est lue par le coach affecté et l’élève lui-même seulement (contrôle explicite).
+  - **Données** :
+    - colonne `feedbacks.strength_log` (jsonb, tableau de 40 exercices au plus), migration `20261121110000` (additive, appliquée) ;
+    - forme validée par le schéma du domaine (répétitions, kg au demi-kilo, durée) ;
+    - contrat : `strengthLog` dans le retour.
+- **Correction (e0df365).** Depuis D-099, les pages de séance qui montrent des exercices plantaient côté serveur : une fonction d’un module navigateur y était appelée. Elle a été déplacée dans le domaine (`exerciseHasVideo`).
+- **Preuves.**
+  - Tests :
+    - domaine : prévu par exercice et place des séries, notes reprises, schéma, comparaison, séries non faites, progression et texte d’évolution ;
+    - serveur : enregistrement et relecture, refus pour une séance non faite ou une charge invalide, progression lue par l’élève et son coach, refusée à un autre coach et à un autre élève.
+  - `npm test` : **309 passés** (+3 PostgreSQL), typecheck OK.
+  - Navigateur (démo, Camille à 375 px) : séance « Renfo haut du corps » publiée pour aujourd’hui et suivie pas à pas, avec 8 répétitions notées au lieu de 10 à la 3ᵉ série.
+    - Le retour reprend ce « 8 ». Une fois envoyé, sa séance affiche « 1 série en moins » et l’onglet Progression « Tes charges ».
+    - Côté coach : même comparaison dans la revue, et carte « Charges en musculation » dans la fiche.

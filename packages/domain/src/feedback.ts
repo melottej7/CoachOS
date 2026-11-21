@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { SPORTS } from './sports';
+import { strengthLogSchema } from './strength-log';
 
 export const RESULT_STATES = ['completed', 'partial', 'postponed', 'missed'] as const;
 export type ResultState = (typeof RESULT_STATES)[number];
@@ -103,6 +104,8 @@ export const saveFeedbackSchema = z
     measureFile: z.enum(['fit', 'tcx', 'gpx']).nullish().transform((v) => v ?? null),
     /** Activités de la montre rattachées à cette séance (CE-X-03, D-064) : résumés seulement, jamais le fichier. */
     activities: z.array(feedbackActivitySchema).max(10, { message: '10 activités au plus' }).default([]),
+    /** D-096 (M4) : séries et charges réalisées, exercice par exercice (séance de musculation). */
+    strengthLog: strengthLogSchema,
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -113,7 +116,7 @@ export const saveFeedbackSchema = z
         message: 'Une séance non réalisée ou reportée ne porte ni durée ni distance',
       });
     }
-    if ((value.state === 'missed' || value.state === 'postponed') && (value.changes.length || value.actualSport !== null || value.repeatsDone.length)) {
+    if ((value.state === 'missed' || value.state === 'postponed') && (value.changes.length || value.actualSport !== null || value.repeatsDone.length || value.strengthLog.length)) {
       ctx.addIssue({ code: 'custom', path: ['changes'], message: 'Une séance non réalisée ou reportée ne décrit pas ce qui a changé' });
     }
     if ((value.state === 'missed' || value.state === 'postponed') && value.testSeconds !== null) {
