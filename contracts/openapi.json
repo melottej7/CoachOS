@@ -172,7 +172,8 @@
               "cycling",
               "swimming",
               "triathlon",
-              "duathlon"
+              "duathlon",
+              "strength"
             ]
           },
           "targetDate": {
@@ -264,7 +265,8 @@
               "cycling",
               "swimming",
               "triathlon",
-              "duathlon"
+              "duathlon",
+              "strength"
             ]
           },
           "title": {
@@ -508,7 +510,8 @@
                   "cycling",
                   "swimming",
                   "triathlon",
-                  "duathlon"
+                  "duathlon",
+                  "strength"
                 ]
               },
               {
@@ -864,7 +867,8 @@
                   "cycling",
                   "swimming",
                   "triathlon",
-                  "duathlon"
+                  "duathlon",
+                  "strength"
                 ]
               },
               {
@@ -1206,7 +1210,8 @@
               "cycling",
               "swimming",
               "triathlon",
-              "duathlon"
+              "duathlon",
+              "strength"
             ]
           },
           "level": {
@@ -1584,7 +1589,13 @@
                 "track",
                 "pool",
                 "open_water",
-                "gym"
+                "gym",
+                "dumbbells",
+                "kettlebell",
+                "bands",
+                "pullup_bar",
+                "bench",
+                "mat"
               ]
             }
           },
@@ -1692,7 +1703,8 @@
                 "cycling",
                 "swimming",
                 "triathlon",
-                "duathlon"
+                "duathlon",
+                "strength"
               ]
             }
           },
@@ -1920,6 +1932,25 @@
                 "const": "open"
               }
             }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "reps"
+            ],
+            "description": "D-096 : répétitions de musculation",
+            "properties": {
+              "kind": {
+                "const": "reps"
+              },
+              "reps": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 500
+              }
+            }
           }
         ]
       },
@@ -2099,6 +2130,39 @@
                 ]
               }
             }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "min"
+            ],
+            "description": "D-096 : charge en kg, au demi-kilo",
+            "properties": {
+              "kind": {
+                "const": "load"
+              },
+              "min": {
+                "type": "number",
+                "minimum": 0.5,
+                "maximum": 500,
+                "multipleOf": 0.5
+              },
+              "max": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0.5,
+                    "maximum": 500,
+                    "multipleOf": 0.5
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
           }
         ]
       },
@@ -2135,7 +2199,8 @@
                   "cycling",
                   "swimming",
                   "triathlon",
-                  "duathlon"
+                  "duathlon",
+                  "strength"
                 ]
               },
               {
@@ -2187,6 +2252,39 @@
               {
                 "type": "string",
                 "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "exercise": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name"
+                ],
+                "description": "D-096 : exercice de musculation (référence et nom recopié)",
+                "properties": {
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  }
+                }
               },
               {
                 "type": "null"
@@ -2360,7 +2458,8 @@
               "cycling",
               "swimming",
               "triathlon",
-              "duathlon"
+              "duathlon",
+              "strength"
             ]
           },
           "level": {
@@ -2661,7 +2760,8 @@
               "cycling",
               "swimming",
               "triathlon",
-              "duathlon"
+              "duathlon",
+              "strength"
             ]
           },
           "title": {
@@ -2740,7 +2840,8 @@
               "cycling",
               "swimming",
               "triathlon",
-              "duathlon"
+              "duathlon",
+              "strength"
             ]
           },
           "kind": {
@@ -2979,6 +3080,150 @@
           }
         },
         "additionalProperties": false
+      },
+      "exerciseInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "instructions": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1500
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "muscle": {
+            "type": "string",
+            "enum": [
+              "legs",
+              "push",
+              "pull",
+              "core",
+              "full",
+              "mobility",
+              "cardio",
+              "other"
+            ]
+          },
+          "equipment": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "bodyweight",
+                "dumbbells",
+                "kettlebell",
+                "barbell",
+                "bands",
+                "pullup_bar",
+                "bench",
+                "machine",
+                "mat"
+              ]
+            },
+            "maxItems": 9
+          },
+          "videoUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500,
+                "pattern": "^https://"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "exerciseUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "expectedRevision"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "instructions": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1500
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "muscle": {
+            "type": "string",
+            "enum": [
+              "legs",
+              "push",
+              "pull",
+              "core",
+              "full",
+              "mobility",
+              "cardio",
+              "other"
+            ]
+          },
+          "equipment": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "bodyweight",
+                "dumbbells",
+                "kettlebell",
+                "barbell",
+                "bands",
+                "pullup_bar",
+                "bench",
+                "machine",
+                "mat"
+              ]
+            },
+            "maxItems": 9
+          },
+          "videoUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500,
+                "pattern": "^https://"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "archive": {
+            "type": "boolean"
+          }
+        }
       }
     }
   },
@@ -5337,7 +5582,8 @@
                       "cycling",
                       "swimming",
                       "triathlon",
-                      "duathlon"
+                      "duathlon",
+                      "strength"
                     ]
                   },
                   "targetDate": {
@@ -7661,7 +7907,8 @@
                           "cycling",
                           "swimming",
                           "triathlon",
-                          "duathlon"
+                          "duathlon",
+                          "strength"
                         ]
                       },
                       {
@@ -15041,7 +15288,8 @@
                       "cycling",
                       "swimming",
                       "triathlon",
-                      "duathlon"
+                      "duathlon",
+                      "strength"
                     ]
                   },
                   "level": {
@@ -15261,7 +15509,13 @@
                         "track",
                         "pool",
                         "open_water",
-                        "gym"
+                        "gym",
+                        "dumbbells",
+                        "kettlebell",
+                        "bands",
+                        "pullup_bar",
+                        "bench",
+                        "mat"
                       ]
                     }
                   },
@@ -15504,7 +15758,8 @@
                         "cycling",
                         "swimming",
                         "triathlon",
-                        "duathlon"
+                        "duathlon",
+                        "strength"
                       ]
                     }
                   },
@@ -16920,7 +17175,8 @@
                       "cycling",
                       "swimming",
                       "triathlon",
-                      "duathlon"
+                      "duathlon",
+                      "strength"
                     ]
                   },
                   "level": {
@@ -21041,7 +21297,8 @@
                               "cycling",
                               "swimming",
                               "triathlon",
-                              "duathlon"
+                              "duathlon",
+                              "strength"
                             ]
                           },
                           {
@@ -21294,7 +21551,13 @@
                             "track",
                             "pool",
                             "open_water",
-                            "gym"
+                            "gym",
+                            "dumbbells",
+                            "kettlebell",
+                            "bands",
+                            "pullup_bar",
+                            "bench",
+                            "mat"
                           ]
                         }
                       },
@@ -21504,7 +21767,8 @@
                           "cycling",
                           "swimming",
                           "triathlon",
-                          "duathlon"
+                          "duathlon",
+                          "strength"
                         ]
                       },
                       "level": {
@@ -21724,7 +21988,13 @@
                             "track",
                             "pool",
                             "open_water",
-                            "gym"
+                            "gym",
+                            "dumbbells",
+                            "kettlebell",
+                            "bands",
+                            "pullup_bar",
+                            "bench",
+                            "mat"
                           ]
                         }
                       },
@@ -22790,7 +23060,8 @@
                       "cycling",
                       "swimming",
                       "triathlon",
-                      "duathlon"
+                      "duathlon",
+                      "strength"
                     ]
                   },
                   "kind": {
@@ -24649,7 +24920,8 @@
                           "cycling",
                           "swimming",
                           "triathlon",
-                          "duathlon"
+                          "duathlon",
+                          "strength"
                         ]
                       },
                       {
@@ -25255,6 +25527,578 @@
           }
         ]
       }
+    },
+    "/workspaces/{wid}/exercises": {
+      "post": {
+        "operationId": "createExercise",
+        "summary": "Nouvel exercice de musculation, nom unique dans l’espace (D-096).",
+        "tags": [
+          "exercises"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 60,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/exerciseInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "revision"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "revision": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/exercises/starter": {
+      "post": {
+        "operationId": "addStarterExercises",
+        "summary": "Exercices de départ sans doublon ; rejouer n’ajoute que les manquants (D-096).",
+        "tags": [
+          "exercises"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 60,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "added",
+                    "skipped"
+                  ],
+                  "properties": {
+                    "added": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "skipped": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/exercises/{eid}": {
+      "patch": {
+        "operationId": "updateExercise",
+        "summary": "Modifier ou retirer un exercice ; les séances gardent leur copie du nom (D-096).",
+        "tags": [
+          "exercises"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 60,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/exerciseUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "revision"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "revision": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{wid}/exercises/{eid}/video": {
+      "post": {
+        "operationId": "uploadExerciseClip",
+        "summary": "Vidéo filmée par le coach : MP4, MOV ou WebM, 25 Mio au plus, reconnue par son contenu ; remplace la précédente (D-096).",
+        "tags": [
+          "exercises"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 60,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "video/mp4": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "video/quicktime": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "video/webm": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "clipId",
+                    "revision"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "revision": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "clipId": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "removeExerciseClip",
+        "summary": "Retirer la vidéo filmée ; le lien éventuel reste (D-096).",
+        "tags": [
+          "exercises"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 60,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "revision"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "revision": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "exercises",
+      "description": "Bibliothèque d’exercices de musculation (D-096)"
+    }
+  ]
 }

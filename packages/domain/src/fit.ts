@@ -19,9 +19,9 @@ const ENUM = 0x00, UINT16 = 0x84, UINT32 = 0x86, STRING = 0x07;
 const INVALID = { [ENUM]: 0xff, [UINT16]: 0xffff, [UINT32]: 0xffffffff } as const;
 
 // Énumérations du profil FIT utilisées ici.
-const SPORT = { generic: 0, running: 1, cycling: 2, swimming: 5 } as const;
-const SUB_SPORT = { generic: 0, trail: 3, lap_swimming: 17 } as const;
-const DURATION = { time: 0, distance: 1, open: 5, repeat: 6 } as const;
+const SPORT = { generic: 0, running: 1, cycling: 2, swimming: 5, training: 10 } as const;
+const SUB_SPORT = { generic: 0, trail: 3, lap_swimming: 17, strength_training: 20 } as const;
+const DURATION = { time: 0, distance: 1, open: 5, repeat: 6, reps: 29 } as const;
 const TARGET = { speed: 0, heart_rate: 1, open: 2, cadence: 3, power: 4 } as const;
 const INTENSITY = { active: 0, rest: 1, warmup: 2, cooldown: 3, recovery: 4 } as const;
 
@@ -115,6 +115,7 @@ function sportOf(s: Sport): { sport: number; sub: number } {
   if (s === 'trail') return { sport: SPORT.running, sub: SUB_SPORT.trail };
   if (s === 'cycling') return { sport: SPORT.cycling, sub: SUB_SPORT.generic };
   if (s === 'swimming') return { sport: SPORT.swimming, sub: SUB_SPORT.lap_swimming };
+  if (s === 'strength') return { sport: SPORT.training, sub: SUB_SPORT.strength_training };
   return { sport: SPORT.generic, sub: SUB_SPORT.generic };
 }
 
@@ -131,7 +132,7 @@ const mmps = (secPerUnit: number, unitMeters: number) => Math.round((unitMeters 
 const range = (min: number, max: number | null): [number, number] => [min, max ?? min];
 
 /** Noms courts : l’écran de la montre affiche peu de caractères. */
-const SHORT_SPORT: Record<Sport, string> = { running: 'Course', trail: 'Trail', cycling: 'Vélo', swimming: 'Nage', triathlon: 'Triathlon', duathlon: 'Duathlon' };
+const SHORT_SPORT: Record<Sport, string> = { running: 'Course', trail: 'Trail', cycling: 'Vélo', swimming: 'Nage', triathlon: 'Triathlon', duathlon: 'Duathlon', strength: 'Muscu' };
 
 function rpeText(min: number, max: number | null) { return max && max !== min ? `Ressenti ${min} à ${max} sur 10` : `Ressenti ${min} sur 10`; }
 
@@ -173,7 +174,11 @@ function stepToFit(step: Step, index: number, session: Sport, multi: boolean, re
     if (i.unit === 'bpm') { low = a + 100; high = b + 100; } else { low = Math.min(a, 100); high = Math.min(b, 100); }
   } else if (i.kind === 'rpe') {
     notes.push(rpeText(i.min, i.max));
+  } else if (i.kind === 'load') {
+    notes.push(i.max && i.max !== i.min ? `${i.min} à ${i.max} kg` : `${i.min} kg`);
   }
+  // D-096 : un exercice s’affiche par son nom sur la montre.
+  if (step.exercise) name = step.exercise.name;
 
   if (step.cadence) {
     const [a, b] = range(step.cadence.min, step.cadence.max);
@@ -186,8 +191,8 @@ function stepToFit(step: Step, index: number, session: Sport, multi: boolean, re
   const m = step.measure;
   return {
     index, name,
-    durationType: m.kind === 'time' ? DURATION.time : m.kind === 'distance' ? DURATION.distance : DURATION.open,
-    durationValue: m.kind === 'time' ? m.seconds * 1000 : m.kind === 'distance' ? m.meters * 100 : null,
+    durationType: m.kind === 'time' ? DURATION.time : m.kind === 'distance' ? DURATION.distance : m.kind === 'reps' ? DURATION.reps : DURATION.open,
+    durationValue: m.kind === 'time' ? m.seconds * 1000 : m.kind === 'distance' ? m.meters * 100 : m.kind === 'reps' ? m.reps : null,
     targetType, targetValue, low, high,
     intensity: { warmup: INTENSITY.warmup, work: INTENSITY.active, recovery: INTENSITY.recovery, cooldown: INTENSITY.cooldown, rest: INTENSITY.rest, other: INTENSITY.active }[step.phase],
     notes: notes.join(' · '),

@@ -68,11 +68,13 @@ const optEnum = <T extends readonly [string, ...string[]]>(v: T) => z.enum(v).nu
 // ---------- Temps, matériel et préférences (D-066) ----------
 
 /** Matériel et accès utiles pour construire les séances. Aucun capteur de fréquence cardiaque (décision santé en attente). */
-export const EQUIPMENT = ['gps_watch', 'power_meter', 'home_trainer', 'road_bike', 'offroad_bike', 'treadmill', 'track', 'pool', 'open_water', 'gym'] as const;
+export const EQUIPMENT = ['gps_watch', 'power_meter', 'home_trainer', 'road_bike', 'offroad_bike', 'treadmill', 'track', 'pool', 'open_water', 'gym', 'dumbbells', 'kettlebell', 'bands', 'pullup_bar', 'bench', 'mat'] as const;
 export type Equipment = (typeof EQUIPMENT)[number];
 export const EQUIPMENT_LABELS: Record<Equipment, string> = {
   gps_watch: 'Montre GPS', power_meter: 'Capteur de puissance', home_trainer: 'Home trainer', road_bike: 'Vélo de route', offroad_bike: 'VTT ou gravel',
   treadmill: 'Tapis de course', track: 'Accès à une piste d’athlétisme', pool: 'Accès à une piscine', open_water: 'Eau libre (lac, mer)', gym: 'Salle de renforcement',
+  // D-096 : matériel de musculation à la maison.
+  dumbbells: 'Haltères', kettlebell: 'Kettlebell', bands: 'Élastiques', pullup_bar: 'Barre de traction', bench: 'Banc', mat: 'Tapis de sol',
 };
 const BY_SPORT: Record<Sport, Equipment[]> = {
   running: ['gps_watch', 'treadmill', 'track', 'gym'],
@@ -81,6 +83,7 @@ const BY_SPORT: Record<Sport, Equipment[]> = {
   swimming: ['pool', 'open_water', 'gps_watch', 'gym'],
   triathlon: [...EQUIPMENT],
   duathlon: ['gps_watch', 'power_meter', 'home_trainer', 'road_bike', 'offroad_bike', 'treadmill', 'track', 'gym'],
+  strength: ['gym', 'dumbbells', 'kettlebell', 'bands', 'pullup_bar', 'bench', 'mat'],
 };
 /** Matériel proposé pour un sport. */
 export const equipmentFor = (sport: Sport | null | undefined): Equipment[] => (sport ? BY_SPORT[sport] : [...EQUIPMENT]);

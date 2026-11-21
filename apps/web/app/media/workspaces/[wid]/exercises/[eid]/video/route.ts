@@ -1,0 +1,37 @@
+import { NextResponse, type NextRequest } from 'next/server';
+import { getActor } from '@/server/auth/session';
+import { isUuid } from '@/server/repo/context';
+import { readExerciseClip } from '@/server/repo/exercises';
+
+/**
+ * D-096 · Vidéo filmée d’un exercice : session requise, lue par le coach et les élèves de l’espace.
+ * Les plages d’octets (Range) sont servies : Safari sur iPhone en a besoin pour lire une vidéo.
+ */
+export async function GET(req: NextRequest, { params }: { params: Promise<{ wid: string; eid: string }> }) {
+  const { wid, eid } = await params;
+  if (!isUuid(wid) || !isUuid(eid)) return new NextResponse(null, { status: 404 });
+  const actor = await getActor();
+  if (!actor) return new NextResponse(null, { status: 401 });
+  const clip = await readExerciseClip(actor.userId, wid, eid);
+  if (!clip) return new NextResponse(null, { status: 404 });
+  const size = clip.bytes.length;
+  const base = {
+    'content-type': clip.type,
+    'accept-ranges': 'bytes',
+    'cache-control': 'private, max-age=300',
+    'x-content-type-options': 'nosniff',
+    'content-security-policy': "default-src 'none'",
+    'content-disposition': 'inline',
+  };
+  const range = req.headers.get('range')?.match(/^bytes=(\d*)-(\d*)$/);
+  if (range && (range[1] || range[2])) {
+    let start = range[1] ? Number(range[1]) : size - Number(range[2]);
+    let end = range[1] && range[2] ? Number(range[2]) : size - 1;
+    start = Math.max(0, start); end = Math.min(size - 1, end);
+    if (start > end || start >= size) return new NextResponse(null, { status: 416, headers: { 'content-range': `bytes */${size}` } });
+    return new NextResponse(new Uint8Array(clip.bytes.subarray(start, end + 1)), {
+      status: 206, headers: { ...base, 'content-range': `bytes ${start}-${end}/${size}`, 'content-length': String(end - start + 1) },
+    });
+  }
+  return new NextResponse(new Uint8Array(clip.bytes), { status: 200, headers: { ...base, 'content-length': String(size) } });
+}

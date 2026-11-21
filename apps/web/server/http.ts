@@ -90,6 +90,7 @@ export async function handleBinaryMutation(
   module: string,
   maxBytes: number,
   run: (ctx: { actorId: string; requestId: string; bytes: Uint8Array }) => Promise<StoredResponse>,
+  tooLarge: { path: string; rule: string } = { path: 'logo', rule: 'Image trop lourde (512 Kio au plus)' },
 ): Promise<NextResponse> {
   const requestId = randomUUID();
   try {
@@ -100,7 +101,7 @@ export async function handleBinaryMutation(
     if (!actor) throw new AppError('AUTH_REQUIRED_OR_INVALID_SIGNATURE', 'Session expirée. Reconnecte-toi pour continuer.');
     if (Object.values(params).some((v) => !isUuid(v))) throw new AppError('RESOURCE_NOT_VISIBLE', 'Cette ressource n’est pas disponible.');
     const declared = Number(req.headers.get('content-length') ?? '0');
-    if (declared > maxBytes) throw new AppError('INVALID_FIELDS', 'Certains champs sont à corriger.', [{ path: 'logo', rule: 'Image trop lourde (512 Kio au plus)' }]);
+    if (declared > maxBytes) throw new AppError('INVALID_FIELDS', 'Certains champs sont à corriger.', [tooLarge]);
     const bytes = new Uint8Array(await req.arrayBuffer());
     const result = await run({ actorId: actor.userId, requestId, bytes });
     return NextResponse.json(result.body, { status: result.status, headers: { 'x-request-id': requestId } });

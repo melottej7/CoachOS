@@ -43,6 +43,8 @@ export const measureSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('time'), seconds: int(1, 86400) }).strict(),
   z.object({ kind: z.literal('distance'), meters: int(1, 1_000_000) }).strict(),
   z.object({ kind: z.literal('open') }).strict(),
+  // D-096 : musculation, un nombre de répétitions (la série est une répétition de blocs : 4 × (10 squats + repos)).
+  z.object({ kind: z.literal('reps'), reps: int(1, 500) }).strict(),
 ]);
 export type Measure = z.output<typeof measureSchema>;
 
@@ -57,6 +59,8 @@ export const intensitySchema = z
     z.object({ kind: z.literal('power'), unit: z.enum(['w', 'pct_ftp']), ...range(int(1, 2500)).shape }).strict(),
     z.object({ kind: z.literal('hr'), unit: z.enum(['bpm', 'pct_max']), ...range(int(30, 250)).shape }).strict(),
     z.object({ kind: z.literal('rpe'), ...range(int(1, 10)).shape }).strict(),
+    // D-096 : charge en kg (au demi-kilo), sans charge = poids du corps.
+    z.object({ kind: z.literal('load'), ...range(z.number().min(0.5).max(500).multipleOf(0.5)).shape }).strict(),
   ])
   .refine((i) => !('max' in i) || i.max === null || i.max >= i.min, { message: 'La valeur haute doit dépasser la valeur basse' });
 export type Intensity = z.output<typeof intensitySchema>;
@@ -69,6 +73,11 @@ export const stepSchema = z
     measure: measureSchema,
     intensity: intensitySchema.default({ kind: 'none' }),
     cadence: z.object({ min: int(20, 250), max: int(20, 250).nullish().transform((v) => v ?? null) }).strict().nullish().transform((v) => v ?? null),
+    /** D-096 : exercice de musculation (référence de la bibliothèque et nom recopié, lisible même si l’exercice est retiré). */
+    exercise: z
+      .object({ id: z.string().uuid().nullish().transform((v) => v ?? null), name: z.string().trim().min(1).max(80) })
+      .strict()
+      .nullish(),
     note: z
       .string()
       .max(200, { message: '200 caractères au plus' })
@@ -104,6 +113,9 @@ export function countSteps(blocks: Block[]): number {
 }
 
 // ---------- Totaux ----------
+
+/** Durée estimée d’une répétition de musculation, mise en place comprise (D-096). */
+export const REP_SECONDS = 4;
 
 export interface Totals {
   seconds: number;
@@ -251,6 +263,10 @@ export function structureTotals(blocks: Block[], opts: { sport?: Sport; refs?: R
         t.seconds += Math.round(b.measure.meters / v) * factor;
         t.estimated = true;
       } else t.unknownTime = true;
+    } else if (b.measure.kind === 'reps') {
+      // D-096 : environ 4 secondes par répétition ; pas de distance en musculation.
+      t.seconds += b.measure.reps * REP_SECONDS * factor;
+      t.estimated = true;
     } else {
       t.unknownTime = true;
       t.unknownDistance = true;
@@ -280,11 +296,13 @@ export function formatMeters(m: number): string {
 }
 
 const pace = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+const kg = (n: number) => n.toLocaleString('fr-BE', { maximumFractionDigits: 1 });
 const rng = (min: number, max: number | null, f: (n: number) => string = String) => (max === null || max === min ? f(min) : `${f(min)} à ${f(max)}`);
 
 export function describeMeasure(m: Measure): string {
   if (m.kind === 'time') return formatClock(m.seconds);
   if (m.kind === 'distance') return formatMeters(m.meters);
+  if (m.kind === 'reps') return `${m.reps} répétition${m.reps > 1 ? 's' : ''}`;
   return 'Libre';
 }
 
@@ -296,6 +314,7 @@ export function describeIntensity(i: Intensity): string | null {
     case 'power': return i.unit === 'w' ? `${rng(i.min, i.max)} W` : `${rng(i.min, i.max)} % FTP`;
     case 'hr': return i.unit === 'bpm' ? `${rng(i.min, i.max)} bpm` : `${rng(i.min, i.max)} % FC max`;
     case 'rpe': return `Effort ${rng(i.min, i.max)}/10`;
+    case 'load': return `${rng(i.min, i.max, kg)} kg`;
   }
 }
 
@@ -305,13 +324,15 @@ export function describeStep(s: Step, sessionSport?: Sport): string {
   if (intensity) parts.push(intensity);
   if (s.cadence) parts.push(`cadence ${rng(s.cadence.min, s.cadence.max)}`);
   const sport = s.sport && s.sport !== sessionSport ? `${SPORT_LABELS[s.sport]} · ` : '';
-  return `${sport}${PHASE_LABELS[s.phase]} · ${parts.join(' · ')}${s.note ? ` (${s.note})` : ''}`;
+  // D-096 : un exercice se lit par son nom (« Squat · 10 répétitions · 40 kg »).
+  const head = s.exercise ? s.exercise.name : PHASE_LABELS[s.phase];
+  return `${sport}${head} · ${parts.join(' · ')}${s.note ? ` (${s.note})` : ''}`;
 }
 
 /** Une ligne par bloc, lisible par l’athlète : « 5 × (400 m · Z5 / 200 m · Z1) ». */
 export function describeBlock(b: Block, sessionSport?: Sport): string {
   if (b.type === 'step') return describeStep(b, sessionSport);
-  const inner = b.steps.map((s) => (s.type === 'step' ? `${describeMeasure(s.measure)}${describeIntensity(s.intensity) ? ` · ${describeIntensity(s.intensity)}` : ''}` : describeBlock(s, sessionSport)));
+  const inner = b.steps.map((s) => (s.type === 'step' ? `${s.exercise ? `${s.exercise.name} · ` : ''}${describeMeasure(s.measure)}${describeIntensity(s.intensity) ? ` · ${describeIntensity(s.intensity)}` : ''}` : describeBlock(s, sessionSport)));
   return `${b.times} × (${inner.join(' / ')})`;
 }
 

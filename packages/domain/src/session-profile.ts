@@ -1,5 +1,5 @@
 import type { Sport } from './sports';
-import { describeIntensity, describeMeasure, PHASE_LABELS, stepEstimate, ZONE_CSS_PCT, ZONE_TARGET_PCT, type Block, type Phase, type References, type Step, type Zone } from './structure';
+import { describeIntensity, describeMeasure, PHASE_LABELS, REP_SECONDS, stepEstimate, ZONE_CSS_PCT, ZONE_TARGET_PCT, type Block, type Phase, type References, type Step, type Zone } from './structure';
 
 // CE-E-04 (D-040) : forme de la séance, une barre par étape dans l’ordre réel (répétitions dépliées).
 // Largeur = durée (estimée si la séance est en distance), hauteur = niveau d’intensité 1 à 7.
@@ -24,7 +24,7 @@ export interface ProfileBar {
 }
 
 /** Vitesse moyenne supposée, pour dessiner seulement (jamais affichée comme une estimation). */
-const DRAW_SPEED: Record<Sport, number> = { running: 10, trail: 8, cycling: 25, swimming: 3, triathlon: 10, duathlon: 10 };
+const DRAW_SPEED: Record<Sport, number> = { running: 10, trail: 8, cycling: 25, swimming: 3, triathlon: 10, duathlon: 10, strength: 10 };
 const OPEN_SECONDS = 300;
 
 function levelOfPct(pct: number, bounds: number[]): number {
@@ -82,12 +82,13 @@ export function sessionProfile(blocks: Block[], sport: Sport, refs?: References)
       if (m.kind === 'time') seconds = m.seconds;
       else if (est.seconds) seconds = est.seconds;
       else if (m.kind === 'distance') { seconds = Math.round(m.meters / (DRAW_SPEED[b.sport ?? sport] / 3.6)); approx = true; }
+      else if (m.kind === 'reps') { seconds = m.reps * REP_SECONDS; approx = true; }
       else { seconds = OPEN_SECONDS; approx = true; }
       const { level, known } = stepLevel(b, sport, refs);
       const intensity = describeIntensity(b.intensity);
       out.push({
         index: out.length, phase: b.phase, level, levelKnown: known, seconds: Math.max(1, seconds), timed: m.kind === 'time', secondsApprox: approx,
-        label: [PHASE_LABELS[b.phase], describeMeasure(m), intensity].filter(Boolean).join(' · '),
+        label: [b.exercise ? b.exercise.name : PHASE_LABELS[b.phase], describeMeasure(m), intensity].filter(Boolean).join(' · '),
         repeat,
       });
     }

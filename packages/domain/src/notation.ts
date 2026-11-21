@@ -58,7 +58,7 @@ function parseMeasure(t: string): { measure: Measure; rest: string } | null {
   if ((m = t.match(/^(\d+)\s*(?:'|’|min|mn)(?:(\d{1,2})(?![\d.,]*\s*k?m\b)|\s+(\d{1,2})(?=\s*["”]))?\s*(?:"|”|s\b)?/i))) {
     return { measure: { kind: 'time', seconds: mmss(m[1]!, m[2] ?? m[3] ?? '0') }, rest: t.slice(m[0].length) };
   }
-  if ((m = t.match(/^(\d+)\s*(?:"|”|s\b|sec\b)/i))) return { measure: { kind: 'time', seconds: Number(m[1]) }, rest: t.slice(m[0].length) };
+  if ((m = t.match(/^(\d+)\s*(?:"|”|s(?![a-zà-ÿ])|sec(?![a-zà-ÿ]))/i))) return { measure: { kind: 'time', seconds: Number(m[1]) }, rest: t.slice(m[0].length) };
   return null;
 }
 
@@ -71,6 +71,11 @@ function parseIntensity(t: string): { intensity: Intensity; rest: string } {
     return take(m, { kind: 'pace', unit: m[5] && m[5].replace(/\s/g, '').toLowerCase() === '100m' ? 'per_100m' : 'per_km', min: b === null ? a : Math.min(a, b), max: b === null ? null : Math.max(a, b) });
   }
   if ((m = t.match(/\brpe\s*(\d{1,2})(?:\s*[-–]\s*(\d{1,2}))?/i))) return take(m, { kind: 'rpe', min: Number(m[1]), max: m[2] ? Number(m[2]) : null });
+  // D-096 : charge en kg (« 40kg », « @40 kg », « 20-24kg »), arrondie au demi-kilo.
+  if ((m = t.match(/@?\s*(\d{1,3}(?:[.,]\d)?)(?:\s*[-–]\s*(\d{1,3}(?:[.,]\d)?))?\s*kg\b/i))) {
+    const kg = (x: string) => Math.round(Number(x.replace(',', '.')) * 2) / 2;
+    return take(m, { kind: 'load', min: kg(m[1]!), max: m[2] ? kg(m[2]) : null });
+  }
   if ((m = t.match(/(\d{2,3})(?:\s*[-–]\s*(\d{2,3}))?\s*%\s*ftp\b/i))) return take(m, { kind: 'power', unit: 'pct_ftp', min: Number(m[1]), max: m[2] ? Number(m[2]) : null });
   if ((m = t.match(/(\d{2,4})(?:\s*[-–]\s*(\d{2,4}))?\s*w\b/i))) return take(m, { kind: 'power', unit: 'w', min: Number(m[1]), max: m[2] ? Number(m[2]) : null });
   if ((m = t.match(/(\d{2,3})(?:\s*[-–]\s*(\d{2,3}))?\s*bpm\b/i))) return take(m, { kind: 'hr', unit: 'bpm', min: Number(m[1]), max: m[2] ? Number(m[2]) : null });
@@ -113,7 +118,22 @@ type ParsedStep = Step & { implicit: boolean; walk?: boolean; recup?: boolean };
 type LooseText = { type: 'text'; text: string };
 
 /** Une étape ; `phase` est null quand elle doit être déduite de sa place. */
-function parseStep(raw: string, errors: NotationError[], lenient = false, inRepeat = false): ParsedStep | LooseText | null {
+/** D-096 : « 10 squats », « 12 rép », « 8x pompes » : des répétitions, avec le nom de l’exercice. */
+function parseReps(t: string): { measure: Measure; name: string | null; rest: string } | null {
+  const m = t.match(/^(\d{1,3})\s*(?:[x×]\s*)?(?:(r[ée]p(?:[ée]titions?)?|reps?)(?![a-zà-ÿ]))?\s*(.*)$/i);
+  if (!m) return null;
+  const tail = m[3] ?? '';
+  if (!m[2] && !/^[a-zà-ÿ]/i.test(tail)) return null;
+  return { measure: { kind: 'reps', reps: Number(m[1]) }, name: null, rest: tail };
+}
+
+/** D-096 : ce qui reste d’une étape de musculation, une fois la charge lue, est le nom de l’exercice. */
+const exerciseName = (words: string) => {
+  const w = words.replace(/[\s,;·]+/g, ' ').replace(/^[\s:–-]+|[\s:–-]+$/g, '').trim().slice(0, 80);
+  return w ? w[0]!.toUpperCase() + w.slice(1) : null;
+};
+
+function parseStep(raw: string, errors: NotationError[], lenient = false, inRepeat = false, strength = false): ParsedStep | LooseText | null {
   let t = raw.trim();
   let note: string | null = null;
   const q = t.match(/[«"]\s*([^»"]*?)\s*[»"]\s*$/);
@@ -124,7 +144,8 @@ function parseStep(raw: string, errors: NotationError[], lenient = false, inRepe
   for (const [re, p] of PHASE_WORDS) { const m = t.match(re); if (m) { phase = p; t = t.slice(m[0].length).replace(/^\s*:?\s*/, ''); break; } }
   if (!phase && /^r\s*(?=\d)/i.test(t)) { phase = 'recovery'; t = t.replace(/^r\s*/i, ''); }
   if (lenient && !phase && /^r\b\s*/i.test(t)) { phase = 'recovery'; t = t.replace(/^r\b\s*/i, ''); }
-  const found = lenient ? findMeasure(t) : (() => { const r = parseMeasure(t); return r ? { prefix: '', ...r } : null; })();
+  let found = lenient ? findMeasure(t) : (() => { const r = parseMeasure(t); return r ? { prefix: '', ...r } : null; })();
+  if (!found && strength) { const r = parseReps(t); if (r) found = { prefix: '', measure: r.measure, rest: r.rest }; }
   if (!found) {
     // Lecture tolérante : « R descente en trottinant » = récupération libre, la consigne en note.
     if (lenient && phase === 'recovery') {
@@ -156,16 +177,19 @@ function parseStep(raw: string, errors: NotationError[], lenient = false, inRepe
     if (words) note = [words, note].filter(Boolean).join(' · ').slice(0, 200);
     rest = '';
   }
-  const left = rest.replace(/[\s,;·]+/g, ' ').trim();
+  let left = rest.replace(/[\s,;·]+/g, ' ').trim();
+  // D-096 : en musculation, les mots restants nomment l’exercice (« 10 squats », « 30" planche »).
+  let exercise: Step['exercise'] = null;
+  if (strength && left && phase !== 'recovery' && phase !== 'rest') { const n = exerciseName(left); if (n) exercise = { id: null, name: n }; left = ''; }
   if (left) errors.push({ item: raw, message: `« ${left} » non compris dans « ${raw} » (une note s’écrit entre « »)` });
   if (meas.measure.kind === 'time' && (meas.measure.seconds < 1 || meas.measure.seconds > 86400)) errors.push({ item: raw, message: `« ${raw} » : durée hors limites` });
   if (meas.measure.kind === 'distance' && (meas.measure.meters < 1 || meas.measure.meters > 1_000_000)) errors.push({ item: raw, message: `« ${raw} » : distance hors limites` });
-  return { type: 'step', phase: phase ?? 'work', implicit: phase === null, ...(walk ? { walk } : {}), ...(recup ? { recup } : {}), sport, measure: meas.measure, intensity, cadence: null, note };
+  return { type: 'step', phase: phase ?? 'work', implicit: phase === null, ...(walk ? { walk } : {}), ...(recup ? { recup } : {}), sport, measure: meas.measure, intensity, cadence: null, ...(exercise ? { exercise } : {}), note };
 }
 
 type Parsed = ParsedStep | { type: 'repeat'; times: number; steps: Parsed[] };
 
-function parseSeq(text: string, depth: number, errors: NotationError[], lenient = false): Parsed[] {
+function parseSeq(text: string, depth: number, errors: NotationError[], lenient = false, strength = false): Parsed[] {
   const parts = splitTop(text);
   if (!parts) { errors.push({ item: text, message: 'Parenthèses mal fermées' }); return []; }
   const out: Parsed[] = [];
@@ -191,12 +215,12 @@ function parseSeq(text: string, depth: number, errors: NotationError[], lenient 
         if (close > 0 && tail) { loose.push({ at: out.length + 1, text: tail }); inner = inner.slice(0, close + 1); }
       }
       if (inner.startsWith('(') && inner.endsWith(')') && splitTop(inner.slice(1, -1)) !== null) inner = inner.slice(1, -1);
-      const steps = parseSeq(inner, depth + 1, errors, lenient);
+      const steps = parseSeq(inner, depth + 1, errors, lenient, strength);
       if (steps.length) out.push({ type: 'repeat', times: Math.max(2, Math.min(50, times)), steps });
       continue;
     }
-    if (part.startsWith('(') && part.endsWith(')')) { out.push(...parseSeq(part.slice(1, -1), depth, errors, lenient)); continue; }
-    const s = parseStep(part, errors, lenient, depth > 0);
+    if (part.startsWith('(') && part.endsWith(')')) { out.push(...parseSeq(part.slice(1, -1), depth, errors, lenient, strength)); continue; }
+    const s = parseStep(part, errors, lenient, depth > 0, strength);
     if (s?.type === 'text') { loose.push({ at: out.length, text: s.text }); continue; }
     if (s) out.push(s);
   }
@@ -223,7 +247,7 @@ function settle(items: Parsed[], sport: Sport, inRepeat: boolean): Block[] {
     if (implicit && recup && inRepeat) return { ...step, phase: 'recovery' };
     // Lecture tolérante : la marche est un échauffement en tête, un retour au calme en fin, sinon une récupération.
     if (implicit && walk && (inRepeat || items.length > 1)) return { ...step, phase: inRepeat ? 'recovery' : i === 0 ? 'warmup' : i === items.length - 1 ? 'cooldown' : 'recovery' };
-    if (!implicit || inRepeat || items.length < 2) return step;
+    if (!implicit || inRepeat || items.length < 2 || step.exercise) return step;
     const me = levelOf(b, sport);
     if (i === 0 && Math.max(...items.slice(1).map((x) => levelOf(x, sport))) > me) return { ...step, phase: 'warmup' };
     if (i === items.length - 1 && Math.max(...items.slice(0, -1).map((x) => levelOf(x, sport))) > me) return { ...step, phase: 'cooldown' };
@@ -253,7 +277,7 @@ export function parseNotation(text: string, sport: Sport, opts: NotationOptions 
   const lenient = Boolean(opts.lenient);
   const clean = (lenient ? normalizeCoachWriting(text, { shiftedZones: opts.shiftedZones }) : text).replace(/\s+/g, ' ').trim();
   if (!clean) return { blocks: [], errors };
-  const parsed = parseSeq(clean, 0, errors, lenient);
+  const parsed = parseSeq(clean, 0, errors, lenient, sport === 'strength');
   return { blocks: settle(parsed, sport, false), errors };
 }
 
@@ -345,6 +369,7 @@ const rng = (a: number, b: number | null, unit: string) => `${a}${b !== null && 
 function fmtMeasure(m: Measure): string {
   if (m.kind === 'time') return fmtTime(m.seconds);
   if (m.kind === 'distance') return m.meters >= 1000 && m.meters % 100 === 0 ? `${String(m.meters / 1000).replace('.', ',')}km` : `${m.meters}m`;
+  if (m.kind === 'reps') return `${m.reps} rép`;
   return 'libre';
 }
 function fmtIntensity(i: Intensity): string {
@@ -358,6 +383,7 @@ function fmtIntensity(i: Intensity): string {
     case 'rpe': return `RPE${rng(i.min, i.max, '')}`;
     case 'power': return i.unit === 'pct_ftp' ? rng(i.min, i.max, '%FTP') : rng(i.min, i.max, 'W');
     case 'hr': return i.unit === 'bpm' ? rng(i.min, i.max, 'bpm') : rng(i.min, i.max, '%FC');
+    case 'load': return rng(i.min, i.max, 'kg').replace(/\./g, ',');
     default: return '';
   }
 }
@@ -369,7 +395,9 @@ function fmtStep(s: Step, sport: Sport, inRepeat: boolean, explicit: boolean): s
   else if (s.phase === 'rest') ph = 'repos ';
   else if (explicit || (inRepeat && s.phase !== 'work') || s.phase === 'other') ph = `${PHASE_WORD[s.phase]} `;
   const intensity = fmtIntensity(s.intensity);
-  return `${sp}${ph}${fmtMeasure(s.measure)}${intensity ? ` ${intensity}` : ''}${s.note ? ` « ${s.note} »` : ''}`;
+  // D-096 : « 10 Squat 40kg », « 30" Planche ».
+  const measure = s.exercise ? (s.measure.kind === 'reps' ? `${s.measure.reps} ${s.exercise.name}` : `${fmtMeasure(s.measure)} ${s.exercise.name}`) : fmtMeasure(s.measure);
+  return `${sp}${ph}${measure}${intensity ? ` ${intensity}` : ''}${s.note ? ` « ${s.note} »` : ''}`;
 }
 
 function fmtSeq(blocks: Block[], sport: Sport, inRepeat: boolean, explicit: Set<string>, path: string): string {

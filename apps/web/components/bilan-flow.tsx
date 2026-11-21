@@ -20,7 +20,7 @@ import { useIntent } from './use-intent';
 
 type Choice<T extends string> = { values: readonly T[]; labels: Record<T, string>; hints?: Partial<Record<T, string>> };
 
-const VERB: Record<Sport, string> = { running: 'couru', trail: 'couru', cycling: 'roulé', swimming: 'nagé', triathlon: 'pratiqué', duathlon: 'pratiqué' };
+const VERB: Record<Sport, string> = { running: 'couru', trail: 'couru', cycling: 'roulé', swimming: 'nagé', triathlon: 'pratiqué', duathlon: 'pratiqué', strength: 'pratiqué' };
 
 export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expectedRevision, after }: {
   wid: string;

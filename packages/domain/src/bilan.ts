@@ -23,7 +23,7 @@ export type BilanAnswers = Partial<AthleteProfileInput>;
 
 /** « la course à pied », « le vélo »… pour formuler les questions. */
 export const SPORT_WITH_ARTICLE: Record<Sport, string> = {
-  running: 'la course à pied', trail: 'le trail', cycling: 'le vélo', swimming: 'la natation', triathlon: 'le triathlon', duathlon: 'le duathlon',
+  running: 'la course à pied', trail: 'le trail', cycling: 'le vélo', swimming: 'la natation', triathlon: 'le triathlon', duathlon: 'le duathlon', strength: 'la musculation',
 };
 
 /** Écrans visibles selon les réponses déjà données (ordre du parcours). */

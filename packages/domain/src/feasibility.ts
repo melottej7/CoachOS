@@ -86,11 +86,14 @@ const SPEED: Record<Sport, Record<Level, number>> = {
   swimming: { beginner: 2.4, intermediate: 3, advanced: 3.5, competitive: 4 },
   triathlon: { beginner: 13, intermediate: 15, advanced: 17, competitive: 19 },
   duathlon: { beginner: 15, intermediate: 17, advanced: 19, competitive: 21 },
+  // D-096 : la musculation n’a pas d’épreuve en distance ; valeur neutre, la faisabilité ne la juge pas sur la vitesse.
+  strength: { beginner: 1, intermediate: 1, advanced: 1, competitive: 1 },
 };
 /** Part de la durée d’épreuve à tenir à l’entraînement en une séance, et plafond (min). */
 const LONG: Record<Sport, { part: number; cap: number }> = {
   running: { part: 0.65, cap: 180 }, trail: { part: 0.6, cap: 240 }, cycling: { part: 0.8, cap: 300 },
   swimming: { part: 1, cap: 90 }, triathlon: { part: 0.6, cap: 240 }, duathlon: { part: 0.6, cap: 210 },
+  strength: { part: 1, cap: 90 },
 };
 const LONGEST_MIN: Record<LongestRecent, number> = { lt20: 15, '20to30': 25, '30to45': 40, '45to60': 55, '60to90': 80, '90to120': 110, gt120: 140 };
 const SESSIONS_N: Record<WeeklySessions, number> = { '0to1': 1, '2to3': 2, '4to5': 4, '6plus': 6 };
@@ -330,7 +333,7 @@ export function chronoFromTitle(title: string): number | null {
 }
 
 /** Distance par défaut quand le titre ne la donne pas (le coach l’ajuste dans les paramètres). */
-export const DEFAULT_GOAL_KM: Record<Sport, number> = { running: 10, trail: 20, cycling: 50, swimming: 1.5, triathlon: 51.5, duathlon: 30 };
+export const DEFAULT_GOAL_KM: Record<Sport, number> = { running: 10, trail: 20, cycling: 50, swimming: 1.5, triathlon: 51.5, duathlon: 30, strength: 0 };
 
 /** Distance lue dans le titre d’un objectif : « Marathon », « semi », « 10 km », « Trail 30 km »… ; null sinon. */
 export function distanceFromTitle(title: string): number | null {
