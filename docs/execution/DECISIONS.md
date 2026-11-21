@@ -1745,3 +1745,27 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - téléphone à 375 px : repères sur deux colonnes, barres visibles, semaines lisibles, « pourquoi » déplié, sans débordement.
   - Deux défauts corrigés pendant la vérification : barres invisibles sur téléphone, liste des semaines sans marge.
   - `npm test` : **309 passés**, typecheck OK.
+
+## D-102 · Musculation, lot M5 : modules de l’espace et séances mixtes · 2026-11-21
+
+- **But (D-096).** CoachOS modulaire : un coach fait de l’endurance, de la musculation, ou les deux. Une séance peut mêler course et renforcement.
+- **Décision.**
+  - **Modules = sports encadrés** cochés dans Paramètres (profil de l’espace, D-022) :
+    - « Musculation » seule = musculation ;
+    - des sports d’endurance seuls = endurance ;
+    - les deux, ou **rien de coché = tout est proposé** (aucune restriction, comportement d’avant).
+    - Une phrase l’explique sous le choix des sports. Aucune nouvelle table.
+  - **Effets.**
+    - L’onglet Séances › Exercices n’apparaît qu’avec la musculation ; s’il est ouvert quand même, une bannière dit pourquoi.
+    - Le sport proposé à la création d’une séance (élève, bibliothèque, groupe) suit les modules ; le sport d’une séance existante reste toujours proposé.
+    - Le bouton « Importer la bibliothèque Foulée » n’apparaît qu’avec l’endurance.
+  - **Séance mixte.** Dans une séance d’endurance (course, trail, vélo, natation), quand la musculation est active :
+    - **« + Renforcement »** ajoute 3 séries d’un exercice avec repos. Les étapes passent en musculation (exercice, répétitions, charge) et portent une pastille « Renfo ✕ », qui les remet en course si on la touche.
+    - En texte : `45' Z2 + 3×(renfo 10 squats + renfo repos 1')`, et l’aller-retour est exact.
+    - Le retour demande alors les séries et charges de ces exercices (D-100), et « Suivre la séance pas à pas » est proposé.
+- **Point d’attention pour le fondateur.** Son espace n’a que « Trail » coché. Il ne verra donc pas la musculation tant qu’il n’aura pas coché « Musculation » (et « Course à pied ») dans Paramètres. Ses données n’ont pas été modifiées.
+- **Preuves.**
+  - Tests du domaine : modules selon les sports cochés, sports proposés, lecture de « renfo », aller-retour, séries demandées dans le retour, la course sans « renfo » inchangée. Les 71 notations du fondateur sont toujours toutes lues.
+  - Test serveur : modules relus après enregistrement du profil (musculation seule, les deux, endurance seule).
+  - `npm test` : **312 passés** (+3 PostgreSQL), typecheck OK.
+  - Navigateur (démo, rien de coché) : sport « Musculation » proposé, « + Renforcement » dans une séance de course, exercice « Pont fessier » rattaché à la bibliothèque. Séance non enregistrée.

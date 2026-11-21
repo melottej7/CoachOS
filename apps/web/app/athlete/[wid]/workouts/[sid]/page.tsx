@@ -47,7 +47,7 @@ export default async function AthleteWorkoutPage({ params, searchParams }: { par
         <section style={{ marginTop: 20 }} aria-label="Déroulé de la séance">
           <StructureView blocks={w.intervals} sport={w.sport} refs={refs} wid={wid} exercises={exercises} />
           {/* D-096 (M3) : séance de musculation à suivre pas à pas, vidéo et minuteur de repos. */}
-          {!w.canceled && (w.sport === 'strength' || Object.keys(exercises).length) ? (
+          {!w.canceled && (w.sport === 'strength' || strengthPlan(w.intervals).length) ? (
             <div className="actions" style={{ marginTop: 12 }}>
               <Link className="btn primary" href={`${base}/workouts/${sid}/suivre`}>▶ Suivre la séance pas à pas</Link>
             </div>

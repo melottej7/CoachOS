@@ -29,7 +29,7 @@ export default async function NewGroupSession({ params, searchParams }: { params
       <p className="sub">{tpl ? `À partir de « ${tpl.workout.title} ». ` : ''}Un brouillon par élève : tu pourras adapter chaque séance avant de publier.</p>
       {team.members.length ? (
         <section className="card"><div className="card-body">
-          <GroupSessionForm exercises={(await listExercises(actor.userId, wid)).map((x) => ({ id: x.id, name: x.name }))} wid={wid} teamId={tid} teamName={team.name} members={team.members.map((m) => ({ id: m.id, name: m.name, state: m.state }))} date={day} initial={tpl?.workout} />
+          <GroupSessionForm modules={(await coachContext(actor.userId, wid))?.modules} exercises={(await listExercises(actor.userId, wid)).map((x) => ({ id: x.id, name: x.name }))} wid={wid} teamId={tid} teamName={team.name} members={team.members.map((m) => ({ id: m.id, name: m.name, state: m.state }))} date={day} initial={tpl?.workout} />
         </div></section>
       ) : <p className="empty">Ce groupe n’a pas encore d’élève que tu suis. <Link href={`/coach/${wid}/athletes?team=${tid}`}>Ajouter des élèves</Link>.</p>}
     </>

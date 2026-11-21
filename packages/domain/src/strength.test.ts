@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  applyFollowLog, asDone, BASE_VIDEOS, compareSet, entryVerdict, loadProgress, progressText, strengthLogSchema, strengthPlan, describeBlock, describeTotals, detectVideoType, shownVideo, starterKey, exerciseIdsOf, fitSteps, followSequence, parseNotation, setLabel, presetsFor, STARTER_EXERCISES, structureSchema,
+  applyFollowLog, asDone, modulesOf, sportsFor, BASE_VIDEOS, compareSet, entryVerdict, loadProgress, progressText, strengthLogSchema, strengthPlan, describeBlock, describeTotals, detectVideoType, shownVideo, starterKey, exerciseIdsOf, fitSteps, followSequence, parseNotation, setLabel, presetsFor, STARTER_EXERCISES, structureSchema,
   structureTotals, toNotation, videoEmbed, type Block,
 } from './index';
 
@@ -170,5 +170,34 @@ describe('séries et charges réalisées (M4)', () => {
     expect(goblet.points.map((p) => [p.date, p.topKg, p.topReps, p.sets, p.volumeKg])).toEqual([['2026-11-18', 16, 10, 1, 160], ['2026-11-25', 20, 8, 2, 340]]);
     expect(progressText(goblet)).toBe('16 kg → 20 kg (+4 kg)');
     expect(progressText(series.find((x) => x.name === 'Pompes')!)).toBe('8 → 12 répétitions');
+  });
+});
+
+describe('modules de l’espace et séances mixtes (M5)', () => {
+  it('endurance, musculation ou les deux, d’après les sports encadrés ; rien de coché = les deux', () => {
+    expect(modulesOf([])).toEqual({ endurance: true, strength: true });
+    expect(modulesOf(null)).toEqual({ endurance: true, strength: true });
+    expect(modulesOf(['strength'])).toEqual({ endurance: false, strength: true });
+    expect(modulesOf(['running', 'trail'])).toEqual({ endurance: true, strength: false });
+    expect(modulesOf(['running', 'strength'])).toEqual({ endurance: true, strength: true });
+    expect(sportsFor({ endurance: false, strength: true })).toEqual(['strength']);
+    expect(sportsFor({ endurance: true, strength: false })).not.toContain('strength');
+    // La valeur d’une séance existante reste proposée.
+    expect(sportsFor({ endurance: false, strength: true }, 'running')).toEqual(['strength', 'running']);
+  });
+  it('« renfo » marque une étape de musculation dans une séance de course ; aller-retour texte', () => {
+    const r = parseNotation("45' Z2 + 3×(renfo 10 squats + renfo repos 1')", 'running');
+    expect(r.errors).toEqual([]);
+    const rep = r.blocks[1]!;
+    expect(rep).toMatchObject({ type: 'repeat', times: 3, steps: [
+      { sport: 'strength', measure: { kind: 'reps', reps: 10 }, exercise: { name: 'Squats' } },
+      { sport: 'strength', phase: 'rest', measure: { kind: 'time', seconds: 60 } },
+    ] });
+    expect(parseNotation(toNotation(r.blocks, 'running'), 'running').blocks).toEqual(r.blocks);
+    expect(describeBlock(r.blocks[0]!, 'running')).toBe('Effort · 45 min · Z2 (endurance fondamentale)');
+    // Le retour demande les séries de l’exercice ; « Suivre » est proposé.
+    expect(strengthPlan(r.blocks).map((e) => [e.name, e.sets.length])).toEqual([['Squats', 3]]);
+    // Sans « renfo », la course garde ses règles.
+    expect(parseNotation('3×(10 squats)', 'running').errors.length).toBeGreaterThan(0);
   });
 });

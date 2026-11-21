@@ -122,3 +122,16 @@ describe('invitation enrichie', () => {
     expect(await codeOf(previewInvitation(token))).toBe('RESOURCE_NOT_VISIBLE');
   });
 });
+
+describe('modules de l’espace (D-102)', () => {
+  it('les sports encadrés décident des modules : musculation seule, puis les deux', async () => {
+    const { coachContext } = await import('./repo/context');
+    await saveWorkspaceProfile(meta(USERS.marine), { ...profile, sports: ['strength'] });
+    expect((await coachContext(USERS.marine, WORKSPACE_A))?.modules).toEqual({ endurance: false, strength: true });
+    await saveWorkspaceProfile(meta(USERS.marine), { ...profile, sports: ['running', 'strength'] });
+    expect((await coachContext(USERS.marine, WORKSPACE_A))?.modules).toEqual({ endurance: true, strength: true });
+    await saveWorkspaceProfile(meta(USERS.marine), profile);
+    expect((await coachContext(USERS.marine, WORKSPACE_A))?.modules).toEqual({ endurance: true, strength: false });
+  });
+});
+

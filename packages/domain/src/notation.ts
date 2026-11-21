@@ -17,8 +17,10 @@ const SPORT_WORDS: [RegExp, Sport][] = [
   [/^(?:course|cap)(?![a-zà-ÿ])/i, 'running'],
   [/^trail(?![a-zà-ÿ])/i, 'trail'],
   [/^(?:natation|nat)(?![a-zà-ÿ])/i, 'swimming'],
+  // D-102 : renforcement dans une séance d’endurance (séance mixte).
+  [/^(?:renfo|renforcement|muscu|musculation)(?![a-zà-ÿ])/i, 'strength'],
 ];
-const SPORT_WORD: Partial<Record<Sport, string>> = { cycling: 'vélo', running: 'course', trail: 'trail', swimming: 'natation' };
+const SPORT_WORD: Partial<Record<Sport, string>> = { cycling: 'vélo', running: 'course', trail: 'trail', swimming: 'natation', strength: 'renfo' };
 const PHASE_WORDS: [RegExp, Phase][] = [
   [/^(?:échauffement|echauffement|échauf|echauf)(?![a-zà-ÿ])/i, 'warmup'],
   [/^(?:retour au calme|calme|rac)(?![a-zà-ÿ])/i, 'cooldown'],
@@ -140,6 +142,8 @@ function parseStep(raw: string, errors: NotationError[], lenient = false, inRepe
   if (q && !(lenient && /\d\s*"\s*$/.test(t))) { note = q[1]!.slice(0, 200) || null; t = t.slice(0, q.index).trim(); }
   let sport: Sport | null = null;
   for (const [re, s] of SPORT_WORDS) { const m = t.match(re); if (m) { sport = s; t = t.slice(m[0].length).replace(/^\s*:?\s*/, ''); break; } }
+  // Une étape marquée « renfo » se lit comme de la musculation (répétitions, exercice), même dans une séance de course.
+  if (sport === 'strength') strength = true;
   let phase: Phase | null = null;
   for (const [re, p] of PHASE_WORDS) { const m = t.match(re); if (m) { phase = p; t = t.slice(m[0].length).replace(/^\s*:?\s*/, ''); break; } }
   if (!phase && /^r\s*(?=\d)/i.test(t)) { phase = 'recovery'; t = t.replace(/^r\s*/i, ''); }

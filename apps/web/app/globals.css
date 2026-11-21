@@ -1306,3 +1306,5 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .prog-method { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); }
 
 .prog-weeks.card-body { padding: 0 16px; }
+.b-sport-tag { border: 0; cursor: pointer; }
+

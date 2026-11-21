@@ -1,4 +1,5 @@
 import { readAs, type Tx } from '../db/client';
+import { modulesOf, type Modules, type Sport } from '@coachos/domain';
 
 export interface WorkspaceSummary {
   id: string;
@@ -39,20 +40,23 @@ export async function workspaceFor(tx: Tx, wid: string) {
 export interface CoachContext {
   workspace: { id: string; name: string; timeZone: string };
   role: 'owner' | 'coach';
+  /** D-102 : endurance, musculation ou les deux, d’après les sports encadrés du profil. */
+  modules: Modules;
 }
 
 /** Le paramètre wid choisit le contexte mais ne donne aucun droit : vérification en base. */
 export async function coachContext(userId: string, wid: string): Promise<CoachContext | null> {
   if (!isUuid(wid)) return null;
   return readAs(userId, async (tx) => {
-    const r = await tx.query<{ id: string; name: string; time_zone: string; role: 'owner' | 'coach' }>(
-      `select w.id, w.name, w.time_zone, m.role from public.workspaces w
+    const r = await tx.query<{ id: string; name: string; time_zone: string; role: 'owner' | 'coach'; sports: Sport[] | null }>(
+      `select w.id, w.name, w.time_zone, m.role, p.sports from public.workspaces w
        join public.memberships m on m.workspace_id = w.id and m.user_id = auth.uid() and m.active
+       left join public.workspace_profiles p on p.workspace_id = w.id
        where w.id = $1`,
       [wid],
     );
     const row = r.rows[0];
-    return row ? { workspace: { id: row.id, name: row.name, timeZone: row.time_zone }, role: row.role } : null;
+    return row ? { workspace: { id: row.id, name: row.name, timeZone: row.time_zone }, role: row.role, modules: modulesOf(row.sports) } : null;
   });
 }
 

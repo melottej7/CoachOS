@@ -26,7 +26,7 @@ export default async function ToPlan({ params }: { params: Promise<{ wid: string
     <>
       <div className="head"><div><div className="kicker">Séances</div><h1>À préparer</h1>
         <p className="sub">Les élèves sans séance publiée sur les 7 prochains jours, d’abord.</p></div></div>
-      <SessionsTabs wid={wid} current="to-plan" toPlan={toPlanCount(roster)} />
+      <SessionsTabs strength={ctx.modules.strength} wid={wid} current="to-plan" toPlan={toPlanCount(roster)} />
       <section className="card" aria-labelledby="todo-plan">
         <div className="card-head"><h2 id="todo-plan">Programme à préparer</h2><span className="muted">{todo.length} élève{todo.length > 1 ? 's' : ''}</span></div>
         {todo.length ? todo.map((a) => (

@@ -180,6 +180,7 @@ export function CoachSpaceForm({ wid, initial, mode, after }: { wid: string; ini
           <h2 id="sec-spe">Spécialités</h2>
           {wizard ? <MascotSays>Quels sports encadres-tu, et pour qui ? Cela aide tes futurs athlètes à savoir s’ils sont au bon endroit.</MascotSays> : null}
           <Chips legend="Sports encadrés" options={SPORTS} labels={SPORT_LABELS} value={v.sports} onChange={(x) => set('sports', x)} />
+          <p className="muted">Ces sports décident aussi de ce que CoachOS te montre : endurance, musculation (onglet Exercices, séances en séries, vidéos), ou les deux. Rien de coché = tout est proposé.</p>
           <Chips legend="Publics accompagnés" options={LEVELS} labels={AUDIENCE_LABELS} value={v.audiences} onChange={(x) => set('audiences', x)} />
           <Chips legend="Objectifs préparés" options={COACH_GOALS} labels={COACH_GOAL_LABELS} value={v.goals} onChange={(x) => set('goals', x)} />
         </section>

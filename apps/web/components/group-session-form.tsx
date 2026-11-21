@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { formatLongDate, SPORT_LABELS, SPORTS, type LibraryWorkout, type Sport } from '@coachos/domain';
+import { formatLongDate, SPORT_LABELS, SPORTS, type LibraryWorkout, type Sport, sportsFor, type Modules } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
 import { fieldError, useIntent } from './use-intent';
 import { fromEditor, toEditor, WorkoutBuilder, type EBlock, type ExerciseOption } from './workout-builder';
@@ -11,7 +11,8 @@ import { fromEditor, toEditor, WorkoutBuilder, type EBlock, type ExerciseOption 
 
 export interface Recipient { id: string; name: string; state: 'invited' | 'active' }
 
-export function GroupSessionForm({ wid, teamId, teamName, members, date, initial, exercises }: {
+export function GroupSessionForm({ wid, teamId, teamName, members, date, initial, exercises, modules }: {
+  modules?: Modules;
   exercises?: ExerciseOption[];
   wid: string; teamId: string; teamName: string; members: Recipient[]; date: string; initial?: LibraryWorkout;
 }) {
@@ -42,13 +43,13 @@ export function GroupSessionForm({ wid, teamId, teamName, members, date, initial
           <input id="gs-date" type="date" required value={localDate} onChange={(e) => setLocalDate(e.target.value)} aria-invalid={!!fieldError(error, 'localDate')} />
           <span className="hint">À l’heure locale de chaque élève</span></div>
         <div className="field"><label htmlFor="gs-sport">Sport</label>
-          <select id="gs-sport" value={sport} onChange={(e) => setSport(e.target.value as Sport)}>{SPORTS.map((s) => <option key={s} value={s}>{SPORT_LABELS[s]}</option>)}</select></div>
+          <select id="gs-sport" value={sport} onChange={(e) => setSport(e.target.value as Sport)}>{sportsFor(modules ?? { endurance: true, strength: true }, sport).map((s) => <option key={s} value={s}>{SPORT_LABELS[s]}</option>)}</select></div>
       </div>
       <div className="field"><label htmlFor="gs-title">Titre</label>
         <input id="gs-title" maxLength={120} required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex. Piste : 10 × 400 m" aria-invalid={!!fieldError(error, 'workout.title')} />
         {fieldError(error, 'workout.title') ? <span className="field-error">{fieldError(error, 'workout.title')}</span> : null}
       </div>
-      <WorkoutBuilder sport={sport} value={blocks} onChange={setBlocks} exercises={exercises} />
+      <WorkoutBuilder strengthOn={modules?.strength ?? true} sport={sport} value={blocks} onChange={setBlocks} exercises={exercises} />
       <div className="field"><label htmlFor="gs-instructions">Consignes <span className="hint">Facultatif · identiques pour tous, modifiables ensuite par élève</span></label>
         <textarea id="gs-instructions" maxLength={5000} value={instructions} onChange={(e) => setInstructions(e.target.value)} /></div>
 

@@ -310,7 +310,8 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
     - **D-099 : deux options de vidéo.** La vidéo du coach d’abord, sinon une vidéo de base CoachOS (fondateur, IA ou mélange), avec son origine affichée. Le coach peut la refuser. Catalogue vide : vidéos à produire par le fondateur ([VIDEOS_DE_BASE.md](VIDEOS_DE_BASE.md)). Migration `20261121100000` appliquée. `npm test` : **304 passés**.
     - **D-100 : M4 fait.** Séries et charges notées pendant « Suivre », reprises dans le retour, comparées au prévu (coach et élève), progression des charges par exercice. Migration `20261121110000` appliquée. Correction e0df365 (pages de séance en erreur depuis D-099). `npm test` : **309 passés**.
     - **D-101** : page « Programme » refondue, programme en premier (graphique du volume par phase, semaines dépliables, création, réglages repliés).
-    - Prochaine tranche : M5 (modularité de l’espace : endurance, musculation ou les deux ; séances mixtes).
+    - **D-102 : M5 fait, lot M terminé.** Modules d’après les sports encadrés (rien de coché = tout), onglet Exercices et sports proposés en conséquence, séance mixte « + Renforcement » et « renfo » en texte. `npm test` : **312 passés**.
+    - Prochaine tranche (D-096) : gestion du coach. D’abord des relances pré-rédigées et validées par le coach ; le paiement attend la validation du parcours des deux rôles (CLAUDE.md) et l’accord du fondateur.
   - **Analyse produit (21 novembre)** : [docs/17_ANALYSE_PRODUIT.md](../17_ANALYSE_PRODUIT.md), en réponse au cadrage « OS du coach sportif hybride ». Recommandations : rester sur le coach de course à pied indépendant ; geler les nouvelles fonctions ; mettre en ligne ; pilote de 4 semaines avec les athlètes du fondateur ; brief du jour et mode simple. 8 questions à trancher par le fondateur, aucune décision prise sans lui.
   - **D-095** : téléphone sur le même Wi-Fi : http://192.168.65.68:3000 (adresse « Network » du serveur), réseaux privés autorisés en développement.
   - **D-094** : « Ajouter des blocs à ma bibliothèque » (au lieu de « garder ») ; saisie rapide renommée « Écrire la séance en texte », avec principe expliqué, aperçu bloc par bloc et exemples.
@@ -334,6 +335,7 @@ Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au mic
 
 **Pour le fondateur** :
 - Crédit Anthropic pour l’IA ; le budget mensuel est de 10 $ par espace par défaut.
+- **Cocher « Musculation » (et « Course à pied ») dans Paramètres › sports encadrés** : ton espace n’a que « Trail » coché, la musculation y est donc masquée (D-102).
 - Vidéos de base des 34 exercices : à filmer ou produire (guide [VIDEOS_DE_BASE.md](VIDEOS_DE_BASE.md)), puis à me transmettre.
 - Base de séances : celle de Foulée fait foi (D-093), plus de tableur attendu. Dans Bibliothèque, clique « 🏃 Mettre à jour Foulée (23) » pour passer tes fractions courtes en Z6. Tes programmes sont reçus et lus (D-085).
 - Accès Garmin reporté (D-026).

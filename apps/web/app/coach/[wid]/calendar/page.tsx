@@ -42,7 +42,8 @@ export default async function Calendar({ params, searchParams }: { params: Promi
   const tourDay = days.includes(today) ? today : days[0];
   const newHref = (d: string) => `${base}/athletes/${athlete.id}/workouts/new?date=${d}`;
   const first = athlete.displayName.split(' ')[0];
-  const ctxTz = (await coachContext(actor.userId, wid))?.workspace.timeZone ?? athlete.timeZone;
+  const cctx = await coachContext(actor.userId, wid);
+  const ctxTz = cctx?.workspace.timeZone ?? athlete.timeZone;
   const toPlan = toPlanCount((await portfolio(actor.userId, wid, ctxTz)).roster);
   const weekTemplates = await listWeekTemplates(actor.userId, wid);
   const drafts = workouts.filter((w) => w.status !== 'published');
@@ -59,7 +60,7 @@ export default async function Calendar({ params, searchParams }: { params: Promi
         </div>
         <Link className="btn primary" href={newHref(today >= days[0]! && today <= days[6]! ? today : days[0]!)}>+ Nouvelle séance</Link>
       </div>
-      <SessionsTabs wid={wid} current="week" toPlan={toPlan} />
+      <SessionsTabs strength={cctx?.modules.strength ?? true} wid={wid} current="week" toPlan={toPlan} />
       {awaiting.map((g) => (
         <div key={g.id} className="banner next-step" role="status">
           <span><strong>Prochaine étape :</strong> l’objectif « {g.title} » est validé. Génère le programme qui permet de l’atteindre (tu relis les risques, rien n’est publié).</span>

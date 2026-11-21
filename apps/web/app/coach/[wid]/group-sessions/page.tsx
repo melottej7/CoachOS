@@ -27,7 +27,7 @@ export default async function GroupSessionsPage({ params }: { params: Promise<{ 
     <>
       <div className="head"><div><div className="kicker">Séances</div><h1>Séances de groupe</h1>
         <p className="sub">Une base commune pour tout un groupe : un brouillon par élève, à adapter si besoin, puis une publication que tu valides.</p></div></div>
-      <SessionsTabs wid={wid} current="groups" toPlan={toPlanCount(roster)} />
+      <SessionsTabs strength={ctx.modules.strength} wid={wid} current="groups" toPlan={toPlanCount(roster)} />
       <section className="card" aria-labelledby="gs-teams">
         <div className="card-head"><h2 id="gs-teams">Préparer pour un groupe</h2></div>
         {active.length ? (

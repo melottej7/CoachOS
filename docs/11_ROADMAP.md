@@ -261,7 +261,7 @@ Instruction du fondateur du 17 novembre 2026 ([16_COMPLEMENT_COACH_ELEVE.md](16_
 | 8 | P · Programmes supervisés | Versions de programme, génération depuis bilan et bibliothèque, régénération partielle | Scénario 6 |
 | 9 | X · Activités et Garmin | Export FIT (sans dépendance), import de fichiers, rapprochement, puis API Garmin selon accès | Scénarios 9 et 10 |
 
-| 10 | **M · Musculation (D-096), prioritaire** | M1 séance de musculation (exercice, répétitions, charge, repos) ; M2 bibliothèque d’exercices avec vidéo (lien ou fichier du coach) ; M3 suivre la séance à distance (un exercice par écran, minuteur) ; M4 retour séries et charges ; M5 modularité de l’espace et séances mixtes | Le coach compose une séance avec ses vidéos, l’élève la suit sur son téléphone et dit ce qu’il a fait |
+| 10 | **M · Musculation (D-096), fait (D-097 à D-102)** | M1 séance de musculation (exercice, répétitions, charge, repos) ; M2 bibliothèque d’exercices avec vidéo (lien ou fichier du coach) ; M3 suivre la séance à distance (un exercice par écran, minuteur) ; M4 retour séries et charges ; M5 modularité de l’espace et séances mixtes | Le coach compose une séance avec ses vidéos, l’élève la suit sur son téléphone et dit ce qu’il a fait |
 | 11 | Gestion du coach (D-096) | Relances pré-rédigées validées, suivi, puis paiement (après validation du parcours des deux rôles, CLAUDE.md) | Relance envoyée en un geste ; premier paiement |
 
 Le lot X1 (export FIT) peut avancer en parallèle dès que le format de séance est stable (fait, D-023). Les lots dépendant d’un fournisseur avancent sur leurs parties indépendantes pendant l’attente d’accès. Le chantier commercial reste postérieur à la validation de l’usage.

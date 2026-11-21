@@ -91,6 +91,12 @@ const newStrengthRepeat = (): ERepeat => ({
   steps: [newStrengthStep('work'), { ...newStep('rest'), measure: { kind: 'time', seconds: 90 } }],
 });
 
+/** D-102 : renforcement ajouté à une séance d’endurance (séance mixte) : 3 séries d’un exercice, étapes en musculation. */
+const newMixedStrength = (): ERepeat => ({
+  type: 'repeat', times: 3, _k: key(),
+  steps: [{ ...newStrengthStep('work'), sport: 'strength' }, { ...newStep('rest', 'strength'), measure: { kind: 'time', seconds: 60 } }],
+});
+
 /** D-096 : un exercice écrit en texte se rattache à la bibliothèque quand le nom correspond. */
 function linkExercises(blocks: Block[], exercises: ExerciseOption[]): Block[] {
   if (!exercises.length) return blocks;
@@ -347,6 +353,10 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools }: { step:
         <select className="b-phase" aria-label={`Type du bloc ${index}`} value={step.phase} onChange={(e) => onChange({ ...step, phase: e.target.value as Phase })}>
           {PHASES.map((p) => <option key={p} value={p}>{PHASE_LABELS[p]}</option>)}
         </select>
+        {step.sport === 'strength' && sport !== 'strength' && !MULTISPORT.includes(sport) ? (
+          <button type="button" className="pill b-sport-tag" title="Étape de renforcement dans une séance d’endurance ; toucher pour la remettre en course"
+            onClick={() => onChange({ ...step, sport: null, exercise: null, measure: step.measure.kind === 'reps' ? { kind: 'time', seconds: 600 } : step.measure, intensity: step.intensity.kind === 'load' ? { kind: 'none' } : step.intensity })}>Renfo ✕</button>
+        ) : null}
         {MULTISPORT.includes(sport) ? (
           <select aria-label={`Sport du bloc ${index}`} value={step.sport ?? ''} onChange={(e) => onChange({ ...step, sport: (e.target.value || null) as Sport | null })}>
             <option value="">Sport…</option>
@@ -442,12 +452,14 @@ function BlockList({ blocks, sport, depth, prefix, parent, refs, dnd, onChange }
 type Indicator = { top: number; left: number; width: number };
 
 /** Constructeur complet, contrôlé par le formulaire de séance. */
-export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vmaHref, library, exercises = [] }: {
+export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vmaHref, library, exercises = [], strengthOn = true }: {
   sport: Sport; value: EBlock[]; onChange: (b: EBlock[]) => void; refs?: References; athleteFirst?: string; vmaHref?: string;
   /** D-074 : blocs réutilisables du coach (insérer, garder). Absent : seulement les modèles rapides. */
   library?: { wid: string; blocks: SavedBlock[] };
   /** D-096 : exercices de la bibliothèque, proposés dans les blocs de musculation. */
   exercises?: ExerciseOption[];
+  /** D-102 : module musculation actif ; une séance d’endurance peut alors finir par du renforcement. */
+  strengthOn?: boolean;
 }) {
   const presets = presetsFor(sport);
   const [mine, setMine] = useState<SavedBlock[]>(library?.blocks ?? []);
@@ -605,6 +617,9 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
           <>
             <button type="button" className="btn" onClick={() => onChange([...value, newStep(value.length ? 'work' : 'warmup', defaultSport)])}>+ Étape</button>
             <button type="button" className="btn" onClick={() => onChange([...value, newRepeat()])}>+ Répétition</button>
+            {strengthOn && !MULTISPORT.includes(sport) ? (
+              <button type="button" className="btn" title="Séance mixte : renforcement après la course" onClick={() => onChange([...value, newMixedStrength()])}>+ Renforcement</button>
+            ) : null}
           </>
         )}
         <label className="visually-hidden" htmlFor="preset">Ajouter un modèle</label>
