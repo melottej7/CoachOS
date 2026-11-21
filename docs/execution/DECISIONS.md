@@ -1964,3 +1964,20 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - `npm test` : **337 passés** (+3 PostgreSQL), typecheck OK, `npm run build` OK.
   - Navigateur : « Dernière fois : 10 × 12 kg (21 nov.) » sous « Développé couché haltères » pour Camille (démo).
 - **Non prouvé.** Envoi réel par Resend ; « la dernière fois » vue à l’écran côté élève (mêmes données que côté coach, aucune séance de démo antérieure ne partage ses exercices).
+
+## D-113 · Base en ligne créée, réglages pour Vercel · 2026-11-21
+
+- **Base Supabase en ligne.**
+  - Projet `mugtpcvxvdkpjixrqvna` (région Europe), relié par le fondateur (connexion au CLI faite par lui-même).
+  - Les **42 migrations** sont appliquées dans l’ordre (`supabase db push --remote`, « Finished supabase db push »). Aucune donnée de démonstration en ligne.
+- **Connexion chiffrée.**
+  - Dès que l’hôte de `DATABASE_URL` n’est pas local, la connexion passe en SSL, sauf si l’adresse précise déjà un `sslmode`.
+  - Le certificat du pooler Supabase n’est pas signé par une autorité publique : la connexion est chiffrée sans vérification du certificat. Vérification complète possible plus tard avec le certificat téléchargeable dans Supabase.
+  - Pool de 3 connexions en ligne, 10 en local. Adresse à utiliser : celle du **pooler en mode transaction** (port 6543), adaptée aux fonctions Vercel.
+- **Vidéos et limites de Vercel (4,5 Mo par requête et par réponse).**
+  - Lecture : la vidéo est servie par morceaux de 4 Mo au plus (réponse partielle 206), y compris sans plage demandée. Le lecteur demande lui-même la suite.
+  - Envoi : au-delà de 4,5 Mo, Vercel refuse l’envoi avant CoachOS. L’écran le dit clairement (filmer plus court, ou mettre un lien YouTube).
+  - **À faire ensuite** : envoi direct vers le stockage de fichiers Supabase pour revenir à 25 Mo et plus.
+- **E-mails d’authentification.** Les invitations partent par Resend (CoachOS). En revanche, la confirmation d’inscription du coach et le mot de passe oublié partent par Supabase. Son serveur d’envoi par défaut n’écrit qu’aux membres de l’équipe du projet : il faut brancher Resend en SMTP dans Supabase avant d’inviter des élèves.
+- **Preuves.** Test `poolConfig` (chiffrement en ligne, pas en local, `sslmode` respecté). `npm test` : **340 passés** (+3 PostgreSQL), typecheck OK.
+- **Non prouvé.** Connexion réelle depuis Vercel ; lecture par morceaux sur iPhone en ligne.

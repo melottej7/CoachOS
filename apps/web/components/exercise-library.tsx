@@ -109,6 +109,8 @@ function ExerciseForm({ wid, initial, exercise, onDone }: { wid: string; initial
       const res = await fetch(`/api/v1/workspaces/${wid}/exercises/${exercise.id}/video`, {
         method: 'POST', body: file, credentials: 'same-origin', headers: { 'content-type': file.type || 'application/octet-stream' },
       });
+      // D-113 · En ligne (Vercel), un envoi de plus de 4,5 Mo est refusé avant d’atteindre CoachOS.
+      if (res.status === 413) { setError('Vidéo trop lourde pour l’envoi en ligne (4 Mo au plus pour l’instant). Filme 10 à 15 secondes en qualité réduite, ou mets un lien YouTube.'); setState('idle'); return; }
       if (!res.ok) {
         const p = (await res.json().catch(() => null)) as { error?: { message?: string; fields?: { rule: string }[] } } | null;
         setError(p?.error?.fields?.[0]?.rule ?? p?.error?.message ?? 'Envoi impossible. Réessaie.');

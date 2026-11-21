@@ -3,6 +3,8 @@ import { getActor } from '@/server/auth/session';
 import { isUuid } from '@/server/repo/context';
 import { readExerciseClip } from '@/server/repo/exercises';
 
+const CHUNK = 4 * 1024 * 1024;
+
 /**
  * D-096 · Vidéo filmée d’un exercice : session requise, lue par le coach et les élèves de l’espace.
  * Les plages d’octets (Range) sont servies : Safari sur iPhone en a besoin pour lire une vidéo.
@@ -24,10 +26,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ wid:
     'content-disposition': 'inline',
   };
   const range = req.headers.get('range')?.match(/^bytes=(\d*)-(\d*)$/);
-  if (range && (range[1] || range[2])) {
-    let start = range[1] ? Number(range[1]) : size - Number(range[2]);
-    let end = range[1] && range[2] ? Number(range[2]) : size - 1;
-    start = Math.max(0, start); end = Math.min(size - 1, end);
+  // D-113 · Vercel refuse les réponses de plus de 4,5 Mo : on sert la vidéo par morceaux de 4 Mo au plus.
+  // Le lecteur demande lui-même le morceau suivant.
+  if ((range && (range[1] || range[2])) || size > CHUNK) {
+    let start = range?.[1] ? Number(range[1]) : range?.[2] ? size - Number(range[2]) : 0;
+    let end = range?.[1] && range[2] ? Number(range[2]) : size - 1;
+    start = Math.max(0, start); end = Math.min(size - 1, end, start + CHUNK - 1);
     if (start > end || start >= size) return new NextResponse(null, { status: 416, headers: { 'content-range': `bytes */${size}` } });
     return new NextResponse(new Uint8Array(clip.bytes.subarray(start, end + 1)), {
       status: 206, headers: { ...base, 'content-range': `bytes ${start}-${end}/${size}`, 'content-length': String(end - start + 1) },
