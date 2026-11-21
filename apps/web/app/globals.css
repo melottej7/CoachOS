@@ -1324,4 +1324,9 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .rl-bravo > summary { cursor: pointer; font-weight: 650; }
 .rl-bravo .rl-list { margin-top: 8px; }
 .rl-waiting { margin: 0; font-size: 14px; }
+.row-relance { margin: 2px 0 0; font-size: 14px; }
+.rt { border: 1px solid var(--rule); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; }
+.rt legend { padding: 0 6px; }
+.rt textarea { width: 100%; font: inherit; }
+.rt-preview { margin: 0; font-size: 14px; padding: 8px 10px; border-radius: 10px; background: var(--surface-2); }
 

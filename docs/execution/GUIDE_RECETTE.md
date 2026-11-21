@@ -347,4 +347,6 @@ Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et
 2. **✍️ … : préparer le message** : le texte est prêt. Modifie-le à ta façon, puis **Envoyer à …** : il part dans la conversation de l’élève.
 3. L’élève passe « En attente de réponse » pendant 3 jours.
 4. Dis-moi : les brouillons sonnent-ils comme toi ? Quelles situations manquent ?
+5. **Élèves** : un élève à relancer porte son statut et « ↺ … · Relancer ».
+6. **Paramètres › Mes relances** : écris tes propres textes avec `{prénom}`, `{séance}`, `{jour}`… L’aperçu montre le résultat ; tes brouillons de relance utiliseront désormais ton texte.
 

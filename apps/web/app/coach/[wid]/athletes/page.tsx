@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { addDays, daysUntil, formatShortDate, formatWeekday, LEVEL_LABELS, LEVELS, READINESS_COACH, readinessAlert, SPORT_LABELS, SPORTS, urgencyLabel, type Level } from '@coachos/domain';
+import { ADHERENCE_LABELS, addDays, daysUntil, formatShortDate, formatWeekday, LEVEL_LABELS, LEVELS, READINESS_COACH, readinessAlert, SPORT_LABELS, SPORTS, urgencyLabel, type Level } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { portfolio, type RosterEntry } from '@/server/repo/portfolio';
 import { ActionButton, CreateTeamForm, RenameTeam } from '@/components/portfolio-forms';
 import { Pill, initials } from '@/components/ui';
+import { relances } from '@/server/repo/relances';
 
 export const metadata = { title: 'Élèves' };
 
@@ -44,6 +45,8 @@ export default async function Roster({ params, searchParams }: { params: Promise
   if (!ctx) notFound();
   const owner = ctx.role === 'owner';
   const { roster, teams, today } = await portfolio(actor.userId, wid, ctx.workspace.timeZone);
+  // D-104 : statut d’adhésion et relance de chaque élève suivi (D-103).
+  const adherence = new Map((await relances(actor.userId, wid)).map((r) => [r.athleteId, r]));
   const base = `/coach/${wid}`;
   const by = BY.some((b) => b.k === sp.by) ? (sp.by as (typeof BY)[number]['k']) : 'urgency';
   const href = (extra: Record<string, string>) => {
@@ -177,7 +180,9 @@ export default async function Roster({ params, searchParams }: { params: Promise
                       <Link href={`${base}/athletes/${a.id}?from=${encodeURIComponent(here)}`}>{a.name}</Link>{' '}
                       {a.state === 'invited' ? <Pill tone="neutral">Invité·e</Pill> : null}{' '}
                       <Pill tone={u === 'Urgent' ? 'attn' : u === 'À suivre' ? '' : 'neutral'}>{u}</Pill>
-                      {readinessAlert(a.readiness?.value) ? <>{' '}<Pill tone="attn">{READINESS_COACH[a.readiness!.value]}</Pill></> : null}
+                      {adherence.get(a.id) && ['silent', 'at_risk', 'watch'].includes(adherence.get(a.id)!.status)
+                        ? <>{' '}<span className={`pill rl-pill ${adherence.get(a.id)!.status}`} title={adherence.get(a.id)!.reason}>{ADHERENCE_LABELS[adherence.get(a.id)!.status]}</span></>
+                        : readinessAlert(a.readiness?.value) ? <>{' '}<Pill tone="attn">{READINESS_COACH[a.readiness!.value]}</Pill></> : null}
                     </h3>
                     <p>
                       {a.sport ? SPORT_LABELS[a.sport] : 'Sport non renseigné'}
@@ -187,6 +192,15 @@ export default async function Roster({ params, searchParams }: { params: Promise
                     </p>
                     {a.nextGoal ? <p className="row-goal">🎯 {a.nextGoal.title}{a.nextGoal.targetDate ? ` · ${formatShortDate(a.nextGoal.targetDate)} (J-${daysUntil(today, a.nextGoal.targetDate)})` : ''}</p> : null}
                     {a.state === 'active' ? <Regularity r={a.regularity} /> : null}
+                    {(() => {
+                      const r = adherence.get(a.id);
+                      if (!r || !['silent', 'at_risk', 'watch'].includes(r.status)) return null;
+                      return (
+                        <p className="row-relance">↺ {r.reason}{r.waitingSince
+                          ? <span className="muted"> · relancé, en attente de réponse</span>
+                          : r.relance ? <> · <Link href={`${base}/planning#relances-title`}>Relancer</Link></> : null}</p>
+                      );
+                    })()}
                     {a.todo.length ? (
                       <p className="row-todo">{a.todo.slice(0, 3).map((t) => t.title + (t.source === 'auto' ? '' : ' (tâche)')).join(' · ')}{a.todo.length > 3 ? ` · +${a.todo.length - 3}` : ''}</p>
                     ) : null}

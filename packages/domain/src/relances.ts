@@ -93,24 +93,54 @@ export function adherenceOf(x: AdherenceInput): Adherence {
 const WEEKDAY = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 const dayName = (d: LocalDate) => WEEKDAY[new Date(`${d}T12:00:00Z`).getUTCDay()]!;
 
+// ---------- Modèles (D-104) ----------
+
+export const RELANCE_KINDS = ['silent', 'readiness', 'missed', 'no_feedback', 'bravo'] as const;
+/** Trous remplis au moment de préparer la relance. */
+export const RELANCE_PLACEHOLDERS = ['prénom', 'séance', 'jour', 'jours', 'faites', 'prévues'] as const;
+export const RELANCE_PLACEHOLDER_HINTS: Record<(typeof RELANCE_PLACEHOLDERS)[number], string> = {
+  prénom: 'prénom de l’élève', séance: 'titre de la séance concernée', jour: 'jour de cette séance, ex. mardi', jours: 'jours sans nouvelle',
+  faites: 'séances faites sur 7 jours', prévues: 'séances prévues sur 7 jours',
+};
+
 /**
- * Brouillon de relance, dans un ton simple et chaleureux (tutoiement). Il sert de point de départ : le coach
- * l’adapte. Aucune question de santé : pour « pas à 100 % », on propose d’en parler (D-084, D-088).
+ * Modèles par défaut, dans un ton simple et chaleureux (tutoiement). Le coach peut écrire les siens. Aucune question
+ * de santé : pour « pas à 100 % », on propose d’en parler (D-084, D-088).
  */
-export function relanceDraft(kind: RelanceKind, c: { first: string; workout?: RecentSession | null; silentDays?: number | null; done7?: number; due7?: number }): string {
-  const w = c.workout;
-  switch (kind) {
-    case 'silent':
-      return `Salut ${c.first} ! Je n’ai pas eu de nouvelles depuis ${c.silentDays ?? 'quelques'} jours 🙂 Comment ça va ? Si les dernières semaines ont été chargées, aucun souci : dis-moi simplement où tu en es, et on adapte la suite ensemble.`;
-    case 'readiness':
-      return `Salut ${c.first}, tu m’as dit ne pas être à 100 % en ce moment. On en parle ? Dis-moi quand tu as cinq minutes pour un appel : on adapte les prochaines séances, sans forcer.`;
-    case 'missed':
-      return `Hello ${c.first} ! Je vois que${w ? ` « ${w.title} » (${dayName(w.date)})` : ' les dernières séances'} n’${w ? 'a' : 'ont'} pas pu se faire. Rien de grave ! Qu’est-ce qui a coincé : le temps, la fatigue, autre chose ? Je t’ajuste la semaine pour que ça colle mieux.`;
-    case 'no_feedback':
-      return `Coucou ${c.first} ! Comment s’est passée ta séance${w ? ` « ${w.title} » de ${dayName(w.date)}` : ''} ? Un retour rapide dans l’app (15 secondes) m’aide à préparer la suite 💪`;
-    case 'bravo':
-      return `Bravo ${c.first} ! ${c.done7 ?? ''} séance${(c.done7 ?? 0) > 1 ? 's' : ''} sur ${c.due7 ?? ''} cette semaine, c’est top. Continue comme ça 👏`.replace(/ {2,}/g, ' ');
-  }
+export const DEFAULT_RELANCE_TEMPLATES: Record<RelanceKind, string> = {
+  silent: 'Salut {prénom} ! Je n’ai pas eu de nouvelles depuis {jours} jours 🙂 Comment ça va ? Si les dernières semaines ont été chargées, aucun souci : dis-moi simplement où tu en es, et on adapte la suite ensemble.',
+  readiness: 'Salut {prénom}, tu m’as dit ne pas être à 100 % en ce moment. On en parle ? Dis-moi quand tu as cinq minutes pour un appel : on adapte les prochaines séances, sans forcer.',
+  missed: 'Hello {prénom} ! Je vois que « {séance} » ({jour}) n’a pas pu se faire. Rien de grave ! Qu’est-ce qui a coincé : le temps, la fatigue, autre chose ? Je t’ajuste la semaine pour que ça colle mieux.',
+  no_feedback: 'Coucou {prénom} ! Comment s’est passée ta séance « {séance} » de {jour} ? Un retour rapide dans l’app (15 secondes) m’aide à préparer la suite 💪',
+  bravo: 'Bravo {prénom} ! {faites} séances sur {prévues} cette semaine, c’est top. Continue comme ça 👏',
+};
+
+export interface RelanceValues { first: string; workout?: RecentSession | null; silentDays?: number | null; done7?: number; due7?: number }
+
+/** Remplit un modèle ; un trou inconnu reste tel quel, une valeur absente prend un repli lisible. */
+export function fillRelance(template: string, c: RelanceValues): string {
+  const v: Record<string, string> = {
+    prénom: c.first, prenom: c.first,
+    séance: c.workout?.title ?? 'ta dernière séance', seance: c.workout?.title ?? 'ta dernière séance',
+    jour: c.workout ? dayName(c.workout.date) : 'ces derniers jours',
+    jours: c.silentDays !== null && c.silentDays !== undefined ? String(c.silentDays) : 'quelques',
+    faites: String(c.done7 ?? 0), prévues: String(c.due7 ?? 0), prevues: String(c.due7 ?? 0),
+  };
+  return template.replace(/\{([a-zà-ÿ]+)\}/gi, (m, k: string) => v[k.toLowerCase()] ?? m).replace(/ {2,}/g, ' ').trim();
+}
+
+/** Trous inconnus d’un modèle (pour prévenir le coach avant d’enregistrer). */
+export function unknownPlaceholders(template: string): string[] {
+  const ok = new Set<string>(['prénom', 'prenom', 'séance', 'seance', 'jour', 'jours', 'faites', 'prévues', 'prevues']);
+  return [...new Set([...template.matchAll(/\{([^}]*)\}/g)].map((m) => m[1]!).filter((k) => !ok.has(k.toLowerCase())))];
+}
+
+/** Brouillon de relance : le modèle du coach s’il en a un, sinon celui de CoachOS. */
+export function relanceDraft(kind: RelanceKind, c: RelanceValues, template?: string | null): string {
+  const t = template ?? DEFAULT_RELANCE_TEMPLATES[kind];
+  const text = fillRelance(t, c);
+  // « 1 séances » dans le modèle par défaut : accord du pluriel.
+  return template ? text : text.replace(/\b1 séances sur/, '1 séance sur');
 }
 
 /** Ordre d’affichage : silencieux, à risque, à surveiller, puis les encouragements. */

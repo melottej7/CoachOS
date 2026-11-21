@@ -1,11 +1,13 @@
 import { adherenceOf, ADHERENCE_RANK, relanceDraft, todayIn, type Adherence, type Readiness, type RecentSession } from '@coachos/domain';
 import { commandAs } from '../db/client';
+import { readRelanceTemplates } from '../commands/relance-templates';
 
 // D-103 · Statut d’adhésion et relance proposée, pour chaque élève actif suivi par le coach connecté.
 
 export interface RelanceRow extends Adherence { athleteId: string; name: string; first: string; draft: string | null }
 
 export async function relances(userId: string, wid: string): Promise<RelanceRow[]> {
+  const mine = await readRelanceTemplates(userId, wid);
   return commandAs(userId, async (tx) => {
     const r = await tx.query<{
       id: string; display_name: string; time_zone: string; recent: RecentSession[] | null; last_feedback: string | null;
@@ -45,7 +47,7 @@ export async function relances(userId: string, wid: string): Promise<RelanceRow[
           today: todayIn(x.time_zone), recent: x.recent ?? [], lastFeedbackOn: x.last_feedback, lastAthleteMessageOn: x.last_athlete_msg,
           lastCoachMessageOn: x.last_coach_msg, readiness: x.readiness && x.readiness_on ? { value: x.readiness, on: x.readiness_on } : null, upcoming7: x.upcoming7,
         });
-        return { ...a, athleteId: x.id, name: x.display_name, first, draft: a.relance ? relanceDraft(a.relance, { first, workout: a.workout, silentDays: a.silentDays, done7: a.done7, due7: a.due7 }) : null };
+        return { ...a, athleteId: x.id, name: x.display_name, first, draft: a.relance ? relanceDraft(a.relance, { first, workout: a.workout, silentDays: a.silentDays, done7: a.done7, due7: a.due7 }, mine[a.relance]) : null };
       })
       .sort((p, q) => ADHERENCE_RANK[p.status] - ADHERENCE_RANK[q.status] || (q.silentDays ?? 0) - (p.silentDays ?? 0) || p.name.localeCompare(q.name, 'fr'));
   });

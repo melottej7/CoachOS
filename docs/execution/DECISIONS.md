@@ -1802,3 +1802,22 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
     - envoyé (message enregistré), Noah passe « en attente de réponse » ;
     - 375 px sans débordement.
 - **Suite possible** (à valider à l’usage) : statut dans la liste Élèves, tes propres modèles de relance, brouillon rédigé par l’IA dans ton style.
+
+## D-104 · Statut dans la liste Élèves et modèles de relance du coach · 2026-11-21
+
+- **Décision.**
+  - **Élèves.** Chaque élève silencieux, à risque ou à surveiller porte son statut (pastille, raison au survol) et une ligne « ↺ raison · Relancer ». Le lien mène à la carte du Planning ; une fois relancé, la ligne affiche « en attente de réponse ». Le statut remplace la pastille « pas à 100 % » quand elle fait double emploi.
+  - **Paramètres › Mes relances** : un modèle par situation (reprendre contact, pas à 100 %, séances manquées, retour attendu, encourager).
+    - **Trous** : `{prénom}`, `{séance}`, `{jour}`, `{jours}`, `{faites}`, `{prévues}`, avec ou sans accent. L’aperçu est rempli avec un exemple (Emma, « Côtes 8 × 30″ », mardi, 9 jours, 3 sur 3).
+    - Un trou inconnu est signalé et reste tel quel.
+    - Le modèle du coach remplace celui de CoachOS dans ses brouillons ; « Revenir au modèle de CoachOS » le retire.
+    - Les modèles sont personnels : chaque coach de l’espace a les siens. Lien « Mes modèles » depuis la carte Relances.
+  - **Données** : table `relance_templates` (espace, coach, situation, texte de 1 000 caractères au plus), RLS en lecture par son auteur, écriture par commande. Migration `20261121120000` (additive, appliquée). Contrat `saveRelanceTemplate`.
+- **Preuves.**
+  - Tests :
+    - domaine : trous remplis, replis lisibles, trou inconnu, modèles par défaut sans trou inconnu, modèle du coach prioritaire ;
+    - serveur : modèle utilisé dans le brouillon, invisible pour un autre coach, refusé à un élève et pour une situation inconnue, rétabli sur demande.
+  - `npm test` : **322 passés** (+3 PostgreSQL), typecheck OK.
+  - Navigateur (démo) :
+    - Élèves : « Noah Dubois · À surveiller · ↺ Pas de retour sur « Sortie souple » · relancé, en attente de réponse » ;
+    - Mes relances : modèle « Alors {prénom}, cette « {séance} » de {jour} ? Tortue mood 🐢 » prévisualisé (« Alors Emma, cette « Côtes 8 × 30″ » de mardi ? »), enregistré, puis modèle de CoachOS rétabli.

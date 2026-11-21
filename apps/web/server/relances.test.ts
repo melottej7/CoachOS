@@ -6,9 +6,14 @@ import { openConversation, sendMessage } from './commands/messages';
 import { createWorkout, publishWorkouts } from './commands/workouts';
 import { addDays, todayIn } from '@coachos/domain';
 import { relances } from './repo/relances';
+import { readRelanceTemplates, saveRelanceTemplate } from './commands/relance-templates';
+import { AppError } from './errors';
 
 // D-103 : relances calculées pour les élèves suivis par le coach connecté, jamais pour un autre coach ni un élève.
 
+async function codeOf(p: Promise<unknown>) {
+  try { await p; return 'OK'; } catch (e) { if (e instanceof AppError) return e.code; throw e; }
+}
 const meta = (actorId: string) => ({ actorId, idempotencyKey: randomUUID(), requestId: randomUUID(), workspaceId: WORKSPACE_A });
 
 beforeAll(async () => {
@@ -42,4 +47,18 @@ describe('relances', () => {
     const after = (await relances(USERS.marine, WORKSPACE_A)).find((r) => r.athleteId === ATHLETES.camille)!;
     expect(after).toMatchObject({ status: 'watch', relance: 'no_feedback', waitingSince: todayIn(TIME_ZONE) });
   });
+
+  it('modèle du coach : utilisé pour ses relances, rétabli sur demande ; personnel et réservé aux coachs', async () => {
+    await saveRelanceTemplate(meta(USERS.marine), { kind: 'no_feedback', body: 'Alors {prénom}, cette « {séance} » ? 🐢' });
+    const row = (await relances(USERS.marine, WORKSPACE_A)).find((r) => r.relance === 'no_feedback');
+    expect(row).toBeDefined();
+    expect(row!.draft).toBe(`Alors ${row!.first}, cette « ${row!.workout!.title} » ? 🐢`);
+    expect(await readRelanceTemplates(USERS.marine, WORKSPACE_A)).toEqual({ no_feedback: 'Alors {prénom}, cette « {séance} » ? 🐢' });
+    expect(await readRelanceTemplates(USERS.hugo, WORKSPACE_A)).toEqual({});
+    expect(await codeOf(saveRelanceTemplate(meta(USERS.camille), { kind: 'silent', body: 'x' }))).toBe('RESOURCE_NOT_VISIBLE');
+    expect(await codeOf(saveRelanceTemplate(meta(USERS.marine), { kind: 'autre', body: 'x' }))).toBe('INVALID_FIELDS');
+    await saveRelanceTemplate(meta(USERS.marine), { kind: 'no_feedback', body: null });
+    expect(await readRelanceTemplates(USERS.marine, WORKSPACE_A)).toEqual({});
+  });
 });
+

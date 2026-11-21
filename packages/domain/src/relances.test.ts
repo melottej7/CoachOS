@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { adherenceOf, relanceDraft, type AdherenceInput, type RecentSession } from './index';
+import { adherenceOf, DEFAULT_RELANCE_TEMPLATES, fillRelance, relanceDraft, unknownPlaceholders, type AdherenceInput, type RecentSession } from './index';
 
 // D-103 : statut d’adhésion par règles lisibles, relance proposée, brouillons sans question de santé.
 
@@ -49,5 +49,21 @@ describe('brouillons de relance', () => {
     for (const k of ['silent', 'readiness', 'missed', 'no_feedback', 'bravo'] as const) {
       expect(relanceDraft(k, { first: 'Emma' })).not.toMatch(/douleur|blessure|mal |médic|santé/i);
     }
+  });
+});
+
+describe('modèles de relance du coach (D-104)', () => {
+  it('trous remplis, avec ou sans accent ; repli lisible ; trou inconnu gardé et signalé', () => {
+    const w = s('2026-11-17', null, 'Côtes');
+    expect(fillRelance('Yo {prénom}, ta {seance} de {jour} ? {jours} j sans news. {faites}/{prévues}', { first: 'Léo', workout: w, silentDays: 8, done7: 1, due7: 3 }))
+      .toBe('Yo Léo, ta Côtes de mardi ? 8 j sans news. 1/3');
+    expect(fillRelance('« {séance} » {jour}', { first: 'Léo' })).toBe('« ta dernière séance » ces derniers jours');
+    expect(fillRelance('Salut {pseudo} !', { first: 'Léo' })).toBe('Salut {pseudo} !');
+    expect(unknownPlaceholders('Salut {prénom} {pseudo} {Jour}')).toEqual(['pseudo']);
+    expect(Object.values(DEFAULT_RELANCE_TEMPLATES).flatMap(unknownPlaceholders)).toEqual([]);
+  });
+  it('le modèle du coach remplace celui de CoachOS', () => {
+    expect(relanceDraft('silent', { first: 'Emma', silentDays: 9 }, 'Hey {prénom}, tortue mood 🐢 ? {jours} jours !')).toBe('Hey Emma, tortue mood 🐢 ? 9 jours !');
+    expect(relanceDraft('bravo', { first: 'Emma', done7: 1, due7: 1 })).toContain('1 séance sur 1');
   });
 });

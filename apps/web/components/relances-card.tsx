@@ -23,7 +23,7 @@ export function RelancesCard({ wid, items }: { wid: string; items: RelanceItem[]
     <section className="card relances" aria-labelledby="relances-title">
       <div className="card-head">
         <h2 id="relances-title">Relances {todo.length ? <span className="count" aria-label={`${todo.length} à faire`}>{todo.length}</span> : null}</h2>
-        <span className="muted">Message prêt, tu relis et tu envoies</span>
+        <span className="muted">Message prêt, tu relis et tu envoies · <Link href={`/coach/${wid}/settings#relances`}>Mes modèles</Link></span>
       </div>
       <div className="card-body stack">
         {todo.length ? (

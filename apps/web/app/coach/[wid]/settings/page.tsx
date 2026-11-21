@@ -9,6 +9,8 @@ import { RuleSettingsForm } from '@/components/rule-settings-form';
 import { autoRuleSettings } from '@/server/repo/portfolio';
 import { aiMonth, aiSource } from '@/server/commands/ai';
 import { formatUsd } from '@coachos/domain';
+import { readRelanceTemplates } from '@/server/commands/relance-templates';
+import { RelanceTemplatesForm } from '@/components/relance-templates-form';
 
 export const metadata = { title: 'Paramètres' };
 
@@ -23,14 +25,22 @@ export default async function Settings({ params, searchParams }: { params: Promi
   const p = ws.profile;
   const rules = await autoRuleSettings(actor.userId, wid);
   // CE-H-04 (D-045) : réglage personnel de chaque coach, propriétaire ou non.
+  const mine = await readRelanceTemplates(actor.userId, wid);
   const followUps = (
-    <section className="card" style={{ marginTop: 18 }} aria-labelledby="suivis" id="suivis">
-      <div className="card-head"><h2 id="suivis">Suivis automatiques</h2></div>
-      <div className="card-body stack">
-        <p className="muted">Ce qui apparaît tout seul dans ton Planning, et quand. Décoche ce qui ne te sert pas ; pour un seul élève, utilise plutôt « Plus tard » sur la tâche.</p>
-        <RuleSettingsForm wid={wid} initial={rules} />
-      </div>
-    </section>
+    <>
+      <section className="card" style={{ marginTop: 18 }} aria-labelledby="suivis" id="suivis">
+        <div className="card-head"><h2 id="suivis">Suivis automatiques</h2></div>
+        <div className="card-body stack">
+          <p className="muted">Ce qui apparaît tout seul dans ton Planning, et quand. Décoche ce qui ne te sert pas ; pour un seul élève, utilise plutôt « Plus tard » sur la tâche.</p>
+          <RuleSettingsForm wid={wid} initial={rules} />
+        </div>
+      </section>
+      {/* D-104 : modèles de relance personnels (chaque coach, propriétaire ou non). */}
+      <section className="card" style={{ marginTop: 18 }} aria-labelledby="mes-relances" id="relances">
+        <div className="card-head"><h2 id="mes-relances">Mes relances</h2></div>
+        <div className="card-body"><RelanceTemplatesForm wid={wid} mine={mine} /></div>
+      </section>
+    </>
   );
 
   if (ctx.role !== 'owner') {
