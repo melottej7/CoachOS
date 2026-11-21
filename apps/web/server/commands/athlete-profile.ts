@@ -2,7 +2,7 @@ import {
   athleteProfileSchema, BILAN_FIELDS, bilanDraftSchema, coachBilanSchema, confirmBilanSchema, nextSources, parseWith,
   type AthleteProfileInput, type BilanAnswers, type BilanDraftInput, type BilanField, type BilanSource, type BilanStep,
   type BreakLength, type Equipment, type Experience, type Level, type LongestRecent, type PracticeStatus, type PreferredTime, type ResumedSince, type Sport,
-  type WeekdayMinutes, type WeeklyHours, type WeeklySessions, type StrengthFocus,
+  type WeekdayMinutes, type WeeklyHours, type WeeklySessions, type StrengthFocus, type TrainingPlace,
 } from '@coachos/domain';
 import { commandAs, readAs, type Tx } from '../db/client';
 import { conflict, invalid, notVisible } from '../errors';
@@ -35,6 +35,8 @@ export interface AthleteProfile {
   /** D-108 : autres sports pratiqués, et ce que l’élève veut travailler en musculation. */
   otherSports: Sport[];
   strengthFocus: StrengthFocus[];
+  /** D-110 : où l’élève fait sa musculation. */
+  trainingPlaces: TrainingPlace[];
   /** Envoyé par l’élève (ou modifié depuis), ou confirmé par le coach. */
   status: 'submitted' | 'confirmed';
   confirmedAt: string | null;
@@ -51,14 +53,14 @@ type Row = {
   available_days: number[]; main_goal: string | null; next_event_name: string | null; next_event_date: string | null;
   practice_status: PracticeStatus | null; break_length: BreakLength | null; resumed_since: ResumedSince | null; longest_recent: LongestRecent | null;
   weekday_minutes: WeekdayMinutes | null; preferred_time: PreferredTime | null; long_day: number | null; equipment: Equipment[] | null; practical_constraints: string | null;
-  other_sports: Sport[] | null; strength_focus: StrengthFocus[] | null;
+  other_sports: Sport[] | null; strength_focus: StrengthFocus[] | null; training_places: TrainingPlace[] | null;
   status: 'submitted' | 'confirmed'; confirmed_at: Date | null; sources: Partial<Record<BilanField, BilanSource>> | null;
   revision: number; updated_at: Date;
 };
 
 const columns = `sport_code, level, experience, weekly_sessions, weekly_hours, available_days, main_goal, next_event_name,
   to_char(next_event_date, 'YYYY-MM-DD') as next_event_date, practice_status, break_length, resumed_since, longest_recent,
-  weekday_minutes, preferred_time, long_day, equipment, practical_constraints, other_sports, strength_focus,
+  weekday_minutes, preferred_time, long_day, equipment, practical_constraints, other_sports, strength_focus, training_places,
   status, confirmed_at, sources, revision, updated_at`;
 
 const toProfile = (r: Row): AthleteProfile => ({
@@ -82,6 +84,7 @@ const toProfile = (r: Row): AthleteProfile => ({
   practicalConstraints: r.practical_constraints,
   otherSports: r.other_sports ?? [],
   strengthFocus: r.strength_focus ?? [],
+  trainingPlaces: r.training_places ?? [],
   status: r.status,
   confirmedAt: r.confirmed_at ? new Date(r.confirmed_at).toISOString() : null,
   sources: r.sources ?? {},
@@ -107,10 +110,10 @@ async function upsert(tx: Tx, wid: string, aid: string, p: AthleteProfileInput, 
   const r = await tx.query<Row>(
     `insert into public.athlete_profiles(workspace_id, athlete_id, sport_code, level, experience, weekly_sessions, weekly_hours,
        available_days, main_goal, next_event_name, next_event_date, practice_status, break_length, resumed_since, longest_recent,
-       status, confirmed_at, confirmed_by, sources, weekday_minutes, preferred_time, long_day, equipment, practical_constraints, other_sports, strength_focus)
+       status, confirmed_at, confirmed_by, sources, weekday_minutes, preferred_time, long_day, equipment, practical_constraints, other_sports, strength_focus, training_places)
      values ($1, $2, $3, $4, $5, $6, $7, $8::smallint[], $9, $10, $11::date, $12, $13, $14, $15,
        case when $16 then 'confirmed' else 'submitted' end, case when $16 then now() end, case when $16 then auth.uid() end, $17::jsonb,
-       $18, $19, $20, $21::text[], $22, $23::text[], $24::text[])
+       $18, $19, $20, $21::text[], $22, $23::text[], $24::text[], $25::text[])
      on conflict (workspace_id, athlete_id) do update set
        sport_code = excluded.sport_code, level = excluded.level, experience = excluded.experience,
        weekly_sessions = excluded.weekly_sessions, weekly_hours = excluded.weekly_hours, available_days = excluded.available_days,
@@ -120,13 +123,13 @@ async function upsert(tx: Tx, wid: string, aid: string, p: AthleteProfileInput, 
        confirmed_by = excluded.confirmed_by, sources = excluded.sources,
        weekday_minutes = excluded.weekday_minutes, preferred_time = excluded.preferred_time, long_day = excluded.long_day,
        equipment = excluded.equipment, practical_constraints = excluded.practical_constraints,
-       other_sports = excluded.other_sports, strength_focus = excluded.strength_focus,
+       other_sports = excluded.other_sports, strength_focus = excluded.strength_focus, training_places = excluded.training_places,
        revision = public.athlete_profiles.revision + 1, updated_at = now()
      returning ${columns}`,
     [wid, aid, p.sport, p.level, p.experience, p.weeklySessions, p.weeklyHours, p.availableDays, p.mainGoal, p.nextEventName, p.nextEventDate,
       p.practiceStatus, p.breakLength, p.resumedSince, p.longestRecent, confirmed, JSON.stringify(sources),
       p.weekdayMinutes ?? null, p.preferredTime ?? null, p.longDay ?? null, p.equipment ?? [], p.practicalConstraints ?? null,
-      (p.otherSports ?? []).filter((x) => x !== p.sport), p.strengthFocus ?? []],
+      (p.otherSports ?? []).filter((x) => x !== p.sport), p.strengthFocus ?? [], p.trainingPlaces ?? []],
   );
   await tx.query('delete from public.athlete_profile_drafts where workspace_id = $1 and athlete_id = $2', [wid, aid]);
   const saved = toProfile(r.rows[0]!);
@@ -258,7 +261,7 @@ export async function readBilanDraft(userId: string, wid: string, aid: string): 
 /** Réponses du bilan à partir du profil enregistré (pour le reprendre ou le compléter). */
 export function profileAnswers(p: AthleteProfile): BilanAnswers {
   return {
-    sport: p.sport, otherSports: p.otherSports, strengthFocus: p.strengthFocus, practiceStatus: p.practiceStatus, experience: p.experience, breakLength: p.breakLength, resumedSince: p.resumedSince,
+    sport: p.sport, otherSports: p.otherSports, strengthFocus: p.strengthFocus, trainingPlaces: p.trainingPlaces, practiceStatus: p.practiceStatus, experience: p.experience, breakLength: p.breakLength, resumedSince: p.resumedSince,
     weeklySessions: p.weeklySessions, longestRecent: p.longestRecent, level: p.level, weeklyHours: p.weeklyHours, availableDays: p.availableDays,
     mainGoal: p.mainGoal, nextEventName: p.nextEventName, nextEventDate: p.nextEventDate,
     weekdayMinutes: p.weekdayMinutes, preferredTime: p.preferredTime, longDay: p.longDay, equipment: p.equipment, practicalConstraints: p.practicalConstraints,

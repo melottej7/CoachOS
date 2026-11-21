@@ -58,8 +58,8 @@ describe('bilan d’arrivée (D-054)', () => {
 
 describe('bilan multisport et musculation (D-108)', () => {
   it('plusieurs sports : on demande le principal ; musculation : pas de « plus longue sortie », question « à travailler »', () => {
-    expect(bilanSteps({ sport: 'running', otherSports: ['strength'] })).toEqual(['sport', 'mainSport', 'status', 'experience', 'sessions', 'longest', 'level', 'focus', 'hours', 'days', 'time', 'equipment', 'goal', 'recap']);
-    expect(bilanSteps({ sport: 'strength' })).toEqual(['sport', 'status', 'experience', 'sessions', 'level', 'focus', 'hours', 'days', 'time', 'equipment', 'goal', 'recap']);
+    expect(bilanSteps({ sport: 'running', otherSports: ['strength'] })).toEqual(['sport', 'mainSport', 'status', 'experience', 'sessions', 'longest', 'level', 'focus', 'hours', 'days', 'time', 'place', 'equipment', 'goal', 'recap']);
+    expect(bilanSteps({ sport: 'strength' })).toEqual(['sport', 'status', 'experience', 'sessions', 'level', 'focus', 'hours', 'days', 'time', 'place', 'equipment', 'goal', 'recap']);
     expect(bilanSports({ sport: 'strength', otherSports: ['running', 'strength'] })).toEqual(['strength', 'running']);
   });
   it('réponses déduites : principal retiré des autres sports, pas de séance longue en musculation, rien à travailler sans musculation', () => {
@@ -76,6 +76,16 @@ describe('moment préféré (D-109)', () => {
     expect(PREFERRED_TIME_LABELS.afternoon).toBe('L’après-midi');
     const p = parseWith(athleteProfileSchema, { sport: 'running', level: 'intermediate', experience: '1to3', weeklySessions: '2to3', preferredTime: 'afternoon' });
     expect(p.ok && p.value.preferredTime).toBe('afternoon');
+  });
+});
+
+describe('lieu de musculation (D-110)', () => {
+  it('matériel de maison gardé seulement si l’élève s’entraîne à la maison ; lieux effacés sans musculation', () => {
+    expect(deriveBilan({ sport: 'strength', trainingPlaces: ['gym'], equipment: ['dumbbells', 'bodyweight'] }).equipment).toEqual([]);
+    expect(deriveBilan({ sport: 'strength', trainingPlaces: ['gym', 'home'], equipment: ['dumbbells'] }).equipment).toEqual(['dumbbells']);
+    expect(deriveBilan({ sport: 'running', otherSports: ['strength'], trainingPlaces: ['outdoor'], equipment: ['gps_watch', 'kettlebell'] }).equipment).toEqual(['gps_watch']);
+    expect(deriveBilan({ sport: 'running', trainingPlaces: ['home'] }).trainingPlaces).toEqual([]);
+    expect(equipmentFor('strength')).toEqual(['bodyweight', 'dumbbells', 'kettlebell', 'bands', 'pullup_bar', 'bench', 'mat']);
   });
 });
 

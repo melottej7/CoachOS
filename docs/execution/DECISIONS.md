@@ -1902,3 +1902,22 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
 - **Retour du fondateur.** « Il manque « après-midi » dans le moment où s’entraîner. »
 - **Décision.** Le bilan propose désormais : le matin, le midi, **l’après-midi**, le soir, ça dépend. Migration `20261121140000` (contrainte élargie, appliquée), contrat mis à jour.
 - **Preuves.** Tests du domaine et du serveur (valeur acceptée et enregistrée). `npm test` : **329 passés** (+3 PostgreSQL), typecheck OK.
+
+## D-110 · Bilan musculation : le lieu d’abord, puis le matériel selon le lieu · 2026-11-21
+
+- **Retour du fondateur.** « Il faudrait d’abord le lieu : salle (genre Basic-Fit), à la maison, street workout. Puis, en fonction de l’endroit, demander le matériel : poids du corps et matériel à la maison, lequel. »
+- **Décision.**
+  - **Nouvel écran « Où fais-tu ta musculation ? »** (plusieurs choix), dès que la musculation fait partie des sports :
+    - « En salle de sport » (tout est sur place) ;
+    - « À la maison » (le matériel est demandé ensuite) ;
+    - « En extérieur (street workout, parc) » (barres et poids du corps).
+  - **Écran matériel, selon le lieu.**
+    - Le matériel d’endurance reste proposé pour les autres sports (« Pour la course à pied »).
+    - Le matériel de musculation n’est demandé **que pour la maison** : « Rien : poids du corps », haltères, kettlebell, élastiques, barre de traction, banc, tapis. « Poids du corps » et le matériel s’excluent l’un l’autre.
+    - Pour la salle et l’extérieur, une phrase dit ce qui est disponible. Le matériel de maison n’est pas gardé si l’élève ne s’entraîne pas chez lui.
+  - Depuis le récapitulatif, un changement de sports enchaîne les questions nouvelles encore sans réponse : sport principal, ce qu’il faut travailler, lieu, matériel de maison.
+  - Fiche de l’élève côté coach : « Musculation : où ».
+- **Données** : colonne `athlete_profiles.training_places` (salle, maison, extérieur) et « poids du corps » dans le matériel. Migration `20261121150000` (additive, appliquée), contrat mis à jour.
+- **Preuves.**
+  - Tests du domaine (écrans, matériel selon le lieu) et du serveur (lieux et « poids du corps » enregistrés). `npm test` : **331 passés** (+3 PostgreSQL), typecheck OK.
+  - Navigateur (démo, Camille, 375 px) : Musculation + Course à pied, puis « Où fais-tu ta musculation ? » (maison et salle), puis matériel en deux groupes (« Pour la course à pied », « À la maison, avec quoi ? »). Brouillon de test effacé.

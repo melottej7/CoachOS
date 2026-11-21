@@ -4,7 +4,7 @@ import { requireActor } from '@/server/auth/session';
 import {
   APPOINTMENT_KIND_LABELS, APPOINTMENT_STATUS_LABELS, DAY_LABELS, EXPERIENCE_LABELS, formatLongDate, formatShortDate, formatWeekday, GOAL_STATE_LABELS,
   addDays, LEVEL_LABELS, RESULT_STATE_LABELS, SPORT_LABELS, todayIn, weekStart, urgencyLabel, utcToLocal, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS_LABELS,
-  EQUIPMENT_LABELS, PREFERRED_TIME_LABELS, WEEKDAY_MINUTES_LABELS, STRENGTH_FOCUS_LABELS,
+  EQUIPMENT_LABELS, PREFERRED_TIME_LABELS, WEEKDAY_MINUTES_LABELS, STRENGTH_FOCUS_LABELS, TRAINING_PLACE_LABELS,
   measureFreshness, assessGoal, BILAN_FIELD_LABELS, BILAN_STATUS_LABELS, chronoFromTitle, BREAK_LENGTH_LABELS, DEFAULT_GOAL_KM, distanceFromTitle, FEASIBILITY_LABELS, bilanCompletion, deriveBilan, LONGEST_RECENT_LABELS, PRACTICE_STATUS_LABELS, RESUMED_SINCE_LABELS,
   type ResultState, type Sport, loadProgress,
 } from '@coachos/domain';
@@ -329,6 +329,7 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
                   ['sport', profile.otherSports.length ? 'Sport principal' : 'Sport', SPORT_LABELS[profile.sport]],
                   ['otherSports', 'Autres sports', profile.otherSports.length ? profile.otherSports.map((x) => SPORT_LABELS[x]).join(', ') : null],
                   ['strengthFocus', 'Musculation : à travailler', profile.strengthFocus.length ? profile.strengthFocus.map((x) => STRENGTH_FOCUS_LABELS[x]).join(', ') : null],
+                  ['trainingPlaces', 'Musculation : où', profile.trainingPlaces.length ? profile.trainingPlaces.map((x) => TRAINING_PLACE_LABELS[x]).join(', ') : null],
                   ['practiceStatus', 'Situation', profile.practiceStatus ? PRACTICE_STATUS_LABELS[profile.practiceStatus] : null],
                   ['experience', 'Pratique régulière', EXPERIENCE_LABELS[profile.experience]],
                   ['breakLength', 'Durée de l’arrêt', profile.breakLength ? BREAK_LENGTH_LABELS[profile.breakLength] : null],

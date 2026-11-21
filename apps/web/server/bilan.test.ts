@@ -113,5 +113,10 @@ describe('bilan d’arrivée', () => {
     await saveAthleteProfile(meta(USERS.noah), { ...answers, preferredTime: 'afternoon' });
     expect((await readAthleteProfile(USERS.marine, WORKSPACE_A, ATHLETES.noah))?.preferredTime).toBe('afternoon');
   });
+
+  it('D-110 : lieux de musculation et « poids du corps » enregistrés', async () => {
+    await saveAthleteProfile(meta(USERS.noah), { ...answers, otherSports: ['strength'], trainingPlaces: ['home', 'outdoor'], equipment: ['bodyweight'] });
+    expect(await readAthleteProfile(USERS.marine, WORKSPACE_A, ATHLETES.noah)).toMatchObject({ trainingPlaces: ['home', 'outdoor'], equipment: ['bodyweight'] });
+  });
 });
 

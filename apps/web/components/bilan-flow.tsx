@@ -6,7 +6,7 @@ import {
   BREAK_LENGTHS, BREAK_LENGTH_LABELS, DAY_LABELS, EQUIPMENT_LABELS, equipmentFor, PREFERRED_TIMES, PREFERRED_TIME_LABELS, WEEKDAY_MINUTES, WEEKDAY_MINUTES_LABELS, EXPERIENCES, EXPERIENCE_LABELS, LEVELS, LEVEL_LABELS, LONGEST_RECENT, LONGEST_RECENT_LABELS,
   PRACTICE_STATUSES, PRACTICE_STATUS_LABELS, RESUMED_SINCE, RESUMED_SINCE_LABELS, SPORTS, SPORT_LABELS, SPORT_WITH_ARTICLE,
   WEEKLY_HOURS, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS, WEEKLY_SESSIONS_LABELS, bilanCompletion, bilanSports, bilanSteps, deriveBilan, formatLongDate, resumeStep,
-  STRENGTH_FOCUS, STRENGTH_FOCUS_LABELS, STRENGTH_LEVEL_HINTS, EQUIPMENT, type Equipment,
+  STRENGTH_FOCUS, STRENGTH_FOCUS_LABELS, STRENGTH_LEVEL_HINTS, EQUIPMENT, HOME_EQUIPMENT, TRAINING_PLACES, TRAINING_PLACE_HINTS, TRAINING_PLACE_LABELS, type Equipment,
   type BilanAnswers, type BilanStep, type Sport,
 } from '@coachos/domain';
 import { mutate, newKey } from './api-client';
@@ -49,8 +49,26 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
   const sport = a.sport ?? 'running';
   const strength = sport === 'strength';
   const picked = bilanSports(a);
-  // D-108 : matériel proposé pour tous les sports choisis.
-  const equipment: Equipment[] = EQUIPMENT.filter((e) => (picked.length ? picked : [sport]).some((x) => equipmentFor(x).includes(e)));
+  // D-108, D-110 : matériel d’endurance pour les sports d’endurance choisis ; matériel de musculation selon le lieu (maison).
+  const enduranceSports = (picked.length ? picked : [sport]).filter((x) => x !== 'strength');
+  const enduranceEquipment: Equipment[] = EQUIPMENT.filter((e) => !HOME_EQUIPMENT.includes(e) && enduranceSports.some((x) => equipmentFor(x).includes(e)));
+  const wantsMuscu = picked.includes('strength') || strength;
+  const atHome = (a.trainingPlaces ?? []).includes('home') || (wantsMuscu && !(a.trainingPlaces ?? []).length);
+  const equipment: Equipment[] = [...enduranceEquipment, ...(wantsMuscu && atHome ? HOME_EQUIPMENT : [])];
+  const toggleEquip = (v: Equipment) => setA((x) => {
+    const cur = x.equipment ?? [];
+    if (cur.includes(v)) return { ...x, equipment: cur.filter((e) => e !== v) };
+    // « Rien : poids du corps » exclut le matériel de maison, et inversement.
+    const home = HOME_EQUIPMENT.includes(v);
+    const kept = v === 'bodyweight' ? cur.filter((e) => !HOME_EQUIPMENT.includes(e)) : home ? cur.filter((e) => e !== 'bodyweight') : cur;
+    return { ...x, equipment: [...kept, v] };
+  });
+  const chips = (list: readonly Equipment[], label: string) => (
+    <div className="bf-chips" role="group" aria-label={label}>{list.map((v) => {
+      const on = (a.equipment ?? []).includes(v);
+      return <button key={v} type="button" aria-pressed={on} className={`bf-chip${on ? ' on' : ''}`} onClick={() => toggleEquip(v)}>{EQUIPMENT_LABELS[v]}</button>;
+    })}</div>
+  );
   const you = (t: string, c: string) => (coach ? c : t);
   /** D-108 : choisir plusieurs sports ; le premier choisi est le principal tant qu’on n’en désigne pas un autre. */
   const toggleSport = (x: Sport) => setA((cur) => {
@@ -77,8 +95,16 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
     // Depuis le récapitulatif : retour au récapitulatif, sauf si la réponse ouvre une question obligatoire encore vide.
     if (fromRecap) {
       // D-108 : après un changement de sports depuis le récapitulatif, demander le principal puis ce qu’il faut travailler en musculation.
-      if (step === 'sport' && list.includes('mainSport')) return go('mainSport', next);
-      if ((step === 'sport' || step === 'mainSport') && list.includes('focus') && !next.strengthFocus?.length) return go('focus', next);
+      // D-108, D-110 : enchaîner les questions nouvelles (sport principal, musculation, lieu, matériel de maison) encore sans réponse.
+      if (step === 'sport' || step === 'mainSport' || step === 'focus' || step === 'place') {
+        const after = (x: BilanStep) => list.includes(x) && list.indexOf(x) > list.indexOf(step);
+        const need = (['mainSport', 'focus', 'place', 'equipment'] as BilanStep[]).find((x) => after(x) && (
+          x === 'mainSport' ? step === 'sport'
+            : x === 'focus' ? !next.strengthFocus?.length
+              : x === 'place' ? !next.trainingPlaces?.length
+                : step === 'place' && Boolean(next.trainingPlaces?.includes('home'))));
+        if (need) return go(need, next);
+      }
       const r = resumeStep(next); if (r === 'recap') setFromRecap(false); return go(r, next);
     }
     return go(list[Math.min(list.indexOf(step) + 1, list.length - 1)]!, next);
@@ -95,7 +121,7 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
   async function submit() {
     // Un jour de séance longue retiré des jours disponibles n’est plus valable.
     const longDay = a.longDay && (!a.availableDays?.length || a.availableDays.includes(a.longDay)) ? a.longDay : null;
-    const body = { ...clean(a), availableDays: a.availableDays ?? [], equipment: (a.equipment ?? []).filter((e) => equipment.includes(e)), longDay, otherSports: a.otherSports ?? [], strengthFocus: a.strengthFocus ?? [] };
+    const body = { ...clean(a), availableDays: a.availableDays ?? [], equipment: (a.equipment ?? []).filter((e) => equipment.includes(e)), longDay, otherSports: a.otherSports ?? [], strengthFocus: a.strengthFocus ?? [], trainingPlaces: a.trainingPlaces ?? [] };
     const r = coach
       ? await run('PUT', `/api/v1/workspaces/${wid}/athletes/${aid}/athlete-profile`, { expectedRevision: expectedRevision ?? null, data: body })
       : await run('PUT', `/api/v1/workspaces/${wid}/athlete-profile`, body);
@@ -231,17 +257,40 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
         </div>
       ),
     },
+    place: {
+      title: you('Où fais-tu ta musculation ?', `Où ${firstName} fait-il ou elle sa musculation ?`),
+      hint: 'Plusieurs choix possibles. Le matériel est demandé ensuite, seulement pour la maison.',
+      body: (
+        <>
+          <div className="bf-choices" role="group" aria-labelledby="bf-q">
+            {TRAINING_PLACES.map((v) => {
+              const on = (a.trainingPlaces ?? []).includes(v);
+              return (
+                <button key={v} type="button" aria-pressed={on} className={`bf-choice${on ? ' on' : ''}`}
+                  onClick={() => setA((x) => deriveBilan({ ...x, trainingPlaces: on ? (x.trainingPlaces ?? []).filter((y) => y !== v) : [...(x.trainingPlaces ?? []), v] }))}>
+                  <span>{on ? '✓ ' : ''}{TRAINING_PLACE_LABELS[v]}</span><small>{TRAINING_PLACE_HINTS[v]}</small>
+                </button>
+              );
+            })}
+          </div>
+          <button type="button" className="btn primary bf-next" onClick={() => nextStep(a)}>Suivant</button>
+        </>
+      ),
+    },
     equipment: {
       title: you('Ton matériel et tes contraintes', `Matériel et contraintes de ${firstName}`),
       hint: 'Facultatif. Plusieurs choix possibles.',
       body: (
         <div className="bf-form">
-          {strength ? <p className="muted">{you('Où et avec quoi t’entraînes-tu ? Salle, ou matériel à la maison.', 'Salle, ou matériel à la maison.')}</p> : null}
-          <div className="bf-chips" role="group" aria-label="Matériel">{equipment.map((v) => {
-            const on = (a.equipment ?? []).includes(v);
-            return <button key={v} type="button" aria-pressed={on} className={`bf-chip${on ? ' on' : ''}`}
-              onClick={() => setA((x) => ({ ...x, equipment: on ? (x.equipment ?? []).filter((e) => e !== v) : [...(x.equipment ?? []), v] }))}>{EQUIPMENT_LABELS[v]}</button>;
-          })}</div>
+          {enduranceEquipment.length ? (
+            <fieldset className="bf-group"><legend>{wantsMuscu ? `Pour ${enduranceSports.map((x) => SPORT_WITH_ARTICLE[x]).join(' et ')}` : 'Matériel'}</legend>
+              {chips(enduranceEquipment, 'Matériel d’endurance')}</fieldset>
+          ) : null}
+          {wantsMuscu && atHome ? (
+            <fieldset className="bf-group"><legend>{you('À la maison, avec quoi ?', 'À la maison, avec quel matériel ?')}</legend>{chips(HOME_EQUIPMENT, 'Matériel à la maison')}</fieldset>
+          ) : null}
+          {wantsMuscu && (a.trainingPlaces ?? []).includes('gym') ? <p className="muted">En salle, tout est sur place : machines, barres et poids libres.</p> : null}
+          {wantsMuscu && (a.trainingPlaces ?? []).includes('outdoor') ? <p className="muted">En extérieur : barres de traction, barres parallèles et poids du corps.</p> : null}
           <label className="field"><span>{you('Contraintes utiles à ton coach', 'Contraintes utiles')} <span className="hint">Facultatif · ex. horaires décalés, enfants le mercredi, déplacements</span></span>
             <textarea maxLength={300} value={a.practicalConstraints ?? ''} onChange={(e) => setA((x) => ({ ...x, practicalConstraints: e.target.value }))} /></label>
           <p className="muted">Pas d’information médicale ici : {you('parles-en directement à ton coach', 'elle reste hors du bilan')}.</p>
@@ -319,6 +368,7 @@ function recapRows(a: BilanAnswers): [BilanStep, string, string][] {
   const rows: [BilanStep, string, string][] = [];
   for (const s of bilanSteps(a)) {
     if (s === 'sport') rows.push([s, bilanSports(a).length > 1 ? 'Sports' : 'Sport', bilanSports(a).length ? bilanSports(a).map((x, i) => `${SPORT_LABELS[x]}${i === 0 && bilanSports(a).length > 1 ? ' (principal)' : ''}`).join(', ') : dash]);
+    if (s === 'place') rows.push([s, 'Musculation : où', a.trainingPlaces?.length ? a.trainingPlaces.map((x) => TRAINING_PLACE_LABELS[x]).join(', ') : 'Non précisé']);
     if (s === 'focus') rows.push([s, 'Musculation : à travailler', a.strengthFocus?.length ? a.strengthFocus.map((x) => STRENGTH_FOCUS_LABELS[x]).join(', ') : 'Non précisé']);
     if (s === 'status') rows.push([s, 'Situation', a.practiceStatus ? PRACTICE_STATUS_LABELS[a.practiceStatus] : dash]);
     if (s === 'experience') rows.push([s, 'Pratique régulière', a.experience ? EXPERIENCE_LABELS[a.experience] : dash]);

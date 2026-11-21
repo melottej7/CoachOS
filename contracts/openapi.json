@@ -1562,6 +1562,19 @@
                 },
                 "maxItems": 6,
                 "description": "D-108 : ce que l’élève veut travailler en musculation."
+              },
+              "trainingPlaces": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "gym",
+                    "home",
+                    "outdoor"
+                  ]
+                },
+                "maxItems": 3,
+                "description": "D-110 : où l’élève fait sa musculation."
               }
             }
           },
@@ -1627,6 +1640,7 @@
                 "pool",
                 "open_water",
                 "gym",
+                "bodyweight",
                 "dumbbells",
                 "kettlebell",
                 "bands",
@@ -1679,6 +1693,19 @@
             },
             "maxItems": 6,
             "description": "D-108 : ce que l’élève veut travailler en musculation."
+          },
+          "trainingPlaces": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "gym",
+                "home",
+                "outdoor"
+              ]
+            },
+            "maxItems": 3,
+            "description": "D-110 : où l’élève fait sa musculation."
           }
         }
       },
@@ -15671,6 +15698,7 @@
                         "pool",
                         "open_water",
                         "gym",
+                        "bodyweight",
                         "dumbbells",
                         "kettlebell",
                         "bands",
@@ -15723,6 +15751,19 @@
                     },
                     "maxItems": 6,
                     "description": "D-108 : ce que l’élève veut travailler en musculation."
+                  },
+                  "trainingPlaces": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "gym",
+                        "home",
+                        "outdoor"
+                      ]
+                    },
+                    "maxItems": 3,
+                    "description": "D-110 : où l’élève fait sa musculation."
                   }
                 }
               }
@@ -21474,6 +21515,7 @@
                       "hours",
                       "days",
                       "time",
+                      "place",
                       "equipment",
                       "goal",
                       "recap"
@@ -21749,6 +21791,7 @@
                             "pool",
                             "open_water",
                             "gym",
+                            "bodyweight",
                             "dumbbells",
                             "kettlebell",
                             "bands",
@@ -21801,6 +21844,19 @@
                         },
                         "maxItems": 6,
                         "description": "D-108 : ce que l’élève veut travailler en musculation."
+                      },
+                      "trainingPlaces": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "gym",
+                            "home",
+                            "outdoor"
+                          ]
+                        },
+                        "maxItems": 3,
+                        "description": "D-110 : où l’élève fait sa musculation."
                       }
                     }
                   }
@@ -22220,6 +22276,7 @@
                             "pool",
                             "open_water",
                             "gym",
+                            "bodyweight",
                             "dumbbells",
                             "kettlebell",
                             "bands",
@@ -22272,6 +22329,19 @@
                         },
                         "maxItems": 6,
                         "description": "D-108 : ce que l’élève veut travailler en musculation."
+                      },
+                      "trainingPlaces": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "gym",
+                            "home",
+                            "outdoor"
+                          ]
+                        },
+                        "maxItems": 3,
+                        "description": "D-110 : où l’élève fait sa musculation."
                       }
                     }
                   }

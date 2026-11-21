@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import {
-  athleteProfileSchema, BREAK_LENGTHS, EQUIPMENT, STRENGTH_FOCUS, EXPERIENCES, LEVELS, LONGEST_RECENT, PRACTICE_STATUSES, PREFERRED_TIMES, RESUMED_SINCE, WEEKDAY_MINUTES,
+  athleteProfileSchema, BREAK_LENGTHS, EQUIPMENT, HOME_EQUIPMENT, STRENGTH_FOCUS, TRAINING_PLACES, EXPERIENCES, LEVELS, LONGEST_RECENT, PRACTICE_STATUSES, PREFERRED_TIMES, RESUMED_SINCE, WEEKDAY_MINUTES,
   WEEKLY_HOURS, WEEKLY_SESSIONS,
   type AthleteProfileInput, type PracticeStatus,
 } from './athlete-profile';
@@ -16,8 +16,8 @@ import { SPORTS } from './workout';
  */
 
 export type BilanStep =
-  | 'sport' | 'mainSport' | 'status' | 'experience' | 'break' | 'resumed' | 'sessions' | 'longest' | 'level' | 'focus' | 'hours' | 'days' | 'time' | 'equipment' | 'goal' | 'recap';
-const STEP_NAMES = ['sport', 'mainSport', 'status', 'experience', 'break', 'resumed', 'sessions', 'longest', 'level', 'focus', 'hours', 'days', 'time', 'equipment', 'goal', 'recap'] as const;
+  | 'sport' | 'mainSport' | 'status' | 'experience' | 'break' | 'resumed' | 'sessions' | 'longest' | 'level' | 'focus' | 'hours' | 'days' | 'time' | 'place' | 'equipment' | 'goal' | 'recap';
+const STEP_NAMES = ['sport', 'mainSport', 'status', 'experience', 'break', 'resumed', 'sessions', 'longest', 'level', 'focus', 'hours', 'days', 'time', 'place', 'equipment', 'goal', 'recap'] as const;
 
 /** D-108 : sports choisis dans le bilan, le principal d’abord. */
 export function bilanSports(a: BilanAnswers): Sport[] {
@@ -49,7 +49,10 @@ export function bilanSteps(a: BilanAnswers): BilanStep[] {
   if (st !== 'stopped' && a.sport !== 'strength') s.push('longest');
   if (st !== 'beginner') s.push('level');
   if (wantsStrength(a)) s.push('focus');
-  s.push('hours', 'days', 'time', 'equipment', 'goal', 'recap');
+  s.push('hours', 'days', 'time');
+  // D-110 : en musculation, le lieu d’abord ; le matériel ensuite, selon le lieu.
+  if (wantsStrength(a)) s.push('place');
+  s.push('equipment', 'goal', 'recap');
   return s;
 }
 
@@ -63,7 +66,11 @@ export function deriveBilan(a: BilanAnswers): BilanAnswers {
   // D-108 : le principal n’est jamais répété dans les autres sports ; pas de séance longue ni de « sortie » en musculation.
   if (out.sport && out.otherSports?.includes(out.sport)) out.otherSports = out.otherSports.filter((x) => x !== out.sport);
   if (out.sport === 'strength') { out.longestRecent = null; out.longDay = null; }
-  if (!wantsStrength(out)) out.strengthFocus = [];
+  if (!wantsStrength(out)) { out.strengthFocus = []; out.trainingPlaces = []; }
+  // Matériel de maison seulement si l’élève s’entraîne à la maison (ou n’a pas encore répondu).
+  if (wantsStrength(out) && out.trainingPlaces?.length && !out.trainingPlaces.includes('home') && out.equipment) {
+    out.equipment = out.equipment.filter((e) => !HOME_EQUIPMENT.includes(e));
+  }
   return out;
 }
 
@@ -99,6 +106,7 @@ export const bilanDraftSchema = z
         sport: z.enum(SPORTS).nullish(),
         otherSports: z.array(z.enum(SPORTS)).max(SPORTS.length).nullish(),
         strengthFocus: z.array(z.enum(STRENGTH_FOCUS)).max(STRENGTH_FOCUS.length).nullish(),
+        trainingPlaces: z.array(z.enum(TRAINING_PLACES)).max(TRAINING_PLACES.length).nullish(),
         practiceStatus: z.enum(PRACTICE_STATUSES).nullish(),
         experience: z.enum(EXPERIENCES).nullish(),
         breakLength: z.enum(BREAK_LENGTHS).nullish(),
@@ -138,12 +146,12 @@ export const BILAN_STATUS_LABELS: Record<BilanStatus, string> = {
 
 /** Champs du profil suivis pour la provenance des réponses. */
 export const BILAN_FIELDS = [
-  'sport', 'otherSports', 'strengthFocus', 'practiceStatus', 'experience', 'breakLength', 'resumedSince', 'weeklySessions', 'longestRecent', 'level', 'weeklyHours',
+  'sport', 'otherSports', 'strengthFocus', 'trainingPlaces', 'practiceStatus', 'experience', 'breakLength', 'resumedSince', 'weeklySessions', 'longestRecent', 'level', 'weeklyHours',
   'availableDays', 'mainGoal', 'nextEventName', 'nextEventDate', 'weekdayMinutes', 'preferredTime', 'longDay', 'equipment', 'practicalConstraints',
 ] as const;
 export type BilanField = (typeof BILAN_FIELDS)[number];
 export const BILAN_FIELD_LABELS: Record<BilanField, string> = {
-  sport: 'Sport principal', otherSports: 'Autres sports', strengthFocus: 'Musculation : à travailler', practiceStatus: 'Situation', experience: 'Pratique régulière', breakLength: 'Durée de l’arrêt', resumedSince: 'Reprise',
+  sport: 'Sport principal', otherSports: 'Autres sports', strengthFocus: 'Musculation : à travailler', trainingPlaces: 'Musculation : où', practiceStatus: 'Situation', experience: 'Pratique régulière', breakLength: 'Durée de l’arrêt', resumedSince: 'Reprise',
   weeklySessions: 'Séances par semaine', longestRecent: 'Plus longue sortie', level: 'Niveau', weeklyHours: 'Heures par semaine',
   availableDays: 'Jours disponibles', mainGoal: 'Objectif', nextEventName: 'Prochaine course', nextEventDate: 'Date de la course',
   weekdayMinutes: 'Temps en semaine', preferredTime: 'Moment préféré', longDay: 'Jour de la séance longue', equipment: 'Matériel', practicalConstraints: 'Contraintes',

@@ -68,13 +68,13 @@ const optEnum = <T extends readonly [string, ...string[]]>(v: T) => z.enum(v).nu
 // ---------- Temps, matériel et préférences (D-066) ----------
 
 /** Matériel et accès utiles pour construire les séances. Aucun capteur de fréquence cardiaque (décision santé en attente). */
-export const EQUIPMENT = ['gps_watch', 'power_meter', 'home_trainer', 'road_bike', 'offroad_bike', 'treadmill', 'track', 'pool', 'open_water', 'gym', 'dumbbells', 'kettlebell', 'bands', 'pullup_bar', 'bench', 'mat'] as const;
+export const EQUIPMENT = ['gps_watch', 'power_meter', 'home_trainer', 'road_bike', 'offroad_bike', 'treadmill', 'track', 'pool', 'open_water', 'gym', 'bodyweight', 'dumbbells', 'kettlebell', 'bands', 'pullup_bar', 'bench', 'mat'] as const;
 export type Equipment = (typeof EQUIPMENT)[number];
 export const EQUIPMENT_LABELS: Record<Equipment, string> = {
   gps_watch: 'Montre GPS', power_meter: 'Capteur de puissance', home_trainer: 'Home trainer', road_bike: 'Vélo de route', offroad_bike: 'VTT ou gravel',
   treadmill: 'Tapis de course', track: 'Accès à une piste d’athlétisme', pool: 'Accès à une piscine', open_water: 'Eau libre (lac, mer)', gym: 'Salle de renforcement',
   // D-096 : matériel de musculation à la maison.
-  dumbbells: 'Haltères', kettlebell: 'Kettlebell', bands: 'Élastiques', pullup_bar: 'Barre de traction', bench: 'Banc', mat: 'Tapis de sol',
+  bodyweight: 'Rien : poids du corps', dumbbells: 'Haltères', kettlebell: 'Kettlebell', bands: 'Élastiques', pullup_bar: 'Barre de traction', bench: 'Banc', mat: 'Tapis de sol',
 };
 const BY_SPORT: Record<Sport, Equipment[]> = {
   running: ['gps_watch', 'treadmill', 'track', 'gym'],
@@ -83,7 +83,7 @@ const BY_SPORT: Record<Sport, Equipment[]> = {
   swimming: ['pool', 'open_water', 'gps_watch', 'gym'],
   triathlon: [...EQUIPMENT],
   duathlon: ['gps_watch', 'power_meter', 'home_trainer', 'road_bike', 'offroad_bike', 'treadmill', 'track', 'gym'],
-  strength: ['gym', 'dumbbells', 'kettlebell', 'bands', 'pullup_bar', 'bench', 'mat'],
+  strength: ['bodyweight', 'dumbbells', 'kettlebell', 'bands', 'pullup_bar', 'bench', 'mat'],
 };
 /** Matériel proposé pour un sport. */
 export const equipmentFor = (sport: Sport | null | undefined): Equipment[] => (sport ? BY_SPORT[sport] : [...EQUIPMENT]);
@@ -100,6 +100,18 @@ export const WEEKDAY_MINUTES_LABELS: Record<WeekdayMinutes, string> = { lt45: 'M
 export const WEEKDAY_MINUTES_CAP: Record<WeekdayMinutes, number | null> = { lt45: 45, '45to60': 60, '60to90': 90, gt90: null };
 
 /** PUT /workspaces/{wid}/athlete-profile. Propriétés inconnues refusées (pas de champ santé caché). */
+/** D-110 : où l’élève fait sa musculation (plusieurs choix) ; le matériel n’est demandé que pour la maison. */
+export const TRAINING_PLACES = ['gym', 'home', 'outdoor'] as const;
+export type TrainingPlace = (typeof TRAINING_PLACES)[number];
+export const TRAINING_PLACE_LABELS: Record<TrainingPlace, string> = {
+  gym: 'En salle de sport', home: 'À la maison', outdoor: 'En extérieur (street workout, parc)',
+};
+export const TRAINING_PLACE_HINTS: Record<TrainingPlace, string> = {
+  gym: 'Machines, barres et poids libres : tout est sur place.', home: 'Tu choisis ensuite ton matériel.', outdoor: 'Barres de traction, barres parallèles, poids du corps.',
+};
+/** Matériel de musculation à la maison (demandé seulement si « à la maison »). */
+export const HOME_EQUIPMENT: readonly Equipment[] = ['bodyweight', 'dumbbells', 'kettlebell', 'bands', 'pullup_bar', 'bench', 'mat'];
+
 /** D-108 : ce que l’élève veut travailler en musculation (plusieurs choix). Aucun objectif de poids (données de santé exclues, D-084). */
 export const STRENGTH_FOCUS = ['general', 'strength', 'muscle', 'sport_prep', 'mobility', 'fitness'] as const;
 export type StrengthFocus = (typeof STRENGTH_FOCUS)[number];
@@ -125,6 +137,7 @@ export const athleteProfileSchema = z
     /** D-108 : autres sports pratiqués avec le coach (le principal est `sport`). */
     otherSports: z.array(z.enum(SPORTS)).max(SPORTS.length).default([]).transform((a) => [...new Set(a)]),
     strengthFocus: z.array(z.enum(STRENGTH_FOCUS)).max(STRENGTH_FOCUS.length).default([]).transform((a) => [...new Set(a)]),
+    trainingPlaces: z.array(z.enum(TRAINING_PLACES)).max(TRAINING_PLACES.length).default([]).transform((a) => [...new Set(a)]),
     level: z.enum(LEVELS, { message: 'Choisir un niveau' }),
     experience: z.enum(EXPERIENCES, { message: 'Choisir une ancienneté' }),
     weeklySessions: z.enum(WEEKLY_SESSIONS, { message: 'Choisir un nombre de séances' }),
