@@ -131,3 +131,17 @@ export function applyFollowLog(plan: PlannedEntry[], log: Record<number, { reps:
     }),
   }));
 }
+
+/** D-112 · « La dernière fois » : meilleure série de la séance la plus récente, par exercice (identifiant ou nom). */
+export interface LastDone { text: string; date: string; topKg: number | null; topReps: number | null }
+export function lastDoneByExercise(series: LoadSeries[]): Record<string, LastDone> {
+  const out: Record<string, LastDone> = {};
+  for (const s of series) {
+    const p = s.points.at(-1);
+    if (!p) continue;
+    out[s.key] = { text: setText({ reps: p.topReps, kg: p.topKg, seconds: p.topSeconds }), date: p.date, topKg: p.topKg, topReps: p.topReps };
+  }
+  return out;
+}
+/** Clé d’un exercice pour retrouver sa dernière fois (même règle que la progression). */
+export const exerciseKey = (id: string | null | undefined, name: string) => id ?? `nom:${name.trim().toLowerCase()}`;

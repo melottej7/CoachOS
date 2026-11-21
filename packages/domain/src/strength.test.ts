@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  applyFollowLog, asDone, availableEquipment, exerciseFits, missingEquipment, modulesOf, sportsFor, BASE_VIDEOS, compareSet, entryVerdict, loadProgress, progressText, strengthLogSchema, strengthPlan, describeBlock, describeTotals, detectVideoType, shownVideo, starterKey, exerciseIdsOf, fitSteps, followSequence, parseNotation, setLabel, presetsFor, STARTER_EXERCISES, structureSchema,
+  applyFollowLog, asDone, exerciseKey, lastDoneByExercise, availableEquipment, exerciseFits, missingEquipment, modulesOf, sportsFor, BASE_VIDEOS, compareSet, entryVerdict, loadProgress, progressText, strengthLogSchema, strengthPlan, describeBlock, describeTotals, detectVideoType, shownVideo, starterKey, exerciseIdsOf, fitSteps, followSequence, parseNotation, setLabel, presetsFor, STARTER_EXERCISES, structureSchema,
   structureTotals, toNotation, videoEmbed, type Block,
 } from './index';
 
@@ -217,6 +217,18 @@ describe('exercice et matériel de l’élève (D-111)', () => {
     expect(exerciseFits(['dumbbells'], { places: [], equipment: [] })).toBeNull();
     expect(exerciseFits(['dumbbells'], null)).toBeNull();
     expect(missingEquipment(['dumbbells', 'kettlebell', 'mat'])).toBe('haltères ou kettlebell');
+  });
+});
+
+describe('la dernière fois (D-112)', () => {
+  it('meilleure série de la séance la plus récente, par identifiant ou par nom', () => {
+    const last = lastDoneByExercise(loadProgress([
+      { date: '2026-11-14', log: [{ exerciseId: 'e1', name: 'Squat goblet', sets: [{ reps: 10, kg: 14, seconds: null }] }] },
+      { date: '2026-11-21', log: [{ exerciseId: 'e1', name: 'Squat goblet', sets: [{ reps: 10, kg: 16, seconds: null }, { reps: 8, kg: 18, seconds: null }] }, { exerciseId: null, name: 'Pompes', sets: [{ reps: 12, kg: null, seconds: null }] }] },
+    ]));
+    expect(last[exerciseKey('e1', 'Squat goblet')]).toMatchObject({ text: '8 × 18 kg', date: '2026-11-21' });
+    expect(last[exerciseKey(null, ' pompes ')]?.text).toBe('12 rép');
+    expect(last[exerciseKey(null, 'Fentes')]).toBeUndefined();
   });
 });
 

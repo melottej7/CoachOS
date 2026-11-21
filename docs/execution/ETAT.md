@@ -315,6 +315,7 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
     - **D-104 :** statut d’adhésion dans Élèves ; Paramètres › Mes relances (modèles à trous, aperçu). Migration `20261121120000` appliquée. `npm test` : **322 passés**.
     - **D-105 à D-107 (retours du fondateur)** : programme en lignes de semaine avec séances en cases, regroupé par blocs, semaines allégées marquées. Tremplin de 3 semaines puis décharge avant le développement. `npm test` : **324 passés**.
     - **D-108 (retour du fondateur en recette)** : bilan multisport (sport principal et autres sports), questions adaptées à la musculation. Migration `20261121130000` appliquée. `npm test` : **327 passés**.
+    - **D-109 à D-112 (recette du fondateur, suite)** : « L’après-midi » ; lieu de musculation puis matériel selon le lieu ; exercices proposés selon le matériel de l’élève ; « la dernière fois » par exercice. Mise en ligne préparée : build OK, e-mails par Resend activables, guide [MISE_EN_LIGNE.md](MISE_EN_LIGNE.md). `npm test` : **337 passés**.
     - Le paiement attend la validation du parcours des deux rôles (CLAUDE.md) et l’accord du fondateur.
   - **Analyse produit (21 novembre)** : [docs/17_ANALYSE_PRODUIT.md](../17_ANALYSE_PRODUIT.md), en réponse au cadrage « OS du coach sportif hybride ». Recommandations : rester sur le coach de course à pied indépendant ; geler les nouvelles fonctions ; mettre en ligne ; pilote de 4 semaines avec les athlètes du fondateur ; brief du jour et mode simple. 8 questions à trancher par le fondateur, aucune décision prise sans lui.
   - **D-095** : téléphone sur le même Wi-Fi : http://192.168.65.68:3000 (adresse « Network » du serveur), réseaux privés autorisés en développement.
@@ -340,6 +341,7 @@ Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au mic
 **Pour le fondateur** :
 - Crédit Anthropic pour l’IA ; le budget mensuel est de 10 $ par espace par défaut.
 - **Cocher « Musculation » (et « Course à pied ») dans Paramètres › sports encadrés** : ton espace n’a que « Trail » coché, la musculation y est donc masquée (D-102).
+- **Mise en ligne** : créer les comptes Supabase, Vercel, GitHub, Resend (et éventuellement un nom de domaine), en suivant [MISE_EN_LIGNE.md](MISE_EN_LIGNE.md).
 - Vidéos de base des 34 exercices : à filmer ou produire (guide [VIDEOS_DE_BASE.md](VIDEOS_DE_BASE.md)), puis à me transmettre.
 - Base de séances : celle de Foulée fait foi (D-093), plus de tableur attendu. Dans Bibliothèque, clique « 🏃 Mettre à jour Foulée (23) » pour passer tes fractions courtes en Z6. Tes programmes sont reçus et lus (D-085).
 - Accès Garmin reporté (D-026).

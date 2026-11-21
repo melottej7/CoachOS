@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { isLocalDate, todayIn, weekStart, type Sport } from '@coachos/domain';
+import { isLocalDate, todayIn, weekStart, type Sport, lastDoneByExercise, loadProgress } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { listAssignedAthletes } from '@/server/repo/coach';
 import { WorkoutForm } from '@/components/workout-form';
@@ -11,6 +11,7 @@ import { isUuid } from '@/server/repo/context';
 import { listExercises } from '@/server/repo/exercises';
 import { coachContext } from '@/server/repo/context';
 import { athleteGear } from '@/server/commands/athlete-profile';
+import { strengthHistory } from '@/server/repo/stats';
 
 export const metadata = { title: 'Nouvelle séance' };
 
@@ -32,7 +33,7 @@ export default async function NewWorkout({ params, searchParams }: { params: Pro
       <div className="head"><div><div className="kicker">{athlete.displayName}</div><h1>Nouvelle séance</h1>
         {w ? <p className="sub">À partir de « {w.title} » (bibliothèque). Ajuste-la pour {athlete.displayName.split(' ')[0]} : la séance de la bibliothèque ne change pas.</p> : null}</div></div>
       <section className="card"><div className="card-body">
-        <WorkoutForm modules={(await coachContext(actor.userId, wid))?.modules} exercises={(await listExercises(actor.userId, wid)).map((x) => ({ id: x.id, name: x.name, equipment: x.equipment }))} gear={await athleteGear(actor.userId, wid, aid)} savedBlocks={await listBlockTemplates(actor.userId, wid)} refs={await readAthleteReferences(actor.userId, wid, aid)} wid={wid} aid={aid} athleteName={athlete.displayName} timeZone={athlete.timeZone} cancelHref={back}
+        <WorkoutForm modules={(await coachContext(actor.userId, wid))?.modules} exercises={(await listExercises(actor.userId, wid)).map((x) => ({ id: x.id, name: x.name, equipment: x.equipment }))} gear={await athleteGear(actor.userId, wid, aid)} lastDone={lastDoneByExercise(loadProgress(await strengthHistory(actor.userId, wid, aid)))} savedBlocks={await listBlockTemplates(actor.userId, wid)} refs={await readAthleteReferences(actor.userId, wid, aid)} wid={wid} aid={aid} athleteName={athlete.displayName} timeZone={athlete.timeZone} cancelHref={back}
           initial={w
             ? { title: w.title, localDate, sport: w.sport, minutes: w.durationSeconds ? String(Math.round(w.durationSeconds / 60)) : '', instructions: w.instructions ?? '', intervals: w.intervals }
             : { title: '', localDate, sport: 'running' satisfies Sport, minutes: '45', instructions: '' }} />

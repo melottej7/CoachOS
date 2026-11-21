@@ -2,7 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { SPORTS, SPORT_LABELS, type Block, type References, type Sport, sportsFor, type Modules } from '@coachos/domain';
+import { SPORTS, SPORT_LABELS, type Block, type References, type Sport, sportsFor, type Modules, type LastDone,
+} from '@coachos/domain';
 import { fromEditor, toEditor, WorkoutBuilder, type AthleteGearInfo, type EBlock, type ExerciseOption, type SavedBlock } from './workout-builder';
 import { ErrorSummary } from './feedback-banners';
 import { fieldError, useIntent } from './use-intent';
@@ -35,11 +36,13 @@ interface Props {
   exercises?: ExerciseOption[];
   /** D-111 : matériel de l’élève, d’après son bilan. */
   gear?: AthleteGearInfo | null;
+  /** D-112 : dernière fois de l’élève, par exercice. */
+  lastDone?: Record<string, LastDone>;
   /** D-102 : sports proposés selon les modules de l’espace. */
   modules?: Modules;
 }
 
-export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, cancelHref, refs, returnTo, savedBlocks, exercises, modules, gear }: Props) {
+export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, cancelHref, refs, returnTo, savedBlocks, exercises, modules, gear, lastDone }: Props) {
   const router = useRouter();
   const [values, setValues] = useState(initial);
   const [blocks, setBlocks] = useState<EBlock[]>(() => toEditor(initial.intervals ?? [], 'i'));
@@ -103,7 +106,7 @@ export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, ca
         </div>
       </div>
       <WorkoutBuilder strengthOn={modules?.strength ?? true} sport={values.sport} value={blocks} onChange={setBlocks} refs={refs} athleteFirst={athleteName.split(' ')[0] ?? athleteName} vmaHref={`/coach/${wid}/athletes/${aid}#refs-title`}
-        library={savedBlocks ? { wid, blocks: savedBlocks } : undefined} exercises={exercises} gear={gear} />
+        library={savedBlocks ? { wid, blocks: savedBlocks } : undefined} exercises={exercises} gear={gear} lastDone={lastDone} />
       {blocks.length ? null : <div className="field">
         <label htmlFor="duration">Durée en minutes <span className="hint">Facultatif</span></label>
         <input id="duration" type="number" inputMode="numeric" min={1} max={1440} value={values.minutes} onChange={set('minutes')}

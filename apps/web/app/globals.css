@@ -1388,3 +1388,5 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .pb-list, .pb, .pb-list .pw-grid { grid-template-columns: minmax(0, 1fr); }
 .pb, .pw, .pw-head, .pw-tiles { min-width: 0; }
 .b-warn { color: var(--attention); font-weight: 600; }
+.fw-last { margin: 0; font-size: 15px; color: var(--muted); }
+.fw-last strong { color: var(--ink); }

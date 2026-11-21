@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
-import { canGiveFeedback, todayIn } from '@coachos/domain';
+import { canGiveFeedback, lastDoneByExercise, loadProgress, todayIn } from '@coachos/domain';
+import { strengthHistory } from '@/server/repo/stats';
 import { requireActor } from '@/server/auth/session';
 import { athleteWorkout } from '@/server/repo/athlete';
 import { athleteContext, isUuid } from '@/server/repo/context';
@@ -21,6 +22,7 @@ export default async function FollowPage({ params }: { params: Promise<{ wid: st
   return (
     <FollowSession wid={wid} sid={sid} title={w.title} sport={w.sport} blocks={w.intervals}
       exercises={await exerciseMap(actor.userId, wid, w.intervals)}
-      backHref={`/athlete/${wid}/workouts/${sid}`} feedbackHref={open ? `/athlete/${wid}/workouts/${sid}/feedback` : null} />
+      backHref={`/athlete/${wid}/workouts/${sid}`} feedbackHref={open ? `/athlete/${wid}/workouts/${sid}/feedback` : null}
+      lastDone={lastDoneByExercise(loadProgress((await strengthHistory(actor.userId, wid, ctx.athlete.id)).filter((h) => h.date < w.localDate)))} />
   );
 }

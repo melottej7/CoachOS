@@ -1945,3 +1945,22 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
     - exercices faisables en tête (curl biceps et élévations latérales grâce aux élastiques) ;
     - « Squat goblet » signalé ;
     - profil de démo remis à l’identique ensuite.
+
+## D-112 · « La dernière fois » en musculation, préparation de la mise en ligne · 2026-11-21
+
+- **« La dernière fois ».**
+  - Pour chaque exercice, la meilleure série de la séance la plus récente de l’élève (d’après ses retours, D-100).
+  - **Coach**, dans le constructeur d’une séance d’élève, sous l’exercice : « Dernière fois : 10 × 12 kg (21 nov.) ».
+  - **Élève**, dans « Suivre la séance pas à pas » : « La dernière fois : 10 × 12 kg ». Seules comptent les séances antérieures à celle-ci.
+  - Les exercices sont retrouvés par leur référence de bibliothèque, sinon par leur nom.
+- **Préparation de la mise en ligne.**
+  - La construction de production passe sans erreur ni avertissement.
+  - **Envoi d’e-mails par Resend** : branché, actif dès que `RESEND_API_KEY` et `EMAIL_FROM` sont fournis. Sans clé, la production refuse explicitement (comme avant). Rien n’est journalisé hormis le statut en cas d’échec. Format de l’API à confirmer avec un vrai compte.
+  - Guide pas à pas pour le fondateur : [MISE_EN_LIGNE.md](MISE_EN_LIGNE.md) (comptes à créer par lui, variables, étapes faites ensuite, points d’attention : données locales non copiées, page de confidentialité, stockage des vidéos).
+- **Preuves.**
+  - Tests :
+    - domaine : dernière fois par référence ou par nom ;
+    - envoi : requête Resend, erreur sans contenu journalisé, refus sans clé en production.
+  - `npm test` : **337 passés** (+3 PostgreSQL), typecheck OK, `npm run build` OK.
+  - Navigateur : « Dernière fois : 10 × 12 kg (21 nov.) » sous « Développé couché haltères » pour Camille (démo).
+- **Non prouvé.** Envoi réel par Resend ; « la dernière fois » vue à l’écran côté élève (mêmes données que côté coach, aucune séance de démo antérieure ne partage ses exercices).

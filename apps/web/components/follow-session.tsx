@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  describeIntensity, describeMeasure, followSequence, PHASE_LABELS, setLabel, type Block, type FollowStep, type Sport,
+  describeIntensity, describeMeasure, followSequence, PHASE_LABELS, setLabel, type Block, type FollowStep, type Sport, exerciseKey, type LastDone,
 } from '@coachos/domain';
 import { ExerciseVideo, hasVideo } from './exercise-video';
 import type { ExerciseInfo } from './structure-view';
@@ -12,9 +12,11 @@ import type { ExerciseInfo } from './structure-view';
  * D-096 (M3) · Suivre la séance sur téléphone, une étape par écran : l’exercice, sa vidéo, la série en cours,
  * puis le repos chronométré qui démarre seul. La position est gardée sur ce téléphone pour reprendre plus tard.
  */
-export function FollowSession({ wid, sid, title, blocks, exercises, backHref, feedbackHref }: {
+export function FollowSession({ wid, sid, title, blocks, exercises, backHref, feedbackHref, lastDone = {} }: {
   wid: string; sid: string; title: string; sport: Sport; blocks: Block[];
   exercises: Record<string, ExerciseInfo>; backHref: string; feedbackHref: string | null;
+  /** D-112 : ce que l’élève a fait la dernière fois, par exercice. */
+  lastDone?: Record<string, LastDone>;
 }) {
   const seq = useMemo(() => followSequence(blocks), [blocks]);
   const storeKey = `coachos:suivre:${sid}`;
@@ -62,7 +64,7 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
           </div>
         </section>
       ) : (
-        <StepScreen key={i} wid={wid} f={seq[i]!} next={seq[i + 1] ?? null} exercises={exercises} logged={log[i]}
+        <StepScreen key={i} wid={wid} f={seq[i]!} next={seq[i + 1] ?? null} exercises={exercises} logged={log[i]} lastDone={lastDone}
           onLog={(v) => note(i, v)} onNext={() => go(i + 1)} onPrev={i > 0 ? () => go(i - 1) : null} />
       )}
     </div>
@@ -71,8 +73,8 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
 
 const isRest = (f: FollowStep) => f.step.phase === 'rest' || f.step.phase === 'recovery';
 
-function StepScreen({ wid, f, next, exercises, logged, onLog, onNext, onPrev }: {
-  wid: string; f: FollowStep; next: FollowStep | null; exercises: Record<string, ExerciseInfo>;
+function StepScreen({ wid, f, next, exercises, logged, onLog, onNext, onPrev, lastDone }: {
+  wid: string; f: FollowStep; next: FollowStep | null; exercises: Record<string, ExerciseInfo>; lastDone: Record<string, LastDone>;
   logged?: { reps: number | null; kg: number | null }; onLog: (v: { reps: number | null; kg: number | null }) => void;
   onNext: () => void; onPrev: (() => void) | null;
 }) {
@@ -90,6 +92,9 @@ function StepScreen({ wid, f, next, exercises, logged, onLog, onNext, onPrev }: 
       <h2 id="fw-name" className="fw-name">{name}</h2>
       {target ? <p className="fw-target">{target}</p> : null}
       {s.note ? <p className="fw-note">{s.note}</p> : null}
+      {!rest && s.exercise && lastDone[exerciseKey(s.exercise.id, s.exercise.name)] ? (
+        <p className="fw-last">La dernière fois : <strong>{lastDone[exerciseKey(s.exercise.id, s.exercise.name)]!.text}</strong></p>
+      ) : null}
       {timed ? <Countdown seconds={timed} auto={rest} onEnd={onNext} rest={rest} /> : null}
       {!rest && ex ? (
         <div className="fw-media">

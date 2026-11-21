@@ -18,11 +18,13 @@ export function setMailer(mailer: Mailer | undefined): void {
 
 /**
  * Adaptateur d’envoi. Développement : API d’envoi de Mailpit (Supabase local), aucun e-mail réel.
- * Production : fournisseur à brancher (Resend, docs/07_ARCHITECTURE.md) ; d’ici là, refus explicite.
+ * Production : Resend (RESEND_API_KEY, EMAIL_FROM), branché à la mise en ligne (D-112) ; sans clé, refus explicite.
  * Ne journalise jamais le destinataire ni le contenu (le lien contient un secret).
  */
 export async function sendEmail(message: EmailMessage): Promise<void> {
   if (globalForMail.__coachosMailer) return globalForMail.__coachosMailer(message);
+  // D-112 : production, fournisseur Resend dès que la clé et l’expéditeur sont fournis (mise en ligne).
+  if (process.env.RESEND_API_KEY && process.env.EMAIL_FROM) return sendWithResend(message, process.env.RESEND_API_KEY, process.env.EMAIL_FROM);
   const mailpit = process.env.MAILPIT_URL;
   if (!mailpit || process.env.NODE_ENV === 'production') {
     throw new AppError('TEMPORARILY_UNAVAILABLE', 'L’envoi d’e-mails n’est pas configuré sur cet environnement.');
@@ -77,3 +79,22 @@ ${tagline ? `<p style="margin:0 0 20px;font-size:15px;line-height:22px;font-styl
 </td></tr></table></body></html>`;
   return { to, subject, text, html };
 }
+
+/** Envoi par l’API de Resend (une requête par e-mail). Rien n’est journalisé hormis le statut en cas d’échec. */
+async function sendWithResend(message: EmailMessage, key: string, from: string): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
+      body: JSON.stringify({ from, to: [message.to], subject: message.subject, text: message.text, html: message.html }),
+    });
+  } catch {
+    throw new AppError('TEMPORARILY_UNAVAILABLE', 'L’e-mail n’a pas pu être envoyé. Réessaie dans un instant.');
+  }
+  if (!res.ok) {
+    console.warn(JSON.stringify({ module: 'email', provider: 'resend', code: 'send_failed', status: res.status }));
+    throw new AppError('TEMPORARILY_UNAVAILABLE', 'L’e-mail n’a pas pu être envoyé. Réessaie dans un instant.');
+  }
+}
+
