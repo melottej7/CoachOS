@@ -34,6 +34,7 @@ export * from './foulee-library';
 export * from './exercises';
 export * from './strength-log';
 export * from './relances';
+export * from './program-blocks';
 export * from './ai-coach';
 export * from './coach-method';
 export * from './week-review';

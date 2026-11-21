@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { addDays, DAY_LABELS, describeTweaks, formatClock, formatLongDate, formatShortDate, isLocalDate, parseTweaksParam, PROGRAM_PHASE_LABELS, weekStart, WEEKDAY_SHORT } from '@coachos/domain';
+import { addDays, DAY_LABELS, programBlocks, weekDelta, describeTweaks, formatClock, formatLongDate, formatShortDate, isLocalDate, parseTweaksParam, PROGRAM_PHASE_LABELS, weekStart, WEEKDAY_SHORT } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { isUuid } from '@/server/repo/context';
 import { buildProgram, existingInPeriod, nextMonday, programContext, readGoalPlans } from '@/server/commands/programs';
@@ -16,6 +16,14 @@ const h = (min: number) => formatClock(Math.round(min / 5) * 5 * 60);
 const RISK_MARK = { watch: '•', risk: '!', block: '✕' } as const;
 const WEEKDAY_LONG = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'] as const;
 const KIND_LABEL = { easy: 'Facile', long: 'Longue', quality: 'Qualité', race: 'Course' } as const;
+/** D-106 : nom et but de chaque bloc. */
+const BLOCK_TITLE = { tremplin: 'Tremplin', developpement: 'Développement', recuperation: 'Semaine allégée', affutage: 'Affûtage' } as const;
+const BLOCK_AIM = {
+  tremplin: 'Reprendre la régularité depuis ce qui est fait aujourd’hui, sans à-coup.',
+  developpement: 'La charge monte, puis une semaine allégée pour assimiler.',
+  recuperation: 'Moins de volume pour assimiler.',
+  affutage: 'Moins de volume, un rappel d’allure : arriver frais le jour J.',
+} as const;
 
 /**
  * D-061 : générateur de programme. À la hauteur de l’objectif validé, 4 semaines de tremplin, risques signalés au coach
@@ -128,34 +136,60 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
           <section className="card" aria-labelledby="prog-weeks">
             <div className="card-head"><h2 id="prog-weeks">Semaine par semaine</h2><span className="muted">Touche une séance pour lire pourquoi elle est là</span></div>
             {/* D-105 : une semaine = un bloc ; ses séances en petites tuiles. */}
-            <ol className="plain pw-grid card-body">
-              {program.weeks.map((w) => (
-                <li key={w.index} id={`semaine-${w.index}`} className={`pw ${w.phase}`}>
-                  <div className="pw-head">
-                    <strong className="pw-n">S{w.index}</strong>
-                    <span className="muted">{formatShortDate(w.monday)}</span>
-                    <Pill tone={w.phase === 'tremplin' ? 'neutral' : w.phase === 'recuperation' || w.phase === 'affutage' ? 'attn' : ''}>{PROGRAM_PHASE_LABELS[w.phase]}</Pill>
-                    <span className="pw-vol"><strong>{h(w.minutes)}</strong>{w.longMinutes ? <span className="muted"> · longue {h(w.longMinutes)}</span> : null}</span>
-                  </div>
-                  <ul className="plain pw-tiles">
-                    {w.sessions.map((s, i) => {
-                      const dow = (new Date(`${s.date}T12:00:00Z`).getUTCDay() + 6) % 7;
-                      return (
-                        <li key={i} className={`pt ${s.kind}`}>
-                          <details>
-                            <summary>
-                              <span className="pt-day">{WEEKDAY_SHORT[dow]}</span>
-                              <span className="pt-title">{s.title}</span>
-                              <span className="pt-kind">{KIND_LABEL[s.kind]}{s.source === 'library' ? ' · 📚' : ''}</span>
-                            </summary>
-                            <p className="pt-why"><strong>{WEEKDAY_LONG[dow]} · pourquoi ?</strong> {s.why}</p>
-                          </details>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </li>
-              ))}
+            <ol className="plain pb-list card-body">
+              {programBlocks(program.weeks).map((b) => {
+                const first = b.weeks[0]!, last = b.weeks.at(-1)!;
+                return (
+                  <li key={b.n} className={`pb ${b.phase}`}>
+                    <div className="pb-head">
+                      <h3><span className="pb-n">Bloc {b.n}</span> · {BLOCK_TITLE[b.phase]} <span className="muted">· S{first.index}{last.index !== first.index ? `–S${last.index}` : ''}</span></h3>
+                      <p className="muted pb-sum">{b.phase === 'developpement' && !b.lightWeeks ? 'La charge monte jusqu’à l’affûtage.'
+                        : b.phase === 'tremplin' && b.lightWeeks ? `${b.loadWeeks} semaines pour reprendre la régularité depuis ce qui est fait aujourd’hui, puis une petite semaine de décharge.` : BLOCK_AIM[b.phase]}
+                        {b.phase === 'developpement' ? (() => {
+                          const top = Math.max(...b.weeks.map((w) => w.minutes));
+                          return ` ${b.loadWeeks} semaine${b.loadWeeks > 1 ? 's' : ''} de charge${b.lightWeeks ? ` + ${b.lightWeeks} allégée` : ''} · ${h(first.minutes) === h(top) ? h(top) : `${h(first.minutes)} → ${h(top)}`} par semaine.`;
+                        })() : ''}</p>
+                    </div>
+                    <ol className="plain pw-grid">
+                      {b.weeks.map((w) => {
+                        // Semaine allégée comparée à la plus grosse semaine de son bloc (la semaine du test est plus courte).
+                        const top = Math.max(0, ...b.weeks.filter((x) => x.index < w.index).map((x) => x.minutes));
+                        const delta = top ? Math.round((w.minutes / top - 1) * 100) : weekDelta(program.weeks, w.index);
+                        return (
+                          <li key={w.index} id={`semaine-${w.index}`} className={`pw ${w.phase}`}>
+                            <div className="pw-head">
+                              <strong className="pw-n">S{w.index}</strong>
+                              <span className="muted">{formatShortDate(w.monday)}</span>
+                              {w.phase === 'recuperation'
+                                ? <span className="pill pw-light">↓ Semaine allégée</span>
+                                : <Pill tone={w.phase === 'tremplin' ? 'neutral' : w.phase === 'affutage' ? 'attn' : ''}>{PROGRAM_PHASE_LABELS[w.phase]}</Pill>}
+                              <span className="pw-vol"><strong>{h(w.minutes)}</strong>{w.longMinutes ? <span className="muted"> · longue {h(w.longMinutes)}</span> : null}
+                                {w.phase === 'recuperation' && delta !== null && delta < 0 ? <span className="pw-delta"> · −{Math.abs(delta)}&nbsp;% de volume pour assimiler</span> : null}</span>
+                            </div>
+                            <ul className="plain pw-tiles">
+                              {w.sessions.map((s, i) => {
+                                const dow = (new Date(`${s.date}T12:00:00Z`).getUTCDay() + 6) % 7;
+                                return (
+                                  <li key={i} className={`pt ${s.kind}`}>
+                                    <details>
+                                      <summary>
+                                        <span className="pt-day">{WEEKDAY_SHORT[dow]}</span>
+                                        <span className="pt-title">{s.title}</span>
+                                        <span className="pt-kind">{KIND_LABEL[s.kind]}{s.source === 'library' ? ' · 📚' : ''}</span>
+                                      </summary>
+                                      <p className="pt-why"><strong>{WEEKDAY_LONG[dow]} · pourquoi ?</strong> {s.why}</p>
+                                    </details>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </li>
+                );
+              })}
             </ol>
           </section>
 

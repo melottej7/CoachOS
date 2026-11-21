@@ -57,3 +57,8 @@ Ce document ne contient aucun nom ni aucune donnée d’élève. Les documents d
 
 - **Échelle des zones** (tranché, D-087 : les 7 zones de CoachOS avec ses repères ; ses documents sont traduits un cran plus haut). Dans ses documents, « Z1 » ou « Z1-2 » désigne l’endurance facile, « Z3 » le seuil ou l’allure 10 km, « Z4 » l’allure 5 km et « Z5 » les fractions de 200 à 400 m. L’échelle à 7 zones de CoachOS (D-029) place l’endurance fondamentale en Z2, le tempo en Z3 et le seuil en Z4. L’import garde les zones telles qu’écrites.
 - **Plafonds cardiaques** (« < 160 bpm ») : gardés comme consigne écrite et non comme intensité, tant que les données de santé restent exclues (D-084).
+
+## Ajout du 21 novembre (D-107)
+
+Le fondateur précise la structure du début de programme : 3 semaines de tremplin, une petite semaine de décharge, puis le premier bloc de développement (cycles de 3 semaines + 1 allégée).
+

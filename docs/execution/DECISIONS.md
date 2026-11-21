@@ -1837,3 +1837,32 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - La couleur de la phase passe en liseré à gauche de la ligne. Les cases et le « pourquoi » au toucher ne changent pas.
   - Vérifié sur ordinateur et à 375 px, sans débordement.
 
+
+## D-106 · Programme : les blocs et les semaines allégées bien visibles · 2026-11-21
+
+- **Retour du fondateur.** « Et bien montrer les blocs et les semaines allégées. »
+- **Décision.**
+  - **Semaines regroupées par bloc**, comme le fondateur écrit ses programmes (« 3 semaines + 1 de repos »).
+    - Les blocs : le tremplin, chaque cycle de développement (fermé par sa semaine allégée), l’affûtage.
+    - Chaque bloc a un en-tête : « **Bloc 2** · Développement · S5–S8 », son but en une phrase, puis « 3 semaines de charge + 1 allégée · 2 h 10 → 2 h 15 par semaine ». Un dernier cycle sans semaine allégée dit « La charge monte jusqu’à l’affûtage ».
+  - **Semaine allégée** :
+    - fond hachuré et bordure en pointillés ;
+    - pastille « ↓ Semaine allégée » ;
+    - baisse de volume écrite, comparée à la plus grosse semaine du bloc (« −15 % de volume pour assimiler »).
+  - Fonction du domaine `programBlocks` (et `weekDelta`), testée.
+- **Preuves.** Navigateur : programme de Noah sur 20 semaines (6 blocs, semaines allégées S8, S12, S16), ordinateur et 375 px. Un débordement sur téléphone a été corrigé pendant la vérification.
+
+## D-107 · Tremplin : 3 semaines puis une petite semaine de décharge · 2026-11-21
+
+- **Instruction du fondateur.** « Dans le programme, pour moi il devrait y avoir 3 semaines de tremplin, une petite de décharge et puis le bloc de développement. »
+- **Décision (générateur, D-061 et D-086 modifiés).**
+  - Quand un développement suit, le tremplin est fait de **3 semaines qui montent**, puis d’**une semaine de décharge** : environ −20 % de volume, séance longue un peu raccourcie, pas de qualité, sorties faciles de 20 min au moins.
+  - Le développement repart ensuite du niveau de la 3ᵉ semaine.
+  - Les programmes courts, sans développement, gardent leur tremplin continu. Les cycles de développement restent en 3 + 1, et le test 5 km reste en S3.
+  - À l’écran : « Bloc 1 · Tremplin · S1–S4 : 3 semaines pour reprendre la régularité depuis ce qui est fait aujourd’hui, puis une petite semaine de décharge. »
+  - Les programmes **déjà créés ne changent pas** : la nouvelle règle s’applique aux nouveaux programmes et aux semaines régénérées.
+- **Preuves.**
+  - Test du générateur : S1 à S3 en tremplin ; S4 allégée, plus légère que S3 et sans qualité ; S5 en développement, au-dessus de S4.
+  - Test des blocs : la décharge ferme le tremplin.
+  - `npm test` : **324 passés** (+3 PostgreSQL), typecheck OK.
+  - Navigateur (semi de Camille) : Bloc 1 de S1 à S4, avec S4 « ↓ Semaine allégée · −15 % de volume pour assimiler ».

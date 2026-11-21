@@ -1369,3 +1369,21 @@ body:has(.chat) .guide-fab { bottom: 110px; }
   .pw-vol { margin-left: 0; white-space: normal; }
   .pw-tiles { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
 }
+/* Blocs et semaines allégées (D-106) */
+.pb-list { display: grid; gap: 18px; padding: 0 16px 16px; }
+.pb { display: grid; gap: 8px; }
+.pb-head h3 { margin: 0; font-size: 16px; }
+.pb-n { display: inline-block; padding: 1px 8px; border-radius: 6px; background: var(--pc, var(--accent)); color: var(--surface); font-weight: 800; }
+.pb.tremplin { --pc: color-mix(in srgb, var(--accent) 60%, var(--surface)); }
+.pb.developpement { --pc: var(--accent); }
+.pb.recuperation { --pc: color-mix(in srgb, var(--accent) 35%, var(--surface)); }
+.pb.affutage { --pc: var(--attention); }
+.pb-sum { margin: 2px 0 0; font-size: 14px; }
+.pb .pw-grid { padding: 0; }
+.pw.recuperation { border-style: dashed; border-left-style: solid;
+  background: repeating-linear-gradient(135deg, var(--surface) 0 10px, color-mix(in srgb, var(--accent) 7%, var(--surface)) 10px 20px); }
+.pw-light { background: color-mix(in srgb, var(--accent) 18%, var(--surface)); color: var(--ink); }
+.pw-delta { color: var(--muted); }
+
+.pb-list, .pb, .pb-list .pw-grid { grid-template-columns: minmax(0, 1fr); }
+.pb, .pw, .pw-head, .pw-tiles { min-width: 0; }

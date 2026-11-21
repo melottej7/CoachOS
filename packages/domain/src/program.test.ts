@@ -11,14 +11,20 @@ const f: FeasibilityInput = {
 const base: ProgramInput = { feasibility: f, startMonday: '2026-11-23', days: [2, 4, 6, 7], currentWeeklyMin: 120, refs: { vmaKmh: 15 }, goalTitle: 'Semi de Bruxelles' };
 
 describe('générateur de programme', () => {
-  it('phases : 4 semaines de tremplin, développement avec une semaine allégée sur quatre, affûtage', () => {
+  it('phases : 3 semaines de tremplin et une de décharge (D-107), développement avec une semaine allégée sur quatre, affûtage', () => {
     const p = generateProgram(base);
     expect(p.weeks).toHaveLength(16);
-    expect(p.weeks.slice(0, 4).every((w) => w.phase === 'tremplin')).toBe(true);
+    expect(p.weeks.slice(0, 3).every((w) => w.phase === 'tremplin')).toBe(true);
+    // Décharge : moins de volume que la 3e semaine, pas de qualité ; le développement repart au-dessus.
+    expect(p.weeks[3]!.phase).toBe('recuperation');
+    expect(p.weeks[3]!.minutes).toBeLessThan(p.weeks[2]!.minutes);
+    expect(p.weeks[3]!.sessions.some((s) => s.kind === 'quality')).toBe(false);
+    expect(p.weeks[4]!.phase).toBe('developpement');
+    expect(p.weeks[4]!.minutes).toBeGreaterThan(p.weeks[3]!.minutes);
     expect(p.weeks.slice(-2).every((w) => w.phase === 'affutage')).toBe(true);
     expect(p.weeks.filter((w) => w.phase === 'recuperation').length).toBeGreaterThanOrEqual(2);
     // Tremplin : part du volume actuel et monte progressivement.
-    expect(p.weeks[0]!.minutes).toBeLessThan(p.weeks[3]!.minutes);
+    expect(p.weeks[0]!.minutes).toBeLessThan(p.weeks[2]!.minutes);
     expect(Math.abs(p.weeks[0]!.minutes - 120)).toBeLessThan(30);
     expect(p.weeks.slice(0, 2).flatMap((w) => w.sessions).some((s) => s.kind === 'quality')).toBe(false);
   });

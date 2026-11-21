@@ -265,12 +265,16 @@ export function generateProgram(input: ProgramInput): Program {
   const taper = nWeeks >= 10 ? 2 : nWeeks >= 5 ? 1 : 0;
   const tremplin = Math.min(4, Math.max(0, nWeeks - taper));
   const devWeeks = Math.max(0, nWeeks - taper - tremplin);
+  // D-107 (méthode du fondateur) : quand le développement suit, le tremplin fait 3 semaines qui montent, puis une
+  // petite semaine de décharge avant le premier bloc de développement.
+  const deloadAt = tremplin === 4 && devWeeks > 0 ? 3 : -1;
+  const tremplinRise = deloadAt >= 0 ? 3 : tremplin;
   // Fin du tremplin : 80 % du pic si le développement suit, sinon le pic directement.
   const tremplinEnd = devWeeks ? peakWeekly * 0.8 : peakWeekly;
   const longTremplinEnd = devWeeks ? Math.max(currentLong, longNeed * 0.8) : longNeed;
-  const gT = growth(startWeekly, tremplinEnd, tremplin);
+  const gT = growth(startWeekly, tremplinEnd, tremplinRise);
   const gD = growth(tremplinEnd, peakWeekly, Math.max(1, devWeeks - Math.floor(devWeeks / 4)));
-  const lT = growth(currentLong, longTremplinEnd, tremplin);
+  const lT = growth(currentLong, longTremplinEnd, tremplinRise);
   const lD = growth(longTremplinEnd, longNeed, Math.max(1, devWeeks - Math.floor(devWeeks / 4)));
 
   // Risques signalés au coach (il décide).
@@ -306,7 +310,7 @@ export function generateProgram(input: ProgramInput): Program {
     return c ?? null;
   };
   const phaseWhy = (p: ProgramPhase) => ({
-    tremplin: 'Tremplin', developpement: 'Développement', recuperation: 'Semaine allégée (−25 % pour assimiler)', affutage: 'Affûtage (moins de volume, un rappel d’intensité)',
+    tremplin: 'Tremplin', developpement: 'Développement', recuperation: 'Semaine allégée (moins de volume pour assimiler)', affutage: 'Affûtage (moins de volume, un rappel d’intensité)',
   })[p];
   // D-086 : méthode du fondateur pour la course à pied.
   const isRun = sport === 'running' || sport === 'trail';
@@ -338,7 +342,10 @@ export function generateProgram(input: ProgramInput): Program {
     const monday = addDays(input.startMonday, i * 7);
     let phase: ProgramPhase;
     let weekly: number, long: number, nQuality: number;
-    if (i < tremplin) {
+    if (i === deloadAt) {
+      // Décharge : environ −20 % de volume, séance longue un peu raccourcie ; le développement repart du niveau de S3.
+      phase = 'recuperation'; weekly = w * 0.8; long = l * 0.85; nQuality = 0;
+    } else if (i < tremplin) {
       phase = 'tremplin';
       w = i === 0 ? startWeekly : w * gT; l = i === 0 ? Math.max(currentLong, Math.min(longTremplinEnd, currentLong * lT)) : l * lT;
       weekly = w; long = l;
@@ -373,7 +380,7 @@ export function generateProgram(input: ProgramInput): Program {
     while (qDays.length < Math.min(nQuality, others.length)) qDays.push(others.find((d) => !qDays.includes(d))!);
     const easyDays = others.filter((d) => !qDays.includes(d));
     const longMin = longD ? r5(long) : 0;
-    const easyFloor = phase === 'tremplin' ? 20 : 30;
+    const easyFloor = phase === 'tremplin' || i === deloadAt ? 20 : 30;
     // Tremplin : la séance de qualité est dimensionnée pour tenir dans le volume visé de la semaine.
     const room = qDays.length ? (weekly - longMin - Math.max(0, others.length - qDays.length) * easyFloor) / qDays.length : 0;
     const qMin = phase === 'affutage' ? 40
