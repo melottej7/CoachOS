@@ -8,6 +8,8 @@ import { coachContext } from '@/server/repo/context';
 import { home, type HomeTask } from '@/server/repo/portfolio';
 import { AppointmentForm, TaskActions, TaskForm } from '@/components/portfolio-forms';
 import { Pill } from '@/components/ui';
+import { relances } from '@/server/repo/relances';
+import { RelancesCard } from '@/components/relances-card';
 
 export const metadata = { title: 'Planning' };
 
@@ -34,6 +36,8 @@ export default async function CoachPlanning({ params, searchParams }: { params: 
   const tz = ctx.workspace.timeZone;
   const monday = weekStart(sp.week && isLocalDate(sp.week) ? sp.week : todayIn(tz));
   const data = await home(actor.userId, wid, tz, monday);
+  // D-103 : qui relancer aujourd’hui, avec un message prêt.
+  const rl = await relances(actor.userId, wid);
   const today = data.today;
   const base = `/coach/${wid}`;
 
@@ -82,6 +86,10 @@ export default async function CoachPlanning({ params, searchParams }: { params: 
             {ctx.role === 'owner' ? <p><Link className="btn primary" href={`${base}/athletes/new`} data-tour="add-athlete">+ Ajouter un élève</Link></p> : null}
           </div>
         </section>
+      ) : null}
+
+      {data.roster.length ? (
+        <RelancesCard wid={wid} items={rl.map((x) => ({ athleteId: x.athleteId, name: x.name, first: x.first, status: x.status, reason: x.reason, relance: x.relance, draft: x.draft, waitingSince: x.waitingSince, workoutId: x.workout?.id ?? null }))} />
       ) : null}
 
       <div className="planning">

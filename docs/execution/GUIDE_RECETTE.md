@@ -341,3 +341,10 @@ Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et
 8. **Séries et charges (D-100)** : pendant « Suivre », change une série (« Fait : 8 rép »). À la fin, « Donner mon retour » : la section « Séries et charges » reprend ce que tu as noté. Envoie, puis côté coach ouvre le retour : « 1 série en moins », avec « 8 × 12 kg ▾ ». La fiche de l’élève montre « Charges en musculation », et l’onglet Progression de l’élève « Tes charges ».
 9. **Endurance, musculation ou les deux (D-102)** : dans Paramètres, coche tes sports encadrés. Coche « Musculation » pour voir l’onglet Exercices ; décoche tout pour tout voir. Dans une séance de course, **+ Renforcement** ajoute 3 séries d’un exercice après le footing. En texte : `45' Z2 + 3×(renfo 10 squats + renfo repos 1')`.
 
+## Relances (D-103)
+
+1. Ouvre **Planning** : la carte « Relances » liste les élèves à relancer, avec la raison (« Pas de retour sur « Sortie souple » », « Aucune nouvelle depuis 9 jours »…).
+2. **✍️ … : préparer le message** : le texte est prêt. Modifie-le à ta façon, puis **Envoyer à …** : il part dans la conversation de l’élève.
+3. L’élève passe « En attente de réponse » pendant 3 jours.
+4. Dis-moi : les brouillons sonnent-ils comme toi ? Quelles situations manquent ?
+

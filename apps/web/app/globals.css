@@ -1307,4 +1307,21 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 
 .prog-weeks.card-body { padding: 0 16px; }
 .b-sport-tag { border: 0; cursor: pointer; }
+/* Relances (D-103) */
+.relances { margin-bottom: 16px; }
+.rl-list { display: grid; gap: 10px; }
+.rl { border: 1px solid var(--rule); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; }
+.rl.silent, .rl.at_risk { border-left: 4px solid var(--attention); }
+.rl.watch { border-left: 4px solid color-mix(in srgb, var(--attention) 50%, var(--rule)); }
+.rl-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.rl-name { font-weight: 750; }
+.rl-pill.silent, .rl-pill.at_risk { background: color-mix(in srgb, var(--attention) 20%, var(--surface)); color: var(--ink); }
+.rl-pill.on_track { background: var(--mint); color: var(--mint-ink); }
+.rl-reason { font-size: 14px; flex: 1 1 220px; }
+.rl-edit { display: grid; gap: 8px; }
+.rl-edit textarea { width: 100%; font: inherit; }
+.rl-sent { margin: 0; font-weight: 600; }
+.rl-bravo > summary { cursor: pointer; font-weight: 650; }
+.rl-bravo .rl-list { margin-top: 8px; }
+.rl-waiting { margin: 0; font-size: 14px; }
 

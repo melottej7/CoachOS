@@ -1769,3 +1769,36 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Test serveur : modules relus après enregistrement du profil (musculation seule, les deux, endurance seule).
   - `npm test` : **312 passés** (+3 PostgreSQL), typecheck OK.
   - Navigateur (démo, rien de coché) : sport « Musculation » proposé, « + Renforcement » dans une séance de course, exercice « Pont fessier » rattaché à la bibliothèque. Séance non enregistrée.
+
+## D-103 · Relances pré-rédigées et statut d’adhésion · 2026-11-21
+
+- **Contexte.** Gestion du coach (D-096), premier volet : savoir qui relancer et le faire en un geste. C’est aussi la recommandation de l’analyse produit (17_ANALYSE_PRODUIT.md : statuts lisibles, pas de score opaque, modèles de messages avant l’IA).
+- **Décision.**
+  - **Statut de chaque élève**, par des règles simples, toujours expliquées en une phrase :
+    - **Silencieux** : au moins 2 séances sur les 14 derniers jours, et 7 jours sans retour ni message de l’élève ;
+    - **À risque** : pas à 100 % depuis moins de 14 jours (D-088), ou 2 séances sans nouvelle ou non faites sur 7 jours ;
+    - **À surveiller** : une séance sans retour 2 jours après, ou déclarée non faite ;
+    - **En rythme** ; **Sans séance** (rien ces 14 jours ni dans les 7 prochains : c’est au coach de planifier, pas de relance).
+  - **Relance proposée** selon la situation : reprendre contact, pas à 100 %, séances manquées, retour attendu, et « Encourager » quand toutes les séances des 7 derniers jours sont faites (2 au moins).
+    - Le brouillon est en tutoiement, chaleureux. Il nomme l’élève, la séance et le jour.
+    - **Aucune question de santé** : pour « pas à 100 % », il propose d’en parler par un appel (D-084).
+  - **Planning › carte « Relances »**, en tête :
+    - les élèves à relancer, avec le statut, la raison et « ✍️ … : préparer le message » ;
+    - le coach **relit, modifie, puis envoie lui-même** (« Envoyer à Noah ») dans la conversation de l’élève ; un retour attendu y est rattaché à sa séance.
+    - Une relance envoyée passe « **En attente de réponse** » pendant 3 jours, puis revient si rien n’a bougé.
+    - Les encouragements sont repliés sous « 👏 Encourager ».
+  - Rien n’est envoyé automatiquement (CLAUDE.md). Aucune nouvelle table : calcul à la lecture (séances publiées, retours, messages, « à 100 % ? »), pour les seuls élèves suivis par le coach connecté.
+- **Preuves.**
+  - Tests du domaine :
+    - les cinq statuts et leurs seuils (délai de 2 jours, 7 jours de silence, « pas à 100 % » ancien ignoré) ;
+    - l’attente après relance, et un message du coach antérieur au signal qui ne compte pas ;
+    - les brouillons (prénom, séance, jour), sans mot de santé.
+  - Tests serveur :
+    - rien pour un autre coach ni un élève ;
+    - séance passée sans retour → « À surveiller », brouillon qui la nomme ; après le message du coach → « en attente ».
+  - `npm test` : **319 passés** (+3 PostgreSQL), typecheck OK.
+  - Navigateur (démo) :
+    - la carte propose Noah, « Pas de retour sur « Sortie souple » », avec le brouillon « Coucou Noah ! Comment s’est passée ta séance « Sortie souple » de mardi ? … » ;
+    - envoyé (message enregistré), Noah passe « en attente de réponse » ;
+    - 375 px sans débordement.
+- **Suite possible** (à valider à l’usage) : statut dans la liste Élèves, tes propres modèles de relance, brouillon rédigé par l’IA dans ton style.
