@@ -6,15 +6,15 @@ import { commandAs, readAs } from '../db/client';
 
 interface Row {
   id: string; revision: number; name: string; instructions: string | null; muscle: Muscle; equipment: ExerciseEquipment[];
-  video_url: string | null; clip_id: string | null; starter: boolean; archived: boolean;
+  video_url: string | null; clip_id: string | null; starter: boolean; archived: boolean; starter_key: string | null; use_base_video: boolean;
 }
 
 const toExercise = (x: Row): Exercise => ({
   id: x.id, revision: x.revision, name: x.name, instructions: x.instructions, muscle: x.muscle, equipment: x.equipment ?? [],
-  videoUrl: x.video_url, clipId: x.clip_id, starter: x.starter, archived: x.archived,
+  videoUrl: x.video_url, clipId: x.clip_id, starter: x.starter, archived: x.archived, starterKey: x.starter_key, useBaseVideo: x.use_base_video,
 });
 
-const COLS = 'id, revision, name, instructions, muscle, equipment, video_url, clip_id, starter, archived';
+const COLS = 'id, revision, name, instructions, muscle, equipment, video_url, clip_id, starter, archived, starter_key, use_base_video';
 
 export async function listExercises(userId: string, wid: string, opts: { archived?: boolean } = {}): Promise<Exercise[]> {
   return readAs(userId, async (tx) => {

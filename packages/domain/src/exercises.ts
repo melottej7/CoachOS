@@ -39,6 +39,7 @@ export const exerciseInputSchema = z.object({
   videoUrl: z.string().trim().max(500).nullish()
     .transform((v) => (v ? v : null))
     .refine((v) => v === null || /^https:\/\/[^\s]+$/i.test(v), { message: 'Lien de vidéo : adresse commençant par https://' }),
+  useBaseVideo: z.boolean().default(true),
 }).strict();
 export type ExerciseInput = z.output<typeof exerciseInputSchema>;
 
@@ -49,13 +50,17 @@ export interface Exercise extends ExerciseInput {
   clipId: string | null;
   starter: boolean;
   archived: boolean;
+  /** D-099 : clé de l’exercice de départ d’origine (stable même si le coach le renomme). */
+  starterKey: string | null;
+  /** D-099 : montrer la vidéo de base CoachOS quand le coach n’a pas mis la sienne. */
+  useBaseVideo: boolean;
 }
 
 /**
  * Lecture d’un lien de vidéo : YouTube et Vimeo s’affichent dans la page (YouTube sans cookie publicitaire) ;
  * les autres liens s’ouvrent dans un nouvel onglet.
  */
-export function videoEmbed(url: string | null | undefined): { kind: 'youtube' | 'vimeo'; src: string } | { kind: 'link'; src: string } | null {
+export function videoEmbed(url: string | null | undefined): { kind: 'youtube' | 'vimeo' | 'file' | 'link'; src: string } | null {
   if (!url) return null;
   let u: URL;
   try { u = new URL(url); } catch { return null; }
@@ -71,6 +76,8 @@ export function videoEmbed(url: string | null | undefined): { kind: 'youtube' | 
     const v = u.pathname.match(/(\d{6,12})/)?.[1];
     if (v) return { kind: 'vimeo', src: `https://player.vimeo.com/video/${v}` };
   }
+  // Fichier vidéo direct (hébergement de CoachOS ou du coach) : lu dans la page.
+  if (/\.(mp4|m4v|webm|mov)$/i.test(u.pathname)) return { kind: 'file', src: u.toString() };
   return { kind: 'link', src: u.toString() };
 }
 
@@ -84,6 +91,40 @@ export function detectVideoType(bytes: Uint8Array): (typeof EXERCISE_CLIP_TYPES)
 }
 
 type Starter = [name: string, muscle: Muscle, equipment: ExerciseEquipment[], instructions: string];
+
+/** Clé stable d’un exercice de départ : « Squat goblet » → « squat-goblet ». */
+export function starterKey(name: string): string {
+  return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+// ---------- Vidéos de base CoachOS (D-099) ----------
+
+export const BASE_VIDEO_SOURCES = ['founder', 'ai', 'founder_ai'] as const;
+export type BaseVideoSource = (typeof BASE_VIDEO_SOURCES)[number];
+/** Ce que l’élève lit sous la vidéo : il sait toujours qui il regarde. */
+export const BASE_VIDEO_SOURCE_LABELS: Record<BaseVideoSource, string> = {
+  founder: 'Vidéo CoachOS',
+  ai: 'Vidéo CoachOS générée par IA',
+  founder_ai: 'Vidéo CoachOS, générée par IA à partir de vrais mouvements',
+};
+export interface BaseVideo { url: string; source: BaseVideoSource; validatedBy: string; validatedOn: string }
+
+/**
+ * Catalogue des vidéos de base, par clé d’exercice de départ. N’y entre qu’une vidéo dont le geste a été validé
+ * par le fondateur (`validatedBy`, `validatedOn`). Vide tant que les vidéos ne sont pas produites.
+ */
+export const BASE_VIDEOS: Readonly<Record<string, BaseVideo>> = {};
+
+/** Vidéo montrée à l’élève : celle du coach d’abord, sinon la vidéo de base si le coach l’accepte. */
+export function shownVideo(
+  e: Pick<Exercise, 'videoUrl' | 'clipId' | 'starterKey' | 'useBaseVideo'>,
+  catalog: Readonly<Record<string, BaseVideo>> = BASE_VIDEOS,
+): { from: 'coach_clip' } | { from: 'coach_link'; url: string } | { from: 'base'; url: string; source: BaseVideoSource } | null {
+  if (e.clipId) return { from: 'coach_clip' };
+  if (e.videoUrl) return { from: 'coach_link', url: e.videoUrl };
+  const base = e.useBaseVideo && e.starterKey ? catalog[e.starterKey] : undefined;
+  return base ? { from: 'base', url: base.url, source: base.source } : null;
+}
 
 /** Exercices de départ (D-096) : le coach les complète, ajoute ses vidéos ou les retire. Consignes générales, sans avis médical. */
 export const STARTER_EXERCISES: Starter[] = [

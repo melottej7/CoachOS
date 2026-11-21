@@ -1658,3 +1658,39 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
     - reprise à la même étape après rechargement ;
     - écran de fin, sans débordement.
 - **Non prouvé.** Vibration, bip et écran allumé sur un vrai iPhone (l’écran allumé demande https, donc la mise en ligne).
+
+## D-099 · Deux options de vidéo : celle du coach, ou une vidéo de base CoachOS · 2026-11-21
+
+- **Instruction du fondateur.** Il faut permettre deux options :
+  - soit le coach importe sa vidéo, pour que ce soit lui que l’élève voie et que cela crée du lien dans son coaching ;
+  - soit il n’a pas le temps, et une **vidéo de base** est proposée. Elle peut être générée par IA, tournée par le fondateur, ou être un mélange des deux : une extrapolation par IA de quelques vidéos du fondateur faisant des exercices.
+- **Décision.**
+  - **Priorité d’affichage**, pour chaque exercice : la vidéo du coach (fichier filmé, puis lien), sinon la vidéo de base CoachOS, sinon aucune.
+  - Le coach peut refuser la vidéo de base pour un exercice. L’élève voit toujours qui il regarde : « Vidéo de ton coach » ou « Vidéo CoachOS » (avec « générée par IA » le cas échéant).
+  - **Catalogue de vidéos de base**, commun à tous les espaces et maintenu par CoachOS :
+    - il est rattaché aux exercices de départ par une clé stable, qui tient même si le coach renomme l’exercice ;
+    - chaque vidéo indique sa source : fondateur, IA, ou fondateur et IA.
+    - Le catalogue démarre vide : les vidéos restent à produire.
+  - **Garde-fous pour l’IA** :
+    - aucune vidéo générée n’est publiée sans validation du geste par le fondateur ;
+    - l’origine IA est toujours indiquée à l’élève ;
+    - l’image d’une personne n’est utilisée qu’avec son accord (ici le fondateur) ;
+    - les conditions d’usage de l’outil choisi sont à vérifier avant publication.
+- **Réalisé.**
+  - Domaine : catalogue `BASE_VIDEOS`, vide pour l’instant. Une entrée = lien, source et validation (qui et quand). La règle `shownVideo` fixe la priorité. Un lien vers un fichier vidéo direct (.mp4, .mov, .webm) est lu dans la page.
+  - Migration `20261121100000_exercise_base_video.sql` (additive) :
+    - `starter_key`, clé stable remplie pour les exercices de départ existants (34 dans la démo) ;
+    - `use_base_video`, vrai par défaut.
+  - Contrat : `useBaseVideo` dans `createExercise` et `updateExercise`.
+  - Écrans :
+    - la fiche d’exercice affiche « Vidéo montrée à tes élèves », avec la case « Montrer la vidéo CoachOS tant que je n’ai pas mis la mienne » quand une vidéo de base existe ;
+    - la liste distingue « ▶ ta vidéo », « ▶ vidéo CoachOS » et « sans vidéo » ;
+    - sous chaque vidéo, l’élève lit son origine.
+  - Guide de tournage et de production pour le fondateur : [VIDEOS_DE_BASE.md](VIDEOS_DE_BASE.md) (34 exercices avec leur clé).
+- **Preuves.**
+  - Tests du domaine : priorité, refus du coach, clé absente ou inconnue, clés sans accent et uniques, catalogue validé.
+  - Test serveur : clé gardée après renommage, refus enregistré.
+  - `npm test` : **304 passés** (+3 PostgreSQL), typecheck OK.
+  - Navigateur : fiche « Pompes », sans vidéo, qui annonce « Pas encore de vidéo CoachOS ».
+- **Non prouvé.** L’affichage d’une vraie vidéo de base : aucune n’est encore produite.
+

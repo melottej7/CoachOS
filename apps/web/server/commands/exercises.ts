@@ -1,4 +1,4 @@
-import { detectVideoType, EXERCISE_CLIP_MAX_BYTES, exerciseInputSchema, parseWith, STARTER_EXERCISES, type ExerciseInput } from '@coachos/domain';
+import { detectVideoType, EXERCISE_CLIP_MAX_BYTES, exerciseInputSchema, parseWith, STARTER_EXERCISES, starterKey, type ExerciseInput } from '@coachos/domain';
 import { z } from 'zod';
 import { commandAs, type Tx } from '../db/client';
 import { conflict, invalid, notVisible } from '../errors';
@@ -34,9 +34,9 @@ export async function createExercise(meta: Meta, body: unknown): Promise<StoredR
     return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'exercise.create', key: meta.idempotencyKey, body: v }, async () => {
       if (await nameTaken(tx, wid, v.name, null)) throw invalid([{ path: 'name', rule: 'Un exercice porte déjà ce nom' }]);
       const r = await tx.query<{ id: string; revision: number }>(
-        `insert into public.exercises(workspace_id, owner_id, name, instructions, muscle, equipment, video_url)
-         values ($1, auth.uid(), $2, $3, $4, $5, $6) returning id, revision`,
-        [wid, v.name, v.instructions, v.muscle, v.equipment, v.videoUrl],
+        `insert into public.exercises(workspace_id, owner_id, name, instructions, muscle, equipment, video_url, use_base_video)
+         values ($1, auth.uid(), $2, $3, $4, $5, $6, $7) returning id, revision`,
+        [wid, v.name, v.instructions, v.muscle, v.equipment, v.videoUrl, v.useBaseVideo],
       );
       const x = r.rows[0]!;
       await audit(tx, wid, meta.actorId, 'exercise.create', x.id, meta.requestId);
@@ -58,9 +58,9 @@ export async function updateExercise(meta: Meta & { exerciseId: string }, body: 
       if (!v.archive && await nameTaken(tx, wid, v.name, meta.exerciseId)) throw invalid([{ path: 'name', rule: 'Un exercice porte déjà ce nom' }]);
       const r = await tx.query<{ revision: number }>(
         `update public.exercises set name = $3, instructions = $4, muscle = $5, equipment = $6, video_url = $7,
-           archived = coalesce($8, archived), revision = revision + 1
+           archived = coalesce($8, archived), use_base_video = $9, revision = revision + 1
          where workspace_id = $1 and id = $2 returning revision`,
-        [wid, meta.exerciseId, v.name, v.instructions, v.muscle, v.equipment, v.videoUrl, v.archive ?? null],
+        [wid, meta.exerciseId, v.name, v.instructions, v.muscle, v.equipment, v.videoUrl, v.archive ?? null, v.useBaseVideo],
       );
       await audit(tx, wid, meta.actorId, v.archive ? 'exercise.archive' : 'exercise.update', meta.exerciseId, meta.requestId);
       return { status: 200, body: { id: meta.exerciseId, revision: r.rows[0]!.revision } };
@@ -79,8 +79,8 @@ export async function addStarterExercises(meta: Meta): Promise<StoredResponse> {
       for (const [name, muscle, equipment, instructions] of STARTER_EXERCISES) {
         if (have.has(name.toLowerCase())) continue;
         await tx.query(
-          `insert into public.exercises(workspace_id, owner_id, name, instructions, muscle, equipment, starter) values ($1, auth.uid(), $2, $3, $4, $5, true)`,
-          [wid, name, instructions, muscle, equipment],
+          `insert into public.exercises(workspace_id, owner_id, name, instructions, muscle, equipment, starter, starter_key) values ($1, auth.uid(), $2, $3, $4, $5, true, $6)`,
+          [wid, name, instructions, muscle, equipment, starterKey(name)],
         );
         added++;
       }

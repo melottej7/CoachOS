@@ -337,4 +337,5 @@ Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et
 4. Publie, puis ouvre la séance côté élève (sur téléphone) : sous chaque exercice, **▶ Voir comment faire** montre tes consignes et ta vidéo.
 5. Dis-moi : les exercices de départ te conviennent-ils ? Lesquels ajouter ? La vidéo se lit-elle bien sur ton iPhone ?
 6. **Suivre la séance** (sur téléphone, en élève) : « ▶ Suivre la séance pas à pas ». Une étape par écran : vidéo, « Série 1 sur 4 », « ✓ Fait, suivant ». Le repos démarre seul, avec un bip et une vibration à la fin. Ferme la page en cours de séance et rouvre-la : tu reprends à la même étape.
+7. **Vidéo du coach ou vidéo CoachOS (D-099)** : dans la fiche d’un exercice, « Vidéo montrée à tes élèves » dit laquelle s’affiche. Ta vidéo passe toujours en premier. Les vidéos CoachOS apparaîtront quand tu auras produit celles des exercices de départ ([VIDEOS_DE_BASE.md](VIDEOS_DE_BASE.md)).
 

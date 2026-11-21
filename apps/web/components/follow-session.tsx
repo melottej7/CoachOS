@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   describeIntensity, describeMeasure, followSequence, PHASE_LABELS, setLabel, type Block, type FollowStep, type Sport,
 } from '@coachos/domain';
-import { ExerciseVideo } from './exercise-video';
+import { ExerciseVideo, hasVideo } from './exercise-video';
 import type { ExerciseInfo } from './structure-view';
 
 /**
@@ -84,7 +84,7 @@ function StepScreen({ wid, f, next, exercises, onNext, onPrev }: {
       {!rest && ex ? (
         <div className="fw-media">
           <ExerciseVideo wid={wid} exercise={ex} />
-          {ex.instructions ? <details className="fw-howto" open={!ex.videoUrl && !ex.clipId}><summary>Consignes</summary><p>{ex.instructions}</p></details> : null}
+          {ex.instructions ? <details className="fw-howto" open={!hasVideo(ex)}><summary>Consignes</summary><p>{ex.instructions}</p></details> : null}
         </div>
       ) : null}
       <div className="actions fw-actions">

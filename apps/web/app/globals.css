@@ -1226,4 +1226,7 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .fw-next { margin: 0; font-size: 14px; }
 .fw-end { text-align: center; justify-items: center; }
 .fw-big { font-size: 48px; margin: 0; }
+.ex-fig { margin: 0; display: grid; gap: 4px; }
+.ex-cap { font-size: 12.5px; color: var(--muted); }
+.ex-cap.base::before { content: 'ⓘ '; }
 

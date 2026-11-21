@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  describeBlock, describeTotals, detectVideoType, exerciseIdsOf, fitSteps, followSequence, parseNotation, setLabel, presetsFor, STARTER_EXERCISES, structureSchema,
+  BASE_VIDEOS, describeBlock, describeTotals, detectVideoType, shownVideo, starterKey, exerciseIdsOf, fitSteps, followSequence, parseNotation, setLabel, presetsFor, STARTER_EXERCISES, structureSchema,
   structureTotals, toNotation, videoEmbed, type Block,
 } from './index';
 
@@ -107,5 +107,30 @@ describe('suivre la séance pas à pas (M3)', () => {
     expect(setLabel(followSequence(nested)[0]!.sets)).toBe('Tour 1 sur 2 · série 1 sur 3');
     const huge = parseNotation('50×(50×(1 pompe + repos 5"))', 'strength').blocks;
     expect(followSequence(huge)).toHaveLength(400);
+  });
+});
+
+describe('vidéo montrée à l’élève (D-099)', () => {
+  const catalog = { 'squat-goblet': { url: 'https://videos.coachos.test/squat-goblet.mp4', source: 'founder_ai' as const, validatedBy: 'fondateur', validatedOn: '2026-11-21' } };
+  const ex = { videoUrl: null, clipId: null, starterKey: 'squat-goblet', useBaseVideo: true };
+  it('celle du coach d’abord (fichier, puis lien), sinon la vidéo de base acceptée, sinon rien', () => {
+    expect(shownVideo({ ...ex, clipId: 'c1', videoUrl: 'https://youtu.be/abcdefghijk' }, catalog)).toEqual({ from: 'coach_clip' });
+    expect(shownVideo({ ...ex, videoUrl: 'https://youtu.be/abcdefghijk' }, catalog)).toEqual({ from: 'coach_link', url: 'https://youtu.be/abcdefghijk' });
+    expect(shownVideo(ex, catalog)).toEqual({ from: 'base', url: catalog['squat-goblet'].url, source: 'founder_ai' });
+    expect(shownVideo({ ...ex, useBaseVideo: false }, catalog)).toBeNull();
+    expect(shownVideo({ ...ex, starterKey: null }, catalog)).toBeNull();
+    expect(shownVideo({ ...ex, starterKey: 'pompes' }, catalog)).toBeNull();
+  });
+  it('clé stable, sans accent ; fichier vidéo direct lu dans la page ; catalogue validé', () => {
+    expect(starterKey('Soulevé de terre jambes tendues')).toBe('souleve-de-terre-jambes-tendues');
+    expect(starterKey('Mobilité des hanches 90/90')).toBe('mobilite-des-hanches-90-90');
+    expect(new Set(STARTER_EXERCISES.map(([n]) => starterKey(n))).size).toBe(STARTER_EXERCISES.length);
+    expect(videoEmbed('https://videos.coachos.test/a/squat.mp4')).toEqual({ kind: 'file', src: 'https://videos.coachos.test/a/squat.mp4' });
+    // Toute vidéo de base nommée par le catalogue est validée et rattachée à un exercice de départ.
+    const keys = new Set(STARTER_EXERCISES.map(([n]) => starterKey(n)));
+    for (const [k, v] of Object.entries(BASE_VIDEOS)) {
+      expect(keys.has(k)).toBe(true);
+      expect(v.url.startsWith('https://') && v.validatedBy && /^\d{4}-\d{2}-\d{2}$/.test(v.validatedOn)).toBeTruthy();
+    }
   });
 });

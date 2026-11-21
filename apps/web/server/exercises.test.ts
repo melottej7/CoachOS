@@ -47,6 +47,11 @@ describe('exercices de musculation (D-096)', () => {
     expect((await addStarterExercises(meta(USERS.marine))).body).toEqual({ added: 0, skipped: STARTER_EXERCISES.length });
     const list = await listExercises(USERS.camille, WORKSPACE_A);
     expect(list.filter((e) => e.starter)).toHaveLength(STARTER_EXERCISES.length - 1);
+    // D-099 : chaque exercice de départ garde sa clé, même renommé ; le coach peut refuser la vidéo de base.
+    const goblet = list.find((e) => e.name === 'Squat goblet')!;
+    expect(goblet).toMatchObject({ starterKey: 'squat-goblet', useBaseVideo: true });
+    await updateExercise({ ...meta(USERS.marine), exerciseId: goblet.id }, { name: 'Goblet squat (mon nom)', muscle: 'legs', expectedRevision: goblet.revision, useBaseVideo: false });
+    expect(await readExercise(USERS.camille, WORKSPACE_A, goblet.id)).toMatchObject({ name: 'Goblet squat (mon nom)', starterKey: 'squat-goblet', useBaseVideo: false });
     expect(await codeOf(addStarterExercises(meta(USERS.camille)))).toBe('RESOURCE_NOT_VISIBLE');
   });
 

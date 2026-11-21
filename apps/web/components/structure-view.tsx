@@ -3,10 +3,10 @@ import {
   type Block, type References, type Sport, type Step,
 } from '@coachos/domain';
 import { SessionChart } from './session-chart';
-import { ExerciseVideo } from './exercise-video';
+import { ExerciseVideo, hasVideo } from './exercise-video';
 
 /** D-096 : ce que l’élève voit d’un exercice de la bibliothèque (consignes et vidéo du coach). */
-export interface ExerciseInfo { id: string; name: string; instructions: string | null; videoUrl: string | null; clipId: string | null }
+export interface ExerciseInfo { id: string; name: string; instructions: string | null; videoUrl: string | null; clipId: string | null; starterKey?: string | null; useBaseVideo?: boolean }
 type Ctx = { sport: Sport; refs?: References; wid?: string; exercises?: Record<string, ExerciseInfo> };
 
 /**
@@ -56,9 +56,9 @@ function StepRow({ s, c }: { s: Step; c: Ctx }) {
       {target ? <>{' · '}<span className="sv-target">{zone ? <span className="zone-dot" aria-hidden="true" /> : null}{target}{zonePace ? <span className="sv-pace">{' · '}{zonePace}</span> : null}</span></> : null}
       {extra.length ? <span className="sv-extra"> {extra.join(' · ')}</span> : null}
       {s.note ? <span className="sv-note"> — {s.note}</span> : null}
-      {ex && c.wid && (ex.instructions || ex.videoUrl || ex.clipId) ? (
+      {ex && c.wid && (ex.instructions || hasVideo(ex)) ? (
         <details className="sv-ex">
-          <summary>{ex.videoUrl || ex.clipId ? '▶ Voir comment faire' : 'Comment faire'}</summary>
+          <summary>{hasVideo(ex) ? '▶ Voir comment faire' : 'Comment faire'}</summary>
           {ex.instructions ? <p className="sv-ex-text">{ex.instructions}</p> : null}
           <ExerciseVideo wid={c.wid} exercise={ex} />
         </details>

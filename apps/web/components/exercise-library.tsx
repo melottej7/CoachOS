@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import {
-  EXERCISE_CLIP_MAX_BYTES, EXERCISE_EQUIPMENT, EXERCISE_EQUIPMENT_LABELS, MUSCLE_LABELS, MUSCLE_SHORT, MUSCLES,
+  BASE_VIDEO_SOURCE_LABELS, BASE_VIDEOS, EXERCISE_CLIP_MAX_BYTES, EXERCISE_EQUIPMENT, EXERCISE_EQUIPMENT_LABELS, MUSCLE_LABELS, MUSCLE_SHORT, MUSCLES,
   type Exercise, type ExerciseEquipment, type Muscle,
 } from '@coachos/domain';
 import { mutate, newKey } from './api-client';
@@ -11,9 +11,9 @@ import { ExerciseVideo, hasVideo } from './exercise-video';
 
 // D-096 · Bibliothèque d’exercices du coach : chercher, créer, modifier, filmer ou lier une vidéo.
 
-type Draft = { name: string; muscle: Muscle; equipment: ExerciseEquipment[]; instructions: string; videoUrl: string };
-const empty: Draft = { name: '', muscle: 'legs', equipment: [], instructions: '', videoUrl: '' };
-const toDraft = (e: Exercise): Draft => ({ name: e.name, muscle: e.muscle, equipment: e.equipment, instructions: e.instructions ?? '', videoUrl: e.videoUrl ?? '' });
+type Draft = { name: string; muscle: Muscle; equipment: ExerciseEquipment[]; instructions: string; videoUrl: string; useBaseVideo: boolean };
+const empty: Draft = { name: '', muscle: 'legs', equipment: [], instructions: '', videoUrl: '', useBaseVideo: true };
+const toDraft = (e: Exercise): Draft => ({ name: e.name, muscle: e.muscle, equipment: e.equipment, instructions: e.instructions ?? '', videoUrl: e.videoUrl ?? '', useBaseVideo: e.useBaseVideo });
 
 export function ExerciseLibrary({ wid, items }: { wid: string; items: Exercise[] }) {
   const router = useRouter();
@@ -27,7 +27,7 @@ export function ExerciseLibrary({ wid, items }: { wid: string; items: Exercise[]
     const k = q.trim().toLowerCase();
     return items.filter((e) => (!muscle || e.muscle === muscle) && (!k || e.name.toLowerCase().includes(k) || (e.instructions ?? '').toLowerCase().includes(k)));
   }, [items, q, muscle]);
-  const withVideo = items.filter(hasVideo).length;
+  const withVideo = items.filter((e) => hasVideo(e)).length;
 
   return (
     <div className="stack">
@@ -53,7 +53,7 @@ export function ExerciseLibrary({ wid, items }: { wid: string; items: Exercise[]
         </span>
       </div>
       {note ? <p className="banner ok" role="status">{note}</p> : null}
-      <p className="muted">{items.length} exercice{items.length > 1 ? 's' : ''}, dont {withVideo} avec vidéo. Tes élèves voient la vidéo dans leur séance, sur leur téléphone.</p>
+      <p className="muted">{items.length} exercice{items.length > 1 ? 's' : ''}, dont {withVideo} avec vidéo. Tes élèves voient ta vidéo dans leur séance ; sans la tienne, la vidéo CoachOS quand elle existe.</p>
 
       {creating ? (
         <ExerciseForm wid={wid} initial={empty} onDone={(id) => { setCreating(false); if (id) setOpen(id); router.refresh(); }} />
@@ -66,7 +66,7 @@ export function ExerciseLibrary({ wid, items }: { wid: string; items: Exercise[]
               <button type="button" className="ex-row" aria-expanded={open === e.id} onClick={() => { setOpen(open === e.id ? null : e.id); setCreating(false); }}>
                 <span className="ex-name">{e.name}</span>
                 <span className="ex-meta muted">{MUSCLE_SHORT[e.muscle]}{e.equipment.length ? ` · ${e.equipment.map((x) => EXERCISE_EQUIPMENT_LABELS[x]).join(', ')}` : ''}</span>
-                <span className={`ex-badge${hasVideo(e) ? ' on' : ''}`}>{hasVideo(e) ? '▶ vidéo' : 'sans vidéo'}</span>
+                <span className={`ex-badge${hasVideo(e) ? ' on' : ''}`}>{e.clipId || e.videoUrl ? '▶ ta vidéo' : hasVideo(e) ? '▶ vidéo CoachOS' : 'sans vidéo'}</span>
               </button>
               {open === e.id ? <ExerciseForm wid={wid} initial={toDraft(e)} exercise={e} onDone={() => router.refresh()} /> : null}
             </li>
@@ -84,8 +84,10 @@ function ExerciseForm({ wid, initial, exercise, onDone }: { wid: string; initial
   const [saved, setSaved] = useState<string | null>(null);
   const [key, setKey] = useState(newKey());
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => { setD((x) => ({ ...x, [k]: v })); setSaved(null); };
-  const body = { name: d.name, muscle: d.muscle, equipment: d.equipment, instructions: d.instructions || null, videoUrl: d.videoUrl || null };
-  const preview = exercise ? { ...exercise, videoUrl: d.videoUrl || null } : { id: 'apercu', name: d.name || 'Exercice', videoUrl: d.videoUrl || null, clipId: null };
+  const body = { name: d.name, muscle: d.muscle, equipment: d.equipment, instructions: d.instructions || null, videoUrl: d.videoUrl || null, useBaseVideo: d.useBaseVideo };
+  const preview = exercise ? { ...exercise, videoUrl: d.videoUrl || null, useBaseVideo: d.useBaseVideo } : { id: 'apercu', name: d.name || 'Exercice', videoUrl: d.videoUrl || null, clipId: null };
+  const base = exercise?.starterKey ? BASE_VIDEOS[exercise.starterKey] : undefined;
+  const own = Boolean(exercise?.clipId || d.videoUrl);
 
   async function save(archive = false) {
     setState('saving'); setError(null);
@@ -145,7 +147,14 @@ function ExerciseForm({ wid, initial, exercise, onDone }: { wid: string; initial
           <span className="muted">MP4 ou MOV, 25 Mio au plus (environ 30 secondes). Visible seulement par toi et tes élèves.</span>
         </div>
       ) : <p className="muted">Enregistre d’abord l’exercice ; tu pourras ensuite y ajouter ta propre vidéo filmée.</p>}
-      {exercise?.clipId || d.videoUrl ? <ExerciseVideo wid={wid} exercise={preview} compact /> : null}
+      <fieldset className="choice ex-source"><legend>Vidéo montrée à tes élèves</legend>
+        {own ? <p className="muted">Ta vidéo : c’est toi que tes élèves voient.{base ? ' La vidéo CoachOS ne s’affiche pas tant que la tienne est là.' : ''}</p>
+          : base ? (
+            <label className="check"><input type="checkbox" checked={d.useBaseVideo} onChange={(e) => set('useBaseVideo', e.target.checked)} />
+              <span>Montrer la vidéo CoachOS tant que je n’ai pas mis la mienne <span className="hint">({BASE_VIDEO_SOURCE_LABELS[base.source]})</span></span></label>
+          ) : <p className="muted">{exercise?.starterKey ? 'Pas encore de vidéo CoachOS pour cet exercice : ajoute la tienne, ou elle arrivera bientôt.' : 'Ajoute ta vidéo (lien ou fichier) : c’est toi que tes élèves verront.'}</p>}
+      </fieldset>
+      {own || (base && d.useBaseVideo) ? <ExerciseVideo wid={wid} exercise={preview} compact /> : null}
       {error ? <p className="field-error" role="alert">{error}</p> : null}
       {saved ? <p className="muted" role="status">{saved}</p> : null}
       <div className="actions">

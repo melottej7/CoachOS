@@ -3146,6 +3146,10 @@
                 "type": "null"
               }
             ]
+          },
+          "useBaseVideo": {
+            "type": "boolean",
+            "description": "D-099 : montrer la vidéo de base CoachOS quand le coach n’a pas mis la sienne (vrai par défaut)."
           }
         }
       },
@@ -3222,6 +3226,10 @@
           },
           "archive": {
             "type": "boolean"
+          },
+          "useBaseVideo": {
+            "type": "boolean",
+            "description": "D-099 : montrer la vidéo de base CoachOS quand le coach n’a pas mis la sienne (vrai par défaut)."
           }
         }
       }

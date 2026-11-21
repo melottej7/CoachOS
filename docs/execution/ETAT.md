@@ -307,6 +307,7 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
     - lecture élève avec « Voir comment faire ».
     - Migration `20261121090000` appliquée. `npm test` : **300 passés**.
     - **D-098 : M3 fait.** « ▶ Suivre la séance pas à pas » : une étape par écran, vidéo, série en cours, repos chronométré automatique, reprise après coupure. `npm test` : **302 passés**.
+    - **D-099 : deux options de vidéo.** La vidéo du coach d’abord, sinon une vidéo de base CoachOS (fondateur, IA ou mélange), avec son origine affichée. Le coach peut la refuser. Catalogue vide : vidéos à produire par le fondateur ([VIDEOS_DE_BASE.md](VIDEOS_DE_BASE.md)). Migration `20261121100000` appliquée. `npm test` : **304 passés**.
     - Prochaine tranche : M4 (séries et charges réalisées dans le retour, progression des charges), puis M5 (modularité de l’espace, séances mixtes).
   - **Analyse produit (21 novembre)** : [docs/17_ANALYSE_PRODUIT.md](../17_ANALYSE_PRODUIT.md), en réponse au cadrage « OS du coach sportif hybride ». Recommandations : rester sur le coach de course à pied indépendant ; geler les nouvelles fonctions ; mettre en ligne ; pilote de 4 semaines avec les athlètes du fondateur ; brief du jour et mode simple. 8 questions à trancher par le fondateur, aucune décision prise sans lui.
   - **D-095** : téléphone sur le même Wi-Fi : http://192.168.65.68:3000 (adresse « Network » du serveur), réseaux privés autorisés en développement.
@@ -331,5 +332,6 @@ Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au mic
 
 **Pour le fondateur** :
 - Crédit Anthropic pour l’IA ; le budget mensuel est de 10 $ par espace par défaut.
+- Vidéos de base des 34 exercices : à filmer ou produire (guide [VIDEOS_DE_BASE.md](VIDEOS_DE_BASE.md)), puis à me transmettre.
 - Base de séances : celle de Foulée fait foi (D-093), plus de tableur attendu. Dans Bibliothèque, clique « 🏃 Mettre à jour Foulée (23) » pour passer tes fractions courtes en Z6. Tes programmes sont reçus et lus (D-085).
 - Accès Garmin reporté (D-026).
