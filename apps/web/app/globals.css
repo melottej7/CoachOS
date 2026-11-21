@@ -1330,8 +1330,9 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .rt textarea { width: 100%; font: inherit; }
 .rt-preview { margin: 0; font-size: 14px; padding: 8px 10px; border-radius: 10px; background: var(--surface-2); }
 /* Semaines en blocs, séances en tuiles (D-105) */
-.pw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; padding: 0 16px 16px; }
-.pw { border: 1px solid var(--rule); border-radius: 14px; padding: 10px 12px 12px; display: grid; gap: 10px; background: var(--surface); border-top: 4px solid var(--pc, var(--accent)); }
+.pw-grid { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 0 16px 16px; }
+
+.pw { border: 1px solid var(--rule); border-radius: 14px; padding: 10px 12px; display: grid; gap: 10px; background: var(--surface); border-left: 5px solid var(--pc, var(--accent)); }
 .pw.tremplin { --pc: color-mix(in srgb, var(--accent) 45%, var(--surface)); }
 .pw.developpement { --pc: var(--accent); }
 .pw.recuperation { --pc: color-mix(in srgb, var(--accent) 25%, var(--surface)); }
@@ -1357,7 +1358,14 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .pt > details[open] > summary { min-height: 0; border-color: var(--accent); }
 .pt > details[open] .pt-title { -webkit-line-clamp: unset; }
 .pt-why { margin: 6px 0 0; padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--surface-2); font-size: 14px; border-radius: 0 8px 8px 0; }
-@media (max-width: 639px) { .pw-grid { grid-template-columns: 1fr; padding: 0 12px 12px; } .pw-tiles { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); } }
+@media (max-width: 639px) { .pw-grid { padding: 0 12px 12px; } .pw-tiles { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); } }
 
 .pt > details { height: 100%; }
 .pt:has(details[open]) > details { height: auto; }
+/* D-105 (retour du fondateur) : une ligne par semaine ; à gauche la semaine, à droite ses séances en cases. */
+@media (min-width: 640px) {
+  .pw { grid-template-columns: 170px 1fr; align-items: start; column-gap: 14px; }
+  .pw-head { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .pw-vol { margin-left: 0; white-space: normal; }
+  .pw-tiles { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+}

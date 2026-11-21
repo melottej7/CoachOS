@@ -1832,3 +1832,8 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
     - Les tuiles d’une même semaine ont la même hauteur.
   - **Toucher une tuile** l’ouvre sur toute la largeur du bloc, avec « Samedi · pourquoi ? » et l’explication.
 - **Preuves.** Navigateur (démo, semi de Camille) : ordinateur, 8 blocs sur deux colonnes ; téléphone à 375 px, 3 tuiles par ligne, tuile ouverte avec son « pourquoi », sans débordement. Typecheck OK. Aucun calcul modifié.
+- **Ajusté le même jour (retour du fondateur).** « Non, ligne pour la semaine, mais au lieu des petites lignes pour les séances, une petite case comme maintenant. »
+  - **Une ligne par semaine**, en pleine largeur. Sur ordinateur, la semaine est à gauche (S1, date, phase, volume) et ses séances en cases à droite ; sur téléphone, la semaine au-dessus de ses cases.
+  - La couleur de la phase passe en liseré à gauche de la ligne. Les cases et le « pourquoi » au toucher ne changent pas.
+  - Vérifié sur ordinateur et à 375 px, sans débordement.
+
