@@ -1724,3 +1724,24 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Navigateur (démo, Camille à 375 px) : séance « Renfo haut du corps » publiée pour aujourd’hui et suivie pas à pas, avec 8 répétitions notées au lieu de 10 à la 3ᵉ série.
     - Le retour reprend ce « 8 ». Une fois envoyé, sa séance affiche « 1 série en moins » et l’onglet Progression « Tes charges ».
     - Côté coach : même comparaison dans la revue, et carte « Charges en musculation » dans la fiche.
+
+## D-101 · Page « Programme » refondue : le programme d’abord · 2026-11-21
+
+- **Retour du fondateur.** « J’aime pas du tout le rendu ici lorsqu’on veut créer un programme de run. »
+  - Sa capture montrait la page dans le mode Lecteur de Safari : il lui a été indiqué comment en sortir.
+  - Mais la page était aussi mal ordonnée : les réglages et l’IA venaient d’abord, le programme lui-même tout en bas, après beaucoup de texte.
+- **Décision (validée par le fondateur : « refonds-la »).**
+  1. **En-tête** : nom de l’objectif, puis des pastilles (distance, date, objectif chrono, jours) au lieu d’un paragraphe. Un programme déjà créé s’annonce en un bandeau court, avec « Régénérer une partie ».
+  2. **Le programme en un coup d’œil** :
+     - quatre repères : volume du départ au pic, séance longue la plus longue, séances de ta bibliothèque, points d’attention ;
+     - un **graphique du volume par semaine**, coloré par phase (tremplin, développement, semaine allégée hachurée, affûtage), avec la course au bout. Les phases sont aussi écrites en légende, la couleur n’est jamais seule. Chaque barre mène à sa semaine.
+     - Le bouton « Créer en brouillons ↓ » est visible tout de suite.
+  3. **Semaine par semaine** : une ligne par semaine (phase, volume, séances en pastilles). Toucher une semaine déplie le « pourquoi » de chaque séance.
+  4. **Créer le programme** : points d’attention, séances déjà prévues, case de décision et bouton, sans long paragraphe.
+  5. **« ⚙️ Ajuster le programme »**, replié en bas : premier lundi, jours, ta méthode, demande à l’IA. Il est ouvert d’office s’il manque des jours ou si des réglages de l’IA sont appliqués.
+  - Rien ne change dans le calcul ni dans la création : la page est seulement réordonnée et mise en forme.
+- **Preuves.** Navigateur (démo, semi de Camille) :
+  - ordinateur : aperçu, graphique, semaines, création, réglages repliés ;
+  - téléphone à 375 px : repères sur deux colonnes, barres visibles, semaines lisibles, « pourquoi » déplié, sans débordement.
+  - Deux défauts corrigés pendant la vérification : barres invisibles sur téléphone, liste des semaines sans marge.
+  - `npm test` : **309 passés**, typecheck OK.
