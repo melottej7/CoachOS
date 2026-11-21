@@ -1978,6 +1978,7 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Lecture : la vidéo est servie par morceaux de 4 Mo au plus (réponse partielle 206), y compris sans plage demandée. Le lecteur demande lui-même la suite.
   - Envoi : au-delà de 4,5 Mo, Vercel refuse l’envoi avant CoachOS. L’écran le dit clairement (filmer plus court, ou mettre un lien YouTube).
   - **À faire ensuite** : envoi direct vers le stockage de fichiers Supabase pour revenir à 25 Mo et plus.
+- **Région.** Base Supabase en Irlande (`eu-west-1`) : les fonctions Vercel tournent à Dublin (`apps/web/vercel.json`, `dub1`), sinon chaque requête traverserait l’Atlantique.
 - **E-mails d’authentification.** Les invitations partent par Resend (CoachOS). En revanche, la confirmation d’inscription du coach et le mot de passe oublié partent par Supabase. Son serveur d’envoi par défaut n’écrit qu’aux membres de l’équipe du projet : il faut brancher Resend en SMTP dans Supabase avant d’inviter des élèves.
 - **Preuves.** Test `poolConfig` (chiffrement en ligne, pas en local, `sslmode` respecté). `npm test` : **340 passés** (+3 PostgreSQL), typecheck OK.
 - **Non prouvé.** Connexion réelle depuis Vercel ; lecture par morceaux sur iPhone en ligne.
