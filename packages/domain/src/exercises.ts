@@ -210,3 +210,11 @@ export function setLabel(sets: SetPos[]): string | null {
   const txt = sets.map((p) => `${p.kind} ${p.k} sur ${p.n}`).join(' · ');
   return txt[0]!.toUpperCase() + txt.slice(1);
 }
+
+/** Vrai si l’exercice a une vidéo à montrer (celle du coach, ou la vidéo de base qu’il accepte). Utilisable partout. */
+export function exerciseHasVideo(
+  e: { videoUrl: string | null; clipId: string | null; starterKey?: string | null; useBaseVideo?: boolean },
+  catalog: Readonly<Record<string, BaseVideo>> = BASE_VIDEOS,
+): boolean {
+  return shownVideo({ videoUrl: e.videoUrl, clipId: e.clipId, starterKey: e.starterKey ?? null, useBaseVideo: e.useBaseVideo ?? true }, catalog) !== null;
+}

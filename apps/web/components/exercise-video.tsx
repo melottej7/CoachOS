@@ -1,6 +1,6 @@
 'use client';
 
-import { BASE_VIDEO_SOURCE_LABELS, shownVideo, videoEmbed, type BaseVideo } from '@coachos/domain';
+import { BASE_VIDEO_SOURCE_LABELS, exerciseHasVideo, shownVideo, videoEmbed, type BaseVideo } from '@coachos/domain';
 
 /** Ce qu’il faut d’un exercice pour choisir et montrer sa vidéo. */
 export interface VideoFields { id: string; name: string; videoUrl: string | null; clipId: string | null; starterKey?: string | null; useBaseVideo?: boolean }
@@ -42,5 +42,4 @@ export function ExerciseVideo({ wid, exercise, compact = false, catalog }: {
 }
 
 /** Vrai si l’exercice a une vidéo à montrer (la sienne ou celle de CoachOS). */
-export const hasVideo = (e: VideoFields, catalog?: Readonly<Record<string, BaseVideo>>) =>
-  shownVideo({ videoUrl: e.videoUrl, clipId: e.clipId, starterKey: e.starterKey ?? null, useBaseVideo: e.useBaseVideo ?? true }, catalog) !== null;
+export const hasVideo = (e: VideoFields, catalog?: Readonly<Record<string, BaseVideo>>) => exerciseHasVideo(e, catalog);
