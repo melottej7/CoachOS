@@ -100,6 +100,21 @@ export const WEEKDAY_MINUTES_LABELS: Record<WeekdayMinutes, string> = { lt45: 'M
 export const WEEKDAY_MINUTES_CAP: Record<WeekdayMinutes, number | null> = { lt45: 45, '45to60': 60, '60to90': 90, gt90: null };
 
 /** PUT /workspaces/{wid}/athlete-profile. Propriétés inconnues refusées (pas de champ santé caché). */
+/** D-108 : ce que l’élève veut travailler en musculation (plusieurs choix). Aucun objectif de poids (données de santé exclues, D-084). */
+export const STRENGTH_FOCUS = ['general', 'strength', 'muscle', 'sport_prep', 'mobility', 'fitness'] as const;
+export type StrengthFocus = (typeof STRENGTH_FOCUS)[number];
+export const STRENGTH_FOCUS_LABELS: Record<StrengthFocus, string> = {
+  general: 'Me renforcer de manière générale', strength: 'Gagner en force', muscle: 'Prendre du muscle',
+  sport_prep: 'Me préparer pour un autre sport', mobility: 'Mobilité et posture', fitness: 'Forme et endurance musculaire',
+};
+/** D-108 : repères de niveau propres à la musculation. */
+export const STRENGTH_LEVEL_HINTS: Record<Level, string> = {
+  beginner: 'Je découvre la musculation ou je reprends après une longue pause.',
+  intermediate: 'Je m’entraîne régulièrement, je connais les mouvements de base.',
+  advanced: 'Je suis un programme et je connais mes charges.',
+  competitive: 'Je prépare une compétition ou je vise des charges précises.',
+};
+
 export const athleteProfileSchema = z
   .object({
     practiceStatus: optEnum(PRACTICE_STATUSES),
@@ -107,6 +122,9 @@ export const athleteProfileSchema = z
     resumedSince: optEnum(RESUMED_SINCE),
     longestRecent: optEnum(LONGEST_RECENT),
     sport: z.enum(SPORTS, { message: 'Choisir un sport' }),
+    /** D-108 : autres sports pratiqués avec le coach (le principal est `sport`). */
+    otherSports: z.array(z.enum(SPORTS)).max(SPORTS.length).default([]).transform((a) => [...new Set(a)]),
+    strengthFocus: z.array(z.enum(STRENGTH_FOCUS)).max(STRENGTH_FOCUS.length).default([]).transform((a) => [...new Set(a)]),
     level: z.enum(LEVELS, { message: 'Choisir un niveau' }),
     experience: z.enum(EXPERIENCES, { message: 'Choisir une ancienneté' }),
     weeklySessions: z.enum(WEEKLY_SESSIONS, { message: 'Choisir un nombre de séances' }),

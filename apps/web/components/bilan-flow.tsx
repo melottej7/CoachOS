@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from 'react';
 import {
   BREAK_LENGTHS, BREAK_LENGTH_LABELS, DAY_LABELS, EQUIPMENT_LABELS, equipmentFor, PREFERRED_TIMES, PREFERRED_TIME_LABELS, WEEKDAY_MINUTES, WEEKDAY_MINUTES_LABELS, EXPERIENCES, EXPERIENCE_LABELS, LEVELS, LEVEL_LABELS, LONGEST_RECENT, LONGEST_RECENT_LABELS,
   PRACTICE_STATUSES, PRACTICE_STATUS_LABELS, RESUMED_SINCE, RESUMED_SINCE_LABELS, SPORTS, SPORT_LABELS, SPORT_WITH_ARTICLE,
-  WEEKLY_HOURS, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS, WEEKLY_SESSIONS_LABELS, bilanCompletion, bilanSteps, deriveBilan, formatLongDate, resumeStep,
+  WEEKLY_HOURS, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS, WEEKLY_SESSIONS_LABELS, bilanCompletion, bilanSports, bilanSteps, deriveBilan, formatLongDate, resumeStep,
+  STRENGTH_FOCUS, STRENGTH_FOCUS_LABELS, STRENGTH_LEVEL_HINTS, EQUIPMENT, type Equipment,
   type BilanAnswers, type BilanStep, type Sport,
 } from '@coachos/domain';
 import { mutate, newKey } from './api-client';
@@ -46,7 +47,17 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
   const done = bilanCompletion(a);
   const coach = mode === 'coach';
   const sport = a.sport ?? 'running';
+  const strength = sport === 'strength';
+  const picked = bilanSports(a);
+  // D-108 : matériel proposé pour tous les sports choisis.
+  const equipment: Equipment[] = EQUIPMENT.filter((e) => (picked.length ? picked : [sport]).some((x) => equipmentFor(x).includes(e)));
   const you = (t: string, c: string) => (coach ? c : t);
+  /** D-108 : choisir plusieurs sports ; le premier choisi est le principal tant qu’on n’en désigne pas un autre. */
+  const toggleSport = (x: Sport) => setA((cur) => {
+    const list = bilanSports(cur);
+    const next = list.includes(x) ? list.filter((y) => y !== x) : [...list, x];
+    return deriveBilan({ ...cur, sport: next[0], otherSports: next.slice(1) });
+  });
 
   useEffect(() => { heading.current?.focus(); }, [step]);
 
@@ -64,7 +75,12 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
   function nextStep(next: BilanAnswers) {
     const list = bilanSteps(next);
     // Depuis le récapitulatif : retour au récapitulatif, sauf si la réponse ouvre une question obligatoire encore vide.
-    if (fromRecap) { const r = resumeStep(next); if (r === 'recap') setFromRecap(false); return go(r, next); }
+    if (fromRecap) {
+      // D-108 : après un changement de sports depuis le récapitulatif, demander le principal puis ce qu’il faut travailler en musculation.
+      if (step === 'sport' && list.includes('mainSport')) return go('mainSport', next);
+      if ((step === 'sport' || step === 'mainSport') && list.includes('focus') && !next.strengthFocus?.length) return go('focus', next);
+      const r = resumeStep(next); if (r === 'recap') setFromRecap(false); return go(r, next);
+    }
     return go(list[Math.min(list.indexOf(step) + 1, list.length - 1)]!, next);
   }
   function answer<K extends keyof BilanAnswers>(k: K, v: BilanAnswers[K]) {
@@ -79,7 +95,7 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
   async function submit() {
     // Un jour de séance longue retiré des jours disponibles n’est plus valable.
     const longDay = a.longDay && (!a.availableDays?.length || a.availableDays.includes(a.longDay)) ? a.longDay : null;
-    const body = { ...clean(a), availableDays: a.availableDays ?? [], equipment: (a.equipment ?? []).filter((e) => equipmentFor(a.sport).includes(e)), longDay };
+    const body = { ...clean(a), availableDays: a.availableDays ?? [], equipment: (a.equipment ?? []).filter((e) => equipment.includes(e)), longDay, otherSports: a.otherSports ?? [], strengthFocus: a.strengthFocus ?? [] };
     const r = coach
       ? await run('PUT', `/api/v1/workspaces/${wid}/athletes/${aid}/athlete-profile`, { expectedRevision: expectedRevision ?? null, data: body })
       : await run('PUT', `/api/v1/workspaces/${wid}/athlete-profile`, body);
@@ -97,7 +113,55 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
   );
 
   const Q: Record<BilanStep, { title: string; hint?: string; body: React.ReactNode }> = {
-    sport: { title: you('Quel est ton sport principal ?', `Quel est le sport principal de ${firstName} ?`), hint: 'Celui que tu veux travailler avec ton coach.', body: choice('sport', { values: SPORTS, labels: SPORT_LABELS }) },
+    sport: {
+      title: you('Quels sports veux-tu travailler avec ton coach ?', `Quels sports ${firstName} travaille-t-il ou elle avec toi ?`),
+      hint: 'Plusieurs choix possibles : course et musculation, par exemple.',
+      body: (
+        <>
+          <div className="bf-choices" role="group" aria-labelledby="bf-q">
+            {SPORTS.map((x) => {
+              const on = picked.includes(x);
+              return (
+                <button key={x} type="button" aria-pressed={on} className={`bf-choice${on ? ' on' : ''}`} onClick={() => toggleSport(x)}>
+                  <span>{on ? '✓ ' : ''}{SPORT_LABELS[x]}</span>{on && picked[0] === x && picked.length > 1 ? <small>Principal pour l’instant</small> : null}
+                </button>
+              );
+            })}
+          </div>
+          <button type="button" className="btn primary bf-next" disabled={!picked.length} onClick={() => nextStep(a)}>Suivant</button>
+        </>
+      ),
+    },
+    mainSport: {
+      title: you('Lequel compte le plus pour toi en ce moment ?', `Lequel compte le plus pour ${firstName} en ce moment ?`),
+      hint: 'Les questions suivantes portent sur ce sport ; ton coach voit aussi les autres.',
+      body: (
+        <div className="bf-choices" role="radiogroup" aria-labelledby="bf-q">
+          {picked.map((x) => (
+            <button key={x} type="button" role="radio" aria-checked={a.sport === x} className={`bf-choice${a.sport === x ? ' on' : ''}`}
+              onClick={() => { const next = deriveBilan({ ...a, sport: x, otherSports: picked.filter((y) => y !== x) }); setA(next); nextStep(next); }}>
+              <span>{SPORT_LABELS[x]}</span>
+            </button>
+          ))}
+        </div>
+      ),
+    },
+    focus: {
+      title: you('En musculation, que veux-tu travailler ?', `En musculation, que veut travailler ${firstName} ?`),
+      hint: 'Plusieurs choix possibles. Facultatif.',
+      body: (
+        <>
+          <div className="bf-chips" role="group" aria-labelledby="bf-q">
+            {STRENGTH_FOCUS.map((v) => {
+              const on = (a.strengthFocus ?? []).includes(v);
+              return <button key={v} type="button" aria-pressed={on} className={`bf-chip${on ? ' on' : ''}`}
+                onClick={() => setA((x) => ({ ...x, strengthFocus: on ? (x.strengthFocus ?? []).filter((y) => y !== v) : [...(x.strengthFocus ?? []), v] }))}>{STRENGTH_FOCUS_LABELS[v]}</button>;
+            })}
+          </div>
+          <button type="button" className="btn primary bf-next" onClick={() => nextStep(a)}>Suivant</button>
+        </>
+      ),
+    },
     status: {
       title: you(`Où en es-tu avec ${SPORT_WITH_ARTICLE[sport]} ?`, `Où en est ${firstName} avec ${SPORT_WITH_ARTICLE[sport]} ?`),
       hint: you('Choisis ce qui te ressemble le plus aujourd’hui. Les questions suivantes s’adaptent à ta réponse.', 'Ce qui lui ressemble le plus aujourd’hui.'),
@@ -121,8 +185,8 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
       body: <>{choice('longestRecent', { values: LONGEST_RECENT, labels: LONGEST_RECENT_LABELS })}<button type="button" className="link-btn bf-skip" onClick={() => answer('longestRecent', null)}>Je ne sais pas</button></>,
     },
     level: {
-      title: you('Comment te décrirais-tu aujourd’hui ?', `Comment décrire ${firstName} aujourd’hui ?`),
-      body: choice('level', { values: LEVELS, labels: Object.fromEntries(LEVELS.map((l) => [l, LEVEL_LABELS[l].label])) as Record<string, string>, hints: Object.fromEntries(LEVELS.map((l) => [l, LEVEL_LABELS[l].hint])) }),
+      title: you(`En ${SPORT_LABELS[sport].toLowerCase()}, comment te décrirais-tu aujourd’hui ?`, `En ${SPORT_LABELS[sport].toLowerCase()}, comment décrire ${firstName} aujourd’hui ?`),
+      body: choice('level', { values: LEVELS, labels: Object.fromEntries(LEVELS.map((l) => [l, LEVEL_LABELS[l].label])) as Record<string, string>, hints: Object.fromEntries(LEVELS.map((l) => [l, strength ? STRENGTH_LEVEL_HINTS[l] : LEVEL_LABELS[l].hint])) }),
     },
     hours: {
       title: you('Combien d’heures par semaine peux-tu y consacrer ?', 'Combien d’heures par semaine disponibles ?'), hint: 'Facultatif.',
@@ -158,11 +222,11 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
               <button key={v} type="button" aria-pressed={a.preferredTime === v} className={`bf-chip${a.preferredTime === v ? ' on' : ''}`}
                 onClick={() => setA((x) => ({ ...x, preferredTime: x.preferredTime === v ? null : v }))}>{PREFERRED_TIME_LABELS[v]}</button>
             ))}</div></fieldset>
-          <fieldset className="bf-group"><legend>{you('Quel jour pour la séance la plus longue ?', 'Jour préféré pour la séance longue')}</legend>
+          {strength ? null : <fieldset className="bf-group"><legend>{you('Quel jour pour la séance la plus longue ?', 'Jour préféré pour la séance longue')}</legend>
             <div className="bf-chips">{DAY_LABELS.map((d, i) => (a.availableDays?.length && !a.availableDays.includes(i + 1) ? null : (
               <button key={d} type="button" aria-pressed={a.longDay === i + 1} className={`bf-chip${a.longDay === i + 1 ? ' on' : ''}`}
                 onClick={() => setA((x) => ({ ...x, longDay: x.longDay === i + 1 ? null : i + 1 }))}>{d}</button>
-            )))}</div></fieldset>
+            )))}</div></fieldset>}
           <button type="button" className="btn primary bf-next" onClick={() => nextStep(a)}>Suivant</button>
         </div>
       ),
@@ -172,7 +236,8 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
       hint: 'Facultatif. Plusieurs choix possibles.',
       body: (
         <div className="bf-form">
-          <div className="bf-chips" role="group" aria-label="Matériel">{equipmentFor(a.sport).map((v) => {
+          {strength ? <p className="muted">{you('Où et avec quoi t’entraînes-tu ? Salle, ou matériel à la maison.', 'Salle, ou matériel à la maison.')}</p> : null}
+          <div className="bf-chips" role="group" aria-label="Matériel">{equipment.map((v) => {
             const on = (a.equipment ?? []).includes(v);
             return <button key={v} type="button" aria-pressed={on} className={`bf-chip${on ? ' on' : ''}`}
               onClick={() => setA((x) => ({ ...x, equipment: on ? (x.equipment ?? []).filter((e) => e !== v) : [...(x.equipment ?? []), v] }))}>{EQUIPMENT_LABELS[v]}</button>;
@@ -189,9 +254,10 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
       body: (
         <div className="bf-form">
           <label className="field"><span>Objectif principal</span>
-            <textarea maxLength={300} value={a.mainGoal ?? ''} onChange={(e) => setA((x) => ({ ...x, mainGoal: e.target.value }))} placeholder="Ex. Courir mon premier 10 km sans m’arrêter" /></label>
+            <textarea maxLength={300} value={a.mainGoal ?? ''} onChange={(e) => setA((x) => ({ ...x, mainGoal: e.target.value }))}
+              placeholder={strength ? 'Ex. Faire 10 pompes complètes d’ici l’été, me sentir plus solide en courant' : 'Ex. Courir mon premier 10 km sans m’arrêter'} /></label>
           <div className="form-row">
-            <label className="field"><span>Prochaine course <span className="hint">Facultatif</span></span>
+            <label className="field"><span>{strength ? 'Échéance ou événement' : 'Prochaine course'} <span className="hint">Facultatif</span></span>
               <input maxLength={120} value={a.nextEventName ?? ''} onChange={(e) => setA((x) => ({ ...x, nextEventName: e.target.value }))} /></label>
             <label className="field"><span>Date</span>
               <input type="date" value={a.nextEventDate ?? ''} onChange={(e) => setA((x) => ({ ...x, nextEventDate: e.target.value || null }))} /></label>
@@ -252,7 +318,8 @@ function recapRows(a: BilanAnswers): [BilanStep, string, string][] {
   const dash = '—';
   const rows: [BilanStep, string, string][] = [];
   for (const s of bilanSteps(a)) {
-    if (s === 'sport') rows.push([s, 'Sport', a.sport ? SPORT_LABELS[a.sport] : dash]);
+    if (s === 'sport') rows.push([s, bilanSports(a).length > 1 ? 'Sports' : 'Sport', bilanSports(a).length ? bilanSports(a).map((x, i) => `${SPORT_LABELS[x]}${i === 0 && bilanSports(a).length > 1 ? ' (principal)' : ''}`).join(', ') : dash]);
+    if (s === 'focus') rows.push([s, 'Musculation : à travailler', a.strengthFocus?.length ? a.strengthFocus.map((x) => STRENGTH_FOCUS_LABELS[x]).join(', ') : 'Non précisé']);
     if (s === 'status') rows.push([s, 'Situation', a.practiceStatus ? PRACTICE_STATUS_LABELS[a.practiceStatus] : dash]);
     if (s === 'experience') rows.push([s, 'Pratique régulière', a.experience ? EXPERIENCE_LABELS[a.experience] : dash]);
     if (s === 'break') rows.push([s, 'Durée de l’arrêt', a.breakLength ? BREAK_LENGTH_LABELS[a.breakLength] : dash]);

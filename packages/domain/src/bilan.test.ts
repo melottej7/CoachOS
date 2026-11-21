@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { athleteProfileSchema, bilanCompletion, bilanSteps, deriveBilan, equipmentFor, nextSources, parseWith, resumeStep } from './index';
+import { athleteProfileSchema, bilanCompletion, bilanSports, bilanSteps, deriveBilan, equipmentFor, nextSources, parseWith, resumeStep } from './index';
 
 describe('bilan d’arrivée (D-054)', () => {
   it('les écrans s’adaptent aux réponses, comme dans Foulée', () => {
@@ -53,6 +53,21 @@ describe('bilan d’arrivée (D-054)', () => {
     expect(equipmentFor('swimming')).toContain('pool');
     expect(equipmentFor('running')).not.toContain('pool');
     expect(bilanCompletion({ ...base, practiceStatus: 'regular' } as never).complete).toBe(true); // les nouveaux écrans ne bloquent pas l’envoi
+  });
+});
+
+describe('bilan multisport et musculation (D-108)', () => {
+  it('plusieurs sports : on demande le principal ; musculation : pas de « plus longue sortie », question « à travailler »', () => {
+    expect(bilanSteps({ sport: 'running', otherSports: ['strength'] })).toEqual(['sport', 'mainSport', 'status', 'experience', 'sessions', 'longest', 'level', 'focus', 'hours', 'days', 'time', 'equipment', 'goal', 'recap']);
+    expect(bilanSteps({ sport: 'strength' })).toEqual(['sport', 'status', 'experience', 'sessions', 'level', 'focus', 'hours', 'days', 'time', 'equipment', 'goal', 'recap']);
+    expect(bilanSports({ sport: 'strength', otherSports: ['running', 'strength'] })).toEqual(['strength', 'running']);
+  });
+  it('réponses déduites : principal retiré des autres sports, pas de séance longue en musculation, rien à travailler sans musculation', () => {
+    expect(deriveBilan({ sport: 'strength', otherSports: ['strength', 'running'], longestRecent: '30to45', longDay: 6 })).toMatchObject({ otherSports: ['running'], longestRecent: null, longDay: null });
+    expect(deriveBilan({ sport: 'running', strengthFocus: ['muscle'] }).strengthFocus).toEqual([]);
+    const p = parseWith(athleteProfileSchema, { sport: 'running', otherSports: ['strength', 'strength'], strengthFocus: ['muscle', 'mobility'], level: 'intermediate', experience: '1to3', weeklySessions: '2to3' });
+    expect(p.ok && p.value).toMatchObject({ otherSports: ['strength'], strengthFocus: ['muscle', 'mobility'] });
+    expect(parseWith(athleteProfileSchema, { sport: 'running', strengthFocus: ['poids'], level: 'intermediate', experience: '1to3', weeklySessions: '2to3' }).ok).toBe(false);
   });
 });
 

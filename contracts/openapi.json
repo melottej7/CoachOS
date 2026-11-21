@@ -1529,6 +1529,39 @@
                   "athlete",
                   "interview"
                 ]
+              },
+              "otherSports": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "running",
+                    "trail",
+                    "cycling",
+                    "swimming",
+                    "triathlon",
+                    "duathlon",
+                    "strength"
+                  ]
+                },
+                "maxItems": 7,
+                "description": "D-108 : autres sports (le principal est sport)."
+              },
+              "strengthFocus": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "general",
+                    "strength",
+                    "muscle",
+                    "sport_prep",
+                    "mobility",
+                    "fitness"
+                  ]
+                },
+                "maxItems": 6,
+                "description": "D-108 : ce que l’élève veut travailler en musculation."
               }
             }
           },
@@ -1612,6 +1645,39 @@
                 "type": "null"
               }
             ]
+          },
+          "otherSports": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "running",
+                "trail",
+                "cycling",
+                "swimming",
+                "triathlon",
+                "duathlon",
+                "strength"
+              ]
+            },
+            "maxItems": 7,
+            "description": "D-108 : autres sports (le principal est sport)."
+          },
+          "strengthFocus": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "general",
+                "strength",
+                "muscle",
+                "sport_prep",
+                "mobility",
+                "fitness"
+              ]
+            },
+            "maxItems": 6,
+            "description": "D-108 : ce que l’élève veut travailler en musculation."
           }
         }
       },
@@ -15622,6 +15688,39 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "otherSports": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "running",
+                        "trail",
+                        "cycling",
+                        "swimming",
+                        "triathlon",
+                        "duathlon",
+                        "strength"
+                      ]
+                    },
+                    "maxItems": 7,
+                    "description": "D-108 : autres sports (le principal est sport)."
+                  },
+                  "strengthFocus": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "general",
+                        "strength",
+                        "muscle",
+                        "sport_prep",
+                        "mobility",
+                        "fitness"
+                      ]
+                    },
+                    "maxItems": 6,
+                    "description": "D-108 : ce que l’élève veut travailler en musculation."
                   }
                 }
               }
@@ -21361,6 +21460,7 @@
                     "type": "string",
                     "enum": [
                       "sport",
+                      "mainSport",
                       "status",
                       "experience",
                       "break",
@@ -21368,6 +21468,7 @@
                       "sessions",
                       "longest",
                       "level",
+                      "focus",
                       "hours",
                       "days",
                       "time",
@@ -21664,6 +21765,39 @@
                             "type": "null"
                           }
                         ]
+                      },
+                      "otherSports": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "running",
+                            "trail",
+                            "cycling",
+                            "swimming",
+                            "triathlon",
+                            "duathlon",
+                            "strength"
+                          ]
+                        },
+                        "maxItems": 7,
+                        "description": "D-108 : autres sports (le principal est sport)."
+                      },
+                      "strengthFocus": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "general",
+                            "strength",
+                            "muscle",
+                            "sport_prep",
+                            "mobility",
+                            "fitness"
+                          ]
+                        },
+                        "maxItems": 6,
+                        "description": "D-108 : ce que l’élève veut travailler en musculation."
                       }
                     }
                   }
@@ -22101,6 +22235,39 @@
                             "type": "null"
                           }
                         ]
+                      },
+                      "otherSports": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "running",
+                            "trail",
+                            "cycling",
+                            "swimming",
+                            "triathlon",
+                            "duathlon",
+                            "strength"
+                          ]
+                        },
+                        "maxItems": 7,
+                        "description": "D-108 : autres sports (le principal est sport)."
+                      },
+                      "strengthFocus": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "general",
+                            "strength",
+                            "muscle",
+                            "sport_prep",
+                            "mobility",
+                            "fitness"
+                          ]
+                        },
+                        "maxItems": 6,
+                        "description": "D-108 : ce que l’élève veut travailler en musculation."
                       }
                     }
                   }

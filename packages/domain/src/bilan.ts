@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import {
-  athleteProfileSchema, BREAK_LENGTHS, EQUIPMENT, EXPERIENCES, LEVELS, LONGEST_RECENT, PRACTICE_STATUSES, PREFERRED_TIMES, RESUMED_SINCE, WEEKDAY_MINUTES,
+  athleteProfileSchema, BREAK_LENGTHS, EQUIPMENT, STRENGTH_FOCUS, EXPERIENCES, LEVELS, LONGEST_RECENT, PRACTICE_STATUSES, PREFERRED_TIMES, RESUMED_SINCE, WEEKDAY_MINUTES,
   WEEKLY_HOURS, WEEKLY_SESSIONS,
   type AthleteProfileInput, type PracticeStatus,
 } from './athlete-profile';
@@ -16,7 +16,15 @@ import { SPORTS } from './workout';
  */
 
 export type BilanStep =
-  | 'sport' | 'status' | 'experience' | 'break' | 'resumed' | 'sessions' | 'longest' | 'level' | 'hours' | 'days' | 'time' | 'equipment' | 'goal' | 'recap';
+  | 'sport' | 'mainSport' | 'status' | 'experience' | 'break' | 'resumed' | 'sessions' | 'longest' | 'level' | 'focus' | 'hours' | 'days' | 'time' | 'equipment' | 'goal' | 'recap';
+const STEP_NAMES = ['sport', 'mainSport', 'status', 'experience', 'break', 'resumed', 'sessions', 'longest', 'level', 'focus', 'hours', 'days', 'time', 'equipment', 'goal', 'recap'] as const;
+
+/** D-108 : sports choisis dans le bilan, le principal d’abord. */
+export function bilanSports(a: BilanAnswers): Sport[] {
+  return [...new Set([...(a.sport ? [a.sport] : []), ...(a.otherSports ?? [])])];
+}
+/** D-108 : le bilan pose les questions de musculation si elle fait partie des sports choisis. */
+export const wantsStrength = (a: BilanAnswers) => bilanSports(a).includes('strength');
 
 /** Réponses en cours : tout est facultatif tant que le bilan n’est pas envoyé. */
 export type BilanAnswers = Partial<AthleteProfileInput>;
@@ -28,13 +36,19 @@ export const SPORT_WITH_ARTICLE: Record<Sport, string> = {
 
 /** Écrans visibles selon les réponses déjà données (ordre du parcours). */
 export function bilanSteps(a: BilanAnswers): BilanStep[] {
-  const s: BilanStep[] = ['sport', 'status'];
+  const s: BilanStep[] = ['sport'];
+  // D-108 : plusieurs sports → on demande lequel compte le plus (les questions suivantes portent sur lui).
+  if (bilanSports(a).length > 1) s.push('mainSport');
+  s.push('status');
   const st = a.practiceStatus;
   if (st !== 'beginner') s.push('experience');
   if (st === 'resumed' || st === 'stopped') s.push('break');
   if (st === 'resumed') s.push('resumed');
-  if (st !== 'stopped') s.push('sessions', 'longest');
+  if (st !== 'stopped') s.push('sessions');
+  // La « plus longue sortie » n’a pas de sens en musculation.
+  if (st !== 'stopped' && a.sport !== 'strength') s.push('longest');
   if (st !== 'beginner') s.push('level');
+  if (wantsStrength(a)) s.push('focus');
   s.push('hours', 'days', 'time', 'equipment', 'goal', 'recap');
   return s;
 }
@@ -46,6 +60,10 @@ export function deriveBilan(a: BilanAnswers): BilanAnswers {
   if (st === 'beginner') { out.experience = 'lt1'; out.level = 'beginner'; out.breakLength = null; out.resumedSince = null; }
   if (st === 'stopped') { out.weeklySessions = '0to1'; out.longestRecent = null; out.resumedSince = null; }
   if (st === 'regular') { out.breakLength = null; out.resumedSince = null; }
+  // D-108 : le principal n’est jamais répété dans les autres sports ; pas de séance longue ni de « sortie » en musculation.
+  if (out.sport && out.otherSports?.includes(out.sport)) out.otherSports = out.otherSports.filter((x) => x !== out.sport);
+  if (out.sport === 'strength') { out.longestRecent = null; out.longDay = null; }
+  if (!wantsStrength(out)) out.strengthFocus = [];
   return out;
 }
 
@@ -75,10 +93,12 @@ export function resumeStep(a: BilanAnswers): BilanStep {
 /** Brouillon du bilan (PUT …/athlete-profile/draft) : mêmes valeurs permises, toutes facultatives. */
 export const bilanDraftSchema = z
   .object({
-    step: z.enum(['sport', 'status', 'experience', 'break', 'resumed', 'sessions', 'longest', 'level', 'hours', 'days', 'time', 'equipment', 'goal', 'recap']),
+    step: z.enum(STEP_NAMES),
     answers: z
       .object({
         sport: z.enum(SPORTS).nullish(),
+        otherSports: z.array(z.enum(SPORTS)).max(SPORTS.length).nullish(),
+        strengthFocus: z.array(z.enum(STRENGTH_FOCUS)).max(STRENGTH_FOCUS.length).nullish(),
         practiceStatus: z.enum(PRACTICE_STATUSES).nullish(),
         experience: z.enum(EXPERIENCES).nullish(),
         breakLength: z.enum(BREAK_LENGTHS).nullish(),
@@ -118,12 +138,12 @@ export const BILAN_STATUS_LABELS: Record<BilanStatus, string> = {
 
 /** Champs du profil suivis pour la provenance des réponses. */
 export const BILAN_FIELDS = [
-  'sport', 'practiceStatus', 'experience', 'breakLength', 'resumedSince', 'weeklySessions', 'longestRecent', 'level', 'weeklyHours',
+  'sport', 'otherSports', 'strengthFocus', 'practiceStatus', 'experience', 'breakLength', 'resumedSince', 'weeklySessions', 'longestRecent', 'level', 'weeklyHours',
   'availableDays', 'mainGoal', 'nextEventName', 'nextEventDate', 'weekdayMinutes', 'preferredTime', 'longDay', 'equipment', 'practicalConstraints',
 ] as const;
 export type BilanField = (typeof BILAN_FIELDS)[number];
 export const BILAN_FIELD_LABELS: Record<BilanField, string> = {
-  sport: 'Sport', practiceStatus: 'Situation', experience: 'Pratique régulière', breakLength: 'Durée de l’arrêt', resumedSince: 'Reprise',
+  sport: 'Sport principal', otherSports: 'Autres sports', strengthFocus: 'Musculation : à travailler', practiceStatus: 'Situation', experience: 'Pratique régulière', breakLength: 'Durée de l’arrêt', resumedSince: 'Reprise',
   weeklySessions: 'Séances par semaine', longestRecent: 'Plus longue sortie', level: 'Niveau', weeklyHours: 'Heures par semaine',
   availableDays: 'Jours disponibles', mainGoal: 'Objectif', nextEventName: 'Prochaine course', nextEventDate: 'Date de la course',
   weekdayMinutes: 'Temps en semaine', preferredTime: 'Moment préféré', longDay: 'Jour de la séance longue', equipment: 'Matériel', practicalConstraints: 'Contraintes',

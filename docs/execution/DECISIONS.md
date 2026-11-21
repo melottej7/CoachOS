@@ -1866,3 +1866,33 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Test des blocs : la décharge ferme le tremplin.
   - `npm test` : **324 passés** (+3 PostgreSQL), typecheck OK.
   - Navigateur (semi de Camille) : Bloc 1 de S1 à S4, avec S4 « ↓ Semaine allégée · −15 % de volume pour assimiler ».
+
+## D-108 · Bilan : plusieurs sports et questions adaptées à la musculation · 2026-11-21
+
+- **Retour du fondateur, en testant un profil d’élève.**
+  - « Il est mis « choisis ton sport de prédilection », mais ce serait bien de pouvoir en choisir plusieurs. »
+  - « Je demande musculation et il me met un questionnaire de course à pied : il faut adapter le questionnaire au sport demandé. »
+- **Décision.**
+  - **Plusieurs sports.** Premier écran : « Quels sports veux-tu travailler avec ton coach ? », avec plusieurs choix (« Principal pour l’instant » sur le premier).
+    - S’il y en a plusieurs, l’écran suivant demande « Lequel compte le plus pour toi en ce moment ? ». Les questions suivantes portent sur ce sport.
+    - Le profil garde le sport principal (`sport`) et les autres (`otherSports`).
+  - **Musculation** (sport principal ou parmi les autres) :
+    - nouvelle question « En musculation, que veux-tu travailler ? » : renforcement général, force, prise de muscle, préparation à un autre sport, mobilité et posture, forme. Aucun objectif de poids (D-084).
+    - Si la musculation est le sport principal :
+      - pas de « plus longue sortie » ni de « jour de la séance longue » ;
+      - repères de niveau propres (« Je suis un programme et je connais mes charges ») et « En musculation, comment te décrirais-tu ? » ;
+      - matériel de salle et de maison ;
+      - objectif d’exemple adapté ; « Échéance ou événement » au lieu de « Prochaine course ».
+  - Le matériel proposé couvre tous les sports choisis.
+  - Si l’on change de sports depuis le récapitulatif, l’app demande aussi le principal et ce qu’il faut travailler.
+  - Côté coach, la fiche de l’élève montre « Sport principal », « Autres sports » et « Musculation : à travailler ».
+- **Données** : colonnes `athlete_profiles.other_sports` et `strength_focus` (listes contrôlées), migration `20261121130000` (additive, appliquée). Contrat : profil et brouillon du bilan, étapes `mainSport` et `focus`.
+- **Preuves.**
+  - Tests :
+    - domaine : écrans selon les sports, réponses déduites, valeurs refusées ;
+    - serveur : autres sports et objectifs enregistrés, relus par le coach, repris dans le brouillon.
+  - `npm test` : **327 passés** (+3 PostgreSQL), typecheck OK.
+  - Navigateur (démo, Camille, 375 px) :
+    - depuis le récapitulatif : Course à pied + Musculation, puis le principal, puis la question de musculation ;
+    - le récapitulatif affiche « Sports : Musculation (principal), Course à pied », sans « Plus longue sortie ».
+    - Brouillon de test effacé ensuite.

@@ -100,5 +100,13 @@ describe('bilan d’arrivée', () => {
     await saveAthleteProfile(meta(USERS.noah), again);
     expect((await readAthleteProfile(USERS.noah, WORKSPACE_A, ATHLETES.noah))!).toMatchObject({ revision: p.revision, equipment: ['home_trainer', 'power_meter'] });
   });
+
+  it('D-108 : autres sports et objectifs de musculation enregistrés, relus et repris dans le brouillon', async () => {
+    await saveAthleteProfile(meta(USERS.noah), { ...answers, otherSports: ['strength', 'running'], strengthFocus: ['strength', 'mobility'] });
+    const p = await readAthleteProfile(USERS.marine, WORKSPACE_A, ATHLETES.noah);
+    expect(p).toMatchObject({ sport: 'running', otherSports: ['strength'], strengthFocus: ['strength', 'mobility'] });
+    await saveBilanDraft(meta(USERS.noah), { step: 'focus', answers: { sport: 'strength', otherSports: ['running'], strengthFocus: ['muscle'] } });
+    expect((await readBilanDraft(USERS.noah, WORKSPACE_A, ATHLETES.noah))?.answers).toMatchObject({ otherSports: ['running'], strengthFocus: ['muscle'] });
+  });
 });
 
