@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Block } from './structure';
+import type { Block, Step } from './structure';
 
 /**
  * D-096 · Bibliothèque d’exercices de musculation. Chaque exercice a un nom, des consignes, un groupe musculaire,
@@ -129,4 +129,43 @@ export function exerciseIdsOf(blocks: Block[]): string[] {
   const walk = (b: Block) => { if (b.type === 'repeat') b.steps.forEach(walk); else if (b.exercise?.id) out.add(b.exercise.id); };
   blocks.forEach(walk);
   return [...out];
+}
+
+// ---------- Suivre la séance pas à pas (D-096, M3) ----------
+
+/** Position dans une répétition : « série » (un exercice répété) ou « tour » (circuit de plusieurs exercices). */
+export interface SetPos { k: number; n: number; kind: 'série' | 'tour' }
+
+/** Une étape à faire, dans l’ordre réel : les répétitions sont dépliées (« série 2 sur 4 »). */
+export interface FollowStep {
+  index: number;
+  step: Step;
+  /** De la répétition la plus extérieure à la plus intérieure. */
+  sets: SetPos[];
+}
+
+const workCount = (list: Block[]): number => list.reduce((n, b) => n + (b.type === 'repeat' ? workCount(b.steps) : b.phase === 'work' ? 1 : 0), 0);
+
+/** Séance dépliée pour le mode « Suivre » (400 étapes au plus). */
+export function followSequence(blocks: Block[]): FollowStep[] {
+  const out: FollowStep[] = [];
+  const walk = (list: Block[], sets: SetPos[]) => {
+    for (const b of list) {
+      if (out.length >= 400) return;
+      if (b.type === 'repeat') {
+        // Un circuit (plusieurs exercices) ou un bloc de séries se compte en tours ; un exercice répété, en séries.
+        const kind = workCount(b.steps) > 1 || b.steps.some((x) => x.type === 'repeat') ? 'tour' : 'série';
+        for (let k = 1; k <= b.times; k++) walk(b.steps, [...sets, { k, n: b.times, kind }]);
+      } else out.push({ index: out.length, step: b, sets });
+    }
+  };
+  walk(blocks, []);
+  return out;
+}
+
+/** « Série 2 sur 4 », « Tour 1 sur 3 · série 2 sur 5 ». */
+export function setLabel(sets: SetPos[]): string | null {
+  if (!sets.length) return null;
+  const txt = sets.map((p) => `${p.kind} ${p.k} sur ${p.n}`).join(' · ');
+  return txt[0]!.toUpperCase() + txt.slice(1);
 }

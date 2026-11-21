@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  describeBlock, describeTotals, detectVideoType, exerciseIdsOf, fitSteps, parseNotation, presetsFor, STARTER_EXERCISES, structureSchema,
+  describeBlock, describeTotals, detectVideoType, exerciseIdsOf, fitSteps, followSequence, parseNotation, setLabel, presetsFor, STARTER_EXERCISES, structureSchema,
   structureTotals, toNotation, videoEmbed, type Block,
 } from './index';
 
@@ -86,5 +86,26 @@ describe('bibliothèque d’exercices', () => {
     const names = STARTER_EXERCISES.map(([n]) => n.toLowerCase());
     expect(new Set(names).size).toBe(names.length);
     expect(STARTER_EXERCISES.every(([, , , txt]) => txt.length > 20)).toBe(true);
+  });
+});
+
+describe('suivre la séance pas à pas (M3)', () => {
+  it('répétitions dépliées dans l’ordre, séries et tours nommés', () => {
+    const blocks = parseNotation("8' RPE3 + 4×(10 squats + repos 1'30) + 3×(12 fentes + 30\" planche + repos 45\")", 'strength').blocks;
+    const seq = followSequence(blocks);
+    expect(seq).toHaveLength(1 + 4 * 2 + 3 * 3);
+    expect(seq[1]!.step.exercise?.name).toBe('Squats');
+    expect(setLabel(seq[1]!.sets)).toBe('Série 1 sur 4');
+    expect(setLabel(seq[7]!.sets)).toBe('Série 4 sur 4');
+    expect(setLabel(seq[9]!.sets)).toBe('Tour 1 sur 3');
+    expect(setLabel(seq[0]!.sets)).toBeNull();
+    expect(seq.map((f) => f.index)).toEqual(seq.map((_, k) => k));
+  });
+
+  it('séries imbriquées et plafond de 400 étapes', () => {
+    const nested = parseNotation("2×(3×(5 pompes + repos 20\") + repos 2')", 'strength').blocks;
+    expect(setLabel(followSequence(nested)[0]!.sets)).toBe('Tour 1 sur 2 · série 1 sur 3');
+    const huge = parseNotation('50×(50×(1 pompe + repos 5"))', 'strength').blocks;
+    expect(followSequence(huge)).toHaveLength(400);
   });
 });

@@ -306,7 +306,8 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
     - constructeur et écriture en texte ;
     - lecture élève avec « Voir comment faire ».
     - Migration `20261121090000` appliquée. `npm test` : **300 passés**.
-    - Prochaine tranche : M3 (suivre la séance pas à pas sur téléphone, minuteur de repos), puis M4 (séries et charges réalisées).
+    - **D-098 : M3 fait.** « ▶ Suivre la séance pas à pas » : une étape par écran, vidéo, série en cours, repos chronométré automatique, reprise après coupure. `npm test` : **302 passés**.
+    - Prochaine tranche : M4 (séries et charges réalisées dans le retour, progression des charges), puis M5 (modularité de l’espace, séances mixtes).
   - **Analyse produit (21 novembre)** : [docs/17_ANALYSE_PRODUIT.md](../17_ANALYSE_PRODUIT.md), en réponse au cadrage « OS du coach sportif hybride ». Recommandations : rester sur le coach de course à pied indépendant ; geler les nouvelles fonctions ; mettre en ligne ; pilote de 4 semaines avec les athlètes du fondateur ; brief du jour et mode simple. 8 questions à trancher par le fondateur, aucune décision prise sans lui.
   - **D-095** : téléphone sur le même Wi-Fi : http://192.168.65.68:3000 (adresse « Network » du serveur), réseaux privés autorisés en développement.
   - **D-094** : « Ajouter des blocs à ma bibliothèque » (au lieu de « garder ») ; saisie rapide renommée « Écrire la séance en texte », avec principe expliqué, aperçu bloc par bloc et exemples.

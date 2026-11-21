@@ -336,4 +336,5 @@ Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et
    - ou **✍️ Écrire la séance en texte** : `8' RPE3 + 4×(10 squat goblet 16kg + repos 1'30) + 3×(30" planche + repos 30")`.
 4. Publie, puis ouvre la séance côté élève (sur téléphone) : sous chaque exercice, **▶ Voir comment faire** montre tes consignes et ta vidéo.
 5. Dis-moi : les exercices de départ te conviennent-ils ? Lesquels ajouter ? La vidéo se lit-elle bien sur ton iPhone ?
+6. **Suivre la séance** (sur téléphone, en élève) : « ▶ Suivre la séance pas à pas ». Une étape par écran : vidéo, « Série 1 sur 4 », « ✓ Fait, suivant ». Le repos démarre seul, avec un bip et une vibration à la fin. Ferme la page en cours de séance et rouvre-la : tu reprends à la même étape.
 

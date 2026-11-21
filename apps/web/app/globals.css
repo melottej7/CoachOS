@@ -1204,4 +1204,26 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .sv-ex > summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--accent); padding: 4px 0; }
 .sv-ex[open] > summary { margin-bottom: 6px; }
 .sv-ex-text { margin: 0 0 8px; font-size: 14px; }
+/* Suivre la séance pas à pas (D-096, M3) */
+.fw { display: grid; gap: 12px; max-width: 640px; margin: 0 auto; }
+.fw-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.fw-bar { height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 10%, var(--surface)); overflow: hidden; }
+.fw-bar > span { display: block; height: 100%; background: var(--accent); transition: width .25s ease; }
+@media (prefers-reduced-motion: reduce) { .fw-bar > span { transition: none; } }
+.fw-card { border: 1px solid var(--rule); border-radius: 16px; background: var(--surface); padding: 18px 16px; display: grid; gap: 10px; }
+.fw-rest { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.fw-kicker { margin: 0; font-weight: 700; color: var(--accent); text-transform: uppercase; font-size: 13px; letter-spacing: .04em; }
+.fw-name { margin: 0; font-size: 28px; line-height: 1.15; }
+.fw-target { margin: 0; font-size: 20px; font-weight: 700; }
+.fw-note { margin: 0; color: var(--muted); }
+.fw-media { display: grid; gap: 8px; }
+.fw-howto > summary { cursor: pointer; font-weight: 600; }
+.fw-howto p { margin: 6px 0 0; }
+.fw-timer { display: grid; justify-items: center; gap: 8px; padding: 8px 0; }
+.fw-clock { margin: 0; font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+.fw-actions { justify-content: space-between; }
+.fw-actions .fw-main { flex: 1 1 auto; min-height: 52px; font-size: 18px; }
+.fw-next { margin: 0; font-size: 14px; }
+.fw-end { text-align: center; justify-items: center; }
+.fw-big { font-size: 48px; margin: 0; }
 

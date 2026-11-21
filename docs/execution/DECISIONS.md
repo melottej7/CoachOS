@@ -1632,3 +1632,29 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
     - séance « Renforcement jambes et gainage » écrite en texte pour Camille (3 exercices rattachés), enregistrée et publiée ;
     - lue par Camille à 375 px avec « Comment faire », sans débordement.
 - **Non prouvé.** Lecture d’une vraie vidéo filmée sur iPhone ; lien YouTube réel (non ajouté à la démo).
+
+## D-098 · Musculation, lot M3 : suivre la séance pas à pas sur téléphone · 2026-11-21
+
+- **But (D-096).** L’élève suit seul, à distance, la séance de son coach, comme s’il était à côté de lui.
+- **Décision.** La page de la séance côté élève a un bouton « ▶ Suivre la séance pas à pas » (séance de musculation, ou séance qui nomme des exercices de la bibliothèque).
+  - **Une étape par écran**, répétitions dépliées dans l’ordre réel. On y lit :
+    - « Série 2 sur 4 », ou « Tour 1 sur 3 » pour un circuit ou un bloc de séries ;
+    - le nom de l’exercice en grand, les répétitions et la charge ;
+    - la consigne de l’étape ;
+    - la vidéo du coach, avec ses consignes dépliées quand il n’y a pas de vidéo.
+  - **« ✓ Fait, suivant »** pour un exercice en répétitions.
+  - **Repos chronométré qui démarre seul**, avec « +15 s » et « Passer le repos ». À la fin, une vibration et un bip, puis l’étape suivante s’affiche seule.
+  - **Effort chronométré** (planche 30 s) : « ▶ Démarrer le chrono », puis l’élève confirme.
+  - Le chrono se fonde sur l’heure de fin, ce qui le garde juste si le téléphone met la page en pause. L’écran reste allumé quand le navigateur le permet (https).
+  - Barre d’avancement, « ← Précédent », « Ensuite : … ».
+  - **Position gardée sur ce téléphone** (stockage du navigateur) pour reprendre après une coupure. Rien n’est envoyé au coach tant que l’élève ne donne pas son retour.
+  - **Fin :** « Séance terminée, bravo ! », puis « Donner mon retour » à partir du jour de la séance (sinon une phrase l’explique), ou « Recommencer ».
+- **Preuves.**
+  - Tests du domaine : ordre et nombre des étapes, séries, tours, séries imbriquées, plafond de 400 étapes. `npm test` : **302 passés** (+3 PostgreSQL), typecheck OK.
+  - Navigateur, Camille à 375 px :
+    - échauffement avec chrono à démarrer ;
+    - « Squat goblet, Série 1 sur 4, 10 répétitions · 16 kg » avec consignes ;
+    - repos lancé seul, « +15 s » ajouté ;
+    - reprise à la même étape après rechargement ;
+    - écran de fin, sans débordement.
+- **Non prouvé.** Vibration, bip et écran allumé sur un vrai iPhone (l’écran allumé demande https, donc la mise en ligne).
