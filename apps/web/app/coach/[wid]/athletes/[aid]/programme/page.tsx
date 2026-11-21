@@ -15,6 +15,7 @@ export const metadata = { title: 'Programme' };
 const h = (min: number) => formatClock(Math.round(min / 5) * 5 * 60);
 const RISK_MARK = { watch: '•', risk: '!', block: '✕' } as const;
 const WEEKDAY_LONG = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'] as const;
+const KIND_LABEL = { easy: 'Facile', long: 'Longue', quality: 'Qualité', race: 'Course' } as const;
 
 /**
  * D-061 : générateur de programme. À la hauteur de l’objectif validé, 4 semaines de tremplin, risques signalés au coach
@@ -125,31 +126,34 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
           </section>
 
           <section className="card" aria-labelledby="prog-weeks">
-            <div className="card-head"><h2 id="prog-weeks">Semaine par semaine</h2><span className="muted">Touche une semaine pour lire pourquoi chaque séance est là</span></div>
-            <ol className="plain prog-weeks card-body">
+            <div className="card-head"><h2 id="prog-weeks">Semaine par semaine</h2><span className="muted">Touche une séance pour lire pourquoi elle est là</span></div>
+            {/* D-105 : une semaine = un bloc ; ses séances en petites tuiles. */}
+            <ol className="plain pw-grid card-body">
               {program.weeks.map((w) => (
-                <li key={w.index} id={`semaine-${w.index}`} className={`prog-week ${w.phase}`}>
-                  <details>
-                    <summary className="prog-week-sum">
-                      <span className="prog-week-head">
-                        <strong>S{w.index}</strong> <span className="muted">{formatShortDate(w.monday)}</span>
-                        <Pill tone={w.phase === 'tremplin' ? 'neutral' : w.phase === 'recuperation' || w.phase === 'affutage' ? 'attn' : ''}>{PROGRAM_PHASE_LABELS[w.phase]}</Pill>
-                        <span className="muted prog-week-vol">{h(w.minutes)}{w.longMinutes ? ` · longue ${h(w.longMinutes)}` : ''}</span>
-                      </span>
-                      <span className="prog-week-line">
-                        {w.sessions.map((s, i) => {
-                          const dow = (new Date(`${s.date}T12:00:00Z`).getUTCDay() + 6) % 7;
-                          return <span key={i} className={`prog-chip ${s.kind}`}><span className="muted">{WEEKDAY_SHORT[dow]}</span> {s.title}{s.source === 'library' ? ' 📚' : ''}</span>;
-                        })}
-                      </span>
-                    </summary>
-                    <ul className="plain prog-whys">
-                      {w.sessions.map((s, i) => {
-                        const dow = (new Date(`${s.date}T12:00:00Z`).getUTCDay() + 6) % 7;
-                        return <li key={i}><strong>{WEEKDAY_LONG[dow]} · {s.title}</strong>{s.source === 'library' ? <span className="muted"> · de ta bibliothèque</span> : null}<p className="prog-why">{s.why}</p></li>;
-                      })}
-                    </ul>
-                  </details>
+                <li key={w.index} id={`semaine-${w.index}`} className={`pw ${w.phase}`}>
+                  <div className="pw-head">
+                    <strong className="pw-n">S{w.index}</strong>
+                    <span className="muted">{formatShortDate(w.monday)}</span>
+                    <Pill tone={w.phase === 'tremplin' ? 'neutral' : w.phase === 'recuperation' || w.phase === 'affutage' ? 'attn' : ''}>{PROGRAM_PHASE_LABELS[w.phase]}</Pill>
+                    <span className="pw-vol"><strong>{h(w.minutes)}</strong>{w.longMinutes ? <span className="muted"> · longue {h(w.longMinutes)}</span> : null}</span>
+                  </div>
+                  <ul className="plain pw-tiles">
+                    {w.sessions.map((s, i) => {
+                      const dow = (new Date(`${s.date}T12:00:00Z`).getUTCDay() + 6) % 7;
+                      return (
+                        <li key={i} className={`pt ${s.kind}`}>
+                          <details>
+                            <summary>
+                              <span className="pt-day">{WEEKDAY_SHORT[dow]}</span>
+                              <span className="pt-title">{s.title}</span>
+                              <span className="pt-kind">{KIND_LABEL[s.kind]}{s.source === 'library' ? ' · 📚' : ''}</span>
+                            </summary>
+                            <p className="pt-why"><strong>{WEEKDAY_LONG[dow]} · pourquoi ?</strong> {s.why}</p>
+                          </details>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </li>
               ))}
             </ol>

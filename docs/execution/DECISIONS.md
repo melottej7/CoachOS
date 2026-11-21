@@ -1821,3 +1821,14 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - Navigateur (démo) :
     - Élèves : « Noah Dubois · À surveiller · ↺ Pas de retour sur « Sortie souple » · relancé, en attente de réponse » ;
     - Mes relances : modèle « Alors {prénom}, cette « {séance} » de {jour} ? Tortue mood 🐢 » prévisualisé (« Alors Emma, cette « Côtes 8 × 30″ » de mardi ? »), enregistré, puis modèle de CoachOS rétabli.
+
+## D-105 · Programme : semaines en blocs, séances en tuiles · 2026-11-21
+
+- **Retour du fondateur** sur la refonte D-101 : « J’aime beaucoup la proposition du programme. » Il demande d’afficher les semaines séparées en blocs, et les séances de la semaine en petits carrés ou rectangles plutôt qu’en ligne.
+- **Décision.**
+  - **Chaque semaine est un bloc** : un bandeau en haut, de la couleur de sa phase. On y lit S1, la date, la phase, puis le volume et la séance longue. Deux blocs par ligne sur ordinateur, un sur téléphone.
+  - **Chaque séance est une tuile** : jour, titre (3 lignes au plus), type (Facile, Longue, Qualité, Course) et 📚 si elle vient de ta bibliothèque.
+    - Un liseré à gauche marque le type : longue en couleur principale, qualité en orange, course sur fond coloré.
+    - Les tuiles d’une même semaine ont la même hauteur.
+  - **Toucher une tuile** l’ouvre sur toute la largeur du bloc, avec « Samedi · pourquoi ? » et l’explication.
+- **Preuves.** Navigateur (démo, semi de Camille) : ordinateur, 8 blocs sur deux colonnes ; téléphone à 375 px, 3 tuiles par ligne, tuile ouverte avec son « pourquoi », sans débordement. Typecheck OK. Aucun calcul modifié.
