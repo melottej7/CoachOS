@@ -1921,3 +1921,27 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
 - **Preuves.**
   - Tests du domaine (écrans, matériel selon le lieu) et du serveur (lieux et « poids du corps » enregistrés). `npm test` : **331 passés** (+3 PostgreSQL), typecheck OK.
   - Navigateur (démo, Camille, 375 px) : Musculation + Course à pied, puis « Où fais-tu ta musculation ? » (maison et salle), puis matériel en deux groupes (« Pour la course à pied », « À la maison, avec quoi ? »). Brouillon de test effacé.
+
+## D-111 · Exercices choisis selon le matériel de l’élève · 2026-11-21
+
+- **Contexte.** Suite de D-110 (« super, continue ») : le lieu et le matériel du bilan doivent servir au coach quand il compose une séance.
+- **Décision.**
+  - **Règle** (domaine) :
+    - **en salle**, tout est faisable ;
+    - **à la maison**, le poids du corps et le matériel déclaré ;
+    - **en extérieur**, le poids du corps et la barre de traction.
+    - Le tapis ne bloque jamais. Un exercice convient s’il ne demande rien, ou si l’un de ses matériels est disponible.
+    - Si l’élève n’a pas dit où il s’entraîne, on ne juge pas.
+  - **Constructeur, séance d’un élève** :
+    - les exercices faisables sont proposés d’abord ; les autres portent « matériel absent » ;
+    - si le coach en choisit un quand même : « ⚠ D’après son bilan, Camille n’a pas le matériel (haltères ou kettlebell) : choisis une variante, ou parlez-en ensemble. » Le coach garde la décision.
+  - Rien ne change pour la bibliothèque ni pour les séances de groupe (pas d’élève unique).
+- **Preuves.**
+  - Tests :
+    - domaine : salle, maison, extérieur, tapis, lieu inconnu, texte du matériel manquant ;
+    - serveur : matériel de l’élève lu par son coach, absent sans lieu.
+  - `npm test` : **333 passés** (+3 PostgreSQL), typecheck OK.
+  - Navigateur (démo, Camille passée provisoirement à « maison, élastiques ») :
+    - exercices faisables en tête (curl biceps et élévations latérales grâce aux élastiques) ;
+    - « Squat goblet » signalé ;
+    - profil de démo remis à l’identique ensuite.

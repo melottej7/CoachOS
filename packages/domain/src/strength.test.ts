@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  applyFollowLog, asDone, modulesOf, sportsFor, BASE_VIDEOS, compareSet, entryVerdict, loadProgress, progressText, strengthLogSchema, strengthPlan, describeBlock, describeTotals, detectVideoType, shownVideo, starterKey, exerciseIdsOf, fitSteps, followSequence, parseNotation, setLabel, presetsFor, STARTER_EXERCISES, structureSchema,
+  applyFollowLog, asDone, availableEquipment, exerciseFits, missingEquipment, modulesOf, sportsFor, BASE_VIDEOS, compareSet, entryVerdict, loadProgress, progressText, strengthLogSchema, strengthPlan, describeBlock, describeTotals, detectVideoType, shownVideo, starterKey, exerciseIdsOf, fitSteps, followSequence, parseNotation, setLabel, presetsFor, STARTER_EXERCISES, structureSchema,
   structureTotals, toNotation, videoEmbed, type Block,
 } from './index';
 
@@ -201,3 +201,22 @@ describe('modules de l’espace et séances mixtes (M5)', () => {
     expect(parseNotation('3×(10 squats)', 'running').errors.length).toBeGreaterThan(0);
   });
 });
+
+describe('exercice et matériel de l’élève (D-111)', () => {
+  it('salle = tout ; maison = son matériel + poids du corps ; extérieur = barre de traction ; tapis jamais bloquant', () => {
+    expect(availableEquipment({ places: ['gym'], equipment: [] })).toBe('all');
+    const home = { places: ['home' as const], equipment: ['bands', 'gps_watch'] };
+    expect(exerciseFits(['dumbbells', 'kettlebell'], home)).toBe(false);
+    expect(exerciseFits(['dumbbells', 'bands'], home)).toBe(true);
+    expect(exerciseFits(['mat', 'bodyweight'], home)).toBe(true);
+    expect(exerciseFits(['mat'], home)).toBe(true);
+    expect(exerciseFits(['pullup_bar'], home)).toBe(false);
+    expect(exerciseFits(['pullup_bar'], { places: ['outdoor'], equipment: [] })).toBe(true);
+    expect(exerciseFits(['machine'], { places: ['gym', 'home'], equipment: [] })).toBe(true);
+    // Lieu inconnu : on ne juge pas.
+    expect(exerciseFits(['dumbbells'], { places: [], equipment: [] })).toBeNull();
+    expect(exerciseFits(['dumbbells'], null)).toBeNull();
+    expect(missingEquipment(['dumbbells', 'kettlebell', 'mat'])).toBe('haltères ou kettlebell');
+  });
+});
+

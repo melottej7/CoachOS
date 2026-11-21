@@ -287,3 +287,12 @@ export async function readBilanVersions(userId: string, wid: string, aid: string
     return out.reverse();
   });
 }
+
+/** D-111 : matériel de musculation de l’élève (lieux et matériel de maison), avec son prénom, pour guider le choix des exercices. */
+export async function athleteGear(userId: string, wid: string, aid: string): Promise<{ first: string; gear: { places: TrainingPlace[]; equipment: string[] } } | null> {
+  const p = await readAthleteProfile(userId, wid, aid);
+  if (!p || !p.trainingPlaces.length) return null;
+  const name = await readAs(userId, async (tx) => (await tx.query<{ display_name: string }>('select display_name from public.athletes where workspace_id = $1 and id = $2', [wid, aid])).rows[0]?.display_name ?? '');
+  return { first: name.split(' ')[0] || 'L’élève', gear: { places: p.trainingPlaces, equipment: p.equipment } };
+}
+

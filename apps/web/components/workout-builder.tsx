@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useId, useRef, useState, type Key
 import {
   describeBlock, describeTotals, formatClock, formatKm, formatPace, PHASES, PHASE_LABELS, presetsFor, SPORTS, SPORT_LABELS, stepEstimate,
   personalTarget, sessionProfile, structureTotals, usesCss, usesFtp, usesVma, ZONE_NAMES, ZONES,
-  type Block, type Intensity, type Measure, type Phase, type References, type Sport, type Step, type Zone,
+  type Block, type Intensity, type Measure, type Phase, type References, type Sport, type Step, type Zone, exerciseFits, missingEquipment, type AthleteGear, type ExerciseEquipment,
 } from '@coachos/domain';
 import { SessionChart } from './session-chart';
 import { QuickNotation } from './quick-notation';
@@ -12,8 +12,11 @@ import { canDrop, find, lift, moveBlock, shift, type DropTarget } from './block-
 import { mutate, newKey } from './api-client';
 
 /** D-096 : exercices de la bibliothèque du coach, proposés dans les blocs de musculation. */
-export interface ExerciseOption { id: string; name: string }
+export interface ExerciseOption { id: string; name: string; equipment?: ExerciseEquipment[] }
 const ExercisesCtx = createContext<ExerciseOption[]>([]);
+/** D-111 : matériel de l’élève de la séance (absent pour la bibliothèque et les groupes). */
+export interface AthleteGearInfo { first: string; gear: AthleteGear }
+const GearCtx = createContext<AthleteGearInfo | null>(null);
 
 /** Bloc réutilisable de la bibliothèque du coach (D-074). */
 export interface SavedBlock { id: string; title: string; sport: Sport | null; blocks: Block[] }
@@ -339,7 +342,13 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools }: { step:
   const { _k: _ignored, ...plain } = step;
   const est = stepEstimate(plain, sport, refs);
   const strength = stepSport === 'strength' || sport === 'strength';
-  const exercises = useContext(ExercisesCtx);
+  const allExercises = useContext(ExercisesCtx);
+  const athlete = useContext(GearCtx);
+  // D-111 : pour un élève qui a dit où il s’entraîne, les exercices faisables d’abord.
+  const fit = (x: ExerciseOption) => exerciseFits(x.equipment ?? [], athlete?.gear ?? null);
+  const exercises = [...allExercises].sort((p, q) => Number(fit(q) !== false) - Number(fit(p) !== false));
+  const chosen = step.exercise?.id ? allExercises.find((x) => x.id === step.exercise!.id) : undefined;
+  const chosenFits = chosen ? fit(chosen) : null;
   const hint = [
     zone ? `Z${zone} · ${ZONE_NAMES[zone as Zone]}` : null,
     zone ? personalTarget(plain, sport, refs) : null,
@@ -376,8 +385,11 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools }: { step:
                 const hit = exercises.find((x) => x.name.toLowerCase() === name.trim().toLowerCase());
                 onChange({ ...step, exercise: name.trim() ? { id: hit?.id ?? null, name: hit?.name ?? name } : null });
               }} />
-            <datalist id={`${id}-exl`}>{exercises.map((x) => <option key={x.id} value={x.name} />)}</datalist>
+            <datalist id={`${id}-exl`}>{exercises.map((x) => <option key={x.id} value={x.name} label={fit(x) === false ? 'matériel absent' : undefined} />)}</datalist>
             {step.exercise && !step.exercise.id && exercises.length ? <span className="b-hint">Pas dans ta bibliothèque : l’élève verra le nom, sans vidéo.</span> : null}
+            {chosen && chosenFits === false && athlete ? (
+              <span className="b-hint b-warn" role="note">⚠ D’après son bilan, {athlete.first} n’a pas le matériel ({missingEquipment(chosen.equipment ?? [])}) : choisis une variante, ou parlez-en ensemble.</span>
+            ) : null}
           </div>
         ) : null}
         <MeasureEditor id={id} m={step.measure} strength={strength} onChange={(m) => onChange({ ...step, measure: m })} />
@@ -452,7 +464,7 @@ function BlockList({ blocks, sport, depth, prefix, parent, refs, dnd, onChange }
 type Indicator = { top: number; left: number; width: number };
 
 /** Constructeur complet, contrôlé par le formulaire de séance. */
-export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vmaHref, library, exercises = [], strengthOn = true }: {
+export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vmaHref, library, exercises = [], strengthOn = true, gear }: {
   sport: Sport; value: EBlock[]; onChange: (b: EBlock[]) => void; refs?: References; athleteFirst?: string; vmaHref?: string;
   /** D-074 : blocs réutilisables du coach (insérer, garder). Absent : seulement les modèles rapides. */
   library?: { wid: string; blocks: SavedBlock[] };
@@ -460,6 +472,8 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
   exercises?: ExerciseOption[];
   /** D-102 : module musculation actif ; une séance d’endurance peut alors finir par du renforcement. */
   strengthOn?: boolean;
+  /** D-111 : matériel de l’élève (séance individuelle). */
+  gear?: AthleteGearInfo | null;
 }) {
   const presets = presetsFor(sport);
   const [mine, setMine] = useState<SavedBlock[]>(library?.blocks ?? []);
@@ -595,6 +609,7 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
   const strength = sport === 'strength';
   return (
     <ExercisesCtx.Provider value={exercises}>
+    <GearCtx.Provider value={gear ?? null}>
     <section className={`builder${drag?.active ? ' is-sorting' : ''}`} aria-labelledby="builder-title" data-tour="builder" ref={root}>
       <div className="b-title-row">
         <h2 id="builder-title">Déroulé de la séance</h2>
@@ -666,6 +681,7 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
       {drag?.active ? <div className="b-ghost" style={{ left: drag.x + 12, top: drag.y + 12 }} aria-hidden="true">{drag.label}</div> : null}
       {drag?.active && drop ? <div className="b-drop" style={{ top: drop.top, left: drop.left, width: drop.width }} aria-hidden="true" /> : null}
     </section>
+    </GearCtx.Provider>
     </ExercisesCtx.Provider>
   );
 }

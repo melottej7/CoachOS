@@ -7,6 +7,7 @@ import { listBlockTemplates } from '@/server/repo/library';
 import { readAthleteReferences } from '@/server/commands/athlete-references';
 import { listExercises } from '@/server/repo/exercises';
 import { coachContext } from '@/server/repo/context';
+import { athleteGear } from '@/server/commands/athlete-profile';
 
 export const metadata = { title: 'Modifier la séance' };
 
@@ -26,7 +27,7 @@ export default async function EditWorkout({ params, searchParams }: { params: Pr
       <Link className="back" href={returnTo ?? detail}>{returnTo ? '← Séance de groupe' : '← Retour à la séance'}</Link>
       <div className="head"><div><div className="kicker">{w.athlete.displayName} · version {r.number}</div><h1>Modifier la séance</h1></div></div>
       <section className="card"><div className="card-body">
-        <WorkoutForm modules={(await coachContext(actor.userId, wid))?.modules} exercises={(await listExercises(actor.userId, wid)).map((x) => ({ id: x.id, name: x.name }))} savedBlocks={await listBlockTemplates(actor.userId, wid)} refs={await readAthleteReferences(actor.userId, wid, aid)} wid={wid} aid={aid} athleteName={w.athlete.displayName} timeZone={r.timeZone} cancelHref={returnTo ?? detail} returnTo={returnTo}
+        <WorkoutForm modules={(await coachContext(actor.userId, wid))?.modules} exercises={(await listExercises(actor.userId, wid)).map((x) => ({ id: x.id, name: x.name, equipment: x.equipment }))} gear={await athleteGear(actor.userId, wid, aid)} savedBlocks={await listBlockTemplates(actor.userId, wid)} refs={await readAthleteReferences(actor.userId, wid, aid)} wid={wid} aid={aid} athleteName={w.athlete.displayName} timeZone={r.timeZone} cancelHref={returnTo ?? detail} returnTo={returnTo}
           edit={{ sid, expectedRevision: r.number, published: w.published !== null }}
           initial={{ title: r.title, localDate: r.localDate, sport: r.sport, minutes: r.durationSeconds ? String(Math.round(r.durationSeconds / 60)) : '', instructions: r.instructions, intervals: r.intervals }} />
       </div></section>

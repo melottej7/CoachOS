@@ -118,5 +118,13 @@ describe('bilan d’arrivée', () => {
     await saveAthleteProfile(meta(USERS.noah), { ...answers, otherSports: ['strength'], trainingPlaces: ['home', 'outdoor'], equipment: ['bodyweight'] });
     expect(await readAthleteProfile(USERS.marine, WORKSPACE_A, ATHLETES.noah)).toMatchObject({ trainingPlaces: ['home', 'outdoor'], equipment: ['bodyweight'] });
   });
+
+  it('D-111 : matériel de l’élève lu par son coach pour guider les exercices', async () => {
+    const { athleteGear } = await import('./commands/athlete-profile');
+    await saveAthleteProfile(meta(USERS.noah), { ...answers, otherSports: ['strength'], trainingPlaces: ['home'], equipment: ['bands'] });
+    expect(await athleteGear(USERS.marine, WORKSPACE_A, ATHLETES.noah)).toEqual({ first: 'Noah', gear: { places: ['home'], equipment: ['bands'] } });
+    await saveAthleteProfile(meta(USERS.noah), { ...answers, otherSports: [], trainingPlaces: [] });
+    expect(await athleteGear(USERS.marine, WORKSPACE_A, ATHLETES.noah)).toBeNull();
+  });
 });
 

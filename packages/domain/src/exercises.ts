@@ -218,3 +218,34 @@ export function exerciseHasVideo(
 ): boolean {
   return shownVideo({ videoUrl: e.videoUrl, clipId: e.clipId, starterKey: e.starterKey ?? null, useBaseVideo: e.useBaseVideo ?? true }, catalog) !== null;
 }
+
+// ---------- Exercice et matériel de l’élève (D-111) ----------
+
+/** Ce dont l’élève dispose, d’après son bilan : lieux de musculation et matériel de maison. */
+export interface AthleteGear { places: ('gym' | 'home' | 'outdoor')[]; equipment: string[] }
+
+/** Matériel disponible selon les lieux ; le tapis et le poids du corps sont toujours possibles. */
+export function availableEquipment(g: AthleteGear): Set<ExerciseEquipment> | 'all' {
+  if (g.places.includes('gym')) return 'all';
+  const out = new Set<ExerciseEquipment>(['bodyweight', 'mat']);
+  if (g.places.includes('outdoor')) out.add('pullup_bar');
+  if (g.places.includes('home')) for (const e of g.equipment) if ((EXERCISE_EQUIPMENT as readonly string[]).includes(e)) out.add(e as ExerciseEquipment);
+  return out;
+}
+
+/**
+ * Un exercice convient s’il ne demande rien, ou si l’un de ses matériels est disponible (le tapis ne compte pas).
+ * null : l’élève n’a pas dit où il s’entraîne, on ne juge pas.
+ */
+export function exerciseFits(exerciseEquipment: readonly ExerciseEquipment[], g: AthleteGear | null): boolean | null {
+  if (!g || !g.places.length) return null;
+  const have = availableEquipment(g);
+  if (have === 'all') return true;
+  const needs = exerciseEquipment.filter((e) => e !== 'mat');
+  return !needs.length || needs.some((e) => have.has(e));
+}
+
+/** Matériel manquant, en clair (« haltères ou kettlebell »). */
+export function missingEquipment(exerciseEquipment: readonly ExerciseEquipment[]): string {
+  return exerciseEquipment.filter((e) => e !== 'mat').map((e) => EXERCISE_EQUIPMENT_LABELS[e].toLowerCase()).join(' ou ');
+}
