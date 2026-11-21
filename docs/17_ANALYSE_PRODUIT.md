@@ -2,6 +2,8 @@
 
 Version du 21 novembre 2026. Réponse au cadrage « OS du coach sportif hybride » proposé par le fondateur. Aucune ligne de code n’a été modifiée pour cette analyse.
 
+> **Décision du fondateur après lecture (D-096, 21 novembre).** CoachOS sera **modulaire : endurance, musculation, ou les deux**, avec des programmes vidéo de musculation suivis à distance, puis la gestion du coach (relances, suivi, paiement). Les recommandations « course à pied seulement » et « abandonner le repositionnement musculation » sont donc écartées. Le reste de l’analyse (preuve d’usage, mise en ligne, brief du jour, pilote) reste valable.
+
 **Comment lire ce document.** Chaque affirmation porte une étiquette :
 - **[Fait]** : constaté dans le projet, le code, les documents du fondateur ou une source publique citée ;
 - **[Hypothèse]** : raisonnement plausible, non prouvé ;

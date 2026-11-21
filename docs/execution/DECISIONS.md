@@ -1567,3 +1567,28 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - La connexion par mot de passe passe par le serveur : elle marche depuis le téléphone.
   - La lecture hors ligne (D-080) attend https, donc la mise en ligne.
 - **Preuve.** Navigateur à 375 px sur http://192.168.65.68:3000/demo : page chargée et active, sans erreur, et plus aucun blocage dans le journal du serveur.
+
+## D-096 · CoachOS modulaire : endurance, musculation, ou les deux · 2026-11-21
+
+- **Instruction du fondateur**, en réponse à l’analyse produit ([17_ANALYSE_PRODUIT.md](../17_ANALYSE_PRODUIT.md)) :
+  - « Il faut quelque chose de modulaire avec une possibilité musculation et sport d’endurance et les deux. » Il faut donc développer le côté musculation.
+  - Le coach choisit des enchaînements d’exercices dans des **programmes vidéo**, que l’élève suit à distance.
+  - Raison donnée : le coaching en présentiel coûte cher et freine beaucoup de gens, alors qu’un programme détaillé en vidéo qui montre les mouvements apporte une vraie valeur.
+  - La gestion du coach suivra : relances, suivis, liens, paiement.
+- **Décision.** La cible « coach de course à pied seulement » proposée par l’analyse est écartée. CoachOS devient modulaire : l’espace d’un coach active l’endurance, la musculation, ou les deux. Une semaine d’élève peut mêler course et renforcement.
+- **Lot M · Musculation**, avant tout autre chantier (ordre de la roadmap mis à jour) :
+  1. **M1, séance de musculation.** Nouveau sport « Musculation ». Une étape peut porter un exercice (nom et référence), des répétitions, une charge (kg) et un repos. Les séries s’écrivent avec les répétitions existantes : 4 × (10 squats à 40 kg + repos 1′30). Le modèle de séance (D-023) reste le même : constructeur, révisions, publication et lecture sont réutilisés.
+  2. **M2, bibliothèque d’exercices avec vidéo.** Nom, consignes, groupe musculaire, matériel, vidéo :
+     - soit un lien (YouTube, Vimeo, Drive…) ;
+     - soit un court fichier filmé par le coach, gardé en privé et lu seulement par les membres de l’espace.
+     - S’y ajoutent des exercices de départ, sans vidéo, que le coach enrichit.
+  3. **M3, suivre la séance à distance.** Côté élève : un exercice par écran, avec sa vidéo, les séries à cocher et un minuteur de repos.
+  4. **M4, retour de musculation.** Séries et charges réalisées, progression des charges visible par le coach et l’élève.
+  5. **M5, modularité.** Les sports de l’espace (profil, D-022) décident de ce qui est montré. Une séance mixte est possible : footing suivi de renforcement.
+- **Après le lot M : la gestion du coach.** Relances pré-rédigées et validées, suivi, puis paiement.
+  - CLAUDE.md demande d’attendre la validation du parcours des deux rôles avant Stripe. Cette condition est rappelée au fondateur, et le paiement sera ouvert sur sa confirmation.
+- **Ce qui reste valable de l’analyse :**
+  - la mise en ligne reste nécessaire pour tout usage à distance ;
+  - aucun envoi ni publication sans le coach ;
+  - les données de santé restent exclues (D-084).
+- **Point de vigilance consigné.** Les vidéos d’exercices sont un standard des applications de musculation (Trainerize, TrueCoach, Everfit). La différence crédible de CoachOS est de réunir **endurance et musculation dans le même plan**, avec **les vidéos et la méthode du coach**. À vérifier avec de vrais élèves.
