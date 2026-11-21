@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['@electric-sql/pglite'],
   transpilePackages: ['@coachos/domain'],
   poweredByHeader: false,
+  // D-113 · La construction de production ne vérifie pas les fichiers de test : l’outil de test (vitest) n’est pas
+  // installé sur Vercel. Les tests restent vérifiés en local (npm run typecheck utilise tsconfig.json).
+  typescript: { tsconfigPath: 'tsconfig.build.json' },
   // Développement seulement : un téléphone sur le même Wi-Fi ouvre l’adresse réseau du Mac (« Network: http://… »).
   // Next.js bloque par défaut ces origines (rechargement en direct, morceaux de page) : on autorise les réseaux privés.
   allowedDevOrigins: ['192.168.*.*', '10.*.*.*', '172.*.*.*', '*.local'],
