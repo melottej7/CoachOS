@@ -1,5 +1,7 @@
 # CoachOS · Instructions permanentes pour Claude Code
 
+**Langue : réponds toujours en français au fondateur, dans chaque message, y compris les guides pas à pas et les réponses courtes. Les libellés d’interface en anglais (boutons Supabase, GitHub, Vercel) sont cités tels quels dans des phrases françaises.**
+
 Construire une application d’endurance fluide pour deux personnes. Le coach planifie et traite les retours. L’athlète trouve sa séance sur téléphone et dit ce qu’il a réalisé. Leur boucle manuelle est prioritaire. L’IA, les intégrations et le paiement suivent les preuves d’usage.
 
 ## Lecture et ordre de travail
