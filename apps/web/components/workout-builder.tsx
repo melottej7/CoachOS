@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { createContext, useContext, useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import {
   describeBlock, describeTotals, formatClock, formatKm, formatPace, PHASES, PHASE_LABELS, presetsFor, SPORTS, SPORT_LABELS, stepEstimate,
   personalTarget, sessionProfile, structureTotals, usesCss, usesFtp, usesVma, ZONE_NAMES, ZONES,
@@ -10,6 +10,10 @@ import { SessionChart } from './session-chart';
 import { QuickNotation } from './quick-notation';
 import { canDrop, find, lift, moveBlock, shift, type DropTarget } from './block-tree';
 import { mutate, newKey } from './api-client';
+
+/** D-096 : exercices de la bibliothèque du coach, proposés dans les blocs de musculation. */
+export interface ExerciseOption { id: string; name: string }
+const ExercisesCtx = createContext<ExerciseOption[]>([]);
 
 /** Bloc réutilisable de la bibliothèque du coach (D-074). */
 export interface SavedBlock { id: string; title: string; sport: Sport | null; blocks: Block[] }
@@ -80,6 +84,26 @@ export function fromEditor(blocks: EBlock[]): Block[] {
 const newStep = (phase: Phase = 'work', sport: Sport | null = null): EStep => ({
   type: 'step', phase, sport, measure: { kind: 'time', seconds: 600 }, intensity: { kind: 'none' }, cadence: null, note: null, _k: key(),
 });
+/** D-096 : étape et série de musculation (exercice à choisir, 10 répétitions, repos 1 min 30). */
+const newStrengthStep = (phase: Phase = 'work'): EStep => ({ ...newStep(phase), measure: phase === 'work' ? { kind: 'reps', reps: 10 } : { kind: 'time', seconds: 300 } });
+const newStrengthRepeat = (): ERepeat => ({
+  type: 'repeat', times: 4, _k: key(),
+  steps: [newStrengthStep('work'), { ...newStep('rest'), measure: { kind: 'time', seconds: 90 } }],
+});
+
+/** D-096 : un exercice écrit en texte se rattache à la bibliothèque quand le nom correspond. */
+function linkExercises(blocks: Block[], exercises: ExerciseOption[]): Block[] {
+  if (!exercises.length) return blocks;
+  const byName = new Map(exercises.map((x) => [x.name.toLowerCase(), x]));
+  const fix = (b: Block): Block => {
+    if (b.type === 'repeat') return { ...b, steps: b.steps.map(fix) };
+    if (!b.exercise || b.exercise.id) return b;
+    const hit = byName.get(b.exercise.name.toLowerCase()) ?? byName.get(b.exercise.name.toLowerCase().replace(/s$/, ''));
+    return hit ? { ...b, exercise: { id: hit.id, name: hit.name } } : b;
+  };
+  return blocks.map(fix);
+}
+
 const newRepeat = (): ERepeat => ({
   type: 'repeat', times: 5, _k: key(),
   steps: [
@@ -137,20 +161,29 @@ function TimeInputs({ seconds, onChange }: { seconds: number; onChange: (s: numb
   );
 }
 
-function MeasureEditor({ id, m, onChange }: { id: string; m: Measure; onChange: (m: Measure) => void }) {
+const MEASURE_LABEL: Record<Measure['kind'], string> = { reps: 'Répétitions', time: 'Durée', distance: 'Distance', open: 'Libre' };
+
+function MeasureEditor({ id, m, strength = false, onChange }: { id: string; m: Measure; strength?: boolean; onChange: (m: Measure) => void }) {
   const km = m.kind === 'distance' && m.meters >= 1000 && m.meters % 100 === 0;
+  // D-096 : en musculation, répétitions d’abord ; la distance n’a pas de sens.
+  const kinds = (strength ? ['reps', 'time', 'open'] : ['time', 'distance', 'open']) as Measure['kind'][];
   return (
     <div className="b-field">
       <div className="seg" role="radiogroup" aria-label="Mesure du bloc">
-        {(['time', 'distance', 'open'] as const).map((k) => (
+        {kinds.map((k) => (
           <label key={k}>
             <input type="radio" name={`${id}-measure`} checked={m.kind === k}
-              onChange={() => onChange(k === 'time' ? { kind: 'time', seconds: 600 } : k === 'distance' ? { kind: 'distance', meters: 1000 } : { kind: 'open' })} />
-            {k === 'time' ? 'Durée' : k === 'distance' ? 'Distance' : 'Libre'}
+              onChange={() => onChange(k === 'time' ? { kind: 'time', seconds: strength ? 30 : 600 } : k === 'distance' ? { kind: 'distance', meters: 1000 } : k === 'reps' ? { kind: 'reps', reps: 10 } : { kind: 'open' })} />
+            {MEASURE_LABEL[k]}
           </label>
         ))}
       </div>
-      {m.kind === 'time' ? (
+      {m.kind === 'reps' ? (
+        <span className="b-inline">
+          <input aria-label="Nombre de répétitions" type="number" min={1} max={500} value={m.reps} className="num"
+            onChange={(e) => onChange({ kind: 'reps', reps: Math.min(500, Math.max(1, Math.round(Number(e.target.value) || 1))) })} /> répétitions
+        </span>
+      ) : m.kind === 'time' ? (
         <TimeInputs seconds={m.seconds} onChange={(seconds) => onChange({ kind: 'time', seconds })} />
       ) : m.kind === 'distance' ? (
         <span className="b-inline">
@@ -161,7 +194,7 @@ function MeasureEditor({ id, m, onChange }: { id: string; m: Measure; onChange: 
             <option value="m">m</option><option value="km">km</option>
           </select>
         </span>
-      ) : <span className="muted">À la sensation, jusqu’au repère indiqué en note</span>}
+      ) : <span className="muted">{strength ? 'Au maximum, ou jusqu’au repère indiqué en note' : 'À la sensation, jusqu’au repère indiqué en note'}</span>}
     </div>
   );
 }
@@ -169,6 +202,10 @@ function MeasureEditor({ id, m, onChange }: { id: string; m: Measure; onChange: 
 const INTENSITY_KINDS: { k: Intensity['kind']; label: string }[] = [
   { k: 'none', label: 'Sans cible' }, { k: 'zone', label: 'Zone' }, { k: 'pace', label: 'Allure' },
   { k: 'power', label: 'Puissance' }, { k: 'hr', label: 'Fréquence cardiaque' }, { k: 'rpe', label: 'Effort ressenti' },
+];
+/** D-096 : musculation, sans charge (poids du corps), charge en kg ou effort ressenti. */
+const STRENGTH_INTENSITY_KINDS: { k: Intensity['kind']; label: string }[] = [
+  { k: 'none', label: 'Poids du corps' }, { k: 'load', label: 'Charge (kg)' }, { k: 'rpe', label: 'Effort ressenti' },
 ];
 
 function IntensityEditor({ id, i, sport, onChange }: { id: string; i: Intensity; sport: Sport; onChange: (i: Intensity) => void }) {
@@ -179,6 +216,7 @@ function IntensityEditor({ id, i, sport, onChange }: { id: string; i: Intensity;
       case 'power': return { kind: 'power', unit: 'w', min: 200, max: null };
       case 'hr': return { kind: 'hr', unit: 'bpm', min: 140, max: null };
       case 'rpe': return { kind: 'rpe', min: 5, max: null };
+      case 'load': return { kind: 'load', min: 10, max: null };
       default: return { kind: 'none' };
     }
   };
@@ -191,8 +229,14 @@ function IntensityEditor({ id, i, sport, onChange }: { id: string; i: Intensity;
       <label className="b-label" htmlFor={`${id}-ik`}>Intensité</label>
       <span className="b-inline">
         <select id={`${id}-ik`} value={i.kind} onChange={(e) => onChange(start(e.target.value as Intensity['kind']))}>
-          {INTENSITY_KINDS.map((o) => <option key={o.k} value={o.k}>{o.label}</option>)}
+          {(sport === 'strength' ? STRENGTH_INTENSITY_KINDS : INTENSITY_KINDS).map((o) => <option key={o.k} value={o.k}>{o.label}</option>)}
         </select>
+        {i.kind === 'load' ? (
+          <>
+            <input aria-label="Charge en kg" type="number" className="num" min={0.5} max={500} step={0.5} value={i.min}
+              onChange={(e) => onChange({ ...i, min: Math.max(0.5, Math.round((Number(e.target.value) || 0.5) * 2) / 2) })} /> kg
+          </>
+        ) : null}
         {i.kind === 'zone' ? (
           <span className="seg zones" role="radiogroup" aria-label="Zone">
             {ZONES.map((z) => (
@@ -288,6 +332,8 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools }: { step:
   const zone = step.intensity.kind === 'zone' ? step.intensity.zone : null;
   const { _k: _ignored, ...plain } = step;
   const est = stepEstimate(plain, sport, refs);
+  const strength = stepSport === 'strength' || sport === 'strength';
+  const exercises = useContext(ExercisesCtx);
   const hint = [
     zone ? `Z${zone} · ${ZONE_NAMES[zone as Zone]}` : null,
     zone ? personalTarget(plain, sport, refs) : null,
@@ -311,8 +357,21 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools }: { step:
         {tools}
       </div>
       <div className="b-body">
-        <MeasureEditor id={id} m={step.measure} onChange={(m) => onChange({ ...step, measure: m })} />
-        <IntensityEditor id={id} i={step.intensity} sport={stepSport ?? 'running'} onChange={(i) => onChange({ ...step, intensity: i })} />
+        {strength && step.phase !== 'rest' && step.phase !== 'recovery' ? (
+          <div className="b-field">
+            <label className="b-label" htmlFor={`${id}-ex`}>Exercice</label>
+            <input id={`${id}-ex`} list={`${id}-exl`} maxLength={80} value={step.exercise?.name ?? ''} placeholder={exercises.length ? 'Choisis ou écris un exercice' : 'Ex. Squat goblet'}
+              onChange={(e) => {
+                const name = e.target.value;
+                const hit = exercises.find((x) => x.name.toLowerCase() === name.trim().toLowerCase());
+                onChange({ ...step, exercise: name.trim() ? { id: hit?.id ?? null, name: hit?.name ?? name } : null });
+              }} />
+            <datalist id={`${id}-exl`}>{exercises.map((x) => <option key={x.id} value={x.name} />)}</datalist>
+            {step.exercise && !step.exercise.id && exercises.length ? <span className="b-hint">Pas dans ta bibliothèque : l’élève verra le nom, sans vidéo.</span> : null}
+          </div>
+        ) : null}
+        <MeasureEditor id={id} m={step.measure} strength={strength} onChange={(m) => onChange({ ...step, measure: m })} />
+        <IntensityEditor id={id} i={step.intensity} sport={strength ? 'strength' : (stepSport ?? 'running')} onChange={(i) => onChange({ ...step, intensity: i })} />
         {hint.length ? <p className="b-hint">{hint.join(' · ')}</p> : null}
         {noteOpen ? (
           <div className="b-field">
@@ -383,10 +442,12 @@ function BlockList({ blocks, sport, depth, prefix, parent, refs, dnd, onChange }
 type Indicator = { top: number; left: number; width: number };
 
 /** Constructeur complet, contrôlé par le formulaire de séance. */
-export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vmaHref, library }: {
+export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vmaHref, library, exercises = [] }: {
   sport: Sport; value: EBlock[]; onChange: (b: EBlock[]) => void; refs?: References; athleteFirst?: string; vmaHref?: string;
   /** D-074 : blocs réutilisables du coach (insérer, garder). Absent : seulement les modèles rapides. */
   library?: { wid: string; blocks: SavedBlock[] };
+  /** D-096 : exercices de la bibliothèque, proposés dans les blocs de musculation. */
+  exercises?: ExerciseOption[];
 }) {
   const presets = presetsFor(sport);
   const [mine, setMine] = useState<SavedBlock[]>(library?.blocks ?? []);
@@ -519,11 +580,15 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
   }, [drag?.key]);
 
   const runSport = usesVma(sport) || MULTISPORT.includes(sport);
+  const strength = sport === 'strength';
   return (
+    <ExercisesCtx.Provider value={exercises}>
     <section className={`builder${drag?.active ? ' is-sorting' : ''}`} aria-labelledby="builder-title" data-tour="builder" ref={root}>
       <div className="b-title-row">
         <h2 id="builder-title">Déroulé de la séance</h2>
-        <p className="muted">Construis la séance bloc par bloc : durée ou distance, zone, répétitions et séries. Glisse un bloc par sa poignée pour le déplacer.</p>
+        <p className="muted">{strength
+          ? 'Choisis tes exercices, leurs répétitions, la charge et le repos ; « + Série » répète un exercice (4 × 10). Glisse un bloc par sa poignée pour le déplacer.'
+          : 'Construis la séance bloc par bloc : durée ou distance, zone, répétitions et séries. Glisse un bloc par sa poignée pour le déplacer.'}</p>
       </div>
       {value.length ? (
         <BlockList blocks={value} sport={sport} depth={0} prefix="" parent={null} refs={refs} dnd={dnd} onChange={onChange} />
@@ -531,8 +596,17 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
         <p className="empty b-empty">Aucun bloc pour l’instant. Ajoute une étape, une répétition ou pars d’un modèle.</p>
       )}
       <div className="actions" data-tour="builder-add">
-        <button type="button" className="btn" onClick={() => onChange([...value, newStep(value.length ? 'work' : 'warmup', defaultSport)])}>+ Étape</button>
-        <button type="button" className="btn" onClick={() => onChange([...value, newRepeat()])}>+ Répétition</button>
+        {strength ? (
+          <>
+            <button type="button" className="btn" onClick={() => onChange([...value, newStrengthStep('work')])}>+ Exercice</button>
+            <button type="button" className="btn" onClick={() => onChange([...value, newStrengthRepeat()])}>+ Série</button>
+          </>
+        ) : (
+          <>
+            <button type="button" className="btn" onClick={() => onChange([...value, newStep(value.length ? 'work' : 'warmup', defaultSport)])}>+ Étape</button>
+            <button type="button" className="btn" onClick={() => onChange([...value, newRepeat()])}>+ Répétition</button>
+          </>
+        )}
         <label className="visually-hidden" htmlFor="preset">Ajouter un modèle</label>
         <select id="preset" className="select" value="" data-tour="presets"
           onChange={(e) => {
@@ -555,7 +629,7 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
       </div>
       {library ? <KeepBlocks wid={library.wid} sport={sport} blocks={blocks} onSaved={(b) => setMine((m) => [...m, b].sort((x, y) => x.title.localeCompare(y.title, 'fr')))} /> : null}
       <QuickNotation sport={sport} blocks={blocks} refs={refs}
-        onApply={(bs, mode) => onChange(mode === 'replace' ? toEditor(bs) : [...value, ...toEditor(bs)])} />
+        onApply={(raw, mode) => { const bs = linkExercises(raw, exercises); onChange(mode === 'replace' ? toEditor(bs) : [...value, ...toEditor(bs)]); }} />
       {value.length ? (
         <div className="b-summary" aria-live="polite">
           <p className="b-total"><strong>Total :</strong> {describeTotals(totals)}</p>
@@ -577,5 +651,6 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
       {drag?.active ? <div className="b-ghost" style={{ left: drag.x + 12, top: drag.y + 12 }} aria-hidden="true">{drag.label}</div> : null}
       {drag?.active && drop ? <div className="b-drop" style={{ top: drop.top, left: drop.left, width: drop.width }} aria-hidden="true" /> : null}
     </section>
+    </ExercisesCtx.Provider>
   );
 }

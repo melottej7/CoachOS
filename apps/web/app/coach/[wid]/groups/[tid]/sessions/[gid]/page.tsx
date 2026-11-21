@@ -6,6 +6,7 @@ import { coachContext, isUuid } from '@/server/repo/context';
 import { groupSession } from '@/server/repo/group-sessions';
 import { GroupPublish } from '@/components/group-publish';
 import { GroupBaseForm } from '@/components/group-base-form';
+import { listExercises } from '@/server/repo/exercises';
 
 export const metadata = { title: 'Séance de groupe' };
 
@@ -25,7 +26,7 @@ export default async function GroupSessionPage({ params }: { params: Promise<{ w
       <div className="kicker">Groupe · {v.teamName} · {SPORT_LABELS[v.sport]}</div>
       <h1>{v.title}</h1>
       <p className="sub">{formatLongDate(v.localDate)} · {v.rows.length} élève{v.rows.length > 1 ? 's' : ''}</p>
-      <GroupBaseForm wid={wid} gid={gid} revision={v.revision} base={v.base}
+      <GroupBaseForm exercises={(await listExercises(actor.userId, wid)).map((x) => ({ id: x.id, name: x.name }))} wid={wid} gid={gid} revision={v.revision} base={v.base}
         rows={v.rows.map((r) => ({ name: r.athleteName, followsBase: r.followsBase, published: r.publishedRevision !== null }))} />
       <section className="card" aria-labelledby="gp-title">
         <div className="card-head"><h2 id="gp-title">Séance de chaque élève</h2></div>

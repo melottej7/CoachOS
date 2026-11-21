@@ -57,7 +57,7 @@ describe('séance structurée', () => {
     // D-087 : 20 min à 70 % de 15 km/h = 3 500 m ; 5 × 400 m à 101 % ≈ 95 s chacun.
     expect(withVma.totalMeters).toBe(2000 + 3500);
     expect(withVma.seconds).toBe(1200 + 5 * 95);
-    expect(describeTotals(withVma)).toBe('environ 27 min 55 s · environ 5,5 km');
+    expect(describeTotals(withVma)).toBe('environ 28 min · environ 5,5 km');
     // Cyclisme : les zones ne se convertissent pas avec la VMA.
     expect(structureTotals(run, { sport: 'cycling', refs: { vmaKmh: 15 } }).unknownDistance).toBe(true);
     // Allure donnée : estimation sans VMA.
@@ -68,7 +68,7 @@ describe('séance structurée', () => {
   it('décrit chaque bloc en français lisible', () => {
     const [w, rep] = blocks(session);
     expect(describeBlock(w!)).toBe('Échauffement · 15 min · Z1 (récupération)');
-    expect(describeBlock(rep!)).toBe('3 × (5 × (400 m · 3:30 à 3:40 /km / 200 m · Z1 (récupération)) / 3 min)');
+    expect(describeBlock(rep!)).toBe('3 × (5 × (400 m · 3:30 à 3:40 /km / 200 m · Z1 (récupération)) / repos 3 min)');
   });
 
   it('refuse imbrication trop profonde, répétition d’une fois, fourchette inversée, unité inconnue', () => {

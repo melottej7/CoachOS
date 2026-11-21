@@ -5,13 +5,14 @@ import { useState } from 'react';
 import { formatLongDate, SPORT_LABELS, SPORTS, type LibraryWorkout, type Sport } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
 import { fieldError, useIntent } from './use-intent';
-import { fromEditor, toEditor, WorkoutBuilder, type EBlock } from './workout-builder';
+import { fromEditor, toEditor, WorkoutBuilder, type EBlock, type ExerciseOption } from './workout-builder';
 
 // Lot G2 (D-042) : une base commune → un brouillon par élève choisi. Liste exacte des destinataires avant création.
 
 export interface Recipient { id: string; name: string; state: 'invited' | 'active' }
 
-export function GroupSessionForm({ wid, teamId, teamName, members, date, initial }: {
+export function GroupSessionForm({ wid, teamId, teamName, members, date, initial, exercises }: {
+  exercises?: ExerciseOption[];
   wid: string; teamId: string; teamName: string; members: Recipient[]; date: string; initial?: LibraryWorkout;
 }) {
   const router = useRouter();
@@ -47,7 +48,7 @@ export function GroupSessionForm({ wid, teamId, teamName, members, date, initial
         <input id="gs-title" maxLength={120} required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex. Piste : 10 × 400 m" aria-invalid={!!fieldError(error, 'workout.title')} />
         {fieldError(error, 'workout.title') ? <span className="field-error">{fieldError(error, 'workout.title')}</span> : null}
       </div>
-      <WorkoutBuilder sport={sport} value={blocks} onChange={setBlocks} />
+      <WorkoutBuilder sport={sport} value={blocks} onChange={setBlocks} exercises={exercises} />
       <div className="field"><label htmlFor="gs-instructions">Consignes <span className="hint">Facultatif · identiques pour tous, modifiables ensuite par élève</span></label>
         <textarea id="gs-instructions" maxLength={5000} value={instructions} onChange={(e) => setInstructions(e.target.value)} /></div>
 

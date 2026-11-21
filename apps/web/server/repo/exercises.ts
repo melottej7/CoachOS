@@ -1,4 +1,4 @@
-import type { Exercise, ExerciseEquipment, Muscle } from '@coachos/domain';
+import { exerciseIdsOf, type Block, type Exercise, type ExerciseEquipment, type Muscle } from '@coachos/domain';
 import { commandAs, readAs } from '../db/client';
 
 // D-096 · Lecture des exercices : coach et élèves de l’espace (RLS). Les octets d’une vidéo filmée ne sont lus
@@ -45,4 +45,10 @@ export async function readExerciseClip(userId: string, wid: string, exerciseId: 
     const x = r.rows[0];
     return x ? { type: x.content_type, bytes: Buffer.from(x.bytes) } : null;
   });
+}
+
+/** D-096 : consignes et vidéos des exercices nommés par une ou plusieurs versions de séance, par identifiant. */
+export async function exerciseMap(userId: string, wid: string, ...structures: Block[][]): Promise<Record<string, Exercise>> {
+  const ids = [...new Set(structures.flatMap(exerciseIdsOf))];
+  return Object.fromEntries((await exercisesByIds(userId, wid, ids)).map((e) => [e.id, e]));
 }

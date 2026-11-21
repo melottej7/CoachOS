@@ -4,6 +4,7 @@ import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { listBlockTemplates } from '@/server/repo/library';
 import { LibraryForm } from '@/components/library-form';
+import { listExercises } from '@/server/repo/exercises';
 
 export const metadata = { title: 'Nouvelle séance de bibliothèque' };
 
@@ -15,7 +16,7 @@ export default async function NewLibraryWorkout({ params }: { params: Promise<{ 
     <>
       <Link className="back" href={`/coach/${wid}/library`}>← Bibliothèque</Link>
       <div className="head"><div><div className="kicker">Bibliothèque</div><h1>Nouvelle séance</h1></div></div>
-      <section className="card"><div className="card-body"><LibraryForm wid={wid} savedBlocks={await listBlockTemplates(actor.userId, wid)} /></div></section>
+      <section className="card"><div className="card-body"><LibraryForm wid={wid} exercises={(await listExercises(actor.userId, wid)).map((x) => ({ id: x.id, name: x.name }))} savedBlocks={await listBlockTemplates(actor.userId, wid)} /></div></section>
     </>
   );
 }

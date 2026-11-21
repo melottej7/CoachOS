@@ -9,6 +9,8 @@ import { StructureView } from '@/components/structure-view';
 import { SaveToLibrary } from '@/components/save-to-library';
 import { FitDownload } from '@/components/fit-download';
 import { readAthleteReferences } from '@/server/commands/athlete-references';
+import { exerciseMap } from '@/server/repo/exercises';
+import type { ExerciseInfo } from '@/components/structure-view';
 
 
 export const metadata = { title: 'Séance' };
@@ -18,7 +20,7 @@ const NOTICES: Record<string, string> = {
   published: 'Séance publiée. L’athlète la voit maintenant dans Aujourd’hui et Programme.',
 };
 
-function Prescription({ r, refs }: { r: RevisionView; refs: References }) {
+function Prescription({ r, refs, wid, exercises }: { r: RevisionView; refs: References; wid: string; exercises: Record<string, ExerciseInfo> }) {
   return (
     <div className="stack">
       <dl className="details">
@@ -27,7 +29,7 @@ function Prescription({ r, refs }: { r: RevisionView; refs: References }) {
         {r.intervals.length ? null : <div><dt>Durée</dt><dd>{formatDuration(r.durationSeconds) ?? 'Non précisée'}</dd></div>}
         {r.distanceM && !r.intervals.length ? <div><dt>Distance</dt><dd>{formatDistance(r.distanceM)}</dd></div> : null}
       </dl>
-      <StructureView blocks={r.intervals} sport={r.sport} refs={refs} />
+      <StructureView blocks={r.intervals} sport={r.sport} refs={refs} wid={wid} exercises={exercises} />
       {r.instructions || !r.intervals.length ? (
         <div>
           <h3>Consignes</h3>
@@ -46,6 +48,7 @@ export default async function CoachWorkout({ params, searchParams }: { params: P
   const actor = await requireActor();
   const w = await coachWorkout(actor.userId, wid, aid, sid);
   if (!w) notFound();
+  const exercises = await exerciseMap(actor.userId, wid, w.working.intervals, w.published?.intervals ?? []);
   const first = w.athlete.displayName.split(' ')[0];
   const base = `/coach/${wid}`;
   const back = `${base}/calendar?athlete=${aid}&week=${weekStart(w.working.localDate)}`;
@@ -71,12 +74,12 @@ export default async function CoachWorkout({ params, searchParams }: { params: P
       <div className={w.status === 'changed' ? 'compare' : undefined}>
         <section className="card" aria-labelledby="working-title">
           <div className="card-head"><h2 id="working-title">{w.status === 'changed' ? `Brouillon · version ${w.working.number}` : `Version ${w.working.number}`}</h2></div>
-          <div className="card-body"><Prescription r={w.working} refs={refs} /></div>
+          <div className="card-body"><Prescription r={w.working} refs={refs} wid={wid} exercises={exercises} /></div>
         </section>
         {w.status === 'changed' && w.published ? (
           <section className="card" aria-labelledby="published-title" style={{ marginTop: 0 }}>
             <div className="card-head"><h2 id="published-title">Publiée · version {w.published.number}</h2><Pill tone="neutral">Lue par {first}</Pill></div>
-            <div className="card-body"><Prescription r={w.published} refs={refs} /></div>
+            <div className="card-body"><Prescription r={w.published} refs={refs} wid={wid} exercises={exercises} /></div>
           </section>
         ) : null}
       </div>

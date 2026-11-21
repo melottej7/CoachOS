@@ -8,6 +8,7 @@ import { Notice, Pill } from '@/components/ui';
 import { StructureView } from '@/components/structure-view';
 import { FitDownload } from '@/components/fit-download';
 import { readAthleteReferences } from '@/server/commands/athlete-references';
+import { exerciseMap } from '@/server/repo/exercises';
 
 
 export const metadata = { title: 'Séance' };
@@ -23,6 +24,7 @@ export default async function AthleteWorkoutPage({ params, searchParams }: { par
   if (!found) notFound();
   const { workout: w, feedback } = found;
   const refs = await readAthleteReferences(actor.userId, wid, ctx.athlete.id);
+  const exercises = await exerciseMap(actor.userId, wid, w.intervals);
   const today = todayIn(ctx.athlete.timeZone);
   const open = canGiveFeedback(w.localDate, today, w.canceled);
   const base = `/athlete/${wid}`;
@@ -42,7 +44,7 @@ export default async function AthleteWorkoutPage({ params, searchParams }: { par
       )}
       {w.intervals.length ? (
         <section style={{ marginTop: 20 }} aria-label="Déroulé de la séance">
-          <StructureView blocks={w.intervals} sport={w.sport} refs={refs} />
+          <StructureView blocks={w.intervals} sport={w.sport} refs={refs} wid={wid} exercises={exercises} />
         </section>
       ) : null}
       {w.canceled ? null : <FitDownload wid={wid} aid={ctx.athlete.id} sid={sid} />}

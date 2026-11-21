@@ -11,6 +11,7 @@ import { StructureView } from '@/components/structure-view';
 import { QuickReply } from '@/components/messaging';
 import { readAthleteReferences } from '@/server/commands/athlete-references';
 import { TestResultActions } from '@/components/test-result';
+import { exerciseMap } from '@/server/repo/exercises';
 
 
 export const metadata = { title: 'Retour' };
@@ -48,6 +49,7 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
   const fb = w.feedback;
   const refs = await readAthleteReferences(actor.userId, wid, item.athleteId);
   const observed = await revisionByNumber(actor.userId, wid, item.athleteId, w.id, fb.observedRevision);
+  const exercises = observed ? await exerciseMap(actor.userId, wid, observed.intervals) : {};
   const current = w.published;
   const next = (await openReviews(actor.userId, wid)).find((r) => r.id !== rid && matchesReviewFilter(r, filter));
   const after = `${base}/review/${rid}${keep(`notice=reviewed${from ? `&from=${from}` : ''}`)}`;
@@ -100,7 +102,7 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
                   <div><dt>Durée</dt><dd>{formatDuration(observed.durationSeconds) ?? 'Non précisée'}</dd></div>
                   {observed.distanceM ? <div><dt>Distance</dt><dd>{formatDistance(observed.distanceM)}</dd></div> : null}
                 </dl>
-                <StructureView blocks={observed.intervals} sport={observed.sport} refs={refs} />
+                <StructureView blocks={observed.intervals} sport={observed.sport} refs={refs} wid={wid} exercises={exercises} />
                 {observed.instructions ? <p className="prose">{observed.instructions}</p> : null}
               </>
             ) : <p>Version observée indisponible.</p>}

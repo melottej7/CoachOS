@@ -8,6 +8,7 @@ import { listBlockTemplates } from '@/server/repo/library';
 import { readAthleteReferences } from '@/server/commands/athlete-references';
 import { readTemplate } from '@/server/repo/library';
 import { isUuid } from '@/server/repo/context';
+import { listExercises } from '@/server/repo/exercises';
 
 export const metadata = { title: 'Nouvelle séance' };
 
@@ -29,7 +30,7 @@ export default async function NewWorkout({ params, searchParams }: { params: Pro
       <div className="head"><div><div className="kicker">{athlete.displayName}</div><h1>Nouvelle séance</h1>
         {w ? <p className="sub">À partir de « {w.title} » (bibliothèque). Ajuste-la pour {athlete.displayName.split(' ')[0]} : la séance de la bibliothèque ne change pas.</p> : null}</div></div>
       <section className="card"><div className="card-body">
-        <WorkoutForm savedBlocks={await listBlockTemplates(actor.userId, wid)} refs={await readAthleteReferences(actor.userId, wid, aid)} wid={wid} aid={aid} athleteName={athlete.displayName} timeZone={athlete.timeZone} cancelHref={back}
+        <WorkoutForm exercises={(await listExercises(actor.userId, wid)).map((x) => ({ id: x.id, name: x.name }))} savedBlocks={await listBlockTemplates(actor.userId, wid)} refs={await readAthleteReferences(actor.userId, wid, aid)} wid={wid} aid={aid} athleteName={athlete.displayName} timeZone={athlete.timeZone} cancelHref={back}
           initial={w
             ? { title: w.title, localDate, sport: w.sport, minutes: w.durationSeconds ? String(Math.round(w.durationSeconds / 60)) : '', instructions: w.instructions ?? '', intervals: w.intervals }
             : { title: '', localDate, sport: 'running' satisfies Sport, minutes: '45', instructions: '' }} />

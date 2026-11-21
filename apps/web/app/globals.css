@@ -1199,4 +1199,9 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .ex-video.compact, .ex-frame.compact { max-width: 420px; }
 .ex-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; }
 .ex-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.sv-ex-name { color: var(--ink); }
+.sv-ex { margin-top: 6px; }
+.sv-ex > summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--accent); padding: 4px 0; }
+.sv-ex[open] > summary { margin-bottom: 6px; }
+.sv-ex-text { margin: 0 0 8px; font-size: 14px; }
 

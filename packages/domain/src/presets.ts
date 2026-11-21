@@ -23,8 +23,33 @@ const RUN: Sport[] = ['running', 'trail', 'triathlon', 'duathlon'];
 const BIKE: Sport[] = ['cycling', 'triathlon', 'duathlon'];
 const SWIM: Sport[] = ['swimming', 'triathlon'];
 const ALL: Sport[] = ['running', 'trail', 'cycling', 'swimming', 'triathlon', 'duathlon'];
+const STR: Sport[] = ['strength'];
+const reps = (n: number): Step['measure'] => ({ kind: 'reps', reps: n });
+const ex = (name: string) => ({ exercise: { id: null, name } });
 
 export const PRESETS: Preset[] = [
+  // D-096 : musculation. Le coach remplace les exercices par ceux de sa bibliothèque.
+  { id: 'str-warmup', label: 'Échauffement 8 min', sports: STR, blocks: () => [step('warmup', min(8), rpe(3), { note: 'mobilité articulaire, montée progressive' })] },
+  {
+    id: 'str-sets', label: 'Exercice en séries : 4 × 10 + repos 1 min 30', sports: STR,
+    blocks: () => [{ type: 'repeat', times: 4, steps: [step('work', reps(10), { kind: 'none' }, ex('Squat')), step('rest', sec(90))] }],
+  },
+  {
+    id: 'str-superset', label: 'Superset : 3 × (10 + 10) + repos 1 min', sports: STR,
+    blocks: () => [{ type: 'repeat', times: 3, steps: [step('work', reps(10), { kind: 'none' }, ex('Pompes')), step('work', reps(10), { kind: 'none' }, ex('Rowing élastique')), step('rest', sec(60))] }],
+  },
+  {
+    id: 'str-circuit', label: 'Circuit 3 tours (4 exercices)', sports: STR,
+    blocks: () => [{
+      type: 'repeat', times: 3,
+      steps: [step('work', reps(12), { kind: 'none' }, ex('Squat')), step('work', reps(10), { kind: 'none' }, ex('Pompes')), step('work', reps(12), { kind: 'none' }, ex('Fentes arrière')), step('work', sec(30), { kind: 'none' }, ex('Planche')), step('rest', sec(90), { kind: 'none' }, { note: 'entre les tours' })],
+    }],
+  },
+  {
+    id: 'str-core', label: 'Gainage 3 × 30 s', sports: STR,
+    blocks: () => [{ type: 'repeat', times: 3, steps: [step('work', sec(30), { kind: 'none' }, ex('Planche')), step('rest', sec(30))] }],
+  },
+  { id: 'str-stretch', label: 'Retour au calme : étirements 5 min', sports: STR, blocks: () => [step('cooldown', min(5), { kind: 'none' }, { note: 'étirements doux' })] },
   { id: 'warmup', label: 'Échauffement 15 min', sports: ALL, blocks: () => [step('warmup', min(15), z(1))] },
   { id: 'cooldown', label: 'Retour au calme 10 min', sports: ALL, blocks: () => [step('cooldown', min(10), z(1))] },
   { id: 'endurance', label: 'Endurance 45 min', sports: ALL, blocks: () => [step('work', min(45), z(2))] },

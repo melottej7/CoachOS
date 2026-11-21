@@ -324,3 +324,16 @@ Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et
 2. Clique dessus, lis la question, puis confirme. Le bouton disparaît.
 3. Cherche « 30"/30" » ou « 200 m » : les fractions sont en Z6 (VMA). Les sprints en côte restent en Z7.
 4. Une séance que tu avais modifiée toi-même n’a pas changé. Les programmes déjà donnés à tes élèves non plus.
+
+## Musculation : exercices, vidéos et séance (D-096, D-097)
+
+1. **Séances › Exercices** : clique **✨ Ajouter les exercices de départ** (34 exercices avec consignes).
+2. Ouvre un exercice (par exemple « Squat goblet ») :
+   - colle un **lien YouTube** de ta démonstration, ou **🎥 Ajouter ma vidéo** (filme 10 à 30 secondes avec ton téléphone) ;
+   - enregistre ; la vidéo s’affiche sous la fiche.
+3. Chez un élève, crée une séance, sport **Musculation** :
+   - **+ Série** ajoute 4 × 10 + repos ; choisis l’exercice dans la liste et mets la charge si besoin ;
+   - ou **✍️ Écrire la séance en texte** : `8' RPE3 + 4×(10 squat goblet 16kg + repos 1'30) + 3×(30" planche + repos 30")`.
+4. Publie, puis ouvre la séance côté élève (sur téléphone) : sous chaque exercice, **▶ Voir comment faire** montre tes consignes et ta vidéo.
+5. Dis-moi : les exercices de départ te conviennent-ils ? Lesquels ajouter ? La vidéo se lit-elle bien sur ton iPhone ?
+

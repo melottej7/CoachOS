@@ -332,16 +332,21 @@ export function describeStep(s: Step, sessionSport?: Sport): string {
 /** Une ligne par bloc, lisible par l’athlète : « 5 × (400 m · Z5 / 200 m · Z1) ». */
 export function describeBlock(b: Block, sessionSport?: Sport): string {
   if (b.type === 'step') return describeStep(b, sessionSport);
-  const inner = b.steps.map((s) => (s.type === 'step' ? `${s.exercise ? `${s.exercise.name} · ` : ''}${describeMeasure(s.measure)}${describeIntensity(s.intensity) ? ` · ${describeIntensity(s.intensity)}` : ''}` : describeBlock(s, sessionSport)));
+  const inner = b.steps.map((s) => (s.type === 'step' ? `${s.exercise ? `${s.exercise.name} · ` : s.phase === 'rest' ? 'repos ' : ''}${describeMeasure(s.measure)}${describeIntensity(s.intensity) ? ` · ${describeIntensity(s.intensity)}` : ''}` : describeBlock(s, sessionSport)));
   return `${b.times} × (${inner.join(' / ')})`;
 }
 
 /** Total lisible : « ≈ 52 min · 8,4 km », « au moins 49 min » si une partie dépend de l’athlète. */
 export function describeTotals(t: Totals): string {
   const parts: string[] = [];
-  if (t.seconds) parts.push(`${t.unknownTime ? 'au moins ' : t.estimated ? 'environ ' : ''}${formatClock(t.seconds)}`);
+  if (t.seconds) parts.push(`${t.unknownTime ? 'au moins ' : t.estimated ? 'environ ' : ''}${formatClock(roundEstimate(t))}`);
   if (t.totalMeters) parts.push(`${t.unknownDistance ? 'au moins ' : t.distanceEstimated ? 'environ ' : ''}${formatKm(t.totalMeters)}`);
   return parts.length ? parts.join(' · ') : 'durée libre';
+}
+
+/** Durée totale affichée : arrondie à la minute quand elle est estimée (« environ 23 min » plutôt que 22 min 49 s). */
+export function roundEstimate(t: Pick<Totals, 'seconds' | 'estimated' | 'unknownTime'>): number {
+  return (t.estimated || t.unknownTime) && t.seconds >= 120 ? Math.round(t.seconds / 60) * 60 : t.seconds;
 }
 
 /** Distance arrondie pour un total : 6,2 km, 800 m. */

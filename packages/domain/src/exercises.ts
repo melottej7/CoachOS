@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Block } from './structure';
 
 /**
  * D-096 · Bibliothèque d’exercices de musculation. Chaque exercice a un nom, des consignes, un groupe musculaire,
@@ -121,3 +122,11 @@ export const STARTER_EXERCISES: Starter[] = [
   ['Étirement des fléchisseurs de hanche', 'mobility', ['mat'], 'Un genou au sol, avance le bassin en serrant le fessier de la jambe arrière. 30 secondes par côté, sans à-coups.'],
   ['Chat-vache', 'mobility', ['mat'], 'À quatre pattes, arrondis le dos en soufflant, puis creuse-le en inspirant. Mouvement lent.'],
 ];
+
+/** Exercices de la bibliothèque nommés par une séance (sans doublon), pour montrer consignes et vidéos. */
+export function exerciseIdsOf(blocks: Block[]): string[] {
+  const out = new Set<string>();
+  const walk = (b: Block) => { if (b.type === 'repeat') b.steps.forEach(walk); else if (b.exercise?.id) out.add(b.exercise.id); };
+  blocks.forEach(walk);
+  return [...out];
+}

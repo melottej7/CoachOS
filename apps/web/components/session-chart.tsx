@@ -104,7 +104,7 @@ export function SessionChart({ bars }: { bars: ProfileBar[] }) {
           </tbody>
         </table>
       </details>
-      {approx ? <p className="sc-note">Largeur approximative pour les étapes en distance sans allure connue.</p> : null}
+      {approx ? <p className="sc-note">Largeur approximative pour les étapes sans durée fixe (distance sans allure connue, répétitions).</p> : null}
     </figure>
   );
 }

@@ -1592,3 +1592,43 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
   - aucun envoi ni publication sans le coach ;
   - les données de santé restent exclues (D-084).
 - **Point de vigilance consigné.** Les vidéos d’exercices sont un standard des applications de musculation (Trainerize, TrueCoach, Everfit). La différence crédible de CoachOS est de réunir **endurance et musculation dans le même plan**, avec **les vidéos et la méthode du coach**. À vérifier avec de vrais élèves.
+
+## D-097 · Musculation, lots M1 et M2 : séance, exercices et vidéos · 2026-11-21
+
+- **Modèle de séance (D-023 étendu, sans migration des séances).**
+  - Une étape peut porter un `exercise` (référence de la bibliothèque et nom recopié). L’élève garde ainsi le nom, même si l’exercice est retiré ensuite.
+  - Elle accepte aussi une mesure `reps` (1 à 500) et une intensité `load` (charge en kg, au demi-kilo ; sans charge = poids du corps).
+  - Les séries sont des répétitions de blocs (4 × (10 squats + repos)).
+  - Durée estimée : 4 s par répétition. Les totaux estimés sont arrondis à la minute (« environ 23 min »), en endurance aussi.
+- **Sport « Musculation ».** Le code est `strength`. La migration `20261121090000_strength.sql` est additive :
+  - catalogue des sports, profil de l’espace ;
+  - matériel de l’élève : haltères, kettlebell, élastiques, barre de traction, banc, tapis.
+- **Bibliothèque d’exercices.** Onglet Séances › **Exercices**.
+  - Tables `exercises` et `exercise_clips`, avec RLS : lecture par le coach et les élèves de l’espace, écriture par commandes du coach.
+  - Fiche d’un exercice : nom unique, groupe musculaire, matériel, consignes.
+  - Vidéo :
+    - par **lien** : YouTube (sans cookie publicitaire) et Vimeo intégrés, autres liens ouverts à part, https seulement ;
+    - par **fichier filmé au téléphone** : MP4, MOV ou WebM, 25 Mio au plus, reconnu par son contenu.
+    - Le fichier est servi par une route privée qui gère les plages d’octets, nécessaires à Safari sur iPhone. Il remplace le précédent et peut être retiré.
+  - **34 exercices de départ**, sans vidéo, avec des consignes générales : jambes, poussée, tirage, gainage, corps entier, cardio, mobilité. Ils sont ajoutés en un clic, sans doublon.
+  - Contrat : `createExercise`, `updateExercise`, `addStarterExercises`, `uploadExerciseClip`, `removeExerciseClip`.
+- **Constructeur.** En Musculation :
+  - boutons « + Exercice » et « + Série » ;
+  - champ Exercice avec suggestions de la bibliothèque (un nom hors bibliothèque est accepté, mais sans vidéo) ;
+  - mesures Répétitions, Durée et Libre ; intensités Poids du corps, Charge et Effort ressenti ;
+  - 6 modèles rapides : échauffement, séries, superset, circuit, gainage, étirements.
+  - Écriture en texte : « 4×(10 squat goblet 16kg + repos 1′30) ». Le nom suit le nombre de répétitions et se rattache à la bibliothèque. Cette lecture n’existe qu’en musculation : l’endurance garde ses règles.
+- **Lecture (élève, coach, revue).** Le nom de l’exercice est en titre. « ▶ Voir comment faire » ouvre ses consignes et sa vidéo. Les répétitions se lisent « 4 séries ».
+- **Export montre.** Le sport FIT est « training, strength », l’étape compte les répétitions, le nom de l’exercice est affiché et la charge est mise en note.
+- **Au passage.** « 3 séances » n’est plus lu comme 3 secondes (accent après « s »).
+- **Preuves.**
+  - Tests :
+    - domaine : lecture, aller-retour texte, schéma, totaux, FIT, modèles, liens vidéo, type de fichier ;
+    - serveur : droits, nom unique, révision, exercices de départ, vidéo lue par l’élève et refusée à un autre espace, fichier non vidéo refusé.
+  - `npm test` : **300 passés** (+3 PostgreSQL), typecheck OK. Migration appliquée à Supabase local.
+  - Navigateur (démo) :
+    - 34 exercices de départ ajoutés ;
+    - envoi d’un fichier de test, lecture complète et par plages (206), refus d’un faux fichier, puis retrait ;
+    - séance « Renforcement jambes et gainage » écrite en texte pour Camille (3 exercices rattachés), enregistrée et publiée ;
+    - lue par Camille à 375 px avec « Comment faire », sans débordement.
+- **Non prouvé.** Lecture d’une vraie vidéo filmée sur iPhone ; lien YouTube réel (non ajouté à la démo).

@@ -4,6 +4,7 @@ import { requireActor } from '@/server/auth/session';
 import { coachContext, isUuid } from '@/server/repo/context';
 import { listBlockTemplates, readTemplate } from '@/server/repo/library';
 import { LibraryForm } from '@/components/library-form';
+import { listExercises } from '@/server/repo/exercises';
 
 export const metadata = { title: 'Séance de bibliothèque' };
 
@@ -18,7 +19,7 @@ export default async function EditLibraryWorkout({ params }: { params: Promise<{
       <Link className="back" href={`/coach/${wid}/library`}>← Bibliothèque</Link>
       <div className="head"><div><div className="kicker">Bibliothèque</div><h1>{t.workout.title}</h1>
         <p className="sub">Les séances déjà créées à partir de celle-ci ne changent pas.</p></div></div>
-      <section className="card"><div className="card-body"><LibraryForm wid={wid} savedBlocks={await listBlockTemplates(actor.userId, wid)} initial={{ id: t.id, revision: t.revision, category: t.category, workout: t.workout }} /></div></section>
+      <section className="card"><div className="card-body"><LibraryForm wid={wid} exercises={(await listExercises(actor.userId, wid)).map((x) => ({ id: x.id, name: x.name }))} savedBlocks={await listBlockTemplates(actor.userId, wid)} initial={{ id: t.id, revision: t.revision, category: t.category, workout: t.workout }} /></div></section>
     </>
   );
 }

@@ -5,14 +5,14 @@ import { useState } from 'react';
 import { SPORT_LABELS, SPORTS, type LibraryWorkout, type Sport } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
 import { fieldError, useIntent } from './use-intent';
-import { fromEditor, toEditor, WorkoutBuilder, type EBlock } from './workout-builder';
+import { fromEditor, toEditor, WorkoutBuilder, type EBlock, type ExerciseOption } from './workout-builder';
 
 // D-046 : modifier la base commune d’une séance de groupe. Répercutée sur les séances qui la suivent encore ;
 // les séances adaptées ne changent pas ; rien n’est publié (la publication reste un geste explicite, plus bas).
 
 export interface BaseRow { name: string; followsBase: boolean; published: boolean }
 
-export function GroupBaseForm({ wid, gid, revision, base, rows }: { wid: string; gid: string; revision: number; base: LibraryWorkout; rows: BaseRow[] }) {
+export function GroupBaseForm({ wid, gid, revision, base, rows, exercises }: { wid: string; gid: string; revision: number; base: LibraryWorkout; rows: BaseRow[]; exercises?: ExerciseOption[] }) {
   const router = useRouter();
   const { run, pending, error } = useIntent<{ revision: number; updated: unknown[]; kept: { name: string }[] }>();
   const [title, setTitle] = useState(base.title);
@@ -51,7 +51,7 @@ export function GroupBaseForm({ wid, gid, revision, base, rows }: { wid: string;
           <div className="field"><label htmlFor="gb-sport">Sport</label>
             <select id="gb-sport" value={sport} onChange={(e) => setSport(e.target.value as Sport)}>{SPORTS.map((s) => <option key={s} value={s}>{SPORT_LABELS[s]}</option>)}</select></div>
         </div>
-        <WorkoutBuilder sport={sport} value={blocks} onChange={setBlocks} />
+        <WorkoutBuilder sport={sport} value={blocks} onChange={setBlocks} exercises={exercises} />
         <div className="field"><label htmlFor="gb-instructions">Consignes <span className="hint">Facultatif</span></label>
           <textarea id="gb-instructions" maxLength={5000} value={instructions} onChange={(e) => setInstructions(e.target.value)} /></div>
         <div className="gs-summary" aria-live="polite">

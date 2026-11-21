@@ -300,6 +300,13 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
   - **D-090** : test 5 km : l’élève saisit son chrono ; le coach voit la VMA estimée et décide (résultat de référence, nouvelle VMA). Non vérifié dans le navigateur (pas de séance « Test 5 km » dans la démo).
   - **D-091** : consignes générales d’un programme importé, gardées et ajoutées à la première séance appliquée.
   - **D-092** : le résumé de la semaine signale d’abord un élève qui n’est pas à 100 %. `npm test` : **286 passés**.
+  - **D-096, D-097 (21 novembre) : CoachOS modulaire, endurance et musculation.** Lot M1-M2 fait :
+    - sport Musculation, exercices dans la séance (répétitions, charge, repos, séries) ;
+    - onglet Séances › Exercices (34 exercices de départ, vidéo par lien ou fichier filmé) ;
+    - constructeur et écriture en texte ;
+    - lecture élève avec « Voir comment faire ».
+    - Migration `20261121090000` appliquée. `npm test` : **300 passés**.
+    - Prochaine tranche : M3 (suivre la séance pas à pas sur téléphone, minuteur de repos), puis M4 (séries et charges réalisées).
   - **Analyse produit (21 novembre)** : [docs/17_ANALYSE_PRODUIT.md](../17_ANALYSE_PRODUIT.md), en réponse au cadrage « OS du coach sportif hybride ». Recommandations : rester sur le coach de course à pied indépendant ; geler les nouvelles fonctions ; mettre en ligne ; pilote de 4 semaines avec les athlètes du fondateur ; brief du jour et mode simple. 8 questions à trancher par le fondateur, aucune décision prise sans lui.
   - **D-095** : téléphone sur le même Wi-Fi : http://192.168.65.68:3000 (adresse « Network » du serveur), réseaux privés autorisés en développement.
   - **D-094** : « Ajouter des blocs à ma bibliothèque » (au lieu de « garder ») ; saisie rapide renommée « Écrire la séance en texte », avec principe expliqué, aperçu bloc par bloc et exemples.

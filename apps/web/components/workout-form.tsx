@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { SPORTS, SPORT_LABELS, type Block, type References, type Sport } from '@coachos/domain';
-import { fromEditor, toEditor, WorkoutBuilder, type EBlock, type SavedBlock } from './workout-builder';
+import { fromEditor, toEditor, WorkoutBuilder, type EBlock, type ExerciseOption, type SavedBlock } from './workout-builder';
 import { ErrorSummary } from './feedback-banners';
 import { fieldError, useIntent } from './use-intent';
 
@@ -31,9 +31,11 @@ interface Props {
   refs?: References;
   /** D-074 : blocs réutilisables du coach. */
   savedBlocks?: SavedBlock[];
+  /** D-096 : exercices de la bibliothèque (séances de musculation). */
+  exercises?: ExerciseOption[];
 }
 
-export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, cancelHref, refs, returnTo, savedBlocks }: Props) {
+export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, cancelHref, refs, returnTo, savedBlocks, exercises }: Props) {
   const router = useRouter();
   const [values, setValues] = useState(initial);
   const [blocks, setBlocks] = useState<EBlock[]>(() => toEditor(initial.intervals ?? [], 'i'));
@@ -97,7 +99,7 @@ export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, ca
         </div>
       </div>
       <WorkoutBuilder sport={values.sport} value={blocks} onChange={setBlocks} refs={refs} athleteFirst={athleteName.split(' ')[0] ?? athleteName} vmaHref={`/coach/${wid}/athletes/${aid}#refs-title`}
-        library={savedBlocks ? { wid, blocks: savedBlocks } : undefined} />
+        library={savedBlocks ? { wid, blocks: savedBlocks } : undefined} exercises={exercises} />
       {blocks.length ? null : <div className="field">
         <label htmlFor="duration">Durée en minutes <span className="hint">Facultatif</span></label>
         <input id="duration" type="number" inputMode="numeric" min={1} max={1440} value={values.minutes} onChange={set('minutes')}

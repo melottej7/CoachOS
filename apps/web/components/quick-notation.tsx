@@ -6,6 +6,17 @@ import { describeBlock, describeTotals, parseNotation, structureTotals, toNotati
 // CE-B-09 (D-041) : écrire la séance comme sur papier ; aperçu et erreurs au fil de la saisie.
 // D-094 : le principe est expliqué (texte → blocs), l’aperçu montre chaque bloc compris et l’aide donne des exemples.
 
+/** D-096 : exemples de musculation. */
+const STRENGTH_EXAMPLES: [write: string, means: string][] = [
+  ['10 squats', '10 répétitions de squat (l’exercice de ta bibliothèque, avec sa vidéo)'],
+  ['10 squat goblet 16kg', 'avec une charge de 16 kg'],
+  ["4×(10 pompes + repos 1'30)", '4 séries de 10 pompes, 1 min 30 de repos entre les séries'],
+  ['30" planche', '30 secondes de planche'],
+  ["3×(12 fentes arrière + 30\" planche + repos 1')", 'un circuit de 3 tours'],
+  ['« Garde le dos droit »', 'une consigne pour l’exercice juste avant'],
+  ["8' RPE3", '8 minutes d’échauffement, effort 3 sur 10'],
+];
+
 const EXAMPLES: [write: string, means: string][] = [
   ["15' Z1", '15 minutes en zone 1'],
   ['2km @4\'30/km', '2 km à 4\'30 par kilomètre'],
@@ -42,14 +53,15 @@ export function QuickNotation({ sport, blocks, refs, onApply }: {
         </p>
         <label htmlFor={`${id}-t`} className="qn-label">Ta séance en texte</label>
         <textarea id={`${id}-t`} className="input qn-text" rows={rows} spellCheck={false} autoCapitalize="off" autoComplete="off"
-          placeholder="15' Z1 + 8×(400m Z6 + R200m) + 10' Z1" value={text} onChange={(e) => setText(e.target.value)}
+          placeholder={sport === 'strength' ? "8' RPE3 + 4×(10 squats 20kg + repos 1'30) + 3×(30\" planche + repos 30\")" : "15' Z1 + 8×(400m Z6 + R200m) + 10' Z1"} value={text} onChange={(e) => setText(e.target.value)}
           aria-describedby={`${id}-out`} aria-invalid={parsed.errors.length ? true : undefined} />
         <details className="qn-how">
           <summary>Comment l’écrire ?</summary>
           <table className="qn-table">
             <thead><tr><th scope="col">Tu écris</th><th scope="col">Ça donne</th></tr></thead>
-            <tbody>{EXAMPLES.map(([w, m]) => <tr key={w}><td><code>{w}</code></td><td>{m}</td></tr>)}</tbody>
+            <tbody>{(sport === 'strength' ? STRENGTH_EXAMPLES : EXAMPLES).map(([w, m]) => <tr key={w}><td><code>{w}</code></td><td>{m}</td></tr>)}</tbody>
           </table>
+          {sport === 'strength' ? <p className="qn-help">Le nom écrit après le nombre de répétitions désigne l’exercice ; s’il existe dans ta bibliothèque, l’élève voit sa vidéo.</p> : null}
           <p className="qn-help">Aussi : <code>45&quot;</code> secondes, <code>1h30</code>, <code>RPE7</code>, <code>95%FTP</code>, <code>150bpm</code>. <code>x</code> ou <code>*</code> valent <code>×</code>.</p>
         </details>
         <div id={`${id}-out`} aria-live="polite">
