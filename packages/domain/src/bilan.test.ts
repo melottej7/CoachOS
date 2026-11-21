@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { athleteProfileSchema, bilanCompletion, bilanSports, bilanSteps, deriveBilan, equipmentFor, nextSources, parseWith, resumeStep } from './index';
+import { PREFERRED_TIME_LABELS, athleteProfileSchema, bilanCompletion, bilanSports, bilanSteps, deriveBilan, equipmentFor, nextSources, parseWith, resumeStep } from './index';
 
 describe('bilan d’arrivée (D-054)', () => {
   it('les écrans s’adaptent aux réponses, comme dans Foulée', () => {
@@ -68,6 +68,14 @@ describe('bilan multisport et musculation (D-108)', () => {
     const p = parseWith(athleteProfileSchema, { sport: 'running', otherSports: ['strength', 'strength'], strengthFocus: ['muscle', 'mobility'], level: 'intermediate', experience: '1to3', weeklySessions: '2to3' });
     expect(p.ok && p.value).toMatchObject({ otherSports: ['strength'], strengthFocus: ['muscle', 'mobility'] });
     expect(parseWith(athleteProfileSchema, { sport: 'running', strengthFocus: ['poids'], level: 'intermediate', experience: '1to3', weeklySessions: '2to3' }).ok).toBe(false);
+  });
+});
+
+describe('moment préféré (D-109)', () => {
+  it('« L’après-midi » est proposé et accepté', () => {
+    expect(PREFERRED_TIME_LABELS.afternoon).toBe('L’après-midi');
+    const p = parseWith(athleteProfileSchema, { sport: 'running', level: 'intermediate', experience: '1to3', weeklySessions: '2to3', preferredTime: 'afternoon' });
+    expect(p.ok && p.value.preferredTime).toBe('afternoon');
   });
 });
 

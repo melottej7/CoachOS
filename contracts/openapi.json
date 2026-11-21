@@ -1588,6 +1588,7 @@
                 "enum": [
                   "morning",
                   "noon",
+                  "afternoon",
                   "evening",
                   "variable"
                 ]
@@ -15631,6 +15632,7 @@
                         "enum": [
                           "morning",
                           "noon",
+                          "afternoon",
                           "evening",
                           "variable"
                         ]
@@ -21708,6 +21710,7 @@
                             "enum": [
                               "morning",
                               "noon",
+                              "afternoon",
                               "evening",
                               "variable"
                             ]
@@ -22178,6 +22181,7 @@
                             "enum": [
                               "morning",
                               "noon",
+                              "afternoon",
                               "evening",
                               "variable"
                             ]

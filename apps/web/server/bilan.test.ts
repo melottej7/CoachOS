@@ -108,5 +108,10 @@ describe('bilan d’arrivée', () => {
     await saveBilanDraft(meta(USERS.noah), { step: 'focus', answers: { sport: 'strength', otherSports: ['running'], strengthFocus: ['muscle'] } });
     expect((await readBilanDraft(USERS.noah, WORKSPACE_A, ATHLETES.noah))?.answers).toMatchObject({ otherSports: ['running'], strengthFocus: ['muscle'] });
   });
+
+  it('D-109 : « L’après-midi » enregistré par la base', async () => {
+    await saveAthleteProfile(meta(USERS.noah), { ...answers, preferredTime: 'afternoon' });
+    expect((await readAthleteProfile(USERS.marine, WORKSPACE_A, ATHLETES.noah))?.preferredTime).toBe('afternoon');
+  });
 });
 

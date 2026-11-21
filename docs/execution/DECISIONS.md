@@ -1896,3 +1896,9 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
     - depuis le récapitulatif : Course à pied + Musculation, puis le principal, puis la question de musculation ;
     - le récapitulatif affiche « Sports : Musculation (principal), Course à pied », sans « Plus longue sortie ».
     - Brouillon de test effacé ensuite.
+
+## D-109 · « L’après-midi » parmi les moments pour s’entraîner · 2026-11-21
+
+- **Retour du fondateur.** « Il manque « après-midi » dans le moment où s’entraîner. »
+- **Décision.** Le bilan propose désormais : le matin, le midi, **l’après-midi**, le soir, ça dépend. Migration `20261121140000` (contrainte élargie, appliquée), contrat mis à jour.
+- **Preuves.** Tests du domaine et du serveur (valeur acceptée et enregistrée). `npm test` : **329 passés** (+3 PostgreSQL), typecheck OK.

@@ -88,9 +88,9 @@ const BY_SPORT: Record<Sport, Equipment[]> = {
 /** Matériel proposé pour un sport. */
 export const equipmentFor = (sport: Sport | null | undefined): Equipment[] => (sport ? BY_SPORT[sport] : [...EQUIPMENT]);
 
-export const PREFERRED_TIMES = ['morning', 'noon', 'evening', 'variable'] as const;
+export const PREFERRED_TIMES = ['morning', 'noon', 'afternoon', 'evening', 'variable'] as const;
 export type PreferredTime = (typeof PREFERRED_TIMES)[number];
-export const PREFERRED_TIME_LABELS: Record<PreferredTime, string> = { morning: 'Le matin', noon: 'Le midi', evening: 'Le soir', variable: 'Ça dépend' };
+export const PREFERRED_TIME_LABELS: Record<PreferredTime, string> = { morning: 'Le matin', noon: 'Le midi', afternoon: 'L’après-midi', evening: 'Le soir', variable: 'Ça dépend' };
 
 /** Temps disponible pour une séance un jour de semaine (lundi à vendredi). */
 export const WEEKDAY_MINUTES = ['lt45', '45to60', '60to90', 'gt90'] as const;
