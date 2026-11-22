@@ -350,3 +350,17 @@ Paramètres → carte **IA ce mois-ci** : nombre de propositions, coût réel et
 5. **Élèves** : un élève à relancer porte son statut et « ↺ … · Relancer ».
 6. **Paramètres › Mes relances** : écris tes propres textes avec `{prénom}`, `{séance}`, `{jour}`… L’aperçu montre le résultat ; tes brouillons de relance utiliseront désormais ton texte.
 
+
+## Recette en ligne (D-114)
+
+CoachOS est en ligne : **https://coach-os-xi-kohl.vercel.app**. L’adresse est provisoire (Vercel) ; un nom de domaine viendra plus tard. En ligne, il n’y a ni boîte e-mail de test ni comptes fictifs : tout est réel, utilise tes vraies adresses.
+
+1. **Ton compte coach.** Sur ton Mac ou ton iPhone, ouvre l’adresse puis **Créer un compte** : ton nom, ta vraie adresse e-mail, un mot de passe neuf (jamais utilisé ailleurs), que tu enregistres dans l’app Mots de passe.
+   - Si un message te demande de confirmer ton adresse, ouvre l’e-mail reçu et clique sur le lien : il te ramène dans CoachOS. Dis-le-moi, cela veut dire que « Confirm email » est encore actif dans Supabase.
+2. **Ton espace.** Son nom et ton fuseau (Europe/Brussels). Dans **Paramètres**, coche tes sports encadrés (Course à pied, Trail, Musculation).
+3. **Ta bibliothèque.** Dans **Bibliothèque**, le bouton « 🏃 Importer la bibliothèque Foulée » reprend ta base de séances en un clic (D-093). Vérifie que tes séances habituelles sont là.
+4. **Un élève d’essai, sans invitation.** Dans **Élèves**, ajoute un élève avec une adresse à toi (par exemple ton adresse avec « +eleve » avant le @ : elle arrive dans ta boîte). **N’envoie pas encore l’invitation** : tant que Resend n’est pas réglé, l’app refuse avec « L’envoi d’e-mails n’est pas configuré sur cet environnement ». C’est attendu.
+5. **Sur ton téléphone**, suis « Installer CoachOS sur ton téléphone » ci-dessus avec cette adresse. En https, l’écran reste allumé pendant « Suivre la séance » et la lecture hors connexion fonctionne.
+6. **Dis-moi** ce qui a été plus lent qu’en local et si une page a affiché une erreur. La page https://coach-os-xi-kohl.vercel.app/api/health doit afficher `{"ok":true,"db":"ok"}` ; sinon, envoie-moi son texte (il ne contient rien de secret).
+
+Ensuite, Resend (je te guide) : créer le compte, vérifier ton domaine d’envoi, coller `RESEND_API_KEY` et `EMAIL_FROM` dans Vercel. Tu invites alors l’élève d’essai et on refait le parcours complet en ligne : invitation reçue, compte élève, séance publiée, retour, vidéo d’exercice sur iPhone.

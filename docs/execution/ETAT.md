@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-19 (régularité dans la liste des élèves, D-043 ; séance de groupe, D-042 ; saisie rapide en texte, D-041 ; graphique de la séance, D-040 ; retour rapide depuis Aujourd’hui, D-039 ; suivi de l’entraînement et onglet Progression, D-037 ; appel de bienvenue, D-038 ; bibliothèque et messages liés aux séances, D-035, D-036 ; rendez-vous depuis la conversation, D-034 ; messagerie, D-033 ; lots G et H : Planning du coach, groupes, fiche élève, tâches et rendez-vous, D-032 ; retours de recette, D-031 ; 7 zones et VMA, D-029 ; constructeur par glisser-déposer et guide CoachOS, D-030 ; visite interactive, D-028).
+Dernière mise à jour : 2026-11-22 (CoachOS en ligne sur Vercel et Supabase, D-113, D-114 ; régularité dans la liste des élèves, D-043 ; séance de groupe, D-042 ; saisie rapide en texte, D-041 ; graphique de la séance, D-040 ; retour rapide depuis Aujourd’hui, D-039 ; suivi de l’entraînement et onglet Progression, D-037 ; appel de bienvenue, D-038 ; bibliothèque et messages liés aux séances, D-035, D-036 ; rendez-vous depuis la conversation, D-034 ; messagerie, D-033 ; lots G et H : Planning du coach, groupes, fiche élève, tâches et rendez-vous, D-032 ; retours de recette, D-031 ; 7 zones et VMA, D-029 ; constructeur par glisser-déposer et guide CoachOS, D-030 ; visite interactive, D-028).
 
 ## Résumé
 
@@ -316,6 +316,7 @@ Fait dans la reprise du 18 novembre (non commité depuis 31df2d2) :
     - **D-105 à D-107 (retours du fondateur)** : programme en lignes de semaine avec séances en cases, regroupé par blocs, semaines allégées marquées. Tremplin de 3 semaines puis décharge avant le développement. `npm test` : **324 passés**.
     - **D-108 (retour du fondateur en recette)** : bilan multisport (sport principal et autres sports), questions adaptées à la musculation. Migration `20261121130000` appliquée. `npm test` : **327 passés**.
     - **D-109 à D-112 (recette du fondateur, suite)** : « L’après-midi » ; lieu de musculation puis matériel selon le lieu ; exercices proposés selon le matériel de l’élève ; « la dernière fois » par exercice. Mise en ligne préparée : build OK, e-mails par Resend activables, guide [MISE_EN_LIGNE.md](MISE_EN_LIGNE.md). `npm test` : **337 passés**.
+    - **D-113, D-114 (22 novembre) : CoachOS est en ligne.** https://coach-os-xi-kohl.vercel.app (Vercel, fonctions à Dublin) sur la base Supabase « CoachOS » (Irlande, 42 migrations appliquées). Contrôle de santé `/api/health` : `{"ok":true,"db":"ok"}` ; l’aperçu d’invitation interroge la base. Vidéos servies par morceaux de 4 Mo, envoi limité à 4 Mo (limite Vercel). Reste côté fondateur : compte coach en ligne, Resend pour les e-mails, « Confirm email » à couper. `npm test` : **343 passés** (3 ignorés : Docker).
     - Le paiement attend la validation du parcours des deux rôles (CLAUDE.md) et l’accord du fondateur.
   - **Analyse produit (21 novembre)** : [docs/17_ANALYSE_PRODUIT.md](../17_ANALYSE_PRODUIT.md), en réponse au cadrage « OS du coach sportif hybride ». Recommandations : rester sur le coach de course à pied indépendant ; geler les nouvelles fonctions ; mettre en ligne ; pilote de 4 semaines avec les athlètes du fondateur ; brief du jour et mode simple. 8 questions à trancher par le fondateur, aucune décision prise sans lui.
   - **D-095** : téléphone sur le même Wi-Fi : http://192.168.65.68:3000 (adresse « Network » du serveur), réseaux privés autorisés en développement.
@@ -341,7 +342,7 @@ Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au mic
 **Pour le fondateur** :
 - Crédit Anthropic pour l’IA ; le budget mensuel est de 10 $ par espace par défaut.
 - **Cocher « Musculation » (et « Course à pied ») dans Paramètres › sports encadrés** : ton espace n’a que « Trail » coché, la musculation y est donc masquée (D-102).
-- **Mise en ligne** : créer les comptes Supabase, Vercel, GitHub, Resend (et éventuellement un nom de domaine), en suivant [MISE_EN_LIGNE.md](MISE_EN_LIGNE.md).
+- **Mise en ligne faite (D-114)** : https://coach-os-xi-kohl.vercel.app. Reste à faire par toi, dans l’ordre : créer ton compte coach en ligne (section « Recette en ligne » du [GUIDE_RECETTE.md](GUIDE_RECETTE.md)) ; régler Resend (`RESEND_API_KEY`, `EMAIL_FROM`) pour que les invitations partent ; couper « Confirm email » dans Supabase › Authentication ; régénérer tes codes de récupération Vercel (ils sont apparus sur une capture) et supprimer cette capture.
 - Vidéos de base des 34 exercices : à filmer ou produire (guide [VIDEOS_DE_BASE.md](VIDEOS_DE_BASE.md)), puis à me transmettre.
 - Base de séances : celle de Foulée fait foi (D-093), plus de tableur attendu. Dans Bibliothèque, clique « 🏃 Mettre à jour Foulée (23) » pour passer tes fractions courtes en Z6. Tes programmes sont reçus et lus (D-085).
 - Accès Garmin reporté (D-026).
