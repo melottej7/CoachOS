@@ -20,7 +20,11 @@ export async function POST(req: NextRequest) {
     return redirectTo(req, '/signup', { error: weak ? 'weak' : 'fields', next });
   }
   const { displayName, email, password } = parsed.data;
-  const { data, error } = await (await supabaseServer()).auth.signUp({ email, password, options: { data: { display_name: displayName } } });
+  // D-114 · En ligne, Supabase demande de confirmer l’adresse : le lien reçu revient sur /auth/callback, qui ouvre
+  // la session puis mène à la création de l’espace. Sans cette adresse de retour, le code de session serait perdu.
+  const origin = new URL(req.headers.get('origin')!).origin;
+  const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next === '/' ? '/coach/new' : next)}`;
+  const { data, error } = await (await supabaseServer()).auth.signUp({ email, password, options: { data: { display_name: displayName }, emailRedirectTo } });
   if (error) {
     logAuth(error.code ?? 'signup_failed', error.status);
     if (error.status === 429) return redirectTo(req, '/signup', { error: 'rate', next });

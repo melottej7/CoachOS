@@ -1983,3 +1983,12 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
 - **Construction sur Vercel.** Premier essai en échec : la vérification des types lisait les fichiers de test, et l’outil de test (`vitest`) n’est pas installé sur Vercel. La construction de production utilise maintenant `apps/web/tsconfig.build.json`, sans les tests. `npm run typecheck` continue de vérifier les tests en local. Vérifié sur une copie propre du dépôt, installée depuis `apps/web` comme Vercel, sans `vitest` : construction réussie.
 - **Preuves.** Test `poolConfig` (chiffrement en ligne, pas en local, `sslmode` respecté). `npm test` : **340 passés** (+3 PostgreSQL), typecheck OK.
 - **Non prouvé.** Connexion réelle depuis Vercel ; lecture par morceaux sur iPhone en ligne.
+
+## D-114 · Première version en ligne, contrôle de santé, confirmation d’adresse · 2026-11-22
+
+- **En ligne.** Projet Vercel `coach-os` (adresse provisoire `coach-os-xi-kohl.vercel.app`), importé depuis GitHub par le fondateur, racine `apps/web`, 5 variables saisies par lui (jamais vues ici). La page de connexion répond ; `NEXT_PUBLIC_SUPABASE_*` sont en place (le formulaire d’inscription répond 403 hors origine, pas 404).
+- **Base injoignable au premier essai.** Une lecture publique (`/api/v1/invitations/preview`) répond « Service momentanément indisponible » en 0,2 s : réglage plutôt que réseau (variable `DATABASE_URL` absente du déploiement ou mot de passe mal collé). Cause à confirmer avec le contrôle de santé.
+- **Contrôle de santé `GET /api/health`.** Public. `{ ok: true, db: 'ok' }`, sinon 503 avec un code court seulement (`NO_DATABASE_URL`, code PostgreSQL comme `28P01`, code réseau, `TIMEOUT`), jamais l’adresse ni le message. Sert aussi à surveiller l’app plus tard.
+- **Confirmation d’adresse.** D-020 reste : pas de confirmation à l’inscription du coach. En ligne, Supabase l’active par défaut : le fondateur la coupe dans le tableau de bord (« Confirm email »). Si elle reste active, l’inscription passe désormais une adresse de retour (`/auth/callback?next=/coach/new`) pour que le lien reçu ouvre bien la session.
+- **Preuves.** Tests du contrôle de santé (ok, code court sur échec). Typecheck OK (complet et construction).
+- **Non prouvé.** Base joignable depuis Vercel ; inscription en ligne.
