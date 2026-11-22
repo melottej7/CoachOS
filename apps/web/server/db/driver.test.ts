@@ -12,6 +12,11 @@ describe('poolConfig (D-113)', () => {
     expect(c.ssl).toBeUndefined();
     expect(c.max).toBe(10);
   });
+  it('ignore les espaces et retours à la ligne autour de l’adresse', () => {
+    const c = poolConfig('  postgresql://u:p@aws-0-eu-west-1.pooler.supabase.com:6543/postgres\n');
+    expect(c.connectionString).toBe('postgresql://u:p@aws-0-eu-west-1.pooler.supabase.com:6543/postgres');
+    expect(c.ssl).toEqual({ rejectUnauthorized: false });
+  });
   it('respecte un sslmode écrit dans l’adresse', () => {
     expect(poolConfig('postgresql://u:p@db.example.com:5432/postgres?sslmode=require').ssl).toBeUndefined();
   });

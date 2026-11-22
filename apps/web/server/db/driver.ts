@@ -31,7 +31,9 @@ function wrap(client: pg.Pool | pg.PoolClient): Tx {
  * Le certificat du pooler Supabase n’est pas signé par une autorité publique : on chiffre sans le vérifier.
  * Petit pool en production : chaque fonction Vercel ouvre le sien, le pooler Supabase mutualise.
  */
-export function poolConfig(connectionString: string): pg.PoolConfig {
+export function poolConfig(raw: string): pg.PoolConfig {
+  // Une adresse collée dans un réglage garde parfois un espace ou un retour à la ligne : la base deviendrait « postgres⏎ ».
+  const connectionString = raw.trim();
   const host = (() => { try { return new URL(connectionString).hostname; } catch { return ''; } })();
   const local = ['localhost', '127.0.0.1', '::1', '[::1]', ''].includes(host) || host.endsWith('.local');
   const explicit = /[?&]sslmode=/.test(connectionString);
