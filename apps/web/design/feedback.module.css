@@ -21,7 +21,7 @@
 .skeleton { display: block; border-radius: var(--ds-radius-sm); background: linear-gradient(90deg, var(--ds-surface-2) 0%, var(--ds-surface-3) 50%, var(--ds-surface-2) 100%); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
 @keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 
-.toast { position: fixed; left: 50%; bottom: calc(var(--ds-6) + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: var(--ds-3); padding: var(--ds-2) var(--ds-2) var(--ds-2) var(--ds-4); border-radius: var(--ds-radius); background: var(--ds-primary); color: var(--ds-on-primary); box-shadow: var(--ds-shadow-lg); font-weight: 600; max-width: calc(100vw - 32px); animation: rise var(--ds-base) var(--ds-ease); }
+.toast { position: fixed; left: 50%; bottom: calc(var(--ds-bottom-bar, 0px) + var(--ds-6) + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: var(--ds-3); padding: var(--ds-2) var(--ds-2) var(--ds-2) var(--ds-4); border-radius: var(--ds-radius); background: var(--ds-primary); color: var(--ds-on-primary); box-shadow: var(--ds-shadow-lg); font-weight: 600; max-width: calc(100vw - 32px); animation: rise var(--ds-base) var(--ds-ease); }
 @keyframes rise { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 .toastAction { height: 36px; padding: 0 12px; border: 0; border-radius: var(--ds-radius-sm); background: transparent; color: inherit; font-weight: 700; cursor: pointer; }
 .toastAction:hover { background: color-mix(in srgb, currentColor 14%, transparent); }

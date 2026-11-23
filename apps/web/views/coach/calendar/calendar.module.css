@@ -75,3 +75,16 @@
 .cellTitle { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; }
 .cellTag { color: var(--ds-ink-2); }
 .none { color: var(--ds-ink-2); }
+
+/* Gestes de la semaine (D-158) : glisser, copier, coller, retirer, annuler. */
+.cardWrap { position: relative; }
+.cardWrap .card { padding-right: 44px; }
+.cardMenu { position: absolute; top: 4px; right: 4px; }
+.cardWrap[draggable='true'] { cursor: grab; }
+.dragging { opacity: .45; }
+.dropTarget { border-color: var(--ds-coach); box-shadow: inset 0 0 0 2px var(--ds-coach); background: var(--ds-coach-soft); }
+.paste { align-self: stretch; display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 40px; padding: 0 var(--ds-2); border: 1px dashed var(--ds-coach); border-radius: var(--ds-radius); background: transparent; color: var(--ds-coach-text); font: inherit; font-size: var(--ds-text-sm); font-weight: 700; cursor: pointer; }
+.paste:hover { background: var(--ds-coach-soft); }
+.paste:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+@media (max-width: 1099px) { .paste { grid-column: 2; } }
+.menuForm { display: flex; flex-direction: column; gap: var(--ds-2); padding: var(--ds-1); }

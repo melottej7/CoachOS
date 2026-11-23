@@ -84,7 +84,7 @@ export default async function Calendar({ params, searchParams }: { params: Promi
 
       <Stack as="section" gap={4} aria-labelledby="week-title">
         <h2 id="week-title" className="ds-visually-hidden">Séances de la semaine du {formatShortDate(monday)}</h2>
-        <WeekGrid days={days} workouts={workouts} today={today} href={(id) => `${base}/athletes/${athlete.id}/workouts/${id}`} newHref={newHref} tourDay={tourDay} />
+        <WeekGrid wid={wid} aid={athlete.id} first={first} days={days} workouts={workouts} today={today} tourDay={tourDay} />
         <Text size="sm" muted>Brouillon : invisible pour {first} · Publiée : visible · Modifiée : {first} lit encore la version publiée, à republier.</Text>
         <WeekTools wid={wid} athleteId={athlete.id} first={first} monday={monday} hasSessions={workouts.some((w) => !w.canceled)}
           drafts={drafts.map((w) => ({ id: w.id, revision: w.workingRevision, title: w.title, localDate: w.localDate, changed: w.status === 'changed' }))}

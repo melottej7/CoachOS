@@ -18,7 +18,9 @@ export function Popover({ label, icon, iconOnly, text, align = 'end', children }
     const onEvent = (e: Event) => {
       const d = ref.current;
       if (!d?.open) return;
-      if (e instanceof KeyboardEvent ? e.key === 'Escape' : !d.contains(e.target as Node)) {
+      // Chemin du clic tel qu’il était au moment du clic : un élément du menu remplacé pendant le clic (étape suivante
+      // d’un petit formulaire) compte encore comme « dedans » (D-158).
+      if (e instanceof KeyboardEvent ? e.key === 'Escape' : !e.composedPath().includes(d)) {
         d.open = false;
         if (e instanceof KeyboardEvent) d.querySelector('summary')?.focus();
       }
