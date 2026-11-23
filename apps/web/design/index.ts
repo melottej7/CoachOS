@@ -6,7 +6,7 @@ export { Stack, Cluster, Grid, Heading, Eyebrow, Text, Numeric, Card, Divider, B
 export { ZoneChip, ZoneStrip, ZoneProfile, type ZoneLevel, type ZoneSegment } from './zones';
 export { Banner, EmptyState, Skeleton, Toast } from './feedback';
 export { Stats, Meter, KpiGrid, type StatItem, type KpiItem } from './data';
-export { Field, Input, Textarea, Select, ChoiceGroup, ChipChoice, ChipChecks, ScaleChoice, AnswerList, PasswordInput, type ChoiceOption, type ChipOption, type AnswerOption } from './form';
+export { Field, Input, Textarea, Select, ChoiceGroup, ChipChoice, ChipChecks, ScaleChoice, AnswerList, PasswordInput, Checkbox, type ChoiceOption, type ChipOption, type AnswerOption } from './form';
 export { AppHeader, BrandName, BellLink } from './header';
 export { AthleteShell, AthleteColumn, ProfileLink, PublicShell, AccentScope, CoachShell } from './shell';
 export { CoachRail, RailBrand, BottomNav, SectionTabs, AccountMenu, type NavItem, type SectionTab, type MenuEntry } from './coach-nav';
@@ -17,3 +17,4 @@ export { SegmentedLinks, WeekDays, MonthGrid, type CalendarDay, type CalendarIte
 export { WeekBars, type ChartBar } from './chart';
 export { DataTable } from './table';
 export { ThemeChoiceGroup, DensityChoiceGroup, type ThemeChoice, type DensityChoice } from './theme';
+export { Popover, MenuItem } from './popover';

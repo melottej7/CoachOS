@@ -72,3 +72,12 @@ textarea.control { padding: var(--ds-3); min-height: 96px; resize: vertical; lin
 .reveal { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); min-height: 36px; min-width: 44px; padding: 0 var(--ds-3); border: 0; border-radius: var(--ds-radius-sm); background: transparent; color: var(--ds-ink-2); font: inherit; font-weight: 700; font-size: var(--ds-text-sm); cursor: pointer; }
 .reveal:hover { color: var(--ds-ink); background: var(--ds-surface-2); }
 .reveal:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 0; }
+
+/* Case à cocher : la case dessinée suit la vraie case (clavier, lecteurs d’écran). */
+.check { position: relative; display: flex; align-items: flex-start; gap: var(--ds-3); min-height: 44px; padding: var(--ds-2) 0; cursor: pointer; }
+.check input { position: absolute; z-index: 1; opacity: 0; width: 22px; height: 22px; margin: var(--ds-2) 0 0; cursor: pointer; }
+.checkBox { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-top: 1px; border: 2px solid var(--ds-rule-strong); border-radius: 6px; background: var(--ds-surface); color: transparent; transition: background-color var(--ds-fast) var(--ds-ease), border-color var(--ds-fast) var(--ds-ease); }
+.check input:checked + .checkBox { background: var(--ds-coach); border-color: var(--ds-coach); color: var(--ds-on-coach); }
+.check input:focus-visible + .checkBox { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+.check:hover .checkBox { border-color: var(--ds-ink-2); }
+.checkText { display: flex; flex-direction: column; gap: 2px; font-weight: 600; }

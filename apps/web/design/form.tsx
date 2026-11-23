@@ -169,3 +169,14 @@ export function PasswordInput({ id, name = 'password', autoComplete, minLength, 
     </div>
   );
 }
+
+/** Case à cocher avec son libellé (toute la ligne se touche). */
+export function Checkbox({ label, checked, onChange, hint, id }: { label: ReactNode; checked: boolean; onChange: (v: boolean) => void; hint?: ReactNode; id?: string }) {
+  return (
+    <label className={s.check}>
+      <input type="checkbox" id={id} checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span className={s.checkBox} aria-hidden="true"><Icon name="check" size={14} /></span>
+      <span className={s.checkText}>{label}{hint ? <span className={s.hint}>{hint}</span> : null}</span>
+    </label>
+  );
+}
