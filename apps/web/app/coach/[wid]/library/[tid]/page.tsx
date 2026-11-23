@@ -1,25 +1,30 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireActor } from '@/server/auth/session';
 import { coachContext, isUuid } from '@/server/repo/context';
 import { listBlockTemplates, readTemplate } from '@/server/repo/library';
-import { LibraryForm } from '@/components/library-form';
 import { listExercises } from '@/server/repo/exercises';
+import { Cluster, Heading, LinkButton, Stack, Text } from '@/design';
+import { LibraryForm } from '@/views/coach/library/library-form';
 
-export const metadata = { title: 'Séance de bibliothèque' };
+export const metadata = { title: 'Séance type' };
 
+/** D-035, refonte Chrono (D-154) : modifier une séance type ; les séances déjà créées à partir d’elle ne changent pas. */
 export default async function EditLibraryWorkout({ params }: { params: Promise<{ wid: string; tid: string }> }) {
   const { wid, tid } = await params;
   const actor = await requireActor();
-  if (!(await coachContext(actor.userId, wid)) || !isUuid(tid)) notFound();
-  const t = await readTemplate(actor.userId, wid, tid);
+  const ctx = await coachContext(actor.userId, wid);
+  if (!ctx || !isUuid(tid)) notFound();
+  const [t, exercises, savedBlocks] = await Promise.all([readTemplate(actor.userId, wid, tid), listExercises(actor.userId, wid), listBlockTemplates(actor.userId, wid)]);
   if (!t || !t.mine) notFound();
   return (
-    <>
-      <Link className="back" href={`/coach/${wid}/library`}>← Bibliothèque</Link>
-      <div className="head"><div><div className="kicker">Bibliothèque</div><h1>{t.workout.title}</h1>
-        <p className="sub">Les séances déjà créées à partir de celle-ci ne changent pas.</p></div></div>
-      <section className="card"><div className="card-body"><LibraryForm modules={(await coachContext(actor.userId, wid))?.modules} wid={wid} exercises={(await listExercises(actor.userId, wid)).map((x) => ({ id: x.id, name: x.name }))} savedBlocks={await listBlockTemplates(actor.userId, wid)} initial={{ id: t.id, revision: t.revision, category: t.category, workout: t.workout }} /></div></section>
-    </>
+    <Stack gap={6} className="ds-narrow-wide">
+      <Stack gap={2}>
+        <Cluster><LinkButton href={`/coach/${wid}/library`} variant="ghost" size="sm" icon="chevronLeft">Séances types</LinkButton></Cluster>
+        <Heading level={1} size={1}>{t.workout.title}</Heading>
+        <Text muted>Les séances déjà créées à partir de celle-ci ne changent pas.</Text>
+      </Stack>
+      <LibraryForm wid={wid} modules={ctx.modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name }))} savedBlocks={savedBlocks}
+        initial={{ id: t.id, revision: t.revision, category: t.category, workout: t.workout }} />
+    </Stack>
   );
 }

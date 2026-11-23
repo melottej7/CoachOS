@@ -1,0 +1,53 @@
+/* Bibliothèque du coach (D-154) : séances types, semaines types, blocs, imports, exercices, méthode. */
+.filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, 220px); gap: var(--ds-2); }
+@media (max-width: 559px) { .filters { grid-template-columns: minmax(0, 1fr); } }
+
+.grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--ds-3); }
+.card { display: flex; flex-direction: column; gap: var(--ds-2); padding: var(--ds-4); border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); min-width: 0; }
+.cardTop { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-2); font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.src { font-size: var(--ds-text-xs); color: var(--ds-ink-3, var(--ds-ink-2)); border: 1px dashed var(--ds-rule); border-radius: var(--ds-radius-full); padding: 1px 8px; }
+.title { margin: 0; font-family: var(--ds-font-display); font-size: var(--ds-text-lg); font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.total { font-variant-numeric: tabular-nums; font-weight: 600; font-size: var(--ds-text-sm); }
+.blocks { margin: 0; padding-left: 1.1em; font-size: var(--ds-text-sm); color: var(--ds-ink-2); display: flex; flex-direction: column; gap: 2px; overflow-wrap: anywhere; }
+.blocksText { margin: 0; font-size: var(--ds-text-sm); color: var(--ds-ink-2); overflow-wrap: anywhere; }
+.cardActions { margin-top: auto; padding-top: var(--ds-2); display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-2); }
+.use { margin-top: auto; padding-top: var(--ds-2); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--ds-2); }
+.use > :last-child { grid-column: 1 / -1; }
+
+/* Listes à lignes (semaines types, blocs, règles). */
+.list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); overflow: hidden; }
+.list > li + li { border-top: 1px solid var(--ds-rule); }
+.row { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--ds-2) var(--ds-3); padding: var(--ds-3) var(--ds-4); }
+.rowMain { flex: 1 1 260px; display: flex; flex-direction: column; gap: var(--ds-1); min-width: 0; overflow-wrap: anywhere; }
+.rowTitle { margin: 0; font-weight: 700; font-size: var(--ds-text-md, 16px); }
+.days { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; font-size: var(--ds-text-sm); }
+.days strong { display: inline-block; min-width: 5.5em; color: var(--ds-ink-2); font-weight: 600; }
+
+/* Imports : source, aperçu ligne par ligne. */
+.file { font: inherit; color: var(--ds-ink-2); max-width: 100%; }
+.file::file-selector-button { font: inherit; font-weight: 600; margin-right: var(--ds-2); padding: 8px 14px; border-radius: var(--ds-radius); border: 1px solid var(--ds-rule); background: var(--ds-surface-2); color: var(--ds-ink); cursor: pointer; }
+.mono { font-family: var(--ds-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: var(--ds-text-sm); }
+.cols { display: flex; flex-wrap: wrap; gap: var(--ds-1); }
+.col { font-size: var(--ds-text-xs); padding: 2px 8px; border-radius: var(--ds-radius-full); background: var(--ds-surface-2); }
+.colOff { text-decoration: line-through; color: var(--ds-ink-2); }
+.imp { list-style: none; margin: 0; padding: 0; border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); overflow: hidden; }
+.imp > li + li { border-top: 1px solid var(--ds-rule); }
+.impRow { display: grid; grid-template-columns: 28px minmax(0, 1fr) minmax(120px, 170px); align-items: start; gap: var(--ds-2) var(--ds-3); padding: var(--ds-3) var(--ds-4); }
+.impRow[data-off] .impMain { opacity: .55; }
+.impBad { background: var(--ds-surface-2); }
+@media (max-width: 559px) { .impRow { grid-template-columns: 28px minmax(0, 1fr); } .impRow > select { grid-column: 2; } }
+.tick { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--ds-coach); }
+.mark { width: 20px; text-align: center; font-weight: 700; color: var(--ds-ink-2); }
+.impMain { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; font-size: var(--ds-text-sm); }
+.err { color: var(--ds-danger); font-size: var(--ds-text-sm); }
+.weeks { display: flex; flex-direction: column; gap: var(--ds-4); }
+
+/* Exercices. */
+.exRow { width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-1) var(--ds-3); padding: var(--ds-3) var(--ds-4); border: 0; background: none; color: var(--ds-ink); font: inherit; text-align: left; cursor: pointer; min-height: 48px; }
+.exRow:hover { background: var(--ds-surface-2); }
+.exRow:focus-visible { outline: 2px solid var(--ds-focus, var(--ds-coach)); outline-offset: -2px; }
+.exName { font-weight: 700; flex: 1 1 180px; min-width: 0; overflow-wrap: anywhere; }
+.exMeta { font-size: var(--ds-text-sm); color: var(--ds-ink-2); flex: 1 1 200px; min-width: 0; }
+.exOpen { padding: 0 var(--ds-4) var(--ds-4); }
+.exNew { padding: var(--ds-4); border: 1px solid var(--ds-coach); border-radius: var(--ds-radius-lg); background: var(--ds-surface); }
+.media { max-width: 420px; }
