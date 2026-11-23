@@ -8,3 +8,6 @@ export { Banner, EmptyState, Skeleton, Toast } from './feedback';
 export { Stats, Meter, type StatItem } from './data';
 export { Field, Input, Textarea, Select, ChoiceGroup, type ChoiceOption } from './form';
 export { AppHeader, BrandName, BellLink } from './header';
+export { AthleteShell, AthleteColumn, ProfileLink } from './shell';
+export { SessionStats, SessionStrip, SessionRows } from './session';
+export { LinkList, LinkListItem } from './list';

@@ -181,7 +181,7 @@ export function TourHost({ space, wid }: { space: 'athlete' | 'coach'; wid: stri
 
   return (
     <>
-      <button type="button" className={`guide-fab ${space}${step && !step.targets?.includes('guide-help') ? ' is-hidden' : ''}`} data-tour="guide-help" onClick={start} aria-label="Revoir la visite guidée" title="Revoir la visite guidée">
+      <button type="button" className={`guide-fab ${space}${step && !step.targets?.includes('guide-help') ? ' is-hidden' : ''}${step ? '' : ' is-idle'}`} data-tour="guide-help" onClick={start} aria-label="Revoir la visite guidée" title="Revoir la visite guidée">
         <Mascot size={52} />
       </button>
       {/* Pendant la recherche de l’élément ou l’attente d’une navigation, rien n’est affiché. */}

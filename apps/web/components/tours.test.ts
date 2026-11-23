@@ -27,13 +27,14 @@ describe('visites du guide CoachOS (CE-C-01)', () => {
   });
 
   it('chaque élément visé existe dans les écrans', () => {
-    const code = [...sources(path.join(WEB, 'app')), ...sources(path.join(WEB, 'components'))]
+    // D-129 : la refonte écrit ses écrans aussi dans design/ et views/.
+    const code = [...sources(path.join(WEB, 'app')), ...sources(path.join(WEB, 'components')), ...sources(path.join(WEB, 'design')), ...sources(path.join(WEB, 'views'))]
       .map((f) => readFileSync(f, 'utf8'))
       .join('\n');
     const targets = new Set(Object.values(TOURS).flatMap((steps) => steps.flatMap((s) => s.targets ?? [])));
     for (const t of targets) {
       // Marqueur fixe (data-tour="x", tour="x") ou conditionnel (data-tour={… ? 'x' : undefined}).
-      const present = code.includes(`tour="${t}"`) || new RegExp(`data-tour=\\{[^}]*'${t}'`).test(code);
+      const present = code.includes(`tour="${t}"`) || code.includes(`tour: '${t}'`) || new RegExp(`data-tour=\\{[^}]*'${t}'`).test(code);
       expect(present, `data-tour="${t}" introuvable`).toBe(true);
     }
   });

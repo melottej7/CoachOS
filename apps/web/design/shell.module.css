@@ -1,0 +1,8 @@
+/* Colonne de l’espace élève : téléphone d’abord, centrée sur grand écran, place pour la barre d’onglets. */
+.athlete { min-height: 100vh; min-height: 100dvh; background: var(--ds-bg); color: var(--ds-ink); font-size: var(--ds-text-md); }
+.column { max-width: 640px; margin: 0 auto; padding: var(--ds-5) var(--ds-4) calc(96px + env(safe-area-inset-bottom)); }
+@media (min-width: 768px) { .column { padding: var(--ds-6) var(--ds-6) var(--ds-12); } }
+.profileLink { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; text-decoration: none; }
+.profileLink:hover > span { box-shadow: 0 0 0 2px var(--ds-rule-strong); }
+/* D-129 · Le personnage de la visite ne recouvre plus l’écran : il n’apparaît que pendant la visite (relancée depuis le Profil). */
+.athlete :global(.guide-fab.is-idle) { display: none; }
