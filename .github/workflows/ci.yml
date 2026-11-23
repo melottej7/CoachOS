@@ -1,0 +1,34 @@
+# D-122 · Contrôles automatiques à chaque changement : tests, types, construction. Aucun secret nécessaire.
+name: Vérifications
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verifier:
+    name: Tests, types et construction
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Dépendances
+        run: npm ci
+      - name: Types
+        run: npm run typecheck
+      - name: Tests (domaine, boucle et droits sur base en mémoire)
+        run: npm test
+      - name: Construction de production
+        run: npm run build
+        env:
+          # La construction ne touche à aucune base : sans adresse, l'app repasse sur son moteur en mémoire.
+          NEXT_TELEMETRY_DISABLED: '1'
