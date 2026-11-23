@@ -2254,3 +2254,13 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Vérification au navigateur sans le panneau de l’application** (son lanceur n’a plus accès au dossier du projet) : passage photo dans le navigateur des tests de bout en bout, à 390 et 1440 px, sans débordement mesuré ; parcours d’invitation par lien vert sur le nouvel écran d’ajout.
 - **Preuves** : 379 tests, typecheck, construction, deux parcours de bout en bout verts.
 - **Reste pour les Élèves** : la fiche d’un élève (bilan, notes, objectifs, niveau, références, programme, échanges, statistiques, données).
+
+## D-151 · Fiche d’un élève refaite, en onglets · 2026-11-23 (branche `refonte`)
+
+- **Onglets** (docs/18_REFONTE.md §2.2), soulignés et défilants sur téléphone : **Vue d’ensemble** (invitation si l’élève n’a pas encore rejoint, semaine dernière avec la question à poser, à faire, prochaines séances, derniers retours, rendez-vous avec compte rendu, groupes), **Progression** (suivi avec la provenance des mesures, mêmes indicateurs et graphiques que chez l’élève, séance par séance, charges en musculation, niveau par sport, objectifs, faisabilité dépliable avec solutions, paramètres, décision et message, repères et tableau des zones, résultats de référence), **Bilan**, **Notes** privées, **Données** (propriétaire : demande d’effacement, effacement définitif confirmé par le prénom). En tête : préparer ses séances, écrire, tâche et appel planifiés sur place. Le calendrier et les échanges restent leurs propres écrans (liens).
+- **Bilan en entretien** côté coach : même parcours une question par écran que l’élève (D-138, `mode="coach"`) ; l’ancien est supprimé.
+- **Toutes les fonctions gardées**, tous les calculs repris tels quels ; douze lectures indépendantes lancées ensemble au lieu de l’une après l’autre.
+- **Supprimés** : dix anciens composants (semaine passée, faisabilité, résultats, repères, historique, effacement, statistiques et charges du coach, bilan).
+- **Corrigé en route** (photos du navigateur des tests) : la barre de cinq onglets élargissait la page sur téléphone (99 px) ; le bouton d’effacement aussi (25 px, libellé raccourci).
+- **Preuves** : 379 tests, typecheck, construction, deux parcours de bout en bout verts ; photos des cinq onglets et du bilan en entretien à 390 et 1440 px, sans débordement mesuré.
+- **Non vérifié** : faisabilité et décision avec un vrai objectif daté, compte rendu de rendez-vous et effacement exécutés dans le navigateur (logique reprise telle quelle, couverte par les tests serveur).

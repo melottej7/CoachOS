@@ -13,23 +13,14 @@ import { Button, Card, Cluster, Disclosure, EmptyState, Eyebrow, Heading, LinkBu
 import { Agenda } from '@/views/coach/home/agenda';
 import { HomeActions } from '@/views/coach/home/home-actions';
 import { Relances } from '@/views/coach/home/relances';
-import { TaskItem, type TaskView } from '@/views/coach/home/task-item';
+import { TaskItem } from '@/views/coach/home/task-item';
+import { taskView } from '@/views/coach/home/task-view';
 import s from '@/views/coach/home/home.module.css';
 
 export const metadata = { title: 'Accueil' };
 
 type Search = { week?: string; athlete?: string; team?: string; kind?: string; priority?: string };
 
-function dueText(t: HomeTask, today: string): string {
-  if (!t.dueOn) return 'Sans échéance';
-  if (t.dueOn === today) return 'Aujourd’hui';
-  if (t.dueOn < today) {
-    const days = Math.round((Date.parse(today) - Date.parse(t.dueOn)) / 86_400_000);
-    return `En retard de ${days} jour${days > 1 ? 's' : ''}`;
-  }
-  if (t.dueOn === addDays(today, 1)) return 'Demain';
-  return `${formatWeekday(t.dueOn)} ${formatShortDate(t.dueOn)}`;
-}
 
 /** « une tâche », « un rendez-vous », « 3 élèves » : le nombre en lettres pour un, accordé au genre. */
 const n = (k: number, one: string, many: string, fem = false) => `${k === 1 ? (fem ? 'une' : 'un') : k} ${k > 1 ? many : one}`;
@@ -85,20 +76,6 @@ export default async function CoachHome({ params, searchParams }: { params: Prom
     : 'Ajoute ton premier élève : chaque jour, cet écran te dira ensuite quoi faire.';
 
   const athletes = data.roster.map((a) => ({ id: a.id, name: a.name, timeZone: a.timeZone }));
-  const slotText = (t: HomeTask) => t.slotOn
-    ? `Créneau ${t.slotOn === today ? 'aujourd’hui' : t.slotOn === addDays(today, 1) ? 'demain' : `${formatWeekday(t.slotOn).toLowerCase()} ${formatShortDate(t.slotOn)}`}${t.slotTime ? ` à ${t.slotTime}` : ''}`
-    : null;
-  const view = (t: HomeTask): TaskView => ({
-    key: t.key, source: t.source, id: t.id, rule: t.rule, ref: t.ref, revision: t.revision, link: t.link, athlete: t.athlete,
-    athleteHref: t.athlete ? `${base}/athletes/${t.athlete.id}?from=${encodeURIComponent(keep({}))}` : null, team: t.team?.name ?? null,
-    title: t.title, reason: t.reason, priority: t.priority, priorityLabel: `Priorité ${PRIORITY_LABELS[t.priority as Priority].toLowerCase()}`,
-    recurrence: t.recurrence ? TASK_RECURRENCE_LABELS[t.recurrence] : null, notes: t.notes,
-    meta: [
-      t.slotOn ? `Échéance : ${dueText(t, today).toLowerCase()}` : dueText(t, today),
-      slotText(t), t.estimateMin ? `≈ ${formatEstimate(t.estimateMin)}` : null, TASK_KIND_LABELS[t.kind as TaskKind],
-    ].filter((x): x is string => Boolean(x)),
-    slot: { slotOn: t.slotOn ?? null, slotTime: t.slotTime ?? null, estimateMin: t.estimateMin ?? null },
-  });
   const first = actor.displayName.split(' ')[0] ?? actor.displayName;
 
   return (
@@ -165,7 +142,7 @@ export default async function CoachHome({ params, searchParams }: { params: Prom
                   <Stack as="section" key={b} gap={2} aria-labelledby={`bucket-${b}`}>
                     <Eyebrow as="h3" id={`bucket-${b}`} tone={b === 'overdue' ? 'signal' : undefined}>{BUCKET_LABELS[b]} · {inBucket.length}</Eyebrow>
                     <ul className={s.tasks}>
-                      {inBucket.map((t) => <TaskItem key={t.key} wid={wid} task={view(t)} today={today} timeZone={tz} />)}
+                      {inBucket.map((t) => <TaskItem key={t.key} wid={wid} task={taskView(t, today, { athleteHref: t.athlete ? `${base}/athletes/${t.athlete.id}?from=${encodeURIComponent(keep({}))}` : null })} today={today} timeZone={tz} />)}
                     </ul>
                   </Stack>
                 );
