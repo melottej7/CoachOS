@@ -8,7 +8,11 @@ describe('GET /api/health (D-114)', () => {
   it('répond ok quand la base est joignable', async () => {
     const r = await GET();
     expect(r.status).toBe(200);
-    expect(await r.json()).toEqual({ ok: true, db: 'ok' });
+    const body = await r.json();
+    expect(body).toMatchObject({ ok: true, db: 'ok' });
+    // D-119 : état des services, jamais une clé.
+    expect(Object.keys(body.services).sort()).toEqual(['ai', 'contact', 'email', 'push']);
+    expect(JSON.stringify(body)).not.toMatch(/re_[A-Za-z0-9]{10,}|sk-ant|VAPID/);
     expect(r.headers.get('cache-control')).toBe('no-store');
   });
 
@@ -17,6 +21,6 @@ describe('GET /api/health (D-114)', () => {
     setDb(broken);
     const r = await GET();
     expect(r.status).toBe(503);
-    expect(await r.json()).toEqual({ ok: false, db: '28P01' });
+    expect(await r.json()).toMatchObject({ ok: false, db: '28P01' });
   });
 });
