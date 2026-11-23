@@ -16,6 +16,12 @@ Dernière mise à jour : 2026-11-23, fin de session (D-120 à D-122). Relire d�
 
 **Ce que le produit fait** : la matrice [COUVERTURE.md](COUVERTURE.md) (cible coach et élève, D-024) et les décisions D-001 à D-122 dans [DECISIONS.md](DECISIONS.md). En deux lignes : un coach planifie des séances structurées par sport (zones VMA, FTP, CSS), des programmes générés selon sa méthode, des groupes, des tâches, des relances, des bilans ; l’élève lit sa séance sur téléphone (hors ligne, montre, pas à pas en musculation), envoie son retour, échange avec son coach ; les données personnelles ont leur page, leur export et leur effacement.
 
+## Refonte complète (D-123, instruction du 23 novembre, soir)
+
+Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 couleurs en dur hors jetons (154 occurrences au total), 14 dans les composants, 109 styles en ligne, 7 composants dans `ui.tsx` sur 70 fichiers de composants, 38 pictogrammes emoji dans les écrans, pas de choix de thème (clair ou sombre suivent seulement le système), pas de page publique ; la police est chargée depuis D-121. Socle réel : 44 migrations, 67 tables, 48 politiques RLS, 24 fichiers de commandes, 12 de lectures, 82 routes API, 57 pages, 67 fichiers de test, 33 425 lignes TypeScript ; aucun worker (la table `jobs` n’est utilisée par aucun code), un seul paquet (`domain`), aucune application mobile : docs/07 décrit une cible, pas le code.
+
+**Prochaine étape (méthode D-123, étape 1)** : tests de bout en bout dans un vrai navigateur (Playwright 1.65, à installer) de la boucle coach → élève → coach, en mode démonstration (PGlite, `/demo`, serveur lancé avec `DATABASE_URL` et `NEXT_PUBLIC_SUPABASE_URL` vides et `COACHOS_PGLITE_DIR=.data/e2e`, port 3100), puis dans l’Action GitHub. Ensuite : verdict sur le socle, carte du produit, étude des références, puis trois directions visuelles (point d’attente du fondateur).
+
 ## Chantiers en cours (D-120)
 
 1. **Confiance.** Fait : en-têtes de sécurité, pages d’erreur, contrôle de santé avec services, script de sauvegarde, revue de sécurité du lot données personnelles, contrôles automatiques (Action GitHub), migrations à la construction Vercel. À faire : tests de bout en bout dans un vrai navigateur (coach → élève → coach), suivi des erreurs en production (Sentry derrière une variable), sauvegarde puis restauration essayées en local, revue des droits en base table par table (test automatisé), limitation des abus (fréquence sur les routes publiques), vidéos hors de la base (Supabase Storage).
