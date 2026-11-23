@@ -11,7 +11,8 @@ export async function POST(req: NextRequest) {
   const form = await req.formData();
   const next = safeNext(String(form.get('next') ?? '/'));
   const parsed = signUpSchema.safeParse({
-    displayName: String(form.get('displayName') ?? ''),
+    firstName: String(form.get('firstName') ?? ''),
+    lastName: String(form.get('lastName') ?? ''),
     email: String(form.get('email') ?? ''),
     password: String(form.get('password') ?? ''),
   });

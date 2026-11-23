@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import type { CoachCardData } from '@/components/coach-card';
 import { fieldError, useIntent } from '@/components/use-intent';
-import { AccentScope, Banner, Button, Card, Field, Input, LinkButton, PasswordInput, Skeleton, Stack, Text } from '@/design';
+import { AccentScope, Banner, Button, Card, Field, Grid, Input, LinkButton, PasswordInput, Skeleton, Stack, Text } from '@/design';
 import { CoachIdentity } from '@/views/coach-profile';
 import { ErrorSummary } from '@/views/error-summary';
 
@@ -139,7 +139,8 @@ export function SignedOutChoice({ token }: { token: string }) {
     const f = new FormData(e.currentTarget);
     const done = await run('POST', '/auth/invite-register', {
       token,
-      displayName: String(f.get('displayName') ?? ''),
+      firstName: String(f.get('firstName') ?? ''),
+      lastName: String(f.get('lastName') ?? ''),
       email: String(f.get('email') ?? ''),
       password: String(f.get('password') ?? ''),
     });
@@ -171,18 +172,24 @@ export function SignedOutChoice({ token }: { token: string }) {
     );
   }
 
-  const nameError = fieldError(error, 'displayName');
+  const firstError = fieldError(error, 'firstName');
+  const lastError = fieldError(error, 'lastName');
   const emailError = fieldError(error, 'email');
   const passwordError = fieldError(error, 'password');
   return (
     <Card pad={5}>
       <Stack gap={5}>
         <Text>Crée ton compte avec <strong>l’adresse qui a reçu l’invitation</strong> et choisis ton mot de passe.</Text>
-        <ErrorSummary error={error} labels={{ displayName: 'Ton nom' }} />
+        <ErrorSummary error={error} labels={{ firstName: 'Prénom', lastName: 'Nom' }} />
         <form onSubmit={create} noValidate><Stack gap={4}>
-          <Field id="displayName" label="Ton nom" error={nameError}>
-            <Input id="displayName" name="displayName" autoComplete="name" required maxLength={100} invalid={!!nameError} />
-          </Field>
+          <Grid min={160} gap={4}>
+            <Field id="firstName" label="Prénom" error={firstError}>
+              <Input id="firstName" name="firstName" autoComplete="given-name" required maxLength={50} invalid={!!firstError} />
+            </Field>
+            <Field id="lastName" label="Nom" error={lastError}>
+              <Input id="lastName" name="lastName" autoComplete="family-name" required maxLength={50} invalid={!!lastError} />
+            </Field>
+          </Grid>
           <Field id="email" label="Adresse e-mail" error={emailError}>
             <Input id="email" name="email" type="email" autoComplete="email" inputMode="email" required maxLength={254} invalid={!!emailError} />
           </Field>

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { signUpSchema } from '@coachos/domain';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { openDatabase, setDb, type Db } from './db/client';
 import { TIME_ZONE, USERS, WORKSPACE_A } from './db/fixtures';
@@ -74,6 +75,20 @@ describe('compte athlète créé depuis l’invitation', () => {
     const acc = await acceptInvitation(meta(reg.userId), { token: reg.token });
     expect(acc.body).toEqual({ workspaceId: WORKSPACE_A, athleteId: aid });
     expect((await athleteContext(reg.userId, WORKSPACE_A))?.athlete.id).toBe(aid);
+  });
+
+  it('prénom et nom demandés séparément, rangés en « Prénom Nom » ; un nom manquant est signalé sans créer de compte (D-153)', async () => {
+    created = [];
+    const missing = await invite('Elsa', 'elsa@demo.coachos.test');
+    const err = await registerFromInvitation({ token: missing.token, firstName: 'Elsa', lastName: '  ', email: 'elsa@demo.coachos.test', password: 'motdepasse-elsa' }, fakeCreate).catch((e: unknown) => e);
+    expect((err as AppError).code).toBe('INVALID_FIELDS');
+    expect((err as AppError).fields?.map((f) => f.path)).toEqual(['lastName']);
+    expect(created).toEqual([]);
+    const reg = await registerFromInvitation({ token: missing.token, firstName: ' Elsa ', lastName: 'De  Smet', email: 'elsa@demo.coachos.test', password: 'motdepasse-elsa' }, fakeCreate);
+    const profile = await db.query<{ display_name: string }>('select display_name from public.users where id = $1', [reg.userId]);
+    expect(profile.rows[0]?.display_name).toBe('Elsa De Smet');
+    expect(signUpSchema.parse({ firstName: 'Nina', lastName: 'Roy', email: 'nina@demo.coachos.test', password: 'motdepasse' }).displayName).toBe('Nina Roy');
+    expect(signUpSchema.safeParse({ firstName: 'Nina', lastName: '', email: 'nina@demo.coachos.test', password: 'motdepasse' }).success).toBe(false);
   });
 
   it('lien déjà utilisé, adresse déjà inscrite ou lien expiré : aucun compte créé', async () => {

@@ -46,6 +46,9 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
   const [step, setStep] = useState<BilanStep>(startAt ?? 'sport');
   const [saved, setSaved] = useState<'idle' | 'saving' | 'saved' | 'offline'>('idle');
   const [fromRecap, setFromRecap] = useState(false);
+  // D-153 : le sport principal n’apparaît choisi que s’il l’a vraiment été (bilan repris, déjà rempli). Juste après le choix
+  // des sports, rien n’est coché : une réponse cochée d’office semblait déjà donnée alors qu’il fallait la toucher pour avancer.
+  const [mainChosen, setMainChosen] = useState(() => bilanSports(initial).length > 1 && startAt !== 'mainSport');
   const { run, pending, error } = useIntent<unknown>();
   const first = useRef(true);
   const top = useRef<HTMLDivElement>(null);
@@ -134,13 +137,19 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
     if (r) { router.push(after); router.refresh(); }
   }
 
-  /** Une seule réponse : le toucher répond et fait avancer, même sur la réponse déjà choisie. */
-  const single = <T extends string>(k: keyof BilanAnswers, values: readonly T[], labels: Record<T, string>, hints?: Partial<Record<T, string>>) => (
-    <AnswerList labelledBy={Q_ID} options={values.map((v) => ({ value: v, label: labels[v], hint: hints?.[v] }))}
-      value={a[k] as T | null | undefined} onPick={(v) => answer(k, v as never)} />
-  );
   const nextButton = (disabled = false) => (
     <Button variant="coach" size="lg" block iconRight="arrowRight" disabled={disabled} onClick={() => nextStep(a)}>Suivant</Button>
+  );
+  /**
+   * Une seule réponse : le toucher répond et fait avancer, même sur la réponse déjà choisie.
+   * D-153 : une réponse déjà là (retour en arrière, bilan repris ou relu par le coach) se garde avec « Suivant ».
+   */
+  const single = <T extends string>(k: keyof BilanAnswers, values: readonly T[], labels: Record<T, string>, hints?: Partial<Record<T, string>>) => (
+    <>
+      <AnswerList labelledBy={Q_ID} options={values.map((v) => ({ value: v, label: labels[v], hint: hints?.[v] }))}
+        value={a[k] as T | null | undefined} onPick={(v) => answer(k, v as never)} />
+      {a[k] != null ? nextButton() : null}
+    </>
   );
   const equipChecks = (list: readonly Equipment[], legend: string) => {
     const cur = (a.equipment ?? []).filter((e) => list.includes(e));
@@ -156,8 +165,8 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
       hint: 'Plusieurs choix possibles : course et musculation, par exemple.',
       body: (
         <>
-          <AnswerList multiple labelledBy={Q_ID} value={picked} onPick={toggleSport}
-            options={SPORTS.map((x) => ({ value: x, label: SPORT_LABELS[x], hint: picked[0] === x && picked.length > 1 ? 'Principal pour l’instant' : undefined }))} />
+          <AnswerList multiple labelledBy={Q_ID} value={picked} onPick={(x) => { setMainChosen(false); toggleSport(x); }}
+            options={SPORTS.map((x) => ({ value: x, label: SPORT_LABELS[x] }))} />
           {nextButton(!picked.length)}
         </>
       ),
@@ -166,8 +175,11 @@ export function BilanFlow({ wid, mode, initial, startAt, firstName, aid, expecte
       title: you('Lequel compte le plus pour toi en ce moment ?', `Lequel compte le plus pour ${firstName} en ce moment ?`),
       hint: 'Les questions suivantes portent sur ce sport ; ton coach voit aussi les autres.',
       body: (
-        <AnswerList labelledBy={Q_ID} value={a.sport} options={picked.map((x) => ({ value: x, label: SPORT_LABELS[x] }))}
-          onPick={(x) => { const next = deriveBilan({ ...a, sport: x, otherSports: picked.filter((y) => y !== x) }); setA(next); nextStep(next); }} />
+        <>
+          <AnswerList labelledBy={Q_ID} value={mainChosen ? a.sport : null} options={SPORTS.filter((x) => picked.includes(x)).map((x) => ({ value: x, label: SPORT_LABELS[x] }))}
+            onPick={(x) => { const next = deriveBilan({ ...a, sport: x, otherSports: picked.filter((y) => y !== x) }); setMainChosen(true); setA(next); nextStep(next); }} />
+          {mainChosen ? nextButton() : null}
+        </>
       ),
     },
     focus: {
