@@ -50,3 +50,4 @@ textarea.control { padding: var(--ds-3); min-height: 96px; resize: vertical; lin
 .scaleStep input:checked + .scaleFace { background: var(--ds-coach); border-color: var(--ds-coach); color: var(--ds-on-coach); }
 .scaleEnds { display: flex; justify-content: space-between; align-items: center; gap: var(--ds-3); min-height: 24px; font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
 .scaleEnds .clear { min-height: 32px; }
+.choiceFace .hint { font-weight: 400; }

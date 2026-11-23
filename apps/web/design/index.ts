@@ -15,3 +15,4 @@ export { Disclosure, MediaVideo } from './disclosure';
 export { SegmentedLinks, WeekDays, MonthGrid, type CalendarDay, type CalendarItem } from './calendar';
 export { WeekBars, type ChartBar } from './chart';
 export { DataTable } from './table';
+export { ThemeChoiceGroup, DensityChoiceGroup, type ThemeChoice, type DensityChoice } from './theme';

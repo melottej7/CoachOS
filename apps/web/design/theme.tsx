@@ -13,11 +13,11 @@ function setCookie(name: string, value: string | null) {
 }
 
 /** Clair, sombre ou automatique (système). Appliqué tout de suite, mémorisé sur cet appareil. */
-export function ThemeChoiceGroup({ initial }: { initial: ThemeChoice }) {
+export function ThemeChoiceGroup({ initial, hideLegend }: { initial: ThemeChoice; hideLegend?: boolean }) {
   const router = useRouter();
   const [value, setValue] = useState<ThemeChoice>(initial);
   return (
-    <ChoiceGroup<ThemeChoice> legend="Apparence" name="theme" value={value}
+    <ChoiceGroup<ThemeChoice> legend="Apparence" hideLegend={hideLegend} name="theme" value={value}
       options={[{ value: 'system', label: 'Automatique', icon: 'monitor' }, { value: 'light', label: 'Clair', icon: 'sun' }, { value: 'dark', label: 'Sombre', icon: 'moon' }]}
       onChange={(v) => {
         setValue(v);

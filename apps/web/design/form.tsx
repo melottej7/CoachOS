@@ -64,9 +64,9 @@ export function ChoiceGroup<V extends string>({ legend, hint, name, options, val
 
 export interface ChipOption<V extends string | number> { value: V; label: string }
 
-/** Pastilles : une seule réponse, effaçable (réponse facultative). */
-export function ChipChoice<V extends string | number>({ legend, hint, name, options, value, onChange, clearLabel = 'Effacer', children }:
-  { legend: ReactNode; hint?: ReactNode; name: string; options: ChipOption<V>[]; value: V | null; onChange: (v: V | null) => void; clearLabel?: string; children?: ReactNode }) {
+/** Pastilles : une seule réponse ; effaçable quand la réponse est facultative (`clearable`, par défaut). */
+export function ChipChoice<V extends string | number>({ legend, hint, name, options, value, onChange, clearLabel = 'Effacer', clearable = true, idPrefix, children }:
+  { legend: ReactNode; hint?: ReactNode; name: string; options: ChipOption<V>[]; value: V | null; onChange: (v: V | null) => void; clearLabel?: string; clearable?: boolean; idPrefix?: string; children?: ReactNode }) {
   const uid = useId();
   return (
     <fieldset className={s.chipSet}>
@@ -74,11 +74,11 @@ export function ChipChoice<V extends string | number>({ legend, hint, name, opti
       <div className={s.chips}>
         {options.map((o) => (
           <label key={String(o.value)} className={s.chip}>
-            <input type="radio" name={`${name}-${uid}`} checked={value === o.value} onChange={() => onChange(o.value)} />
+            <input type="radio" id={idPrefix ? `${idPrefix}-${o.value}` : undefined} name={`${name}-${uid}`} checked={value === o.value} onChange={() => onChange(o.value)} />
             <span className={s.chipFace}>{o.label}</span>
           </label>
         ))}
-        {value !== null ? <button type="button" className={s.clear} onClick={() => onChange(null)}>{clearLabel}</button> : null}
+        {clearable && value !== null ? <button type="button" className={s.clear} onClick={() => onChange(null)}>{clearLabel}</button> : null}
       </div>
       {children}
     </fieldset>
@@ -86,14 +86,14 @@ export function ChipChoice<V extends string | number>({ legend, hint, name, opti
 }
 
 /** Pastilles : plusieurs réponses possibles (cases à cocher). */
-export function ChipChecks<V extends string>({ legend, hint, options, value, onChange, hideLegend }:
+export function ChipChecks<V extends string | number>({ legend, hint, options, value, onChange, hideLegend }:
   { legend: ReactNode; hint?: ReactNode; options: ChipOption<V>[]; value: V[]; onChange: (v: V[]) => void; hideLegend?: boolean }) {
   return (
     <fieldset className={s.chipSet}>
       <Legend hint={hint} hidden={hideLegend}>{legend}</Legend>
       <div className={s.chips}>
         {options.map((o) => (
-          <label key={o.value} className={s.chip}>
+          <label key={String(o.value)} className={s.chip}>
             <input type="checkbox" checked={value.includes(o.value)} onChange={() => onChange(value.includes(o.value) ? value.filter((x) => x !== o.value) : [...value, o.value])} />
             <span className={s.chipFace}><span className={s.chipTick} aria-hidden="true"><Icon name="check" size={14} /></span>{o.label}</span>
           </label>
