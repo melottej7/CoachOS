@@ -2085,3 +2085,11 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Règles qui tiennent.** Français ; rien de publié ni envoyé à un élève sans action du coach ; aucune donnée de santé (D-084) ; aucune donnée Strava vers l’IA ; paiement en mode test, éteint en production ; migrations additives ; base en ligne jamais terrain d’essai ; **sur `main` n’arrivent que des parcours entièrement refaits et vérifiés**.
 - **Autonomie.** L’agent décide seul de tout ce qui est réversible, committe et pousse. Le fondateur sert à : créer un compte, payer, saisir une clé ; toute action qui touche de vraies personnes ou données ; le nom et le choix final du style. Le reste va dans « Pour le fondateur » (ETAT.md).
 - **« Fait »** = un parcours qui fonctionne pour les deux rôles à 1440 et 390 px, clair et sombre, au clavier, avec tous ses états ; tests et build verts ; regardé dans un navigateur en se demandant si un coach le trouverait plus beau et plus rapide que ses outils actuels. Fin de session : captures avant et après, vérifié et non vérifié, ce qui attend le fondateur, le prochain parcours.
+
+## D-124 · Construction Vercel en échec, chemin du script de migration corrigé · 2026-11-23
+
+- **Incident.** Après le push du 23 novembre au soir (7 commits, D-119 à D-123), la construction Vercel a échoué ; l’Action GitHub, elle, était verte. Le site a continué de servir la version précédente : aucun utilisateur touché, mais D-121 et D-122 n’étaient pas en ligne.
+- **Cause.** Erreur de l’agent dans D-122 : `buildCommand` appelait `node ../scripts/migrate-remote.mjs` alors que Vercel l’exécute depuis `apps/web` ; le bon chemin est `../../scripts/`. Le script avait été essayé depuis la racine du dépôt, pas depuis le dossier où Vercel le lance.
+- **Correction.** `buildCommand` = `node ../../scripts/migrate-remote.mjs && npm run build` ; l’Action GitHub exécute désormais la commande exacte de `vercel.json`, depuis `apps/web`. Rejouée en local : « base en ligne non touchée », construction réussie, code 0.
+- **Leçon.** Une commande de mise en ligne s’essaie depuis le dossier et avec l’enveloppe exacts de la plateforme, jamais depuis un raccourci.
+- **Non prouvé.** La construction Vercel corrigée (au prochain push) ; le script avec les variables Supabase renseignées (`npx supabase@3` téléchargé pendant la construction Vercel).

@@ -3,5 +3,5 @@
   "regions": [
     "dub1"
   ],
-  "buildCommand": "node ../scripts/migrate-remote.mjs && next build"
+  "buildCommand": "node ../../scripts/migrate-remote.mjs && npm run build"
 }

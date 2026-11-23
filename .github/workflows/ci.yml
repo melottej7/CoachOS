@@ -27,8 +27,11 @@ jobs:
         run: npm run typecheck
       - name: Tests (domaine, boucle et droits sur base en mémoire)
         run: npm test
-      - name: Construction de production
-        run: npm run build
+      - name: Construction de production, avec la commande exacte de Vercel
+        # D-124 · Exécutée depuis apps/web comme sur Vercel (vercel.json, buildCommand). Sans variables Supabase,
+        # le script de migration ne touche à aucune base. Vercel construit en parallèle : cette étape ne bloque pas une
+        # mise en ligne, mais une erreur de commande s'y voit en clair au lieu de rester cachée dans le journal de Vercel.
+        working-directory: apps/web
+        run: sh -c "$(node -p "require('./vercel.json').buildCommand")"
         env:
-          # La construction ne touche à aucune base : sans adresse, l'app repasse sur son moteur en mémoire.
           NEXT_TELEMETRY_DISABLED: '1'
