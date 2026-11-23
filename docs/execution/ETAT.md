@@ -26,8 +26,8 @@ Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 coul
 
 **Refonte en cours sur la branche `refonte`** (rien de visible en ligne tant qu’un espace n’est pas entièrement refait ; aperçus Vercel coupés pour cette branche) :
 - fait (vérifié au navigateur, tests, typecheck, construction et parcours de bout en bout verts) : design system dans `apps/web/design/` et page interne `/systeme` (D-128, D-129) ; cadre de l’espace élève ; Aujourd’hui (D-129), détail d’une séance (D-130), Programme semaine et mois (D-131), retour détaillé (D-132), Suivre la séance (D-133), Progression (D-134), Échanges, liste et fil (D-135), Profil avec Clair / Sombre / Automatique (D-136), Notifications (D-137), bilan d’arrivée, présentation du coach, invitation et visite guidée (D-138 à D-141) ; passage à 1440 px et au clavier fait ;
-- l’espace élève est donc entièrement refait : prochaine étape, le fusionner sur `main` (vérification finale, puis Pull Request à créer par le fondateur dans GitHub Desktop) ;
-- ensuite : l’accueil du coach, la boîte de réception, le calendrier avec glisser-copier-coller et annulation, la fiche élève, la bibliothèque, les paramètres, les surfaces publiques ; enfin le nettoyage de l’ancien code.
+- **l’espace élève refait est en ligne** depuis le 23 novembre 2026 (Pull Request n° 1 fusionnée par le fondateur, `c5f0930`) : version en ligne contrôlée (état du serveur, base joignable ; invitation en Chrono avec ses polices ; page interne `/systeme` invisible en production, 404) ;
+- en cours : le côté coach, sur la même branche `refonte` (fusion quand tout l’espace coach sera refait) : l’accueil du coach, la boîte de réception, le calendrier avec glisser-copier-coller et annulation, la fiche élève, la bibliothèque, les paramètres, les surfaces publiques ; enfin le nettoyage de l’ancien code.
 - règle : `main` ne reçoit que des corrections ou un espace entièrement refait et vérifié ; la branche se fusionne espace par espace.
 
 ## Chantiers en cours (D-120)
