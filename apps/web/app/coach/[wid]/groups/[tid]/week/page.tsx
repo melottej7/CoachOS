@@ -4,6 +4,9 @@ import { addDays, formatShortDate, formatWeekday, isLocalDate, RESULT_STATE_LABE
 import { requireActor } from '@/server/auth/session';
 import { coachContext, isUuid } from '@/server/repo/context';
 import { teamWeek, type TeamWeekItem } from '@/server/repo/group-sessions';
+import { Cluster, EmptyState, Eyebrow, Heading, Icon, IconLinkButton, LinkButton, Stack, Text } from '@/design';
+import { cx } from '@/design/cx';
+import s from '@/views/coach/calendar/calendar.module.css';
 
 export const metadata = { title: 'Semaine du groupe' };
 
@@ -13,16 +16,16 @@ function Cell({ it, href }: { it: TeamWeekItem; href: string }) {
   const tag = it.canceled ? 'Annulée'
     : it.result ? RESULT_STATE_LABELS[it.result as ResultState]
     : it.status === 'draft' ? 'Brouillon' : it.status === 'changed' ? 'Modifiée, non republiée' : 'Publiée';
-  const tone = it.canceled || it.status !== 'published' ? 'attn' : it.result === 'completed' ? 'ok' : it.result === 'missed' ? 'miss' : '';
+  const tone = it.canceled || it.status !== 'published' ? s.cellPending : it.result === 'completed' ? s.cellDone : it.result === 'missed' ? s.cellMissed : undefined;
   return (
-    <Link href={href} className={`tw-item ${tone}`}>
-      <span className="tw-title">{it.groupSessionId ? '👥 ' : ''}{it.title}</span>
-      <span className="tw-tag">{tag}</span>
+    <Link href={href} className={cx(s.cell, tone)}>
+      <span className={s.cellTitle}>{it.groupSessionId ? <Icon name="users" size={14} /> : null}{it.title}</span>
+      <span className={s.cellTag}>{tag}</span>
     </Link>
   );
 }
 
-/** CE-G2-03 : la semaine d’un groupe avec l’état de chaque élève. */
+/** CE-G2-03, refonte Chrono (D-148) : la semaine d’un groupe avec l’état de chaque élève. */
 export default async function TeamWeek({ params, searchParams }: { params: Promise<{ wid: string; tid: string }>; searchParams: Promise<{ semaine?: string }> }) {
   const { wid, tid } = await params;
   const { semaine } = await searchParams;
@@ -40,35 +43,38 @@ export default async function TeamWeek({ params, searchParams }: { params: Promi
   const drafts = w.items.filter((i) => i.status !== 'published').length;
   const without = w.members.filter((m) => !w.items.some((i) => i.athleteId === m.id && !i.canceled));
   return (
-    <>
-      <Link className="back" href={`${base}/group-sessions`}>← Séances de groupe</Link>
-      <div className="head">
-        <div><div className="kicker">Groupe · {w.name}</div><h1>Semaine du {day(monday)}</h1>
-          <p className="sub">{published} séance{published > 1 ? 's' : ''} publiée{published > 1 ? 's' : ''} · {drafts} brouillon{drafts > 1 ? 's' : ''} ou modification{drafts > 1 ? 's' : ''} à publier{without.length ? ` · sans séance : ${without.map((m) => m.name.split(' ')[0]).join(', ')}` : ''}</p></div>
-        <span className="actions">
-          <Link className="btn small" href={`${here}?semaine=${addDays(monday, -7)}`} aria-label="Semaine précédente">‹ Précédente</Link>
-          {monday !== weekStart(today) ? <Link className="btn small" href={here}>Cette semaine</Link> : null}
-          <Link className="btn small" href={`${here}?semaine=${addDays(monday, 7)}`} aria-label="Semaine suivante">Suivante ›</Link>
-          <Link className="btn small primary" href={`${base}/groups/${tid}/sessions/new?date=${days.find((d) => d >= today) ?? monday}`}>📅 Séance pour le groupe</Link>
-        </span>
-      </div>
+    <Stack gap={6}>
+      <Cluster><LinkButton href={`${base}/group-sessions`} variant="ghost" size="sm" icon="chevronLeft">Séances de groupe</LinkButton></Cluster>
+      <Cluster between gap={3} align="end">
+        <Stack gap={1}>
+          <Eyebrow tone="coach">Groupe · {w.name}</Eyebrow>
+          <Heading level={1} size={1}>Semaine du {day(monday)}</Heading>
+          <Text muted>{published} séance{published > 1 ? 's' : ''} publiée{published > 1 ? 's' : ''} · {drafts} brouillon{drafts > 1 ? 's' : ''} ou modification{drafts > 1 ? 's' : ''} à publier{without.length ? ` · sans séance : ${without.map((m) => m.name.split(' ')[0]).join(', ')}` : ''}</Text>
+        </Stack>
+        <LinkButton href={`${base}/groups/${tid}/sessions/new?date=${days.find((d) => d >= today) ?? monday}`} variant="primary" icon="plus">Séance pour le groupe</LinkButton>
+      </Cluster>
+      <Cluster gap={2}>
+        <IconLinkButton href={`${here}?semaine=${addDays(monday, -7)}`} icon="chevronLeft" label="Semaine précédente" />
+        <LinkButton href={here} variant={monday === weekStart(today) ? 'ghost' : 'secondary'}>Cette semaine</LinkButton>
+        <IconLinkButton href={`${here}?semaine=${addDays(monday, 7)}`} icon="chevronRight" label="Semaine suivante" />
+      </Cluster>
       {w.members.length ? (
-        <div className="tw-frame">
-          <table className="tw">
-            <caption className="visually-hidden">Séances du groupe {w.name}, semaine du {day(monday)}, par élève et par jour</caption>
+        <div className={s.tableFrame} tabIndex={0} role="region" aria-label={`Séances du groupe ${w.name}`}>
+          <table className={s.teamWeek}>
+            <caption className="ds-visually-hidden">Séances du groupe {w.name}, semaine du {day(monday)}, par élève et par jour</caption>
             <thead>
-              <tr><th scope="col">Élève</th>{days.map((d) => <th key={d} scope="col" className={d === today ? 'today' : undefined}>{formatWeekday(d).slice(0, 3)} {day(d)}</th>)}</tr>
+              <tr><th scope="col">Élève</th>{days.map((d) => <th key={d} scope="col" className={d === today ? s.todayCol : undefined}>{formatWeekday(d).slice(0, 3)} {day(d)}</th>)}</tr>
             </thead>
             <tbody>
               {w.members.map((m) => (
                 <tr key={m.id}>
-                  <th scope="row"><Link href={`${base}/athletes/${m.id}`}>{m.name}</Link>{m.state === 'invited' ? <span className="muted"> · invité·e</span> : null}</th>
+                  <th scope="row"><Link href={`${base}/athletes/${m.id}`}>{m.name}</Link>{m.state === 'invited' ? <Text as="span" size="sm" muted> · invité·e</Text> : null}</th>
                   {days.map((d) => {
                     const list = w.items.filter((i) => i.athleteId === m.id && i.localDate === d);
                     return (
-                      <td key={d} className={d === today ? 'today' : undefined}>
+                      <td key={d} className={d === today ? s.todayCol : undefined}>
                         {list.map((it) => <Cell key={it.id} it={it} href={it.groupSessionId && it.status !== 'published' ? `${base}/groups/${tid}/sessions/${it.groupSessionId}` : `${base}/athletes/${m.id}/workouts/${it.id}`} />)}
-                        {!list.length ? <span className="tw-empty" aria-label="Aucune séance">·</span> : null}
+                        {!list.length ? <span className={s.none} aria-label="Aucune séance">·</span> : null}
                       </td>
                     );
                   })}
@@ -77,8 +83,8 @@ export default async function TeamWeek({ params, searchParams }: { params: Promi
             </tbody>
           </table>
         </div>
-      ) : <p className="empty">Ce groupe n’a pas encore d’élève que tu suis.</p>}
-      <p className="muted foot-note">👥 = séance créée pour le groupe. Un brouillon de groupe ouvre la séance de groupe pour l’adapter ou la publier.</p>
-    </>
+      ) : <EmptyState icon="users" title="Aucun élève suivi dans ce groupe" action={<LinkButton href={`${base}/athletes?team=${tid}`} variant="primary">Ajouter des élèves</LinkButton>} />}
+      <Text size="sm" muted>L’icône de groupe marque une séance créée pour le groupe. Un brouillon de groupe ouvre la séance de groupe pour l’adapter ou la publier.</Text>
+    </Stack>
   );
 }

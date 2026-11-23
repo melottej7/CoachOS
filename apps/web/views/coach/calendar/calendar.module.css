@@ -56,3 +56,22 @@
 .rowText { flex: 1 1 220px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .rowTitle { font-weight: 700; color: var(--ds-ink); }
 .rowMeta { font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+
+/* Semaine d’un groupe : élèves en lignes, jours en colonnes (défilement horizontal sur téléphone). */
+.tableFrame { overflow-x: auto; border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); }
+.tableFrame:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+.teamWeek { width: 100%; min-width: 860px; border-collapse: collapse; font-size: var(--ds-text-sm); }
+.teamWeek th, .teamWeek td { padding: var(--ds-2); border-bottom: 1px solid var(--ds-rule); text-align: left; vertical-align: top; }
+.teamWeek thead th { font-weight: 700; color: var(--ds-ink-2); white-space: nowrap; text-transform: capitalize; }
+.teamWeek tbody th { min-width: 150px; font-weight: 700; }
+.teamWeek tbody tr:last-child th, .teamWeek tbody tr:last-child td { border-bottom: 0; }
+.teamWeek .todayCol { background: var(--ds-coach-soft); }
+.teamWeek thead .todayCol { color: var(--ds-coach-text); }
+.cell { display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px; padding: 4px 6px; border-left: 3px solid var(--ds-rule-strong); border-radius: var(--ds-radius-sm); background: var(--ds-surface-2); color: var(--ds-ink); text-decoration: none; }
+.cell:hover { background: var(--ds-surface-3); }
+.cellDone { border-left-color: var(--ds-success); }
+.cellMissed { border-left-color: var(--ds-danger); }
+.cellPending { border-left-color: var(--ds-warning); border-left-style: dashed; }
+.cellTitle { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; }
+.cellTag { color: var(--ds-ink-2); }
+.none { color: var(--ds-ink-2); }

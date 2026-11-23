@@ -2231,3 +2231,11 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Supprimés** : ancien graphique de séance, ancienne structure, anciens boutons de publication, d’ajout à la bibliothèque et de fichier FIT.
 - **Preuves** : 375 tests (dont l’arbre de blocs), typecheck, construction, parcours de bout en bout vert (création, publication, lecture élève, retour, traitement). Navigateur (serveur de démonstration) : modèle rapide ajouté, bloc déplacé au clavier (annonce « position 2 sur 2 dans la répétition », focus gardé) puis à la souris (trait d’insertion, ordre inversé), séance fictive enregistrée puis publiée, modification ouverte ; 1440 px et 375 px sans débordement mesuré.
 - **Non vérifié** : séance de musculation et séance mixte dans le navigateur, écriture en texte, « Ajouter des blocs à ma bibliothèque » (logique reprise telle quelle).
+
+## D-148 · Groupes du coach refaits : semaine d’un groupe, créer et publier une séance de groupe · 2026-11-23 (branche `refonte`)
+
+- **Semaine d’un groupe** : tableau élèves × jours (défilement horizontal sur téléphone, colonne d’aujourd’hui à la couleur du coach), chaque séance avec son état (faite, manquée, brouillon ou modification à publier) et l’icône de groupe pour les séances créées pour le groupe.
+- **Séance pour un groupe** : date, sport, titre, constructeur de blocs, consignes, destinataires cochés un à un avec le récapitulatif exact (« 3 brouillons le jeudi… · sans cette séance : … »).
+- **Page d’une séance de groupe** : base commune modifiable (répercutée sur les séances qui la suivent, les adaptées ne changent pas), puis chaque élève et l’état de sa séance, « Adapter » et « Voir », exceptions rappelées avant l’envoi, annonce facultative dans le fil du groupe relue avant l’envoi. Logique inchangée ; lectures en parallèle.
+- **Supprimés** : anciens formulaires de séance de groupe, de base commune et de publication de groupe.
+- **Preuves** : 375 tests, typecheck, construction, parcours de bout en bout vert. **Non vérifié au navigateur** : le serveur de démonstration a été arrêté par l’application pendant que le fondateur consultait la maquette ; à regarder au prochain passage (identité « Coach · Club Trail Ardennes », qui a des groupes).
