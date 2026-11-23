@@ -1,0 +1,58 @@
+/* Calendrier du coach (D-146). */
+.week { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-2); }
+.day { display: flex; flex-direction: column; gap: var(--ds-2); padding: var(--ds-3); border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); min-width: 0; }
+.today { border-color: var(--ds-coach); box-shadow: inset 0 3px 0 var(--ds-coach); }
+.dayHead { display: flex; align-items: baseline; gap: var(--ds-2); margin: 0; font-size: var(--ds-text-sm); font-weight: 600; color: var(--ds-ink-2); text-transform: capitalize; }
+.dayHead strong { font-family: var(--ds-font-display); font-size: var(--ds-text-xl); color: var(--ds-ink); }
+.today .dayHead, .today .dayHead strong { color: var(--ds-coach-text); }
+.past .dayHead strong { color: var(--ds-ink-2); }
+.cards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-2); }
+.card { display: flex; flex-direction: column; gap: 4px; padding: var(--ds-2) var(--ds-3); border: 1px solid var(--ds-rule); border-left: 4px solid var(--ds-rule-strong); border-radius: var(--ds-radius); background: var(--ds-surface-2); color: var(--ds-ink); text-decoration: none; transition: border-color var(--ds-fast) var(--ds-ease), background-color var(--ds-fast) var(--ds-ease); }
+.card:hover { border-color: var(--ds-ink-2); }
+.card:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+.published { border-left-color: var(--ds-success); }
+.changed { border-left-color: var(--ds-warning); }
+.draft { border-left-style: dashed; }
+.canceled .cardTitle { text-decoration: line-through; color: var(--ds-ink-2); }
+.cardTitle { font-weight: 700; font-size: var(--ds-text-base); overflow-wrap: anywhere; }
+.cardMeta { font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.badges { display: flex; flex-wrap: wrap; gap: 4px; }
+.rest { margin: 0; font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.add { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; min-height: 36px; padding: 0 var(--ds-2); border-radius: var(--ds-radius-sm); color: var(--ds-ink-2); font-size: var(--ds-text-sm); font-weight: 700; text-decoration: none; }
+.add:hover { color: var(--ds-ink); background: var(--ds-surface-2); }
+/* Téléphone et tablette : la date à gauche, les séances à droite ; un jour de repos tient sur une ligne. */
+@media (max-width: 1099px) {
+  .day { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: var(--ds-3); row-gap: var(--ds-2); align-items: center; padding: var(--ds-2) var(--ds-3); }
+  .dayHead { grid-row: span 2; flex-direction: column; align-items: center; gap: 0; align-self: start; padding-top: 2px; }
+  .cards, .rest, .add { grid-column: 2; }
+  .rest { display: none; }
+  .add { min-height: 40px; }
+}
+@media (min-width: 1100px) {
+  .week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--ds-2); }
+  .day { min-height: 220px; padding: var(--ds-2); }
+  .dayHead { flex-direction: column; gap: 0; }
+  .add { margin-top: auto; }
+}
+
+/* Outils de la semaine */
+.tools { display: flex; flex-direction: column; gap: var(--ds-4); }
+.panelList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-1); }
+
+/* Adapter la semaine */
+.proposals { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--ds-3); min-width: 0; }
+.proposal { position: relative; display: flex; flex-direction: column; gap: var(--ds-2); padding: var(--ds-4); border: 1px solid var(--ds-rule-strong); border-radius: var(--ds-radius-lg); background: var(--ds-surface); cursor: pointer; }
+.proposal input { position: absolute; z-index: 1; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.proposal:has(input:checked) { border-color: var(--ds-coach); box-shadow: inset 0 0 0 1px var(--ds-coach); background: var(--ds-coach-soft); }
+.proposal:has(input:focus-visible) { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+.proposalHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--ds-2); }
+.changes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; font-size: var(--ds-text-sm); }
+.changes s { color: var(--ds-ink-2); }
+
+/* Listes d’élèves et de groupes */
+.rows { list-style: none; margin: 0; padding: 0; border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); overflow: hidden; }
+.rows > li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-3); padding: var(--ds-3) var(--ds-4); }
+.rows > li + li { border-top: 1px solid var(--ds-rule); }
+.rowText { flex: 1 1 220px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rowTitle { font-weight: 700; color: var(--ds-ink); }
+.rowMeta { font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
