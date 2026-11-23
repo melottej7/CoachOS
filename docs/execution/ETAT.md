@@ -28,7 +28,10 @@ Dernière mise à jour : 2026-11-23, fin de session (D-120 à D-122). Relire d�
 
 Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, pourquoi, ce que ça débloque, le temps, les clics. Tout le reste avance sans toi.
 
-1. **Rendre les mises en ligne autonomes** · 10 minutes · débloque : je pousse le code et les migrations s’appliquent seules ; tu n’as plus rien à faire pour une mise en ligne.
+1. **Rendre les mises en ligne autonomes** · 15 minutes · débloque : je pousse le code moi-même et les migrations s’appliquent seules ; tu n’as plus rien à faire pour une mise en ligne. Aujourd’hui, `git push` depuis ma session échoue (« could not read Username for github.com ») : seul GitHub Desktop a tes identifiants.
+   - GitHub : en haut à droite, ton avatar › **Settings** › tout en bas **« Developer settings »** › **« Personal access tokens »** › **« Fine-grained tokens »** › **« Generate new token »** › nom `CoachOS Mac` › expiration 1 an › Repository access : **« Only select repositories »** › `CoachOS` › Permissions › **Contents : Read and write** › **« Generate token »** › copie-le (il ne s’affiche qu’une fois).
+   - Terminal (onglet de l’app) : colle cette commande en remplaçant `LE_JETON` par le jeton copié, puis Entrée. Je ne vois jamais le jeton ; il reste dans le trousseau du Mac.
+     `printf 'protocol=https\nhost=github.com\nusername=melottej7\npassword=LE_JETON\n' | git credential-osxkeychain store`
    - Supabase : en bas à gauche, clique ton avatar › **« Account preferences »** › **« Access Tokens »** › **« Generate new token »** › nom `Vercel` › **« Generate token »** › copie-le (il ne s’affiche qu’une fois).
    - Vercel : projet coach-os › **Settings › Environment Variables** › **« Add »** trois fois : `SUPABASE_ACCESS_TOKEN` (la valeur copiée, **Sensitive**) ; `SUPABASE_DB_PASSWORD` (le mot de passe de ta base, app Mots de passe « CoachOS base », **Sensitive**) ; `SUPABASE_PROJECT_ID` = `mugtpcvxvdkpjixrqvna`. **« Save »** à chaque fois.
    - Dis-moi « variables Vercel faites » : au prochain déploiement, le journal de construction affichera « base en ligne à jour ».
