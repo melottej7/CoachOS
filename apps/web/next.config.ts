@@ -1,6 +1,8 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // D-125 · Les tests de bout en bout ont leur propre dossier de construction : ils ne touchent jamais au serveur de développement.
+  distDir: process.env.COACHOS_DIST_DIR || '.next',
   // PGlite charge ses fichiers WASM depuis node_modules : ne pas le bundler.
   serverExternalPackages: ['@electric-sql/pglite'],
   transpilePackages: ['@coachos/domain'],

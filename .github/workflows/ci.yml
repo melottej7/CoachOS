@@ -35,3 +35,32 @@ jobs:
         run: sh -c "$(node -p "require('./vercel.json').buildCommand")"
         env:
           NEXT_TELEMETRY_DISABLED: '1'
+
+  bout-en-bout:
+    # D-125 · Boucle coach → élève → coach dans un vrai navigateur (Chromium), serveur isolé sur données fictives.
+    name: Parcours de bout en bout
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Dépendances
+        run: npm ci
+      - name: Navigateur
+        run: npx playwright install --with-deps chromium
+      - name: Parcours
+        run: npm run test:e2e
+        env:
+          CI: '1'
+      - name: Rapport en cas d’échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-bout-en-bout
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

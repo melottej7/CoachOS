@@ -2093,3 +2093,12 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Correction.** `buildCommand` = `node ../../scripts/migrate-remote.mjs && npm run build` ; l’Action GitHub exécute désormais la commande exacte de `vercel.json`, depuis `apps/web`. Rejouée en local : « base en ligne non touchée », construction réussie, code 0.
 - **Leçon.** Une commande de mise en ligne s’essaie depuis le dossier et avec l’enveloppe exacts de la plateforme, jamais depuis un raccourci.
 - **Non prouvé.** La construction Vercel corrigée (au prochain push) ; le script avec les variables Supabase renseignées (`npx supabase@3` téléchargé pendant la construction Vercel).
+
+## D-125 · Filet de sécurité : la boucle coach → élève → coach dans un vrai navigateur · 2026-11-23
+
+- **Pourquoi d’abord.** Étape 1 de D-123 : avant de toucher aux écrans, un test qui prouve que le parcours de tous les jours fonctionne encore, et qui échouera si la refonte le casse.
+- **Outil.** Playwright 1.65 (Chromium), lancé par `npm run test:e2e` et dans l’Action GitHub (job « Parcours de bout en bout », rapport et traces téléversés en cas d’échec).
+- **Isolement.** Serveur de développement dédié (port 3100, dossier de construction `.next-e2e` grâce à `COACHOS_DIST_DIR`), base PGlite neuve avec le jeu fictif (`.data/e2e-pglite`, effacé à chaque lancement), variables Supabase, e-mail, IA et rappels vidées : ni Supabase local (données de recette du fondateur, D-019) ni la base en ligne ne sont touchés. Entrée par `/demo` (développement uniquement).
+- **Parcours vérifié** (`e2e/boucle.spec.ts`) : Marine (1440 px) crée un brouillon pour Camille → Camille (390 px) ne le voit ni dans son programme ni par son adresse → Marine publie → Camille le lit (titre, consignes) puis envoie « Réalisée » avec un commentaire → Marine le retrouve dans la file, l’ouvre, lit le commentaire, le marque traité → Hugo (coach d’un autre espace), Léa (élève d’un autre espace) et Noah (élève du même espace) obtiennent « Page indisponible » sur l’adresse de la séance.
+- **Règle pour la refonte.** Les écrans refaits gardent des noms accessibles (titres, libellés, boutons) ; si un nom change, le test change dans le même commit, jamais supprimé.
+- **Preuves.** Local : 1 test passé en 22,7 s. Action GitHub : au prochain push.
