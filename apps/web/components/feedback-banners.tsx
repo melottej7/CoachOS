@@ -48,6 +48,8 @@ export const FIELD_IDS: Record<string, string> = {
   comment: 'comment',
   name: 'name',
   displayName: 'displayName',
+  firstName: 'firstName',
+  lastName: 'lastName',
   timeZone: 'timeZone',
   email: 'email',
   tagline: 'tagline',

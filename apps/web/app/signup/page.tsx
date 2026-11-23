@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 const ERRORS: Record<string, string> = {
   weak: `Le mot de passe doit contenir au moins ${PASSWORD_MIN} caractères.`,
-  fields: 'Vérifie ton nom et ton adresse e-mail.',
+  fields: 'Vérifie ton prénom, ton nom et ton adresse e-mail.',
   exists: 'Un compte existe déjà avec cette adresse. Connecte-toi, ou utilise « Mot de passe oublié ».',
   rate: 'Trop de tentatives rapprochées. Patiente une minute avant de réessayer.',
   failed: 'La création du compte a échoué. Réessaie dans un instant.',
@@ -35,8 +35,12 @@ export default async function SignUp({ searchParams }: { searchParams: Promise<{
         <form className="form" action="/auth/signup" method="post" style={{ marginTop: 20 }}>
           <input type="hidden" name="next" value={next} />
           <div className="field">
-            <label htmlFor="displayName">Ton nom</label>
-            <input id="displayName" name="displayName" autoComplete="name" required maxLength={100} autoFocus />
+            <label htmlFor="firstName">Prénom</label>
+            <input id="firstName" name="firstName" autoComplete="given-name" required maxLength={50} autoFocus />
+          </div>
+          <div className="field">
+            <label htmlFor="lastName">Nom</label>
+            <input id="lastName" name="lastName" autoComplete="family-name" required maxLength={50} />
           </div>
           <div className="field">
             <label htmlFor="email">Adresse e-mail</label>
