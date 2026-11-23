@@ -1,8 +1,5 @@
 import Link from 'next/link';
 import { goalsAwaitingProgram } from '@/server/commands/programs';
-import { SessionsTabs, toPlanCount } from '@/components/sessions-tabs';
-import { coachContext } from '@/server/repo/context';
-import { portfolio } from '@/server/repo/portfolio';
 import { addDays, formatDuration, formatShortDate, formatWeekRange, formatWeekday, dayOfMonth, isLocalDate, todayIn, weekDates, weekStart, RESULT_STATE_LABELS, WORKOUT_STATUS_LABELS } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachWeek, listAssignedAthletes, openReviews } from '@/server/repo/coach';
@@ -43,9 +40,6 @@ export default async function Calendar({ params, searchParams }: { params: Promi
   const tourDay = days.includes(today) ? today : days[0];
   const newHref = (d: string) => `${base}/athletes/${athlete.id}/workouts/new?date=${d}`;
   const first = athlete.displayName.split(' ')[0];
-  const cctx = await coachContext(actor.userId, wid);
-  const ctxTz = cctx?.workspace.timeZone ?? athlete.timeZone;
-  const toPlan = toPlanCount((await portfolio(actor.userId, wid, ctxTz)).roster);
   const weekTemplates = await listWeekTemplates(actor.userId, wid);
   const drafts = workouts.filter((w) => w.status !== 'published');
   const adapt = athlete.state === 'active' ? await weekProposals(actor.userId, wid, athlete.id, monday) : null;
@@ -61,7 +55,6 @@ export default async function Calendar({ params, searchParams }: { params: Promi
         </div>
         <Link className="btn primary" href={newHref(today >= days[0]! && today <= days[6]! ? today : days[0]!)}>+ Nouvelle séance</Link>
       </div>
-      <SessionsTabs strength={cctx?.modules.strength ?? true} wid={wid} current="week" toPlan={toPlan} />
       {awaiting.map((g) => (
         <div key={g.id} className="banner next-step" role="status">
           <span><strong>Prochaine étape :</strong> l’objectif « {g.title} » est validé. Génère le programme qui permet de l’atteindre (tu relis les risques, rien n’est publié).</span>

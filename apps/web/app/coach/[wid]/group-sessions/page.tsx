@@ -5,7 +5,6 @@ import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { portfolio } from '@/server/repo/portfolio';
 import { groupSessions } from '@/server/repo/group-sessions';
-import { SessionsTabs, toPlanCount } from '@/components/sessions-tabs';
 import { Pill } from '@/components/ui';
 
 export const metadata = { title: 'Séances de groupe' };
@@ -27,7 +26,6 @@ export default async function GroupSessionsPage({ params }: { params: Promise<{ 
     <>
       <div className="head"><div><div className="kicker">Séances</div><h1>Séances de groupe</h1>
         <p className="sub">Une base commune pour tout un groupe : un brouillon par élève, à adapter si besoin, puis une publication que tu valides.</p></div></div>
-      <SessionsTabs strength={ctx.modules.strength} wid={wid} current="groups" toPlan={toPlanCount(roster)} />
       <section className="card" aria-labelledby="gs-teams">
         <div className="card-head"><h2 id="gs-teams">Préparer pour un groupe</h2></div>
         {active.length ? (

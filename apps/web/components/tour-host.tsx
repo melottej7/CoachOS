@@ -40,7 +40,7 @@ function Typed({ text, onTyping, hiddenClass = 'visually-hidden' }: { text: stri
  * progression par action.
  * L’état est gardé dans ce navigateur (commodité, pas de donnée métier).
  */
-export function TourHost({ space, wid, look = 'classic' }: { space: 'athlete' | 'coach'; wid: string; look?: 'classic' | 'chrono' }) {
+export function TourHost({ space, wid }: { space: 'athlete' | 'coach'; wid: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const startParam = searchParams.get('tour');
@@ -120,7 +120,8 @@ export function TourHost({ space, wid, look = 'classic' }: { space: 'athlete' | 
     setStatus('searching');
     let tries = 0;
     const find = () => {
-      const el = step.targets!.map((t) => document.querySelector(`[data-tour="${t}"]`)).find(Boolean) ?? null;
+      const visible = (x: Element | null) => Boolean(x && x.getClientRects().length);
+      const el = step.targets!.map((t) => [...document.querySelectorAll(`[data-tour="${t}"]`)].find(visible) ?? null).find(Boolean) ?? null;
       if (el) {
         target.current = el;
         setFound(el.getAttribute('data-tour'));
@@ -182,103 +183,47 @@ export function TourHost({ space, wid, look = 'classic' }: { space: 'athlete' | 
   const where = step && status === 'elsewhere' ? placeName(step.path) : null;
   const toggleVoice = () => { const v = !voice; setVoice(v); store.set('coachos_tour_voice', v ? '1' : '0'); if (!v && typeof speechSynthesis !== 'undefined') speechSynthesis.cancel(); };
 
-  // Refonte Chrono (D-141) : mêmes étapes et même logique, aux couleurs du design system (clair et sombre).
-  // Le personnage n’a plus de bouton permanent : il n’apparaît que pendant la visite, relancée depuis le Profil (D-129).
-  if (look === 'chrono') {
-    return (
-      <>
-        {step?.targets?.includes('guide-help') ? (
-          <button type="button" className={c.fab} data-tour="guide-help" onClick={start} aria-label="Revoir la visite guidée" title="Revoir la visite guidée">
-            <Mascot size={52} />
-          </button>
-        ) : null}
-        {step && state && status !== 'searching' ? (
-          <>
-            {rect && status === 'shown' ? (
-              <div className={c.spot} aria-hidden="true"
-                style={{ top: rect.top - pad, left: rect.left - pad, width: rect.width + pad * 2, height: rect.height + pad * 2 }} />
-            ) : <div className={c.dim} aria-hidden="true" />}
-            <div className={cx(c.panel, onTop ? c.atTop : c.atBottom)} role="dialog" aria-modal="false" aria-label="Visite guidée CoachOS">
-              <div className={c.talk}>
-                <span className={c.mascot} key={`${state.id}-${state.step}`}>
-                  <Mascot full size={88} mood={step.mood} pose={pose} talking={typing && status === 'shown'} />
-                </span>
-                <p className={c.bubble} aria-live="polite">
-                  {where ? (
-                    <>La suite de la visite se passe sur {where.startsWith('la ') || where.startsWith('une ') ? where : <>la page « {where} »</>}.
-                      <span className={c.where}>{step.href ? 'Je t’y emmène ?' : 'Ouvre-la, je reprendrai là-bas. Tu peux aussi passer cette étape.'}</span></>
-                  ) : <Typed text={(found && step.textFor?.[found]) || step.text} onTyping={setTyping} hiddenClass="ds-visually-hidden" />}
-                </p>
-              </div>
-              <div className={c.bar}>
-                <Button variant="ghost" size="sm" onClick={finish}>{where ? 'Arrêter la visite' : 'Passer'}</Button>
-                <Button variant="ghost" size="sm" icon={voice ? 'check' : undefined} aria-pressed={voice} onClick={toggleVoice}>Voix</Button>
-                <span className={c.progress} role="img" aria-label={`Étape ${state.step + 1} sur ${total}`}>
-                  <span className={c.dots} aria-hidden="true">{Array.from({ length: total }, (_, k) => <span key={k} className={k === state.step ? c.on : undefined} />)}</span>
-                  <span className={c.count} aria-hidden="true">{state.step + 1} / {total}</span>
-                </span>
-                <span className={c.actions}>
-                  {state.step > 0 && !where ? <Button size="sm" onClick={() => go(-1)}>Précédent</Button> : null}
-                  {where ? (
-                    step.href
-                      ? <Button variant="coach" size="sm" onClick={() => router.push(step.href!(wid))}>Y aller</Button>
-                      : <Button variant="coach" size="sm" onClick={() => go(1)}>Passer cette étape</Button>
-                  ) : step.action === 'click' && target.current ? (
-                    <span className={c.hint}>Touche l’élément en surbrillance</span>
-                  ) : (
-                    <Button variant="coach" size="sm" onClick={() => go(1)}>{state.step + 1 === total ? 'Terminer' : 'Suivant'}</Button>
-                  )}
-                </span>
-              </div>
-            </div>
-          </>
-        ) : null}
-      </>
-    );
-  }
-
+  // Refonte Chrono (D-141, D-143) : habillage du design system (clair et sombre), chez l’élève comme chez le coach.
+  // Le personnage n’a plus de bouton permanent : il n’apparaît que pendant la visite, relancée depuis le Profil ou le menu du compte.
   return (
     <>
-      <button type="button" className={`guide-fab ${space}${step && !step.targets?.includes('guide-help') ? ' is-hidden' : ''}${step ? '' : ' is-idle'}`} data-tour="guide-help" onClick={start} aria-label="Revoir la visite guidée" title="Revoir la visite guidée">
-        <Mascot size={52} />
-      </button>
-      {/* Pendant la recherche de l’élément ou l’attente d’une navigation, rien n’est affiché. */}
       {step && state && status !== 'searching' ? (
         <>
           {rect && status === 'shown' ? (
-            <div className="tour-spot" aria-hidden="true"
+            <div className={c.spot} aria-hidden="true"
               style={{ top: rect.top - pad, left: rect.left - pad, width: rect.width + pad * 2, height: rect.height + pad * 2 }} />
-          ) : <div className="tour-dim" aria-hidden="true" />}
-          <div className={`tour-panel ${onTop ? 'at-top' : 'at-bottom'}`} role="dialog" aria-modal="false" aria-label="Visite guidée CoachOS">
-            <div className="tour-talk">
-              <span className="tour-mascot" key={`${state.id}-${state.step}`}>
+          ) : <div className={c.dim} aria-hidden="true" />}
+          <div className={cx(c.panel, onTop ? c.atTop : c.atBottom)} role="dialog" aria-modal="false" aria-label="Visite guidée CoachOS">
+            <div className={c.talk}>
+              <span className={c.mascot} key={`${state.id}-${state.step}`}>
                 <Mascot full size={88} mood={step.mood} pose={pose} talking={typing && status === 'shown'} />
               </span>
-              <p className="bubble" aria-live="polite">
+              <p className={c.bubble} aria-live="polite">
                 {where ? (
                   <>La suite de la visite se passe sur {where.startsWith('la ') || where.startsWith('une ') ? where : <>la page « {where} »</>}.
-                    <span className="tour-where">{step.href ? 'Je t’y emmène ?' : 'Ouvre-la, je reprendrai là-bas. Tu peux aussi passer cette étape.'}</span></>
-                ) : <Typed text={(found && step.textFor?.[found]) || step.text} onTyping={setTyping} />}
+                    <span className={c.where}>{step.href ? 'Je t’y emmène ?' : 'Ouvre-la, je reprendrai là-bas. Tu peux aussi passer cette étape.'}</span></>
+                ) : <Typed text={(found && step.textFor?.[found]) || step.text} onTyping={setTyping} hiddenClass="ds-visually-hidden" />}
               </p>
             </div>
-            <div className="tour-bar">
-              <button type="button" className="link-btn" onClick={finish}>{where ? 'Arrêter la visite' : 'Passer'}</button>
-              <button type="button" className="link-btn" aria-pressed={voice} onClick={toggleVoice}>
-                {voice ? '🔊 Voix' : '🔈 Voix'}
-              </button>
-              <span className="tour-dots" aria-label={`Étape ${state.step + 1} sur ${total}`}>
-                {Array.from({ length: total }, (_, k) => <span key={k} className={k === state.step ? 'on' : ''} />)}
+            <div className={c.bar}>
+              <Button variant="ghost" size="sm" onClick={finish}>{where ? 'Arrêter la visite' : 'Passer'}</Button>
+              <Button variant="ghost" size="sm" icon={voice ? 'check' : undefined} aria-pressed={voice} onClick={toggleVoice}>Voix</Button>
+              <span className={c.progress} role="img" aria-label={`Étape ${state.step + 1} sur ${total}`}>
+                <span className={c.dots} aria-hidden="true">{Array.from({ length: total }, (_, k) => <span key={k} className={k === state.step ? c.on : undefined} />)}</span>
+                <span className={c.count} aria-hidden="true">{state.step + 1} / {total}</span>
               </span>
-              {state.step > 0 && !where ? <button type="button" className="btn small" onClick={() => go(-1)}>Précédent</button> : null}
-              {where ? (
-                step.href
-                  ? <button type="button" className="btn primary small" onClick={() => router.push(step.href!(wid))}>Y aller</button>
-                  : <button type="button" className="btn primary small" onClick={() => go(1)}>Passer cette étape</button>
-              ) : step.action === 'click' && target.current ? (
-                <span className="tour-hint">Touche l’élément en surbrillance</span>
-              ) : (
-                <button type="button" className="btn primary small" onClick={() => go(1)}>{state.step + 1 === total ? 'Terminer' : 'Suivant'}</button>
-              )}
+              <span className={c.actions}>
+                {state.step > 0 && !where ? <Button size="sm" onClick={() => go(-1)}>Précédent</Button> : null}
+                {where ? (
+                  step.href
+                    ? <Button variant="coach" size="sm" onClick={() => router.push(step.href!(wid))}>Y aller</Button>
+                    : <Button variant="coach" size="sm" onClick={() => go(1)}>Passer cette étape</Button>
+                ) : step.action === 'click' && target.current ? (
+                  <span className={c.hint}>Touche l’élément en surbrillance</span>
+                ) : (
+                  <Button variant="coach" size="sm" onClick={() => go(1)}>{state.step + 1 === total ? 'Terminer' : 'Suivant'}</Button>
+                )}
+              </span>
             </div>
           </div>
         </>

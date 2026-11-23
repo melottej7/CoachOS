@@ -35,3 +35,20 @@ export function PublicShell({ children }: { children: ReactNode }) {
 export function AccentScope({ accent, children }: { accent: string; children: ReactNode }) {
   return <div className={`chrono ${s.scope}`} data-accent={accent}>{children}</div>;
 }
+
+/**
+ * Cadre du coach (D-143) : barre latérale sur ordinateur, en-tête et barre basse sur téléphone.
+ * `rail` remplit la barre latérale, `top` l’en-tête du téléphone, `bottom` la barre basse.
+ */
+export function CoachShell({ accent, rail, top, bottom, children }: { accent: string; rail: ReactNode; top: ReactNode; bottom: ReactNode; children: ReactNode }) {
+  return (
+    <div className={`chrono ${s.coach}`} data-accent={accent}>
+      <aside className={s.rail}>{rail}</aside>
+      <div className={s.coachBody}>
+        <div className={s.coachTop}>{top}</div>
+        <main id="contenu" className={s.coachMain}>{children}</main>
+      </div>
+      {bottom}
+    </div>
+  );
+}

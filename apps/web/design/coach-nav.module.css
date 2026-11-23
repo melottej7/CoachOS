@@ -1,0 +1,53 @@
+/* Navigation du coach (D-143) : barre latérale sombre sur ordinateur, barre basse sur téléphone, sous-onglets de section. */
+.railBrand { display: flex; align-items: center; gap: var(--ds-3); min-height: 48px; padding: var(--ds-2); margin-bottom: var(--ds-4); border-radius: var(--ds-radius); color: var(--ds-rail-active); text-decoration: none; }
+.railBrand:hover { background: var(--ds-rail-hover); }
+.railBrand:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: -2px; }
+.railBrandText { display: flex; flex-direction: column; min-width: 0; }
+.railBrandName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--ds-font-display); font-size: var(--ds-text-lg); font-weight: 700; }
+.railBrandRole { font-size: var(--ds-text-xs); color: var(--ds-rail-ink); }
+.railNav { display: flex; flex-direction: column; gap: 2px; }
+.railItem { display: flex; align-items: center; gap: var(--ds-3); min-height: 44px; padding: 0 var(--ds-3); border-radius: var(--ds-radius); color: var(--ds-rail-ink); font-size: var(--ds-text-base); font-weight: 600; text-decoration: none; transition: background-color var(--ds-fast) var(--ds-ease), color var(--ds-fast) var(--ds-ease); }
+.railItem:hover { background: var(--ds-rail-hover); color: var(--ds-rail-active); }
+.railItem:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: -2px; }
+.railItem[aria-current='page'] { background: var(--ds-rail-hover); color: var(--ds-rail-active); box-shadow: inset 3px 0 0 var(--ds-coach); }
+.railCount { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--ds-signal); color: #FFFFFF; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.railSpacer { flex: 1; min-height: var(--ds-6); }
+
+/* Barre basse : téléphone et tablette ; masquée quand la barre latérale apparaît. */
+.bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); padding: 4px 4px calc(4px + env(safe-area-inset-bottom)); background: var(--ds-surface); border-top: 1px solid var(--ds-rule); }
+.tab { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 56px; min-width: 0; border-radius: var(--ds-radius); color: var(--ds-ink-2); font-size: var(--ds-text-xs); font-weight: 600; text-decoration: none; transition: color var(--ds-fast) var(--ds-ease); }
+.tab > span:not(.tabCount) { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab:hover { color: var(--ds-ink); }
+.tab:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: -2px; }
+.tab[aria-current='page'] { color: var(--ds-coach-text); }
+.tab[aria-current='page']::before { content: ''; position: absolute; top: -4px; left: 30%; right: 30%; height: 3px; border-radius: 0 0 3px 3px; background: var(--ds-coach); }
+.tabCount { position: absolute; top: 6px; left: calc(50% + 6px); display: flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--ds-signal); color: #FFFFFF; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+@media (min-width: 1024px) { .bottom { display: none; } }
+
+/* Sous-onglets de section : soulignés, défilables sur téléphone. */
+.sectionTabs { display: flex; gap: var(--ds-1); margin-bottom: var(--ds-6); border-bottom: 1px solid var(--ds-rule); overflow-x: auto; scrollbar-width: none; }
+.sectionTabs::-webkit-scrollbar { display: none; }
+.sectionTab { position: relative; display: inline-flex; align-items: center; gap: var(--ds-2); min-height: 44px; padding: 0 var(--ds-3); color: var(--ds-ink-2); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.sectionTab:hover { color: var(--ds-ink); }
+.sectionTab:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: -2px; border-radius: var(--ds-radius-sm); }
+.sectionTab[aria-current='page'] { color: var(--ds-ink); }
+.sectionTab[aria-current='page']::after { content: ''; position: absolute; left: var(--ds-3); right: var(--ds-3); bottom: -1px; height: 2px; border-radius: 2px; background: var(--ds-coach); }
+.sectionCount { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--ds-signal-soft); color: var(--ds-signal-text); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Menu du compte. */
+.account { position: relative; }
+.accountSummary { display: flex; align-items: center; gap: var(--ds-3); min-height: 44px; min-width: 44px; padding: var(--ds-1); border-radius: var(--ds-radius); color: inherit; list-style: none; cursor: pointer; }
+.accountSummary::-webkit-details-marker { display: none; }
+.accountSummary:hover { background: var(--ds-surface-2); }
+.accountSummary:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+.accountRail .accountSummary { width: 100%; padding: var(--ds-2); color: var(--ds-rail-active); }
+.accountRail .accountSummary:hover { background: var(--ds-rail-hover); }
+.accountPanel { position: absolute; z-index: 50; min-width: 248px; padding: var(--ds-2); background: var(--ds-surface); color: var(--ds-ink); border: 1px solid var(--ds-rule-strong); border-radius: var(--ds-radius-lg); box-shadow: var(--ds-shadow-lg); }
+.down { top: calc(100% + 6px); right: 0; }
+.up { bottom: calc(100% + 6px); left: 0; }
+.menuHead { display: flex; flex-direction: column; gap: 2px; padding: var(--ds-2) var(--ds-3) var(--ds-3); margin-bottom: var(--ds-1); border-bottom: 1px solid var(--ds-rule); }
+.menuHead span { font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.menuItem { display: flex; align-items: center; gap: var(--ds-3); width: 100%; min-height: 44px; padding: 0 var(--ds-3); border: 0; border-radius: var(--ds-radius); background: transparent; color: var(--ds-ink); font: inherit; font-weight: 600; text-align: left; text-decoration: none; cursor: pointer; }
+.menuItem:hover { background: var(--ds-surface-2); }
+.menuItem:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: -2px; }
+.menuItem svg { color: var(--ds-ink-2); }

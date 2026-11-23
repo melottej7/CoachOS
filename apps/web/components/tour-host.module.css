@@ -20,9 +20,6 @@
 .dots span.on { width: 22px; border-radius: 4px; background: var(--ds-coach); }
 .actions { display: inline-flex; align-items: center; gap: var(--ds-2); margin-left: auto; }
 .hint { font-weight: 700; font-size: var(--ds-text-sm); color: var(--ds-coach-text); }
-.fab { position: fixed; right: var(--ds-4); bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 62; display: grid; place-items: center; width: 58px; height: 58px; padding: 0; overflow: hidden; border-radius: 50%; border: 2px solid var(--ds-coach); background: var(--ds-surface); box-shadow: var(--ds-shadow-lg); cursor: pointer; }
-.fab:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
-@media (min-width: 768px) { .fab { bottom: var(--ds-4); } }
 @media (prefers-reduced-motion: no-preference) {
   .spot { transition: top 0.25s, left 0.25s, width 0.25s, height 0.25s; }
   .mascot { animation: tour-hop 0.45s ease-out; }

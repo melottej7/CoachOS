@@ -8,7 +8,6 @@ import { ActionButton } from '@/components/portfolio-forms';
 import { WeekTemplateList } from '@/components/week-template-list';
 import { portfolio } from '@/server/repo/portfolio';
 import { FouleeButton, LibraryBrowser, StarterButton } from '@/components/library-browser';
-import { SessionsTabs, toPlanCount } from '@/components/sessions-tabs';
 
 export const metadata = { title: 'Bibliothèque' };
 
@@ -38,7 +37,6 @@ export default async function Library({ params, searchParams }: { params: Promis
           <Link className="btn primary" href={`/coach/${wid}/library/new`}>+ Nouvelle séance</Link>
         </span>
       </div>
-      <SessionsTabs strength={ctx.modules.strength} wid={wid} current="library" toPlan={toPlanCount(p.roster)} />
       <section className="card">
         <LibraryBrowser wid={wid} athletes={athletes} preselect={pour} teams={p.teams.filter((t) => !t.archived && t.members > 0).map((t) => ({ id: t.id, name: t.name }))} items={items.map((i) => ({ id: i.id, revision: i.revision, category: i.category, workout: i.workout, meta: i.meta }))} />
         {!items.length ? <p className="muted foot-note">Pour démarrer, ajoute les séances de départ (fractionné, tempo, côtes, sortie longue, vélo, natation…) puis adapte-les. Tu peux aussi ajouter une séance déjà créée depuis sa page : « 📚 Ajouter à la bibliothèque ».</p> : null}
