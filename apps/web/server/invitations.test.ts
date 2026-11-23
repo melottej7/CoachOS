@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { openDatabase, setDb, type Db } from './db/client';
 import { USERS, WORKSPACE_A } from './db/fixtures';
-import { setMailer, type EmailMessage } from './email/send';
+import { sendEmail, setMailer, type EmailMessage } from './email/send';
 import { AppError } from './errors';
 import { acceptInvitation, createAthlete, createWorkspace, issueInvitation, latestInvitation, revokeInvitation } from './commands/invitations';
 import { listAssignedAthletes } from './repo/coach';
@@ -97,6 +97,38 @@ describe('inviter et accepter (C03-01 à C03-05)', () => {
     setMailer(async (m) => void sent.push(m));
     const after = await db.query<{ n: number }>('select count(*)::int as n from public.invitations where athlete_id = $1', [aid]);
     expect(after.rows[0]!.n).toBe(before.rows[0]!.n);
+  });
+
+  it('e-mail pas encore activé : message clair et définitif, rien créé, le lien reste possible (D-152)', async () => {
+    const count = async () => (await db.query<{ n: number }>('select count(*)::int as n from public.invitations where athlete_id = $1', [aid])).rows[0]!.n;
+    const before = await count();
+    setMailer(undefined);
+    try {
+      // Resend tant que le domaine n’est pas vérifié : 403 pour toute adresse autre que celle du titulaire.
+      vi.stubEnv('RESEND_API_KEY', 're_test');
+      vi.stubEnv('EMAIL_FROM', 'CoachOS <envoi@example.com>');
+      vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', { status: 403 })));
+      const key = randomUUID();
+      const m = { actorId: USERS.marine, idempotencyKey: key, requestId: randomUUID(), workspaceId: WORKSPACE_A, athleteId: aid, appOrigin: ORIGIN };
+      const err = await issueInvitation(m, { email: 'zoe@demo.coachos.test', delivery: 'email' }).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(AppError);
+      expect((err as AppError).code).toBe('ACTION_FORBIDDEN_OR_FEATURE_DISABLED');
+      expect((err as AppError).message).toContain('Je l’envoie moi-même');
+      expect(await count()).toBe(before);
+      // Même intention basculée sur le lien à copier : aucune trace de l’essai ne bloque la clé.
+      const ok = await issueInvitation(m, { email: 'zoe@demo.coachos.test', delivery: 'link' });
+      expect(ok.status).toBe(201);
+      expect((ok.body as { link?: string }).link).toMatch(/\/invite#token=/);
+      // Sans clé en production : même refus définitif, pas « service indisponible ».
+      vi.stubEnv('RESEND_API_KEY', '');
+      vi.stubEnv('NODE_ENV', 'production');
+      const e2 = await sendEmail({ to: 'x@example.com', subject: 's', text: 't', html: 'h' }).catch((e: unknown) => e);
+      expect((e2 as AppError).code).toBe('ACTION_FORBIDDEN_OR_FEATURE_DISABLED');
+    } finally {
+      vi.unstubAllEnvs();
+      vi.unstubAllGlobals();
+      setMailer(async (m) => void sent.push(m));
+    }
   });
 
   it('renvoyer remplace le lien : l’ancien échoue, le dernier reste valable (C03-05)', async () => {
