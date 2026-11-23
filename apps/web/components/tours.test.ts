@@ -27,22 +27,24 @@ describe('visites du guide CoachOS (CE-C-01)', () => {
   });
 
   it('chaque élément visé existe dans les écrans', () => {
-    const code = [...sources(path.join(WEB, 'app')), ...sources(path.join(WEB, 'components'))]
+    // D-129 : la refonte écrit ses écrans aussi dans design/ et views/.
+    const code = [...sources(path.join(WEB, 'app')), ...sources(path.join(WEB, 'components')), ...sources(path.join(WEB, 'design')), ...sources(path.join(WEB, 'views'))]
       .map((f) => readFileSync(f, 'utf8'))
       .join('\n');
     const targets = new Set(Object.values(TOURS).flatMap((steps) => steps.flatMap((s) => s.targets ?? [])));
     for (const t of targets) {
       // Marqueur fixe (data-tour="x", tour="x") ou conditionnel (data-tour={… ? 'x' : undefined}).
-      const present = code.includes(`tour="${t}"`) || new RegExp(`data-tour=\\{[^}]*'${t}'`).test(code);
+      const present = code.includes(`tour="${t}"`) || code.includes(`tour: '${t}'`) || new RegExp(`data-tour=\\{[^}]*'${t}'`).test(code);
       expect(present, `data-tour="${t}" introuvable`).toBe(true);
     }
   });
 
-  it('chaque visite commence sur une page connue et se termine sur le bouton du guide', () => {
-    for (const steps of Object.values(TOURS)) {
+  it('chaque visite commence sur une page connue et se termine là où elle se relance', () => {
+    for (const [id, steps] of Object.entries(TOURS)) {
       expect(steps[0]!.path).not.toBe('any');
       expect(steps[0]!.href).toBeDefined();
-      expect(steps.at(-1)!.targets).toEqual(['guide-help']);
+      // Coach : le bouton du guide ; élève (D-129, D-141) : le Profil, d’où la visite se relance.
+      expect(steps.at(-1)!.targets).toEqual([id === 'athlete' ? 'tab-profile' : 'guide-help']);
       for (const s of steps) {
         if (s.action === 'click') expect(s.targets?.length).toBeGreaterThan(0);
         for (const k of Object.keys(s.textFor ?? {})) expect(s.targets).toContain(k);

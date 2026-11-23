@@ -1,0 +1,13 @@
+.set { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--ds-3); }
+.legend { padding: 0; font-weight: 700; font-size: var(--ds-text-md); }
+.hint { display: block; margin-top: 2px; font-weight: 400; font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.exercise { border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); overflow: hidden; }
+.head { display: flex; flex-direction: column; gap: 2px; padding: var(--ds-3) var(--ds-4); border-bottom: 1px solid var(--ds-rule); }
+.sets { display: flex; flex-direction: column; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-3); padding: var(--ds-2) var(--ds-4); min-height: 56px; }
+.row + .row { border-top: 1px solid var(--ds-rule); }
+.n { font-family: var(--ds-font-display); font-weight: 600; font-size: var(--ds-text-sm); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ds-ink-2); }
+.inputs { display: flex; gap: var(--ds-3); }
+.unit { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ds-ink-2); }
+.num { width: 68px; min-height: 44px; padding: 0 var(--ds-2); border-radius: var(--ds-radius); border: 1px solid var(--ds-rule-strong); background: var(--ds-surface); color: var(--ds-ink); font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-lg); text-align: center; font-variant-numeric: tabular-nums; }
+.num:focus-visible { outline: none; border-color: var(--ds-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ds-focus) 25%, transparent); }

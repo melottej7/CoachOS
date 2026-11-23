@@ -3,5 +3,10 @@
   "regions": [
     "dub1"
   ],
-  "buildCommand": "node ../../scripts/migrate-remote.mjs && npm run build"
+  "buildCommand": "node ../../scripts/migrate-remote.mjs && npm run build",
+  "git": {
+    "deploymentEnabled": {
+      "refonte": false
+    }
+  }
 }

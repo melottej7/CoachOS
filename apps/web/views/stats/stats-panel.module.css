@@ -1,0 +1,6 @@
+.sports { display: flex; flex-direction: column; gap: var(--ds-2); }
+.sport { display: grid; grid-template-columns: minmax(96px, 30%) minmax(0, 1fr) 48px; align-items: center; gap: var(--ds-3); font-size: var(--ds-text-sm); }
+.sport > :last-child { text-align: right; }
+.defs { display: flex; flex-direction: column; gap: var(--ds-2); font-size: var(--ds-text-sm); }
+.defs dt { font-weight: 700; }
+.defs dd { margin: 0; color: var(--ds-ink-2); }

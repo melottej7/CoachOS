@@ -22,7 +22,13 @@ Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 coul
 
 **Fait** : étape 1, filet de sécurité (D-125 : boucle coach → élève → coach et droits dans un vrai navigateur, `npm run test:e2e`, aussi dans l’Action GitHub) ; étape 2, cible ([docs/18_REFONTE.md](../18_REFONTE.md)) ; étape 3, trois directions visuelles sur le canevas « CoachOS · trois directions » (D-126, recommandation : A · Chrono).
 
-**En attente du fondateur** : choix de la direction, validation de la carte et des changements du socle. En attendant : opérations groupées et annulation côté serveur, chargement parallèle des pages, recherche globale, test des droits table par table (rien de visible ne change avant le choix).
+**Choix du fondateur (D-128)** : direction A · Chrono, avec clair, sombre ou automatique, deux densités pour le coach et la couleur du coach chez l’élève. Carte et changements additifs du socle validés.
+
+**Refonte en cours sur la branche `refonte`** (rien de visible en ligne tant qu’un espace n’est pas entièrement refait ; aperçus Vercel coupés pour cette branche) :
+- fait (vérifié au navigateur, tests, typecheck, construction et parcours de bout en bout verts) : design system dans `apps/web/design/` et page interne `/systeme` (D-128, D-129) ; cadre de l’espace élève ; Aujourd’hui (D-129), détail d’une séance (D-130), Programme semaine et mois (D-131), retour détaillé (D-132), Suivre la séance (D-133), Progression (D-134), Échanges, liste et fil (D-135), Profil avec Clair / Sombre / Automatique (D-136), Notifications (D-137), bilan d’arrivée, présentation du coach, invitation et visite guidée (D-138 à D-141) ; passage à 1440 px et au clavier fait ;
+- l’espace élève est donc entièrement refait : prochaine étape, le fusionner sur `main` (vérification finale, puis Pull Request à créer par le fondateur dans GitHub Desktop) ;
+- ensuite : l’accueil du coach, la boîte de réception, le calendrier avec glisser-copier-coller et annulation, la fiche élève, la bibliothèque, les paramètres, les surfaces publiques ; enfin le nettoyage de l’ancien code.
+- règle : `main` ne reçoit que des corrections ou un espace entièrement refait et vérifié ; la branche se fusionne espace par espace.
 
 ## Chantiers en cours (D-120)
 
@@ -36,7 +42,7 @@ Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 coul
 
 Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, pourquoi, ce que ça débloque, le temps, les clics. Tout le reste avance sans toi.
 
-0. **Choisir la direction visuelle** · 15 minutes · ouvre le canevas « CoachOS · trois directions » (lien dans la conversation du 23 novembre), compare A, B, C en clair et en sombre, puis dis-moi : A, B, C ou un mélange (« A avec les phrases de B », par exemple). Valide aussi la carte et les changements du socle de [docs/18_REFONTE.md](../18_REFONTE.md) (sections 1.2 et 2). C’est le seul choix qui bloque la reconstruction des écrans.
+0. **Fait** : direction choisie (A · Chrono, D-128).
 1. **Rendre les mises en ligne autonomes** · 15 minutes · débloque : je pousse le code moi-même et les migrations s’appliquent seules ; tu n’as plus rien à faire pour une mise en ligne. Aujourd’hui, `git push` depuis ma session échoue (« could not read Username for github.com ») : seul GitHub Desktop a tes identifiants.
    - GitHub : en haut à droite, ton avatar › **Settings** › tout en bas **« Developer settings »** › **« Personal access tokens »** › **« Fine-grained tokens »** › **« Generate new token »** › nom `CoachOS Mac` › expiration 1 an › Repository access : **« Only select repositories »** › `CoachOS` › Permissions › **Contents : Read and write** › **« Generate token »** › copie-le (il ne s’affiche qu’une fois).
    - Terminal (onglet de l’app) : colle cette commande en remplaçant `LE_JETON` par le jeton copié, puis Entrée. Je ne vois jamais le jeton ; il reste dans le trousseau du Mac.
@@ -58,7 +64,7 @@ Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, p
 7. **Relire la page de confidentialité** · 10 minutes · https://coach-os-xi-kohl.vercel.app/confidentialite. Texte exact techniquement, marqué « à faire relire par un professionnel » dans nos documents ; c’est toi qui l’assumes. Facultatif : Vercel › `COACHOS_CONTACT_EMAIL` = ton adresse de contact.
 8. **Rappels sur ton iPhone** · 3 minutes · CoachOS installée sur l’écran d’accueil, ouverte depuis l’icône › 🔔 Notifications › **« Activer les rappels sur cet appareil »** › accepte. Puis publie-toi une séance depuis le Mac : dis-moi si le rappel arrive.
 9. **Paiement en mode test** · quand le chantier 3 commence · 10 minutes · https://stripe.com › compte › **mode test** (interrupteur en haut à droite) › Developers › API keys › copie la **clé secrète de test** (`sk_test_…`) dans Vercel `STRIPE_SECRET_KEY` (Sensitive). Rien ne sera facturé : l’interrupteur reste éteint en production jusqu’à ta décision. Le prix final et le nom du produit sont à toi (hypothèses : 29/59/99 € HT par mois).
-10. **Hygiène des comptes** · 5 minutes · Vercel › Account Settings › Authentication › **« Regenerate »** les codes de récupération (apparus sur une capture) et supprime cette capture.
+10. **Hygiène des comptes** · 5 minutes · Vercel › Account Settings › Authentication › **« Regenerate »** les codes de récupération (apparus sur une capture) et supprime cette capture. GitHub › ton avatar › **Settings** › **« Developer settings »** › **« Personal access tokens »** › **« Fine-grained tokens »** › le jeton collé dans la conversation (il commence par `github_pat_11CUYS`) › **« Delete »** : il a circulé en clair, il ne doit plus servir.
 11. **Facultatif** · crédit Anthropic pour l’IA (budget 10 $ par espace et par mois par défaut) ; vidéos de base des 34 exercices ([VIDEOS_DE_BASE.md](VIDEOS_DE_BASE.md)) ; cocher « Musculation » dans Paramètres › sports encadrés de ton espace si tu veux la musculation.
 
 ## Lancer en local

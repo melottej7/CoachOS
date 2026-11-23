@@ -1,0 +1,23 @@
+/* Barre d’onglets de l’élève : en bas sur téléphone, sous l’en-tête sur grand écran. */
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); padding: 4px 4px calc(4px + env(safe-area-inset-bottom)); background: var(--ds-surface); border-top: 1px solid var(--ds-rule); }
+.tab { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 56px; border-radius: var(--ds-radius); text-decoration: none; color: var(--ds-ink-2); font-size: var(--ds-text-xs); font-weight: 600; transition: color var(--ds-fast) var(--ds-ease), background-color var(--ds-fast) var(--ds-ease); }
+.tab:hover { color: var(--ds-ink); }
+.tab[aria-current='page'] { color: var(--ds-coach-text); }
+.tab[aria-current='page']::before { content: ''; position: absolute; top: -4px; left: 30%; right: 30%; height: 3px; border-radius: 0 0 3px 3px; background: var(--ds-coach); }
+.count { position: absolute; top: 6px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--ds-signal); color: #FFFFFF; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; }
+@media (min-width: 768px) {
+  .tabbar { position: static; padding: 0; border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); margin-bottom: var(--ds-6); }
+  .tab { flex-direction: row; gap: 8px; min-height: 48px; font-size: var(--ds-text-base); }
+  .tab[aria-current='page'] { background: var(--ds-coach-soft); }
+  .tab[aria-current='page']::before { display: none; }
+  .count { position: static; }
+}
+
+/* En-tête compact */
+.header { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: var(--ds-3); height: 56px; padding: 0 var(--ds-4); background: color-mix(in srgb, var(--ds-bg) 88%, transparent); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid var(--ds-rule); }
+.brand { display: flex; align-items: center; gap: var(--ds-3); min-width: 0; text-decoration: none; color: var(--ds-ink); font-weight: 700; }
+.brandName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.headerActions { display: flex; align-items: center; gap: var(--ds-1); }
+.bell { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: var(--ds-radius); color: var(--ds-ink); text-decoration: none; }
+.bell:hover { background: var(--ds-surface-2); }
+.bellDot { position: absolute; top: 9px; right: 9px; width: 9px; height: 9px; border-radius: 50%; background: var(--ds-signal); box-shadow: 0 0 0 2px var(--ds-bg); }

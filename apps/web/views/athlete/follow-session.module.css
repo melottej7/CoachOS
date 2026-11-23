@@ -1,0 +1,31 @@
+.bar { block-size: 6px; border-radius: 3px; background: var(--ds-surface-3); overflow: hidden; }
+.barFill { display: block; block-size: 100%; background: var(--ds-coach); transition: inline-size var(--ds-base) var(--ds-ease); }
+
+.card { display: flex; flex-direction: column; gap: var(--ds-6); padding: var(--ds-6) var(--ds-5); border-radius: var(--ds-radius-lg); border: 1px solid var(--ds-rule); background: var(--ds-surface); border-top: 6px solid var(--ds-rule-strong); }
+.card[data-zone='1'] { border-top-color: var(--ds-z1); } .card[data-zone='2'] { border-top-color: var(--ds-z2); }
+.card[data-zone='3'] { border-top-color: var(--ds-z3); } .card[data-zone='4'] { border-top-color: var(--ds-z4); }
+.card[data-zone='5'] { border-top-color: var(--ds-z5); } .card[data-zone='6'] { border-top-color: var(--ds-z6); }
+.card[data-zone='7'] { border-top-color: var(--ds-z7); }
+.rest { background: var(--ds-coach-soft); border-color: transparent; border-top-color: var(--ds-coach); }
+
+.name { font-family: var(--ds-font-display); font-weight: 700; font-size: clamp(32px, 9vw, 44px); line-height: 1.02; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.target { font-family: var(--ds-font-display); font-weight: 600; font-size: var(--ds-text-2xl); line-height: 1.15; font-variant-numeric: tabular-nums; }
+
+.timer { display: flex; flex-direction: column; align-items: center; gap: var(--ds-3); }
+.clock { font-family: var(--ds-font-display); font-weight: 700; font-size: clamp(72px, 24vw, 120px); line-height: 0.9; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; text-align: center; }
+.timerBar { inline-size: 100%; block-size: 8px; border-radius: 4px; background: var(--ds-surface-3); overflow: hidden; }
+.timerBar > span { display: block; block-size: 100%; background: var(--ds-coach); transition: inline-size 250ms linear; }
+@media (prefers-reduced-motion: reduce) { .timerBar > span, .barFill { transition: none; } }
+
+.done { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-3); padding: var(--ds-3) var(--ds-4); border-radius: var(--ds-radius); background: var(--ds-surface-2); }
+.doneLabel { font-family: var(--ds-font-display); font-weight: 600; font-size: var(--ds-text-sm); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); }
+.unit { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ds-ink-2); }
+.num { inline-size: 72px; min-block-size: 48px; padding: 0 var(--ds-2); border-radius: var(--ds-radius); border: 1px solid var(--ds-rule-strong); background: var(--ds-surface); color: var(--ds-ink); font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-xl); text-align: center; font-variant-numeric: tabular-nums; }
+.num:focus-visible { outline: none; border-color: var(--ds-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ds-focus) 25%, transparent); }
+
+.actions { margin-block-start: auto; }
+.actions .prev { flex: 0 0 auto; inline-size: 56px; padding: 0; }
+
+.end { align-items: center; text-align: center; border-top-color: var(--ds-success); }
+.endMark { display: inline-flex; align-items: center; justify-content: center; inline-size: 80px; block-size: 80px; border-radius: 50%; background: var(--ds-success-soft); color: var(--ds-success); }
+.end .actions { inline-size: 100%; }

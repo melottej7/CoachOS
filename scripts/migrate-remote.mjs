@@ -11,6 +11,11 @@ const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const dryRun = process.argv.includes('--dry-run');
 const { SUPABASE_ACCESS_TOKEN: token, SUPABASE_DB_PASSWORD: password, SUPABASE_PROJECT_ID: project } = process.env;
 
+// D-128 · Seule la mise en ligne de production touche la base en ligne : jamais un aperçu de branche.
+if (process.env.VERCEL && process.env.VERCEL_ENV !== 'production') {
+  console.log(`[migrations] construction « ${process.env.VERCEL_ENV ?? 'inconnue'} » : base en ligne non touchée.`);
+  process.exit(0);
+}
 if (!token || !password || !project) {
   console.log('[migrations] SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD ou SUPABASE_PROJECT_ID absent : base en ligne non touchée.');
   process.exit(0);

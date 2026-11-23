@@ -1,0 +1,23 @@
+.stats { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); overflow: hidden; }
+.stat { display: flex; flex-direction: column; gap: 2px; padding: var(--ds-3) var(--ds-4); min-width: 0; }
+.stat + .stat { border-left: 1px solid var(--ds-rule); }
+.statLabel { font-family: var(--ds-font-display); font-weight: 600; font-size: var(--ds-text-sm); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); }
+.statValue { font-family: var(--ds-font-display); font-weight: 700; font-size: var(--size, 34px); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.statUnit { font-size: 0.45em; font-weight: 600; color: var(--ds-ink-2); margin-left: 0.15em; letter-spacing: 0; }
+.statSub { font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.up { color: var(--ds-success); }
+.down { color: var(--ds-danger); }
+
+.meter { display: block; height: 8px; border-radius: 4px; background: var(--ds-surface-3); overflow: hidden; }
+.meter > span { display: block; height: 100%; border-radius: 4px; background: var(--ds-coach); transition: width var(--ds-slow) var(--ds-ease); }
+.meterSignal > span { background: var(--ds-signal); }
+.meterInk > span { background: var(--ds-ink); }
+
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-rule); overflow: hidden; margin: 0; }
+@media (min-width: 900px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.kpi { display: flex; flex-direction: column; gap: 6px; padding: var(--ds-4); background: var(--ds-surface); min-width: 0; }
+.kpi dd { margin: 0; }
+.kpiValue { font-family: var(--ds-font-display); font-weight: 700; font-size: 32px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.kpiDelta { font-size: var(--ds-text-xs); font-weight: 600; color: var(--ds-ink-2); }
+/* Le sens « mieux / moins bien » n’est pas connu ici (plus d’effort n’est pas forcément mieux) : couleur neutre-chaude. */
+.deltaUp, .deltaDown { color: var(--ds-ink); }

@@ -1,0 +1,6 @@
+.head { display: flex; align-items: center; gap: var(--ds-3); padding-bottom: var(--ds-3); border-bottom: 1px solid var(--ds-rule); margin-bottom: var(--ds-2); }
+.team { inline-size: 40px; block-size: 40px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--ds-radius); background: var(--ds-surface-3); color: var(--ds-ink); }
+.who { flex: 1 1 auto; min-inline-size: 0; }
+.name { font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-xl); line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sub { font-size: var(--ds-text-sm); color: var(--ds-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.actions { display: flex; gap: var(--ds-2); }

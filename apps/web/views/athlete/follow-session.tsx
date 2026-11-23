@@ -1,0 +1,232 @@
+'use client';
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  describeIntensity, describeMeasure, exerciseKey, followSequence, PHASE_LABELS, setLabel,
+  type Block, type Exercise, type FollowStep, type LastDone, type Sport,
+} from '@coachos/domain';
+import { Button, Cluster, Disclosure, Eyebrow, Heading, Icon, LinkButton, Stack, Text, ZoneChip, type ZoneLevel } from '@/design';
+import { cx } from '@/design/cx';
+import { ExerciseMedia } from './exercise-howto';
+import s from './follow-session.module.css';
+
+/** Ce qui a été noté pendant la séance, par étape du mode « Suivre » (D-096, M4). */
+export type FollowLog = Record<number, { reps: number | null; kg: number | null }>;
+export const followLogKey = (sid: string) => `coachos:suivre:${sid}:series`;
+export function readFollowLog(sid: string): FollowLog {
+  try { const v = JSON.parse(localStorage.getItem(followLogKey(sid)) ?? '{}') as unknown; return v && typeof v === 'object' ? (v as FollowLog) : {}; } catch { return {}; }
+}
+
+const isRest = (f: FollowStep) => f.step.phase === 'rest' || f.step.phase === 'recovery';
+const zoneOf = (f: FollowStep): ZoneLevel => (f.step.intensity.kind === 'zone' ? Math.max(1, Math.min(7, f.step.intensity.zone)) as ZoneLevel : 0);
+
+/**
+ * D-096 (M3) · Suivre la séance sur téléphone (refonte Chrono, D-133) : une étape par écran, en très grand —
+ * l’exercice, sa vidéo, la série en cours, puis le repos chronométré qui démarre seul.
+ * La position et les séries notées restent sur ce téléphone pour reprendre plus tard.
+ */
+export function FollowSession({ wid, sid, title, blocks, exercises, backHref, feedbackHref, lastDone = {} }: {
+  wid: string; sid: string; title: string; sport: Sport; blocks: Block[];
+  exercises: Record<string, Exercise>; backHref: string; feedbackHref: string | null;
+  /** D-112 : ce que l’élève a fait la dernière fois, par exercice. */
+  lastDone?: Record<string, LastDone>;
+}) {
+  const seq = useMemo(() => followSequence(blocks), [blocks]);
+  const storeKey = `coachos:suivre:${sid}`;
+  const [i, setI] = useState(0);
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    try { const v = Number(localStorage.getItem(storeKey)); if (Number.isInteger(v) && v > 0 && v <= seq.length) setI(v); } catch { /* stockage indisponible */ }
+    setRestored(true);
+  }, [storeKey, seq.length]);
+  useEffect(() => {
+    if (!restored) return;
+    try { localStorage.setItem(storeKey, String(i)); } catch { /* stockage indisponible */ }
+  }, [i, restored, storeKey]);
+  useWakeLock();
+  // D-096 (M4) : ce que l’élève a vraiment fait, série par série, gardé sur ce téléphone jusqu’à son retour.
+  const [log, setLog] = useState<FollowLog>({});
+  useEffect(() => { setLog(readFollowLog(sid)); }, [sid]);
+  const note = (index: number, v: { reps: number | null; kg: number | null }) => setLog((l) => {
+    const next = { ...l, [index]: v };
+    try { localStorage.setItem(followLogKey(sid), JSON.stringify(next)); } catch { /* stockage indisponible */ }
+    return next;
+  });
+
+  const done = i >= seq.length;
+  const go = (n: number) => setI(Math.max(0, Math.min(seq.length, n)));
+  if (!seq.length) return <Text muted>Cette séance n’a pas de déroulé à suivre.</Text>;
+
+  return (
+    <Stack gap={4}>
+      <Cluster between nowrap>
+        <LinkButton href={backHref} variant="ghost" size="sm" icon="close">Quitter</LinkButton>
+        <Text size="sm" muted tabular>{done ? 'Terminé' : `Étape ${i + 1} sur ${seq.length}`}</Text>
+      </Cluster>
+      <div className={s.bar} role="progressbar" aria-label="Avancement de la séance" aria-valuemin={0} aria-valuemax={seq.length} aria-valuenow={i}>
+        <span className={s.barFill} style={{ inlineSize: `${(i / seq.length) * 100}%` }} />
+      </div>
+      {done ? (
+        <section className={cx(s.card, s.end)} aria-live="polite">
+          <span className={s.endMark} aria-hidden="true"><Icon name="check" size={40} /></span>
+          <Heading level={2} size={2}>Séance terminée, bravo !</Heading>
+          <Text muted>{title}</Text>
+          <Stack gap={2} className={s.actions}>
+            {feedbackHref ? <LinkButton href={feedbackHref} variant="coach" size="lg" block>Donner mon retour</LinkButton> : <Text size="sm" muted>Tu pourras donner ton retour à partir du jour de la séance.</Text>}
+            <Button variant="ghost" block onClick={() => go(0)}>Recommencer</Button>
+          </Stack>
+        </section>
+      ) : (
+        <StepScreen key={i} wid={wid} f={seq[i]!} next={seq[i + 1] ?? null} exercises={exercises} logged={log[i]} lastDone={lastDone}
+          onLog={(v) => note(i, v)} onNext={() => go(i + 1)} onPrev={i > 0 ? () => go(i - 1) : null} />
+      )}
+    </Stack>
+  );
+}
+
+function StepScreen({ wid, f, next, exercises, logged, onLog, onNext, onPrev, lastDone }: {
+  wid: string; f: FollowStep; next: FollowStep | null; exercises: Record<string, Exercise>; lastDone: Record<string, LastDone>;
+  logged?: { reps: number | null; kg: number | null }; onLog: (v: { reps: number | null; kg: number | null }) => void;
+  onNext: () => void; onPrev: (() => void) | null;
+}) {
+  const st = f.step;
+  const ex = st.exercise?.id ? exercises[st.exercise.id] : undefined;
+  const rest = isRest(f);
+  const timed = st.measure.kind === 'time' ? st.measure.seconds : null;
+  const name = st.exercise?.name ?? (rest ? 'Repos' : PHASE_LABELS[st.phase]);
+  const zone = zoneOf(f);
+  // Une étape chronométrée montre sa durée dans le chrono, pas deux fois ; la zone a sa pastille.
+  const target = [timed ? null : describeMeasure(st.measure), st.intensity.kind === 'zone' ? null : describeIntensity(st.intensity)].filter(Boolean).join(' · ');
+  const sets = setLabel(f.sets);
+  const last = !rest && st.exercise ? lastDone[exerciseKey(st.exercise.id, st.exercise.name)] : undefined;
+  const media = !rest && ex ? ExerciseMedia({ wid, exercise: ex }) : null;
+  return (
+    <section className={cx(s.card, rest && s.rest)} data-zone={zone || undefined} aria-labelledby="fw-name">
+      <Stack gap={2}>
+        {sets && !rest ? <Eyebrow tone="coach">{sets}</Eyebrow> : rest ? <Eyebrow>Récupère</Eyebrow> : null}
+        <Cluster gap={3} align="center" nowrap>
+          {zone ? <ZoneChip zone={zone} size="lg" /> : null}
+          <h2 id="fw-name" className={s.name}>{name}</h2>
+        </Cluster>
+        {target ? <p className={s.target}>{target}</p> : null}
+        {st.note ? <Text muted>{st.note}</Text> : null}
+        {last ? <Text size="sm">La dernière fois : <strong>{last.text}</strong></Text> : null}
+      </Stack>
+      {timed ? <Countdown seconds={timed} auto={rest} onEnd={onNext} rest={rest} /> : null}
+      {media || ex?.instructions ? (
+        <Stack gap={2}>
+          {media}
+          {ex?.instructions ? (
+            <Disclosure summary="Consignes" open={!media}><Text prose size="sm" muted>{ex.instructions}</Text></Disclosure>
+          ) : null}
+        </Stack>
+      ) : null}
+      {!rest && st.exercise && st.measure.kind === 'reps' ? (
+        <DoneInputs planned={{ reps: st.measure.reps, kg: st.intensity.kind === 'load' ? st.intensity.min : null }} value={logged} onChange={onLog} />
+      ) : null}
+      <Stack gap={2} className={s.actions}>
+        <Cluster gap={2} nowrap grow>
+          {onPrev ? <Button size="lg" icon="chevronLeft" onClick={onPrev} aria-label="Étape précédente" className={s.prev} /> : null}
+          {/* Étape chronométrée : le chrono est l’action principale, « Suivant » passe au second plan. */}
+          <Button size="lg" variant={timed && !rest ? 'secondary' : 'coach'} icon={rest || timed ? undefined : 'check'} iconRight={rest || timed ? 'chevronRight' : undefined} onClick={onNext}>
+            {rest ? 'Passer le repos' : timed ? 'Suivant' : 'Fait, suivant'}
+          </Button>
+        </Cluster>
+        {next ? (
+          <Text size="sm" muted>Ensuite : {next.step.exercise?.name ?? (isRest(next) ? 'repos' : PHASE_LABELS[next.step.phase].toLowerCase())}{next.step.measure.kind !== 'open' ? ` · ${describeMeasure(next.step.measure)}` : ''}</Text>
+        ) : <Text size="sm" muted>Dernière étape.</Text>}
+      </Stack>
+    </section>
+  );
+}
+
+/** Compte à rebours fondé sur l’heure de fin (juste même si le téléphone met la page en pause). */
+function Countdown({ seconds, auto, rest, onEnd }: { seconds: number; auto: boolean; rest: boolean; onEnd: () => void }) {
+  const [endAt, setEndAt] = useState<number | null>(auto ? Date.now() + seconds * 1000 : null);
+  const [left, setLeft] = useState(seconds);
+  const ended = useRef(false);
+  useEffect(() => {
+    if (endAt === null) return;
+    const tick = () => {
+      const l = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+      setLeft(l);
+      if (l === 0 && !ended.current) {
+        ended.current = true;
+        signal();
+        // Fin du repos : on enchaîne ; fin d’un effort chronométré : l’élève confirme.
+        if (rest) setTimeout(onEnd, 600);
+      }
+    };
+    tick();
+    const t = setInterval(tick, 250);
+    return () => clearInterval(t);
+  }, [endAt, rest, onEnd]);
+  const ratio = endAt === null ? 1 : left / seconds;
+  return (
+    <div className={s.timer}>
+      <p className={s.clock} aria-live={left === 0 ? 'assertive' : 'off'} role="timer">
+        {left === 0 ? (rest ? 'C’est reparti !' : 'Terminé !') : `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`}
+      </p>
+      <div className={s.timerBar} aria-hidden="true"><span style={{ inlineSize: `${ratio * 100}%` }} /></div>
+      {endAt === null ? (
+        <Button variant="primary" size="lg" icon="play" onClick={() => setEndAt(Date.now() + seconds * 1000)}>Démarrer le chrono</Button>
+      ) : left > 0 ? (
+        <Button size="sm" variant="secondary" onClick={() => setEndAt((e) => (e ?? Date.now()) + 15_000)}>+15 s</Button>
+      ) : null}
+    </div>
+  );
+}
+
+/** Fin d’un chrono : vibration si le téléphone la permet, et un bip court. */
+function signal() {
+  try { navigator.vibrate?.([200, 100, 200]); } catch { /* indisponible */ }
+  try {
+    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return;
+    const a = new Ctx();
+    const o = a.createOscillator();
+    const g = a.createGain();
+    o.frequency.value = 880; g.gain.value = 0.15;
+    o.connect(g); g.connect(a.destination);
+    o.start(); o.stop(a.currentTime + 0.25);
+    o.onended = () => void a.close();
+  } catch { /* son indisponible */ }
+}
+
+/** Garde l’écran allumé pendant la séance quand le navigateur le permet (https). */
+function useWakeLock() {
+  useEffect(() => {
+    let lock: { release: () => Promise<void> } | null = null;
+    const nav = navigator as unknown as { wakeLock?: { request: (t: 'screen') => Promise<{ release: () => Promise<void> }> } };
+    const ask = () => { nav.wakeLock?.request('screen').then((l) => { lock = l; }).catch(() => undefined); };
+    ask();
+    const again = () => { if (document.visibilityState === 'visible') ask(); };
+    document.addEventListener('visibilitychange', again);
+    return () => { document.removeEventListener('visibilitychange', again); void lock?.release().catch(() => undefined); };
+  }, []);
+}
+
+/** « Fait : 10 rép. · 16 kg », prérempli avec le prévu ; l’élève corrige s’il a fait moins ou plus. */
+function DoneInputs({ planned, value, onChange }: { planned: { reps: number; kg: number | null }; value?: { reps: number | null; kg: number | null }; onChange: (v: { reps: number | null; kg: number | null }) => void }) {
+  const v = value ?? { reps: planned.reps, kg: planned.kg };
+  const num = (t: string, max: number, step = 1) => (t.trim() === '' ? null : Math.max(0, Math.min(max, Math.round(Number(t.replace(',', '.')) / step) * step)));
+  const changed = v.reps !== planned.reps || v.kg !== planned.kg;
+  return (
+    <div className={s.done}>
+      <span className={s.doneLabel}>Fait</span>
+      <label className={s.unit}>
+        <input className={s.num} type="number" inputMode="numeric" min={0} max={500} value={v.reps ?? ''} aria-label="Répétitions faites"
+          onChange={(e) => onChange({ ...v, reps: num(e.target.value, 500) })} />
+        <span aria-hidden="true">rép.</span>
+      </label>
+      {planned.kg !== null || v.kg !== null ? (
+        <label className={s.unit}>
+          <input className={s.num} type="number" inputMode="decimal" min={0} max={500} step={0.5} value={v.kg ?? ''} aria-label="Charge utilisée en kg"
+            onChange={(e) => onChange({ ...v, kg: num(e.target.value, 500, 0.5) })} />
+          <span aria-hidden="true">kg</span>
+        </label>
+      ) : null}
+      {changed ? <Button size="sm" variant="ghost" onClick={() => onChange({ reps: planned.reps, kg: planned.kg })}>Comme prévu</Button> : null}
+    </div>
+  );
+}

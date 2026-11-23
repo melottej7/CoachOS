@@ -1,0 +1,7 @@
+.goal { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-4); flex-wrap: wrap; }
+.count { font-family: var(--ds-font-display); font-weight: 700; font-size: clamp(48px, 14vw, 72px); line-height: 0.9; color: var(--ds-coach-text); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.results { display: flex; flex-direction: column; border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); overflow: hidden; }
+.result { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--ds-3); align-items: center; padding: var(--ds-3) var(--ds-4); }
+.result + .result { border-top: 1px solid var(--ds-rule); }
+.resultText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.time { font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-2xl); font-variant-numeric: tabular-nums; }

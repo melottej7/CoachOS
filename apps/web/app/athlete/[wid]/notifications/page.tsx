@@ -1,15 +1,14 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireActor } from '@/server/auth/session';
 import { athleteContext } from '@/server/repo/context';
 import { listNotifications, readNotificationSettings } from '@/server/commands/notifications';
-import { NotificationList, NotificationSettings } from '@/components/notifications';
-import { PushSettings } from '@/components/push-settings';
 import { countMyPushDevices, publicVapidKey } from '@/server/commands/push';
+import { Cluster, Eyebrow, Heading, LinkButton, Stack, Text } from '@/design';
+import { NotificationList, NotificationSettings, PushSettings } from '@/views/notifications';
 
 export const metadata = { title: 'Notifications' };
 
-/** D-067 (X36, C25-08) : notifications de l’élève dans cet espace. */
+/** D-067 (X36, C25-08), refonte Chrono (D-137) : notifications de l’élève dans cet espace, rappels et e-mails. */
 export default async function AthleteNotifications({ params }: { params: Promise<{ wid: string }> }) {
   const { wid } = await params;
   const actor = await requireActor();
@@ -17,13 +16,24 @@ export default async function AthleteNotifications({ params }: { params: Promise
   if (!ctx) notFound();
   const [items, settings, devices] = await Promise.all([listNotifications(actor.userId, wid), readNotificationSettings(actor.userId, wid), countMyPushDevices(actor.userId, wid)]);
   return (
-    <>
-      <Link className="back" href={`/athlete/${wid}/today`}>← Aujourd’hui</Link>
-      <h1>Notifications</h1>
-      <p className="sub">Séances publiées et messages de ton coach.</p>
-      <section className="card"><div className="card-body"><NotificationList wid={wid} items={items} timeZone={ctx.athlete.timeZone} /></div></section>
-      <section className="card"><div className="card-body"><PushSettings wid={wid} role="athlete" publicKey={publicVapidKey()} devices={devices} /></div></section>
-      <section className="card"><div className="card-body"><NotificationSettings wid={wid} email={settings.email} /></div></section>
-    </>
+    <Stack gap={8}>
+      <Stack gap={4}>
+        <Cluster><LinkButton href={`/athlete/${wid}/today`} variant="ghost" size="sm" icon="chevronLeft">Aujourd’hui</LinkButton></Cluster>
+        <Stack gap={1}>
+          <Eyebrow tone="coach">{ctx.workspace.name}</Eyebrow>
+          <Heading level={1} size={1}>Notifications</Heading>
+          <Text muted>Séances publiées et messages de ton coach.</Text>
+        </Stack>
+      </Stack>
+      <NotificationList wid={wid} items={items} timeZone={ctx.athlete.timeZone} />
+      <Stack as="section" gap={3} aria-labelledby="rappels">
+        <Heading level={2} size={4} id="rappels">Rappels sur cet appareil</Heading>
+        <PushSettings wid={wid} publicKey={publicVapidKey()} devices={devices} />
+      </Stack>
+      <Stack as="section" gap={3} aria-labelledby="emails">
+        <Heading level={2} size={4} id="emails">E-mails</Heading>
+        <NotificationSettings wid={wid} email={settings.email} />
+      </Stack>
+    </Stack>
   );
 }
