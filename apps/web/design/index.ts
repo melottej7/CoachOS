@@ -5,7 +5,7 @@ export { Button, LinkButton, AnchorButton, IconButton, IconLinkButton, type Butt
 export { Stack, Cluster, Grid, Heading, Eyebrow, Text, Numeric, Card, Divider, Badge, Kbd, Avatar, VisuallyHidden, type Tone } from './core';
 export { ZoneChip, ZoneStrip, ZoneProfile, type ZoneLevel, type ZoneSegment } from './zones';
 export { Banner, EmptyState, Skeleton, Toast } from './feedback';
-export { Stats, Meter, KpiGrid, type StatItem, type KpiItem } from './data';
+export { Stats, Meter, KpiGrid, Facts, type StatItem, type KpiItem, type Fact } from './data';
 export { Field, Input, Textarea, Select, ChoiceGroup, ChipChoice, ChipChecks, ScaleChoice, AnswerList, PasswordInput, Checkbox, type ChoiceOption, type ChipOption, type AnswerOption } from './form';
 export { AppHeader, BrandName, BellLink } from './header';
 export { AthleteShell, AthleteColumn, ProfileLink, PublicShell, AccentScope, CoachShell } from './shell';

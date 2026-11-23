@@ -1,0 +1,16 @@
+/* Boîte de réception · retours (D-145). */
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--ds-3); align-items: end; }
+.queue { list-style: none; margin: 0; padding: 0; border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); overflow: hidden; }
+.queue li + li { border-top: 1px solid var(--ds-rule); }
+.row { display: flex; align-items: center; gap: var(--ds-3); min-height: 64px; padding: var(--ds-3) var(--ds-4); color: var(--ds-ink); text-decoration: none; transition: background-color var(--ds-fast) var(--ds-ease); }
+.row:hover { background: var(--ds-surface-2); }
+.row:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: -2px; background: var(--ds-surface-2); }
+.rowText { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rowTitle { font-weight: 700; overflow-wrap: anywhere; }
+.rowMeta { font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.chevron { flex: none; color: var(--ds-ink-2); }
+.compare { display: grid; gap: var(--ds-6); }
+@media (min-width: 1100px) { .compare { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
+.reps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-1); }
+/* Réponses toutes faites : une phrase longue passe à la ligne au lieu de sortir de la carte. */
+.quick button { height: auto; min-height: 36px; padding-top: 6px; padding-bottom: 6px; white-space: normal; text-align: left; }

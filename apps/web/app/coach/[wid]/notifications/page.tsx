@@ -2,13 +2,13 @@ import { notFound } from 'next/navigation';
 import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { listNotifications, readNotificationSettings } from '@/server/commands/notifications';
-import { NotificationList, NotificationSettings } from '@/components/notifications';
-import { PushSettings } from '@/components/push-settings';
 import { countMyPushDevices, publicVapidKey } from '@/server/commands/push';
+import { Heading, Stack, Text } from '@/design';
+import { NotificationList, NotificationSettings, PushSettings } from '@/views/notifications';
 
 export const metadata = { title: 'Notifications' };
 
-/** D-067 (X36, C25-08) : notifications du coach dans cet espace. */
+/** D-067 (X36, C25-08), refonte Chrono (D-145) : notifications du coach dans cet espace, rappels et e-mails. */
 export default async function CoachNotifications({ params }: { params: Promise<{ wid: string }> }) {
   const { wid } = await params;
   const actor = await requireActor();
@@ -16,12 +16,20 @@ export default async function CoachNotifications({ params }: { params: Promise<{
   if (!ctx) notFound();
   const [items, settings, devices] = await Promise.all([listNotifications(actor.userId, wid), readNotificationSettings(actor.userId, wid), countMyPushDevices(actor.userId, wid)]);
   return (
-    <>
-      <h1>Notifications</h1>
-      <p className="sub">Retours reçus, messages et bilans de tes élèves. Une notification ouvre l’écran où agir.</p>
-      <section className="card"><div className="card-body"><NotificationList wid={wid} items={items} timeZone={ctx.workspace.timeZone} /></div></section>
-      <section className="card"><div className="card-body"><PushSettings wid={wid} role="coach" publicKey={publicVapidKey()} devices={devices} /></div></section>
-      <section className="card"><div className="card-body"><NotificationSettings wid={wid} email={settings.email} /></div></section>
-    </>
+    <Stack gap={8} className="ds-narrow">
+      <Stack gap={1}>
+        <Heading level={1} size={1}>Notifications</Heading>
+        <Text muted>Retours reçus, messages et bilans de tes élèves. Une notification ouvre l’écran où agir.</Text>
+      </Stack>
+      <NotificationList wid={wid} items={items} timeZone={ctx.workspace.timeZone} role="coach" />
+      <Stack as="section" gap={3} aria-labelledby="rappels">
+        <Heading level={2} size={4} id="rappels">Rappels sur cet appareil</Heading>
+        <PushSettings wid={wid} publicKey={publicVapidKey()} devices={devices} role="coach" />
+      </Stack>
+      <Stack as="section" gap={3} aria-labelledby="emails">
+        <Heading level={2} size={4} id="emails">E-mails</Heading>
+        <NotificationSettings wid={wid} email={settings.email} />
+      </Stack>
+    </Stack>
   );
 }

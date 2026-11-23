@@ -5,7 +5,7 @@ import { addDays, newVideoLink, type AppointmentKind } from '@coachos/domain';
 import { fieldError } from '@/components/use-intent';
 import { Button, Checkbox, ChipChoice, Cluster, Disclosure, Field, Input, Select, Stack, Text, Textarea } from '@/design';
 import { ErrorSummary } from '@/views/error-summary';
-import { useAction } from './use-action';
+import { useAction } from '@/views/coach/use-action';
 
 const KINDS: { value: AppointmentKind; label: string }[] = [{ value: 'video', label: 'Visio' }, { value: 'call', label: 'Appel' }, { value: 'in_person', label: 'Rencontre' }];
 const TIMES = ['08:00', '12:00', '18:00', '19:00'];

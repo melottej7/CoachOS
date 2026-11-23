@@ -1,0 +1,11 @@
+.layout { display: grid; gap: var(--ds-6); }
+.side { display: flex; flex-direction: column; gap: var(--ds-4); min-width: 0; }
+.main { display: flex; flex-direction: column; gap: var(--ds-4); min-width: 0; }
+@media (max-width: 1023px) {
+  .hasActive .side { display: none; }
+  .layout:not(.hasActive) .main { display: none; }
+}
+@media (min-width: 1024px) {
+  .layout { grid-template-columns: 320px minmax(0, 1fr); align-items: start; }
+  .side { position: sticky; top: var(--ds-6); max-height: calc(100dvh - 2 * var(--ds-6)); overflow-y: auto; padding-right: var(--ds-2); }
+}

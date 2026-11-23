@@ -1,5 +1,6 @@
 /* Colonne de l’espace élève : téléphone d’abord, centrée sur grand écran, place pour la barre d’onglets. */
-.athlete { min-height: 100vh; min-height: 100dvh; background: var(--ds-bg); color: var(--ds-ink); font-size: var(--ds-text-md); }
+.athlete { --ds-bottom-bar: calc(65px + env(safe-area-inset-bottom)); min-height: 100vh; min-height: 100dvh; background: var(--ds-bg); color: var(--ds-ink); font-size: var(--ds-text-md); }
+@media (min-width: 768px) { .athlete { --ds-bottom-bar: 0px; } }
 .column { max-width: 640px; margin: 0 auto; padding: var(--ds-5) var(--ds-4) calc(96px + env(safe-area-inset-bottom)); }
 @media (min-width: 768px) { .column { padding: var(--ds-6) var(--ds-6) var(--ds-12); } }
 .profileLink { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; text-decoration: none; }
@@ -14,13 +15,13 @@
 .scope { background: transparent; color: inherit; }
 
 /* Cadre du coach : la barre latérale apparaît à partir de 1024 px, la barre basse disparaît. */
-.coach { min-height: 100vh; min-height: 100dvh; background: var(--ds-bg); color: var(--ds-ink); font-size: var(--ds-text-md); }
+.coach { --ds-bottom-bar: calc(65px + env(safe-area-inset-bottom)); min-height: 100vh; min-height: 100dvh; background: var(--ds-bg); color: var(--ds-ink); font-size: var(--ds-text-md); }
 .rail { display: none; }
 .coachBody { min-width: 0; }
 .coachMain { width: 100%; max-width: 1280px; margin: 0 auto; padding: var(--ds-5) var(--ds-4) calc(96px + env(safe-area-inset-bottom)); }
 @media (min-width: 768px) { .coachMain { padding-left: var(--ds-6); padding-right: var(--ds-6); } }
 @media (min-width: 1024px) {
-  .coach { display: grid; grid-template-columns: 248px minmax(0, 1fr); }
+  .coach { --ds-bottom-bar: 0px; display: grid; grid-template-columns: 248px minmax(0, 1fr); }
   .rail { position: sticky; top: 0; display: flex; flex-direction: column; gap: var(--ds-2); height: 100vh; height: 100dvh; padding: var(--ds-4) var(--ds-3); overflow-y: auto; background: var(--ds-rail); color: var(--ds-rail-ink); }
   .coachTop { display: none; }
   .coachMain { padding: var(--ds-8) var(--ds-8) var(--ds-12); }

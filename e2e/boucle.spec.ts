@@ -61,9 +61,10 @@ test('créer, publier, lire sur téléphone, envoyer un retour, traiter ; droits
 
   // 5. Le coach traite le retour depuis la file.
   await coach.goto(`/coach/${WS_A}/review`);
-  const row = coach.getByRole('region', { name: 'Retours à traiter' }).locator('.row').filter({ hasText: title });
+  // D-145 : chaque retour de la file est une ligne entière, un lien vers son détail.
+  const row = coach.getByRole('list', { name: 'Retours à traiter' }).getByRole('link').filter({ hasText: title });
   await expect(row).toBeVisible();
-  await row.getByRole('link', { name: 'Ouvrir le retour' }).click();
+  await row.click();
   await expect(coach.getByText('Bonnes sensations, test de bout en bout.')).toBeVisible();
   await coach.getByRole('button', { name: 'Marquer comme traité' }).click();
   await expect(coach.getByText(/Traité le/)).toBeVisible();

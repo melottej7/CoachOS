@@ -54,3 +54,19 @@ export function KpiGrid({ items }: { items: KpiItem[] }) {
     </dl>
   );
 }
+
+export interface Fact { label: ReactNode; value: ReactNode }
+
+/** Liste de faits « libellé : valeur » (ce que l’élève a déclaré, détails d’une séance). Une ligne par fait. */
+export function Facts({ items }: { items: Fact[] }) {
+  return (
+    <dl className={s.facts}>
+      {items.map((f, i) => (
+        <div key={i} className={s.fact}>
+          <dt>{f.label}</dt>
+          <dd>{f.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}

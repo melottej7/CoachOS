@@ -10,7 +10,7 @@ import {
 } from '@/design';
 import { AppointmentForm } from './appointment-form';
 import { ESTIMATES } from './task-form';
-import { useAction } from './use-action';
+import { useAction } from '@/views/coach/use-action';
 import s from './home.module.css';
 
 export interface TaskView {

@@ -4,7 +4,7 @@ import type { FormEvent } from 'react';
 import { formatEstimate, PRIORITY_LABELS, TASK_KIND_LABELS, TASK_KINDS, TASK_RECURRENCES, TASK_RECURRENCE_LABELS, type TaskKind } from '@coachos/domain';
 import { Button, Cluster, Disclosure, Field, Grid, Input, Select, Stack, Textarea } from '@/design';
 import { ErrorSummary } from '@/views/error-summary';
-import { useAction } from './use-action';
+import { useAction } from '@/views/coach/use-action';
 
 export const ESTIMATES = [5, 10, 15, 20, 30, 45, 60, 90, 120, 180];
 

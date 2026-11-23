@@ -13,14 +13,14 @@ import s from './notifications.module.css';
 const ICON: Record<NotificationKind, IconName> = { workouts_published: 'calendar', message: 'chat', feedback: 'check', bilan_submitted: 'edit', group_message: 'users' };
 const when = (iso: string, tz: string) => new Intl.DateTimeFormat('fr-BE', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: tz }).format(new Date(iso));
 
-export function NotificationList({ wid, items, timeZone }: {
-  wid: string; timeZone: string;
+export function NotificationList({ wid, items, timeZone, role = 'athlete' }: {
+  wid: string; timeZone: string; role?: 'athlete' | 'coach';
   items: { id: string; kind: NotificationKind; text: string; createdAt: string; read: boolean }[];
 }) {
   const router = useRouter();
   const all = useIntent<unknown>();
   const unread = items.filter((n) => !n.read).length;
-  if (!items.length) return <EmptyState icon="bell" title="Rien de neuf">Tu seras prévenu·e ici quand ton coach publie une séance ou t’écrit.</EmptyState>;
+  if (!items.length) return <EmptyState icon="bell" title="Rien de neuf">{role === 'coach' ? 'Tu seras prévenu·e ici quand un élève envoie un retour, un bilan ou un message.' : 'Tu seras prévenu·e ici quand ton coach publie une séance ou t’écrit.'}</EmptyState>;
   return (
     <Stack gap={3}>
       <Cluster between gap={2}>
@@ -88,7 +88,7 @@ const ready = () => Promise.race([navigator.serviceWorker.ready, new Promise<nul
  * D-118 · Rappels sur cet appareil : un abonnement push par navigateur et par espace. Activer = permission du
  * navigateur puis enregistrement sur le serveur ; désactiver = oubli côté serveur puis côté navigateur.
  */
-export function PushSettings({ wid, publicKey, devices }: { wid: string; publicKey: string | null; devices: number }) {
+export function PushSettings({ wid, publicKey, devices, role = 'athlete' }: { wid: string; publicKey: string | null; devices: number; role?: 'athlete' | 'coach' }) {
   const { run, pending, error } = useIntent<{ id: string; devices: number } | { removed: boolean }>();
   const [state, setState] = useState<PushState>('checking');
   const [count, setCount] = useState(devices);
@@ -148,14 +148,14 @@ export function PushSettings({ wid, publicKey, devices }: { wid: string; publicK
 
   return (
     <Stack gap={3}>
-      <Text size="sm" muted>Une alerte courte quand ton coach publie une séance, t’écrit ou écrit au groupe. Jamais le texte du message.</Text>
+      <Text size="sm" muted>{role === 'coach' ? 'Une alerte courte quand un élève envoie un retour, un bilan ou un message. Jamais le texte du message.' : 'Une alerte courte quand ton coach publie une séance, t’écrit ou écrit au groupe. Jamais le texte du message.'}</Text>
       {note ? <Text size="sm">{note}</Text> : state === 'on' ? (
         <Cluster between gap={2}>
           <Badge tone="success" dot>Activés sur cet appareil{count > 1 ? ` · ${count} appareils` : ''}</Badge>
           <Button size="sm" variant="ghost" loading={pending} onClick={() => void disable()}>Désactiver ici</Button>
         </Cluster>
       ) : (
-        <Cluster><Button icon="bell" variant="coach" loading={pending} onClick={() => void enable()}>{pending ? 'Activation…' : 'Activer les rappels sur cet appareil'}</Button></Cluster>
+        <Cluster><Button icon="bell" variant={role === 'coach' ? 'primary' : 'coach'} loading={pending} onClick={() => void enable()}>{pending ? 'Activation…' : 'Activer les rappels sur cet appareil'}</Button></Cluster>
       )}
       {error ? <Text size="sm" tone="danger" role="alert">{error.kind === 'error' ? error.message : 'Connexion perdue. Réessaie.'}</Text> : null}
     </Stack>
