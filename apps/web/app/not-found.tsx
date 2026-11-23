@@ -1,12 +1,13 @@
-import Link from 'next/link';
+import { EmptyState, LinkButton, PublicShell } from '@/design';
 
-/** X50 : message uniforme, aucune donnée, retour à la liste autorisée. */
+/** X50, refonte Chrono (D-156) : message uniforme, aucune donnée, retour à la liste autorisée. */
 export default function NotFound() {
   return (
-    <main id="contenu" className="athlete-zone">
-      <h1>Page indisponible</h1>
-      <p className="sub">Cette page n’existe pas ou n’est pas accessible avec ce compte.</p>
-      <p style={{ marginTop: 16 }}><Link className="btn" href="/choose-workspace">Revenir à mes espaces</Link></p>
-    </main>
+    <PublicShell home="/choose-workspace">
+      <h1 className="ds-visually-hidden">Page indisponible</h1>
+      <EmptyState icon="info" title="Page indisponible" action={<LinkButton href="/choose-workspace" variant="primary">Revenir à mes espaces</LinkButton>}>
+        Cette page n’existe pas ou n’est pas accessible avec ce compte.
+      </EmptyState>
+    </PublicShell>
   );
 }

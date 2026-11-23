@@ -20,13 +20,18 @@ export function ProfileLink({ href, label, tour, children }: { href: string; lab
  * Pages hors espace (invitation, connexion) : même fond, en-tête à la marque CoachOS, colonne étroite centrée.
  * Ces pages ne connaissent pas encore la couleur du coach : elle n’habille que l’aperçu de l’espace (AccentScope).
  */
-export function PublicShell({ children }: { children: ReactNode }) {
+/**
+ * Pages hors espace (connexion, inscription, choix d’espace, compte, erreurs) : marque, colonne étroite par défaut,
+ * plus large pour un texte long ou une grille (`wide`), éléments à droite de l’en-tête (`aside`).
+ */
+export function PublicShell({ children, wide, aside, home = '/' }: { children: ReactNode; wide?: boolean; aside?: ReactNode; home?: string }) {
   return (
     <div className={`chrono ${s.athlete}`} data-accent="emerald">
       <header className={s.publicHeader}>
-        <Link href="/" className={s.publicBrand}><span className={s.publicMark} aria-hidden="true">C</span>CoachOS</Link>
+        <Link href={home} className={s.publicBrand}><span className={s.publicMark} aria-hidden="true">C</span>CoachOS</Link>
+        {aside ? <div className={s.publicAside}>{aside}</div> : null}
       </header>
-      <main id="contenu" className={s.narrow}>{children}</main>
+      <main id="contenu" className={wide ? s.wide : s.narrow}>{children}</main>
     </div>
   );
 }
