@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { formatLongDate, SPORT_LABELS, SPORTS, type LibraryWorkout, type Sport, sportsFor, type Modules } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
 import { fieldError, useIntent } from './use-intent';
-import { fromEditor, toEditor, WorkoutBuilder, type EBlock, type ExerciseOption } from './workout-builder';
+import { fromEditor, toEditor, WorkoutBuilder, type EBlock, type ExerciseOption } from '@/views/coach/workout/builder';
 
 // Lot G2 (D-042) : une base commune → un brouillon par élève choisi. Liste exacte des destinataires avant création.
 

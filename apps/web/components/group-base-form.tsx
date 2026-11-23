@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { SPORT_LABELS, SPORTS, type LibraryWorkout, type Sport, sportsFor, type Modules } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
 import { fieldError, useIntent } from './use-intent';
-import { fromEditor, toEditor, WorkoutBuilder, type EBlock, type ExerciseOption } from './workout-builder';
+import { fromEditor, toEditor, WorkoutBuilder, type EBlock, type ExerciseOption } from '@/views/coach/workout/builder';
 
 // D-046 : modifier la base commune d’une séance de groupe. Répercutée sur les séances qui la suivent encore ;
 // les séances adaptées ne changent pas ; rien n’est publié (la publication reste un geste explicite, plus bas).

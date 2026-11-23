@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { LIBRARY_CATEGORIES, LIBRARY_CATEGORY_LABELS, SPORT_LABELS, SPORTS, type LibraryCategory, type LibraryWorkout, type Sport, sportsFor, type Modules } from '@coachos/domain';
 import { ErrorSummary } from './feedback-banners';
 import { fieldError, useIntent } from './use-intent';
-import { fromEditor, toEditor, WorkoutBuilder, type EBlock, type ExerciseOption, type SavedBlock } from './workout-builder';
+import { fromEditor, toEditor, WorkoutBuilder, type EBlock, type ExerciseOption, type SavedBlock } from '@/views/coach/workout/builder';
 
 /** Créer ou modifier une séance de bibliothèque (D-035) : titre, sport, catégorie, consignes, déroulé par blocs. */
 export function LibraryForm({ wid, initial, savedBlocks, exercises, modules }: {

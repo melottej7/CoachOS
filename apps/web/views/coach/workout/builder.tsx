@@ -3,13 +3,15 @@
 import { createContext, useContext, useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import {
   describeBlock, describeTotals, formatClock, formatKm, formatPace, PHASES, PHASE_LABELS, presetsFor, SPORTS, SPORT_LABELS, stepEstimate,
-  personalTarget, sessionProfile, structureTotals, usesCss, usesFtp, usesVma, ZONE_NAMES, ZONES,
+  personalTarget, sessionView, structureTotals, usesCss, usesFtp, usesVma, ZONE_NAMES, ZONES,
   type Block, type Intensity, type Measure, type Phase, type References, type Sport, type Step, type Zone, exerciseFits, missingEquipment, type AthleteGear, type ExerciseEquipment, exerciseKey, formatShortDate, type LastDone,
 } from '@coachos/domain';
-import { SessionChart } from './session-chart';
+import { canDrop, find, lift, moveBlock, shift, type DropTarget } from '@/components/block-tree';
+import { mutate, newKey } from '@/components/api-client';
+import { Button, Checkbox, Cluster, Field, Icon, IconButton, Input, MenuItem, Popover, Select, SessionStrip, Stack, Text } from '@/design';
+import { cx } from '@/design/cx';
 import { QuickNotation } from './quick-notation';
-import { canDrop, find, lift, moveBlock, shift, type DropTarget } from './block-tree';
-import { mutate, newKey } from './api-client';
+import s from './builder.module.css';
 
 /** D-096 : exercices de la bibliothèque du coach, proposés dans les blocs de musculation. */
 export interface ExerciseOption { id: string; name: string; equipment?: ExerciseEquipment[] }
@@ -29,21 +31,21 @@ function KeepBlocks({ wid, sport, blocks, onSaved }: { wid: string; sport: Sport
   const [title, setTitle] = useState('');
   const [anySport, setAnySport] = useState(false);
   const [state, setState] = useState<'idle' | 'saving' | string>('idle');
-  const ref = useRef<HTMLDetailsElement>(null);
+  const uid = useId();
   if (!blocks.length) return null;
   return (
-    <details className="b-keep" ref={ref}>
-      <summary className="link-btn">💾 Ajouter des blocs à ma bibliothèque</summary>
-      <div className="stack">
-        <fieldset className="choice"><legend>Blocs à ajouter</legend>
+    <details className={s.keep}>
+      <summary className={s.keepSummary}><Icon name="download" size={16} />Ajouter des blocs à ma bibliothèque</summary>
+      <Stack gap={3} className={s.keepBody}>
+        <fieldset className={s.fieldset}><legend className={s.label}>Blocs à ajouter</legend>
           {blocks.map((b, i) => (
-            <label key={i} className="check"><input type="checkbox" aria-label={`Ajouter : ${describeBlock(b, sport)}`} checked={picked.includes(i)} onChange={() => setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i].sort((a, z) => a - z)))} /> <span>{describeBlock(b, sport)}</span></label>
+            <Checkbox key={i} label={describeBlock(b, sport)} checked={picked.includes(i)} onChange={() => setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i].sort((a, z) => a - z)))} />
           ))}
         </fieldset>
-        <label className="field"><span>Nom du bloc</span><input aria-label="Nom du bloc" maxLength={80} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex. Échauffement piste avec gammes" /></label>
-        <label className="check"><input type="checkbox" aria-label="Utilisable dans tous les sports" checked={anySport} onChange={(e) => setAnySport(e.target.checked)} /> <span>Utilisable dans tous les sports (sinon : {SPORT_LABELS[sport].toLowerCase()} seulement)</span></label>
-        <div className="actions">
-          <button type="button" className="btn small primary" disabled={state === 'saving' || !picked.length || !title.trim()} onClick={async () => {
+        <Field id={`${uid}-name`} label="Nom du bloc"><Input id={`${uid}-name`} maxLength={80} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex. Échauffement piste avec gammes" /></Field>
+        <Checkbox checked={anySport} onChange={setAnySport} label={`Utilisable dans tous les sports (sinon : ${SPORT_LABELS[sport].toLowerCase()} seulement)`} />
+        <Cluster gap={2}>
+          <Button size="sm" variant="primary" loading={state === 'saving'} disabled={!picked.length || !title.trim()} onClick={async () => {
             setState('saving');
             const chosen = picked.map((i) => blocks[i]!);
             const body = { title: title.trim(), sport: anySport ? null : sport, blocks: chosen };
@@ -51,10 +53,10 @@ function KeepBlocks({ wid, sport, blocks, onSaved }: { wid: string; sport: Sport
             if (!r.ok) { setState(r.kind === 'error' ? (r.fields[0]?.rule ?? r.message) : 'Connexion perdue. Réessaie.'); return; }
             onSaved({ id: r.data.id, title: body.title, sport: body.sport, blocks: chosen });
             setPicked([]); setTitle(''); setState(chosen.length > 1 ? 'Blocs ajoutés à ta bibliothèque.' : 'Bloc ajouté à ta bibliothèque.');
-          }}>{picked.length > 1 ? 'Ajouter les blocs à ma bibliothèque' : 'Ajouter le bloc à ma bibliothèque'}</button>
-          {state !== 'idle' && state !== 'saving' ? <span className="muted" role="status">{state}</span> : null}
-        </div>
-      </div>
+          }}>{picked.length > 1 ? 'Ajouter les blocs à ma bibliothèque' : 'Ajouter le bloc à ma bibliothèque'}</Button>
+          {state !== 'idle' && state !== 'saving' ? <Text as="span" size="sm" muted role="status">{state}</Text> : null}
+        </Cluster>
+      </Stack>
     </details>
   );
 }
@@ -141,7 +143,7 @@ function PaceInput({ id, value, onChange, label }: { id: string; value: number |
   const [text, setText] = useState(value === null ? '' : clock(value));
   const [bad, setBad] = useState(false);
   return (
-    <input id={id} aria-label={label} inputMode="numeric" placeholder="4:30" size={5} value={text} aria-invalid={bad}
+    <input id={id} className={cx(s.control, s.pace)} aria-label={label} inputMode="numeric" placeholder="4:30" size={5} value={text} aria-invalid={bad}
       onChange={(e) => setText(e.target.value)}
       onBlur={() => {
         if (text.trim() === '') { setBad(false); return onChange(null); }
@@ -161,11 +163,11 @@ function TimeInputs({ seconds, onChange }: { seconds: number; onChange: (s: numb
     if (total > 0) onChange(total);
   };
   return (
-    <span className="b-inline">
-      <input aria-label="Minutes" type="number" min={0} max={1440} value={minText} className="num"
+    <span className={s.inline}>
+      <input aria-label="Minutes" type="number" min={0} max={1440} value={minText} className={cx(s.control, s.num)}
         onChange={(e) => { setMinText(e.target.value); commit(e.target.value, secText); }}
         onBlur={() => { if (minText.trim() === '' && (Number(secText) || 0) === 0) { setMinText('1'); commit('1', secText); } }} /> min
-      <input aria-label="Secondes" type="number" min={0} max={59} step={5} value={secText} className="num"
+      <input aria-label="Secondes" type="number" min={0} max={59} step={5} value={secText} className={cx(s.control, s.num)}
         onChange={(e) => { setSecText(e.target.value); commit(minText, e.target.value); }}
         onBlur={() => { if (secText.trim() === '') setSecText('0'); }} /> s
     </span>
@@ -179,10 +181,10 @@ function MeasureEditor({ id, m, strength = false, onChange }: { id: string; m: M
   // D-096 : en musculation, répétitions d’abord ; la distance n’a pas de sens.
   const kinds = (strength ? ['reps', 'time', 'open'] : ['time', 'distance', 'open']) as Measure['kind'][];
   return (
-    <div className="b-field">
-      <div className="seg" role="radiogroup" aria-label="Mesure du bloc">
+    <div className={s.field}>
+      <div className={s.seg} role="radiogroup" aria-label="Mesure du bloc">
         {kinds.map((k) => (
-          <label key={k}>
+          <label key={k} className={s.segItem}>
             <input type="radio" name={`${id}-measure`} checked={m.kind === k}
               onChange={() => onChange(k === 'time' ? { kind: 'time', seconds: strength ? 30 : 600 } : k === 'distance' ? { kind: 'distance', meters: 1000 } : k === 'reps' ? { kind: 'reps', reps: 10 } : { kind: 'open' })} />
             {MEASURE_LABEL[k]}
@@ -190,22 +192,22 @@ function MeasureEditor({ id, m, strength = false, onChange }: { id: string; m: M
         ))}
       </div>
       {m.kind === 'reps' ? (
-        <span className="b-inline">
-          <input aria-label="Nombre de répétitions" type="number" min={1} max={500} value={m.reps} className="num"
+        <span className={s.inline}>
+          <input aria-label="Nombre de répétitions" type="number" min={1} max={500} value={m.reps} className={cx(s.control, s.num)}
             onChange={(e) => onChange({ kind: 'reps', reps: Math.min(500, Math.max(1, Math.round(Number(e.target.value) || 1))) })} /> répétitions
         </span>
       ) : m.kind === 'time' ? (
         <TimeInputs seconds={m.seconds} onChange={(seconds) => onChange({ kind: 'time', seconds })} />
       ) : m.kind === 'distance' ? (
-        <span className="b-inline">
-          <input aria-label="Distance" type="number" min={1} step={km ? 0.1 : 25} value={km ? m.meters / 1000 : m.meters} className="num"
+        <span className={s.inline}>
+          <input aria-label="Distance" type="number" min={1} step={km ? 0.1 : 25} value={km ? m.meters / 1000 : m.meters} className={cx(s.control, s.num)}
             onChange={(e) => onChange({ kind: 'distance', meters: Math.max(1, Math.round((Number(e.target.value) || 0) * (km ? 1000 : 1))) })} />
-          <select aria-label="Unité de distance" value={km ? 'km' : 'm'}
+          <select className={s.control} aria-label="Unité de distance" value={km ? 'km' : 'm'}
             onChange={(e) => onChange({ kind: 'distance', meters: e.target.value === 'km' ? Math.max(1000, Math.round(m.meters / 1000) * 1000) : m.meters })}>
             <option value="m">m</option><option value="km">km</option>
           </select>
         </span>
-      ) : <span className="muted">{strength ? 'Au maximum, ou jusqu’au repère indiqué en note' : 'À la sensation, jusqu’au repère indiqué en note'}</span>}
+      ) : <span className={s.muted}>{strength ? 'Au maximum, ou jusqu’au repère indiqué en note' : 'À la sensation, jusqu’au repère indiqué en note'}</span>}
     </div>
   );
 }
@@ -232,26 +234,26 @@ function IntensityEditor({ id, i, sport, onChange }: { id: string; i: Intensity;
     }
   };
   const num = (label: string, v: number | null, set: (n: number | null) => void, min: number, max: number) => (
-    <input aria-label={label} type="number" className="num" min={min} max={max} value={v ?? ''} placeholder={v === null ? '—' : undefined}
+    <input aria-label={label} type="number" className={cx(s.control, s.num)} min={min} max={max} value={v ?? ''} placeholder={v === null ? '—' : undefined}
       onChange={(e) => set(e.target.value === '' ? null : Number(e.target.value))} />
   );
   return (
-    <div className="b-field">
-      <label className="b-label" htmlFor={`${id}-ik`}>Intensité</label>
-      <span className="b-inline">
-        <select id={`${id}-ik`} value={i.kind} onChange={(e) => onChange(start(e.target.value as Intensity['kind']))}>
+    <div className={s.field}>
+      <label className={s.label} htmlFor={`${id}-ik`}>Intensité</label>
+      <span className={s.inline}>
+        <select id={`${id}-ik`} className={s.control} value={i.kind} onChange={(e) => onChange(start(e.target.value as Intensity['kind']))}>
           {(sport === 'strength' ? STRENGTH_INTENSITY_KINDS : INTENSITY_KINDS).map((o) => <option key={o.k} value={o.k}>{o.label}</option>)}
         </select>
         {i.kind === 'load' ? (
           <>
-            <input aria-label="Charge en kg" type="number" className="num" min={0.5} max={500} step={0.5} value={i.min}
+            <input aria-label="Charge en kg" type="number" className={cx(s.control, s.num)} min={0.5} max={500} step={0.5} value={i.min}
               onChange={(e) => onChange({ ...i, min: Math.max(0.5, Math.round((Number(e.target.value) || 0.5) * 2) / 2) })} /> kg
           </>
         ) : null}
         {i.kind === 'zone' ? (
-          <span className="seg zones" role="radiogroup" aria-label="Zone">
+          <span className={cx(s.seg, s.zones)} role="radiogroup" aria-label="Zone">
             {ZONES.map((z) => (
-              <label key={z} title={`Z${z} · ${ZONE_NAMES[z]}`} className={`z${z}`}><input type="radio" name={`${id}-zone`} checked={i.zone === z} onChange={() => onChange({ kind: 'zone', zone: z })} />Z{z}</label>
+              <label key={z} title={`Z${z} · ${ZONE_NAMES[z]}`} className={s.segItem} data-zone={z}><input type="radio" name={`${id}-zone`} checked={i.zone === z} onChange={() => onChange({ kind: 'zone', zone: z })} />Z{z}</label>
             ))}
           </span>
         ) : null}
@@ -260,7 +262,7 @@ function IntensityEditor({ id, i, sport, onChange }: { id: string; i: Intensity;
             <PaceInput id={`${id}-pmin`} label="Allure la plus lente" value={i.min} onChange={(v) => v !== null && onChange({ ...i, min: v })} />
             à
             <PaceInput id={`${id}-pmax`} label="Allure la plus rapide (facultatif)" value={i.max} onChange={(v) => onChange({ ...i, max: v })} />
-            <select aria-label="Unité d’allure" value={i.unit} onChange={(e) => onChange({ ...i, unit: e.target.value as 'per_km' | 'per_100m' })}>
+            <select className={s.control} aria-label="Unité d’allure" value={i.unit} onChange={(e) => onChange({ ...i, unit: e.target.value as 'per_km' | 'per_100m' })}>
               <option value="per_km">/km</option><option value="per_100m">/100 m</option>
             </select>
           </>
@@ -268,7 +270,7 @@ function IntensityEditor({ id, i, sport, onChange }: { id: string; i: Intensity;
         {i.kind === 'power' ? (
           <>
             {num('Puissance basse', i.min, (n) => onChange({ ...i, min: n ?? 1 }), 1, 2500)} à {num('Puissance haute (facultatif)', i.max, (n) => onChange({ ...i, max: n }), 1, 2500)}
-            <select aria-label="Unité de puissance" value={i.unit} onChange={(e) => onChange({ ...i, unit: e.target.value as 'w' | 'pct_ftp' })}>
+            <select className={s.control} aria-label="Unité de puissance" value={i.unit} onChange={(e) => onChange({ ...i, unit: e.target.value as 'w' | 'pct_ftp' })}>
               <option value="w">W</option><option value="pct_ftp">% FTP</option>
             </select>
           </>
@@ -276,7 +278,7 @@ function IntensityEditor({ id, i, sport, onChange }: { id: string; i: Intensity;
         {i.kind === 'hr' ? (
           <>
             {num('Fréquence basse', i.min, (n) => onChange({ ...i, min: n ?? 30 }), 30, 250)} à {num('Fréquence haute (facultatif)', i.max, (n) => onChange({ ...i, max: n }), 30, 250)}
-            <select aria-label="Unité de fréquence cardiaque" value={i.unit} onChange={(e) => onChange({ ...i, unit: e.target.value as 'bpm' | 'pct_max' })}>
+            <select className={s.control} aria-label="Unité de fréquence cardiaque" value={i.unit} onChange={(e) => onChange({ ...i, unit: e.target.value as 'bpm' | 'pct_max' })}>
               <option value="bpm">bpm</option><option value="pct_max">% FC max</option>
             </select>
           </>
@@ -302,7 +304,7 @@ interface DnD {
 /** Poignée : glisser à la souris ou au doigt ; flèches haut et bas au clavier. */
 function Handle({ k, index, label, dnd }: { k: string; index: string; label: string; dnd: DnD }) {
   return (
-    <button type="button" className="b-handle" data-handle={k}
+    <button type="button" className={s.handle} data-handle={k}
       aria-label={`Déplacer le bloc ${index} : glisser, ou flèches haut et bas`}
       title="Glisser pour déplacer"
       onPointerDown={(e) => dnd.start(k, e, label)}
@@ -316,20 +318,19 @@ function Handle({ k, index, label, dnd }: { k: string; index: string; label: str
 
 /** Outils d’un bloc : dupliquer, supprimer, et un menu « Plus » (monter, descendre, sortir de la répétition). */
 function Tools({ k, index, inside, dnd, onDuplicate, onRemove }: { k: string; index: string; inside: boolean; dnd: DnD; onDuplicate: () => void; onRemove: () => void }) {
-  const ref = useRef<HTMLDetailsElement>(null);
-  const close = () => ref.current?.removeAttribute('open');
   return (
-    <span className="b-tools">
-      <button type="button" className="icon-btn" onClick={onDuplicate} aria-label={`Dupliquer le bloc ${index}`} title="Dupliquer">⧉</button>
-      <button type="button" className="icon-btn danger" onClick={onRemove} aria-label={`Supprimer le bloc ${index}`} title="Supprimer">✕</button>
-      <details className="b-more" ref={ref}>
-        <summary className="icon-btn" aria-label={`Plus d’actions pour le bloc ${index}`} title="Plus">⋯</summary>
-        <div className="b-menu">
-          <button type="button" onClick={() => { dnd.shift(k, -1); close(); }}>Monter</button>
-          <button type="button" onClick={() => { dnd.shift(k, 1); close(); }}>Descendre</button>
-          {inside ? <button type="button" onClick={() => { dnd.lift(k); close(); }}>Sortir de la répétition</button> : null}
-        </div>
-      </details>
+    <span className={s.tools}>
+      <IconButton icon="copy" size="sm" onClick={onDuplicate} label={`Dupliquer le bloc ${index}`} />
+      <IconButton icon="trash" size="sm" onClick={onRemove} label={`Supprimer le bloc ${index}`} />
+      <Popover iconOnly icon="more" label={`Plus d’actions pour le bloc ${index}`}>
+        {(close) => (
+          <>
+            <MenuItem onClick={() => { dnd.shift(k, -1); close(); }}>Monter</MenuItem>
+            <MenuItem onClick={() => { dnd.shift(k, 1); close(); }}>Descendre</MenuItem>
+            {inside ? <MenuItem onClick={() => { dnd.lift(k); close(); }}>Sortir de la répétition</MenuItem> : null}
+          </>
+        )}
+      </Popover>
     </span>
   );
 }
@@ -360,54 +361,54 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools }: { step:
     est.seconds ? `environ ${formatClock(est.seconds)}` : null,
   ].filter(Boolean);
   return (
-    <div className={`b-step phase-${step.phase}${zone ? ` z${zone}` : ''}`} role="group" aria-label={`Bloc ${index}`}>
-      <div className="b-head">
+    <div className={cx(s.step, (step.phase === 'recovery' || step.phase === 'rest') && s.easy)} data-zone={zone ?? undefined} role="group" aria-label={`Bloc ${index}`}>
+      <div className={s.head}>
         {head}
-        <select className="b-phase" aria-label={`Type du bloc ${index}`} value={step.phase} onChange={(e) => onChange({ ...step, phase: e.target.value as Phase })}>
+        <select className={cx(s.control, s.phase)} aria-label={`Type du bloc ${index}`} value={step.phase} onChange={(e) => onChange({ ...step, phase: e.target.value as Phase })}>
           {PHASES.map((p) => <option key={p} value={p}>{PHASE_LABELS[p]}</option>)}
         </select>
         {step.sport === 'strength' && sport !== 'strength' && !MULTISPORT.includes(sport) ? (
-          <button type="button" className="pill b-sport-tag" title="Étape de renforcement dans une séance d’endurance ; toucher pour la remettre en course"
-            onClick={() => onChange({ ...step, sport: null, exercise: null, measure: step.measure.kind === 'reps' ? { kind: 'time', seconds: 600 } : step.measure, intensity: step.intensity.kind === 'load' ? { kind: 'none' } : step.intensity })}>Renfo ✕</button>
+          <button type="button" className={s.sportTag} title="Étape de renforcement dans une séance d’endurance ; toucher pour la remettre en course"
+            onClick={() => onChange({ ...step, sport: null, exercise: null, measure: step.measure.kind === 'reps' ? { kind: 'time', seconds: 600 } : step.measure, intensity: step.intensity.kind === 'load' ? { kind: 'none' } : step.intensity })}>Renfo<Icon name="close" size={14} /></button>
         ) : null}
         {MULTISPORT.includes(sport) ? (
-          <select aria-label={`Sport du bloc ${index}`} value={step.sport ?? ''} onChange={(e) => onChange({ ...step, sport: (e.target.value || null) as Sport | null })}>
+          <select className={s.control} aria-label={`Sport du bloc ${index}`} value={step.sport ?? ''} onChange={(e) => onChange({ ...step, sport: (e.target.value || null) as Sport | null })}>
             <option value="">Sport…</option>
             {(MULTI_STEP_SPORTS[sport] ?? SPORTS).map((s) => <option key={s} value={s}>{SPORT_LABELS[s]}</option>)}
           </select>
         ) : null}
-        <span className="b-spacer" />
+        <span className={s.spacer} />
         {tools}
       </div>
-      <div className="b-body">
+      <div className={s.body}>
         {strength && step.phase !== 'rest' && step.phase !== 'recovery' ? (
-          <div className="b-field">
-            <label className="b-label" htmlFor={`${id}-ex`}>Exercice</label>
-            <input id={`${id}-ex`} list={`${id}-exl`} maxLength={80} value={step.exercise?.name ?? ''} placeholder={exercises.length ? 'Choisis ou écris un exercice' : 'Ex. Squat goblet'}
+          <div className={s.field}>
+            <label className={s.label} htmlFor={`${id}-ex`}>Exercice</label>
+            <input id={`${id}-ex`} className={s.control} list={`${id}-exl`} maxLength={80} value={step.exercise?.name ?? ''} placeholder={exercises.length ? 'Choisis ou écris un exercice' : 'Ex. Squat goblet'}
               onChange={(e) => {
                 const name = e.target.value;
                 const hit = exercises.find((x) => x.name.toLowerCase() === name.trim().toLowerCase());
                 onChange({ ...step, exercise: name.trim() ? { id: hit?.id ?? null, name: hit?.name ?? name } : null });
               }} />
             <datalist id={`${id}-exl`}>{exercises.map((x) => <option key={x.id} value={x.name} label={fit(x) === false ? 'matériel absent' : undefined} />)}</datalist>
-            {step.exercise && !step.exercise.id && exercises.length ? <span className="b-hint">Pas dans ta bibliothèque : l’élève verra le nom, sans vidéo.</span> : null}
-            {lastDone ? <span className="b-hint">Dernière fois : <strong>{lastDone.text}</strong> ({formatShortDate(lastDone.date)})</span> : null}
+            {step.exercise && !step.exercise.id && exercises.length ? <span className={s.hint}>Pas dans ta bibliothèque : l’élève verra le nom, sans vidéo.</span> : null}
+            {lastDone ? <span className={s.hint}>Dernière fois : <strong>{lastDone.text}</strong> ({formatShortDate(lastDone.date)})</span> : null}
             {chosen && chosenFits === false && athlete ? (
-              <span className="b-hint b-warn" role="note">⚠ D’après son bilan, {athlete.first} n’a pas le matériel ({missingEquipment(chosen.equipment ?? [])}) : choisis une variante, ou parlez-en ensemble.</span>
+              <span className={cx(s.hint, s.warn)} role="note"><Icon name="alert" size={14} /> D’après son bilan, {athlete.first} n’a pas le matériel ({missingEquipment(chosen.equipment ?? [])}) : choisis une variante, ou parlez-en ensemble.</span>
             ) : null}
           </div>
         ) : null}
         <MeasureEditor id={id} m={step.measure} strength={strength} onChange={(m) => onChange({ ...step, measure: m })} />
         <IntensityEditor id={id} i={step.intensity} sport={strength ? 'strength' : (stepSport ?? 'running')} onChange={(i) => onChange({ ...step, intensity: i })} />
-        {hint.length ? <p className="b-hint">{hint.join(' · ')}</p> : null}
+        {hint.length ? <p className={s.hint}>{hint.join(' · ')}</p> : null}
         {noteOpen ? (
-          <div className="b-field">
-            <label className="b-label" htmlFor={`${id}-note`}>Note</label>
-            <input id={`${id}-note`} maxLength={200} value={step.note ?? ''} placeholder="Par exemple : en côte, pieds rapides, pull-buoy"
+          <div className={s.field}>
+            <label className={s.label} htmlFor={`${id}-note`}>Note</label>
+            <input id={`${id}-note`} className={s.control} maxLength={200} value={step.note ?? ''} placeholder="Par exemple : en côte, pieds rapides, pull-buoy"
               onChange={(e) => onChange({ ...step, note: e.target.value || null })} />
           </div>
         ) : (
-          <button type="button" className="link-btn b-note-add" onClick={() => setNoteOpen(true)}>+ Ajouter une note</button>
+          <span><Button size="sm" variant="ghost" icon="plus" onClick={() => setNoteOpen(true)}>Ajouter une note</Button></span>
         )}
       </div>
     </div>
@@ -419,14 +420,14 @@ function BlockList({ blocks, sport, depth, prefix, parent, refs, dnd, onChange }
 }) {
   const update = (k: number, b: EBlock) => onChange(blocks.map((x, i) => (i === k ? b : x)));
   return (
-    <ol className={`b-list depth-${depth}`} data-parent={parent ?? ''}>
+    <ol className={s.list} data-b="list" data-depth={depth} data-parent={parent ?? ''}>
       {blocks.map((b, k) => {
         const index = prefix ? `${prefix}.${k + 1}` : String(k + 1);
         const label = describeBlock(fromEditor([b])[0]!, sport);
         const head = (
           <>
             <Handle k={b._k} index={index} label={label} dnd={dnd} />
-            <span className="b-index" aria-hidden="true">{index}</span>
+            <span className={s.index} aria-hidden="true">{index}</span>
           </>
         );
         const tools = (
@@ -435,25 +436,25 @@ function BlockList({ blocks, sport, depth, prefix, parent, refs, dnd, onChange }
             onRemove={() => onChange(blocks.filter((_, i) => i !== k))} />
         );
         return (
-          <li key={b._k} data-bk={b._k} data-kind={b.type} className={dnd.dragging === b._k ? 'is-dragging' : undefined}>
+          <li key={b._k} data-bk={b._k} data-kind={b.type} className={dnd.dragging === b._k ? s.dragging : undefined}>
             {b.type === 'step' ? (
               <StepEditor step={b} sport={sport} index={index} refs={refs} onChange={(s) => update(k, s)} head={head} tools={tools} />
             ) : (
-              <div className={`b-repeat depth-${depth}`} role="group" aria-label={`Répétition ${index}`}>
-                <div className="b-head b-repeat-head">
+              <div className={cx(s.repeat, depth > 0 && s.nested)} data-b="repeat" role="group" aria-label={`Répétition ${index}`}>
+                <div className={cx(s.head, s.repeatHead)} data-b="repeat-head">
                   {head}
-                  <span className="b-repeat-icon" aria-hidden="true">↻</span>
-                  <label className="b-inline b-times">Répéter
-                    <input type="number" className="num" min={2} max={50} value={b.times} aria-label={`Nombre de répétitions du bloc ${index}`}
+                  <span className={s.repeatIcon} aria-hidden="true"><Icon name="repeat" size={16} /></span>
+                  <label className={cx(s.inline, s.times)}>Répéter
+                    <input type="number" className={cx(s.control, s.num)} min={2} max={50} value={b.times} aria-label={`Nombre de répétitions du bloc ${index}`}
                       onChange={(e) => update(k, { ...b, times: Math.min(50, Math.max(2, Number(e.target.value) || 2)) })} /> fois
                   </label>
-                  <span className="b-spacer" />
+                  <span className={s.spacer} />
                   {tools}
                 </div>
                 <BlockList blocks={b.steps} sport={sport} depth={depth + 1} prefix={index} parent={b._k} refs={refs} dnd={dnd} onChange={(steps) => update(k, { ...b, steps })} />
-                <div className="actions b-repeat-foot">
-                  <button type="button" className="btn small" onClick={() => update(k, { ...b, steps: [...b.steps, newStep('recovery')] })}>+ Étape dans la répétition</button>
-                  {depth === 0 ? <button type="button" className="btn small" onClick={() => update(k, { ...b, steps: [...b.steps, newRepeat()] })}>+ Série imbriquée</button> : null}
+                <div className={s.repeatFoot} data-b="repeat-foot">
+                  <Button size="sm" icon="plus" onClick={() => update(k, { ...b, steps: [...b.steps, newStep('recovery')] })}>Étape dans la répétition</Button>
+                  {depth === 0 ? <Button size="sm" icon="plus" onClick={() => update(k, { ...b, steps: [...b.steps, newRepeat()] })}>Série imbriquée</Button> : null}
                 </div>
               </div>
             )}
@@ -523,7 +524,7 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
     const li = el.closest<HTMLElement>('li[data-bk]');
     if (!li) {
       // Sous la liste : fin de séance.
-      const list = root.current.querySelector<HTMLElement>('.b-list.depth-0');
+      const list = root.current.querySelector<HTMLElement>('[data-b="list"][data-depth="0"]');
       if (!list) return null;
       const r = list.getBoundingClientRect();
       return y > r.bottom - 4 ? { parent: null, before: null, top: r.bottom + 2, left: r.left, width: r.width } : null;
@@ -535,15 +536,15 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
     const r = li.getBoundingClientRect();
     const lr = parentList.getBoundingClientRect();
     if (li.dataset.kind === 'repeat') {
-      const head = li.querySelector<HTMLElement>(':scope > .b-repeat > .b-repeat-head')!.getBoundingClientRect();
-      const inner = li.querySelector<HTMLElement>(':scope > .b-repeat > .b-list')!;
+      const head = li.querySelector<HTMLElement>(':scope > [data-b="repeat"] > [data-b="repeat-head"]')!.getBoundingClientRect();
+      const inner = li.querySelector<HTMLElement>(':scope > [data-b="repeat"] > [data-b="list"]')!;
       const ir = inner.getBoundingClientRect();
       if (y < head.top + head.height / 2) return { parent, before: k, top: r.top - 6, left: lr.left, width: lr.width };
       if (y <= head.bottom + 4) {
         const first = inner.firstElementChild as HTMLElement | null;
         return { parent: k, before: first?.dataset.bk ?? null, top: ir.top - 4, left: ir.left, width: ir.width };
       }
-      if (el.closest('.b-repeat-foot') && el.closest('li[data-bk]') === li) return { parent: k, before: null, top: ir.bottom + 3, left: ir.left, width: ir.width };
+      if (el.closest('[data-b="repeat-foot"]') && el.closest('li[data-bk]') === li) return { parent: k, before: null, top: ir.bottom + 3, left: ir.left, width: ir.width };
       if (y > r.bottom - 10) {
         const next = li.nextElementSibling as HTMLElement | null;
         return { parent, before: next?.dataset.bk ?? null, top: r.bottom + 5, left: lr.left, width: lr.width };
@@ -614,80 +615,81 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
 
   const runSport = usesVma(sport) || MULTISPORT.includes(sport);
   const strength = sport === 'strength';
+  const view = value.length ? sessionView(blocks, sport, refs) : null;
   return (
     <ExercisesCtx.Provider value={exercises}>
     <GearCtx.Provider value={gear ?? null}>
     <LastCtx.Provider value={lastDone ?? {}}>
-    <section className={`builder${drag?.active ? ' is-sorting' : ''}`} aria-labelledby="builder-title" data-tour="builder" ref={root}>
-      <div className="b-title-row">
-        <h2 id="builder-title">Déroulé de la séance</h2>
-        <p className="muted">{strength
-          ? 'Choisis tes exercices, leurs répétitions, la charge et le repos ; « + Série » répète un exercice (4 × 10). Glisse un bloc par sa poignée pour le déplacer.'
-          : 'Construis la séance bloc par bloc : durée ou distance, zone, répétitions et séries. Glisse un bloc par sa poignée pour le déplacer.'}</p>
-      </div>
+    <section className={cx(s.builder, drag?.active && s.sorting)} aria-labelledby="builder-title" data-tour="builder" ref={root}>
+      <Stack gap={1}>
+        <h2 id="builder-title" className={s.title}>Déroulé de la séance</h2>
+        <Text size="sm" muted>{strength
+          ? 'Choisis tes exercices, leurs répétitions, la charge et le repos ; « Série » répète un exercice (4 × 10). Glisse un bloc par sa poignée pour le déplacer.'
+          : 'Construis la séance bloc par bloc : durée ou distance, zone, répétitions et séries. Glisse un bloc par sa poignée pour le déplacer.'}</Text>
+      </Stack>
       {value.length ? (
         <BlockList blocks={value} sport={sport} depth={0} prefix="" parent={null} refs={refs} dnd={dnd} onChange={onChange} />
       ) : (
-        <p className="empty b-empty">Aucun bloc pour l’instant. Ajoute une étape, une répétition ou pars d’un modèle.</p>
+        <p className={s.empty}>Aucun bloc pour l’instant. Ajoute une étape, une répétition ou pars d’un modèle.</p>
       )}
-      <div className="actions" data-tour="builder-add">
+      <Cluster gap={2} data-tour="builder-add">
         {strength ? (
           <>
-            <button type="button" className="btn" onClick={() => onChange([...value, newStrengthStep('work')])}>+ Exercice</button>
-            <button type="button" className="btn" onClick={() => onChange([...value, newStrengthRepeat()])}>+ Série</button>
+            <Button icon="plus" onClick={() => onChange([...value, newStrengthStep('work')])}>Exercice</Button>
+            <Button icon="plus" onClick={() => onChange([...value, newStrengthRepeat()])}>Série</Button>
           </>
         ) : (
           <>
-            <button type="button" className="btn" onClick={() => onChange([...value, newStep(value.length ? 'work' : 'warmup', defaultSport)])}>+ Étape</button>
-            <button type="button" className="btn" onClick={() => onChange([...value, newRepeat()])}>+ Répétition</button>
+            <Button icon="plus" onClick={() => onChange([...value, newStep(value.length ? 'work' : 'warmup', defaultSport)])}>Étape</Button>
+            <Button icon="repeat" onClick={() => onChange([...value, newRepeat()])}>Répétition</Button>
             {strengthOn && !MULTISPORT.includes(sport) ? (
-              <button type="button" className="btn" title="Séance mixte : renforcement après la course" onClick={() => onChange([...value, newMixedStrength()])}>+ Renforcement</button>
+              <Button icon="plus" title="Séance mixte : renforcement après la course" onClick={() => onChange([...value, newMixedStrength()])}>Renforcement</Button>
             ) : null}
           </>
         )}
-        <label className="visually-hidden" htmlFor="preset">Ajouter un modèle</label>
-        <select id="preset" className="select" value="" data-tour="presets"
+        <label className="ds-visually-hidden" htmlFor="preset">Ajouter un modèle</label>
+        <Select id="preset" className={s.auto} value="" data-tour="presets"
           onChange={(e) => {
             const p = presets.find((x) => x.id === e.target.value);
             if (p) onChange([...value, ...toEditor(p.blocks())]);
           }}>
-          <option value="">+ Modèle rapide…</option>
+          <option value="">Modèle rapide…</option>
           {presets.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-        </select>
+        </Select>
         {library ? (
           <>
-            <label className="visually-hidden" htmlFor="my-block">Ajouter un de mes blocs</label>
-            <select id="my-block" className="select" value="" disabled={!usable.length}
+            <label className="ds-visually-hidden" htmlFor="my-block">Ajouter un de mes blocs</label>
+            <Select id="my-block" className={s.auto} value="" disabled={!usable.length}
               onChange={(e) => { const b = usable.find((x) => x.id === e.target.value); if (b) onChange([...value, ...toEditor(b.blocks)]); }}>
-              <option value="">{usable.length ? '+ Mon bloc…' : 'Aucun bloc gardé'}</option>
+              <option value="">{usable.length ? 'Mon bloc…' : 'Aucun bloc gardé'}</option>
               {usable.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}
-            </select>
+            </Select>
           </>
         ) : null}
-      </div>
+      </Cluster>
       {library ? <KeepBlocks wid={library.wid} sport={sport} blocks={blocks} onSaved={(b) => setMine((m) => [...m, b].sort((x, y) => x.title.localeCompare(y.title, 'fr')))} /> : null}
       <QuickNotation sport={sport} blocks={blocks} refs={refs}
         onApply={(raw, mode) => { const bs = linkExercises(raw, exercises); onChange(mode === 'replace' ? toEditor(bs) : [...value, ...toEditor(bs)]); }} />
-      {value.length ? (
-        <div className="b-summary" aria-live="polite">
-          <p className="b-total"><strong>Total :</strong> {describeTotals(totals)}</p>
-          <SessionChart bars={sessionProfile(blocks, sport, refs)} />
+      {view ? (
+        <Stack gap={3} className={s.summary} aria-live="polite">
+          <Text size="md"><strong>Total :</strong> {describeTotals(totals)}</Text>
+          <SessionStrip view={view} height={20} />
           {runSport && !refs?.vmaKmh ? (
-            <p className="muted">Sans VMA, les kilomètres ne sont estimés que pour les blocs avec une allure.
-              {vmaHref ? <> <a href={vmaHref}>Renseigner la VMA{athleteFirst ? ` de ${athleteFirst}` : ''}</a></> : null}</p>
+            <Text size="sm" muted>Sans VMA, les kilomètres ne sont estimés que pour les blocs avec une allure.
+              {vmaHref ? <> <a href={vmaHref}>Renseigner la VMA{athleteFirst ? ` de ${athleteFirst}` : ''}</a></> : null}</Text>
           ) : null}
           {(usesFtp(sport) && !refs?.ftpW) || (usesCss(sport) && !refs?.cssSecPer100) ? (
-            <p className="muted">{usesFtp(sport) ? 'Sans FTP, les zones ne sont pas traduites en watts.' : 'Sans CSS, les zones ne sont pas traduites en allures de nage.'}
-              {vmaHref ? <> <a href={vmaHref}>Renseigner {usesFtp(sport) ? 'la FTP' : 'la CSS'}{athleteFirst ? ` de ${athleteFirst}` : ''}</a></> : null}</p>
+            <Text size="sm" muted>{usesFtp(sport) ? 'Sans FTP, les zones ne sont pas traduites en watts.' : 'Sans CSS, les zones ne sont pas traduites en allures de nage.'}
+              {vmaHref ? <> <a href={vmaHref}>Renseigner {usesFtp(sport) ? 'la FTP' : 'la CSS'}{athleteFirst ? ` de ${athleteFirst}` : ''}</a></> : null}</Text>
           ) : null}
-          {totals.unknownTime ? <p className="muted">Une partie du temps dépend de l’athlète (bloc libre ou distance sans allure).</p> : null}
-          <p className="muted" style={{ marginTop: 6 }}>Ce que lira l’athlète :</p>
-          <ol className="b-preview">{blocks.map((b, k) => <li key={k}>{describeBlock(b, sport)}</li>)}</ol>
-        </div>
+          {totals.unknownTime ? <Text size="sm" muted>Une partie du temps dépend de l’élève (bloc libre ou distance sans allure).</Text> : null}
+          <Text size="sm" strong>Ce que lira l’élève :</Text>
+          <ol className={s.preview}>{blocks.map((b, k) => <li key={k}>{describeBlock(b, sport)}</li>)}</ol>
+        </Stack>
       ) : null}
-      <p className="visually-hidden" aria-live="assertive">{announce}</p>
-      {drag?.active ? <div className="b-ghost" style={{ left: drag.x + 12, top: drag.y + 12 }} aria-hidden="true">{drag.label}</div> : null}
-      {drag?.active && drop ? <div className="b-drop" style={{ top: drop.top, left: drop.left, width: drop.width }} aria-hidden="true" /> : null}
+      <p className="ds-visually-hidden" aria-live="assertive">{announce}</p>
+      {drag?.active ? <div className={s.ghost} style={{ left: drag.x + 12, top: drag.y + 12 }} aria-hidden="true">{drag.label}</div> : null}
+      {drag?.active && drop ? <div className={s.drop} style={{ top: drop.top, left: drop.left, width: drop.width }} aria-hidden="true" /> : null}
     </section>
     </LastCtx.Provider>
     </GearCtx.Provider>

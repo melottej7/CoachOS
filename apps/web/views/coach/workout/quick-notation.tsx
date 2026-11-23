@@ -2,6 +2,9 @@
 
 import { useId, useState } from 'react';
 import { describeBlock, describeTotals, parseNotation, structureTotals, toNotation, type Block, type References, type Sport } from '@coachos/domain';
+import { Button, Cluster, DataTable, Disclosure, Icon, Stack, Text } from '@/design';
+import { cx } from '@/design/cx';
+import s from './builder.module.css';
 
 // CE-B-09 (D-041) : écrire la séance comme sur papier ; aperçu et erreurs au fil de la saisie.
 // D-094 : le principe est expliqué (texte → blocs), l’aperçu montre chaque bloc compris et l’aide donne des exemples.
@@ -40,47 +43,46 @@ export function QuickNotation({ sport, blocks, refs, onApply }: {
   const ready = !!text.trim() && !parsed.errors.length && parsed.blocks.length > 0;
   const rows = Math.min(6, Math.max(3, Math.ceil(text.length / 55)));
   return (
-    <details className="qn" open={open} onToggle={(e) => {
+    <details className={s.qn} open={open} onToggle={(e) => {
       const o = (e.currentTarget as HTMLDetailsElement).open;
       setOpen(o);
       if (o && !text.trim()) setText(toNotation(blocks, sport));
     }}>
-      <summary className="btn">✍️ Écrire la séance en texte</summary>
-      <div className="qn-body">
-        <p className="qn-intro">
+      <summary className={s.qnSummary}><Icon name="edit" size={16} />Écrire la séance en texte</summary>
+      <Stack gap={3} className={s.qnBody}>
+        <Text size="sm" muted>
           Plus rapide que les boutons : écris toute la séance d’un coup, comme dans tes programmes. CoachOS la découpe en blocs et te montre ce qu’il a compris avant que tu l’appliques.
           {blocks.length ? ' Le texte reprend la séance actuelle : modifie-le ou efface-le.' : ''}
-        </p>
-        <label htmlFor={`${id}-t`} className="qn-label">Ta séance en texte</label>
-        <textarea id={`${id}-t`} className="input qn-text" rows={rows} spellCheck={false} autoCapitalize="off" autoComplete="off"
+        </Text>
+        <label htmlFor={`${id}-t`} className={s.label}>Ta séance en texte</label>
+        <textarea id={`${id}-t`} className={cx(s.control, s.qnText)} rows={rows} spellCheck={false} autoCapitalize="off" autoComplete="off"
           placeholder={sport === 'strength' ? "8' RPE3 + 4×(10 squats 20kg + repos 1'30) + 3×(30\" planche + repos 30\")" : "15' Z1 + 8×(400m Z6 + R200m) + 10' Z1"} value={text} onChange={(e) => setText(e.target.value)}
           aria-describedby={`${id}-out`} aria-invalid={parsed.errors.length ? true : undefined} />
-        <details className="qn-how">
-          <summary>Comment l’écrire ?</summary>
-          <table className="qn-table">
-            <thead><tr><th scope="col">Tu écris</th><th scope="col">Ça donne</th></tr></thead>
-            <tbody>{(sport === 'strength' ? STRENGTH_EXAMPLES : EXAMPLES).map(([w, m]) => <tr key={w}><td><code>{w}</code></td><td>{m}</td></tr>)}</tbody>
-          </table>
-          {sport === 'strength' ? <p className="qn-help">Le nom écrit après le nombre de répétitions désigne l’exercice ; s’il existe dans ta bibliothèque, l’élève voit sa vidéo.</p> : null}
-          <p className="qn-help">Aussi : <code>45&quot;</code> secondes, <code>1h30</code>, <code>RPE7</code>, <code>95%FTP</code>, <code>150bpm</code>. <code>x</code> ou <code>*</code> valent <code>×</code>.</p>
-        </details>
+        <Disclosure summary="Comment l’écrire ?">
+          <Stack gap={2}>
+            <DataTable caption="Exemples d’écriture" head={['Tu écris', 'Ça donne']}
+              rows={(sport === 'strength' ? STRENGTH_EXAMPLES : EXAMPLES).map(([w, m]) => ({ key: w, cells: [<code key="w">{w}</code>, m] }))} />
+            {sport === 'strength' ? <Text size="sm" muted>Le nom écrit après le nombre de répétitions désigne l’exercice ; s’il existe dans ta bibliothèque, l’élève voit sa vidéo.</Text> : null}
+            <Text size="sm" muted>Aussi : <code>45&quot;</code> secondes, <code>1h30</code>, <code>RPE7</code>, <code>95%FTP</code>, <code>150bpm</code>. <code>x</code> ou <code>*</code> valent <code>×</code>.</Text>
+          </Stack>
+        </Disclosure>
         <div id={`${id}-out`} aria-live="polite">
           {parsed.errors.length ? (
-            <ul className="qn-errors">{parsed.errors.slice(0, 4).map((e, k) => <li key={k}>{e.message}</li>)}</ul>
+            <ul className={s.qnErrors}>{parsed.errors.slice(0, 4).map((e, k) => <li key={k}>{e.message}</li>)}</ul>
           ) : ready ? (
-            <div className="qn-ok">
-              <p>✓ CoachOS a compris {parsed.blocks.length} bloc{parsed.blocks.length > 1 ? 's' : ''} · {describeTotals(structureTotals(parsed.blocks, { sport, refs }))}</p>
-              <ol className="qn-blocks">{parsed.blocks.map((b, k) => <li key={k}>{describeBlock(b, sport)}{notesOf(b).map((n) => <span key={n} className="qn-note"> « {n} »</span>)}</li>)}</ol>
-            </div>
+            <Stack gap={1} className={s.qnOk}>
+              <Text size="sm" tone="success"><Icon name="check" size={14} /> CoachOS a compris {parsed.blocks.length} bloc{parsed.blocks.length > 1 ? 's' : ''} · {describeTotals(structureTotals(parsed.blocks, { sport, refs }))}</Text>
+              <ol className={s.preview}>{parsed.blocks.map((b, k) => <li key={k}>{describeBlock(b, sport)}{notesOf(b).map((n) => <span key={n} className={s.muted}> « {n} »</span>)}</li>)}</ol>
+            </Stack>
           ) : null}
         </div>
-        <div className="actions">
-          <button type="button" className="btn primary" disabled={!ready} onClick={() => { onApply(parsed.blocks, 'replace'); setText(''); setOpen(false); }}>
+        <Cluster gap={2}>
+          <Button variant="primary" disabled={!ready} onClick={() => { onApply(parsed.blocks, 'replace'); setText(''); setOpen(false); }}>
             {blocks.length ? 'Remplacer la séance par ces blocs' : 'Créer ces blocs'}
-          </button>
-          {blocks.length ? <button type="button" className="btn" disabled={!ready} onClick={() => { onApply(parsed.blocks, 'append'); setText(''); setOpen(false); }}>Ajouter ces blocs à la fin</button> : null}
-        </div>
-      </div>
+          </Button>
+          {blocks.length ? <Button disabled={!ready} onClick={() => { onApply(parsed.blocks, 'append'); setText(''); setOpen(false); }}>Ajouter ces blocs à la fin</Button> : null}
+        </Cluster>
+      </Stack>
     </details>
   );
 }
