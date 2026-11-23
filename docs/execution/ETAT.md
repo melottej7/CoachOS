@@ -25,8 +25,9 @@ Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 coul
 **Choix du fondateur (D-128)** : direction A · Chrono, avec clair, sombre ou automatique, deux densités pour le coach et la couleur du coach chez l’élève. Carte et changements additifs du socle validés.
 
 **Refonte en cours sur la branche `refonte`** (rien de visible en ligne tant qu’un espace n’est pas entièrement refait ; aperçus Vercel coupés pour cette branche) :
-- fait : design system dans `apps/web/design/` et page interne `/systeme` (D-128, D-129) ; cadre de l’espace élève ; écrans « Aujourd’hui » (D-129) et détail d’une séance (D-130) refaits et vérifiés à 390 px (et 1440 pour Aujourd’hui), clair et sombre ;
-- prochain : le reste de l’espace élève (retour détaillé, suivre en endurance et en musculation, Programme, Progression, Échanges, Profil et réglages d’apparence), puis l’accueil du coach, la boîte de réception, le calendrier avec glisser-copier-coller et annulation, la fiche élève, la bibliothèque, les paramètres, les surfaces publiques.
+- fait (vérifié au navigateur, tests, typecheck, construction et parcours de bout en bout verts) : design system dans `apps/web/design/` et page interne `/systeme` (D-128, D-129) ; cadre de l’espace élève ; Aujourd’hui (D-129), détail d’une séance (D-130), Programme semaine et mois (D-131), retour détaillé (D-132), Suivre la séance (D-133), Progression (D-134), Échanges, liste et fil (D-135), Profil avec Clair / Sombre / Automatique (D-136), Notifications (D-137) ;
+- reste pour terminer l’espace élève avant de le fusionner sur `main` : l’intérieur du bilan (une question par écran, partagé avec le coach), la présentation du coach, l’arrivée (invitation, bienvenue), puis un passage complet à 1440 px et au clavier ;
+- ensuite : l’accueil du coach, la boîte de réception, le calendrier avec glisser-copier-coller et annulation, la fiche élève, la bibliothèque, les paramètres, les surfaces publiques ; enfin le nettoyage de l’ancien code.
 - règle : `main` ne reçoit que des corrections ou un espace entièrement refait et vérifié ; la branche se fusionne espace par espace.
 
 ## Chantiers en cours (D-120)

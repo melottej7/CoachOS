@@ -1,0 +1,11 @@
+.list { display: flex; flex-direction: column; border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); overflow: hidden; }
+.list > li + li { border-top: 1px solid var(--ds-rule); }
+.row { display: flex; align-items: center; gap: var(--ds-3); padding: var(--ds-3) var(--ds-4); min-block-size: 64px; text-decoration: none; color: inherit; }
+.row:hover { background: var(--ds-surface-2); }
+.icon { inline-size: 36px; block-size: 36px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--ds-radius); background: var(--ds-surface-3); color: var(--ds-ink-2); }
+.unread .icon { background: var(--ds-coach-soft); color: var(--ds-coach-text); }
+.text { flex: 1 1 auto; min-inline-size: 0; display: flex; flex-direction: column; gap: 2px; }
+.what { overflow-wrap: anywhere; }
+.unread .what { font-weight: 700; }
+.when { font-size: var(--ds-text-xs); color: var(--ds-ink-2); }
+.dot { inline-size: 10px; block-size: 10px; flex-shrink: 0; border-radius: 50%; background: var(--ds-signal); }

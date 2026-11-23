@@ -2159,3 +2159,8 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Écart** : le mode « assistant en trois étapes » de l’ancien formulaire n’était plus utilisé (le bilan l’a remplacé) ; le nouveau formulaire n’a que la version sur une page.
 - **Preuves** : tests 375, typecheck ; navigateur à 390 px en clair puis bascule en sombre depuis la page (attribut et cookie vérifiés), aucun débordement.
 - **Reste** : l’intérieur du bilan (une question par écran, `BilanFlow`, partagé avec le coach) garde l’ancien style dans le nouveau cadre ; notifications (`PushSettings`), présentation du coach et arrivée aussi.
+
+## D-137 · Notifications de l’élève refaites · 2026-11-23 (branche `refonte`)
+
+- **Écran** `/athlete/[wid]/notifications` : liste avec pictogramme par type (plus d’emoji), non-lues en gras avec un point et « (non lue) » pour les lecteurs d’écran, « Tout marquer lu » ; état vide expliqué ; **Rappels sur cet appareil** (même logique que D-118, états expliqués : non réglé, navigateur incompatible, iPhone à installer d’abord, bloqué, activé) ; **E-mails** en gros boutons. Le côté coach garde l’ancien composant jusqu’à sa refonte.
+- **Preuves** : typecheck ; navigateur à 390 px sombre, aucun débordement.
