@@ -19,6 +19,8 @@ export function setMailer(mailer: Mailer | undefined): void {
 /**
  * Adaptateur d’envoi. Développement : API d’envoi de Mailpit (Supabase local), aucun e-mail réel.
  * Production : Resend (RESEND_API_KEY, EMAIL_FROM), branché à la mise en ligne (D-112) ; sans clé, refus explicite.
+ * D-152 : envoi pas encore activé (pas de clé, ou Resend qui refuse tant que le domaine n’est pas vérifié) → erreur
+ * définitive, marquée `email_not_enabled`, et non « service indisponible » : rejouer ne servirait à rien.
  * Ne journalise jamais le destinataire ni le contenu (le lien contient un secret).
  */
 export async function sendEmail(message: EmailMessage): Promise<void> {
@@ -26,9 +28,7 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
   // D-112 : production, fournisseur Resend dès que la clé et l’expéditeur sont fournis (mise en ligne).
   if (process.env.RESEND_API_KEY && process.env.EMAIL_FROM) return sendWithResend(message, process.env.RESEND_API_KEY, process.env.EMAIL_FROM);
   const mailpit = process.env.MAILPIT_URL;
-  if (!mailpit || process.env.NODE_ENV === 'production') {
-    throw new AppError('TEMPORARILY_UNAVAILABLE', 'L’envoi d’e-mails n’est pas configuré sur cet environnement.');
-  }
+  if (!mailpit || process.env.NODE_ENV === 'production') throw emailNotEnabled();
   let res: Response;
   try {
     res = await fetch(`${mailpit}/api/v1/send`, {
@@ -94,7 +94,18 @@ async function sendWithResend(message: EmailMessage, key: string, from: string):
   }
   if (!res.ok) {
     console.warn(JSON.stringify({ module: 'email', provider: 'resend', code: 'send_failed', status: res.status }));
+    // 401 : clé refusée ; 403 : domaine pas encore vérifié (Resend n’envoie alors qu’au titulaire du compte).
+    if (res.status === 401 || res.status === 403) throw emailNotEnabled();
     throw new AppError('TEMPORARILY_UNAVAILABLE', 'L’e-mail n’a pas pu être envoyé. Réessaie dans un instant.');
   }
+}
+
+/** D-152 : l’envoi d’e-mails n’est pas (encore) possible sur cet environnement. Erreur définitive, reconnaissable. */
+export function emailNotEnabled(message = 'L’envoi d’e-mails n’est pas encore activé.'): AppError {
+  return new AppError('ACTION_FORBIDDEN_OR_FEATURE_DISABLED', message, null, { reason: 'email_not_enabled' });
+}
+
+export function isEmailNotEnabled(e: unknown): boolean {
+  return e instanceof AppError && e.details?.reason === 'email_not_enabled';
 }
 

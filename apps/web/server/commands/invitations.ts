@@ -10,7 +10,7 @@ import {
 import { commandAs, systemTx, type Tx } from '../db/client';
 import { randomUUID } from 'node:crypto';
 import { emailHmac, linkInvitationToken, newInvitationToken, sha256 } from '../crypto';
-import { invitationEmail, sendEmail } from '../email/send';
+import { emailNotEnabled, invitationEmail, isEmailNotEnabled, sendEmail } from '../email/send';
 import { AppError, conflict, invalid, notVisible } from '../errors';
 import { audit, idempotent, type StoredResponse } from './idempotency';
 
@@ -115,7 +115,13 @@ export async function issueInvitation(
       const { expires_at } = inv.rows[0]!;
       await audit(tx, wid, meta.actorId, 'invitation.issue', id, meta.requestId);
       if (delivery === 'email') {
-        await sendEmail(invitationEmail(email, row.wname, `${meta.appOrigin}/invite#token=${token}`, INVITATION_TTL_DAYS, row.coach, row.tagline));
+        try {
+          await sendEmail(invitationEmail(email, row.wname, `${meta.appOrigin}/invite#token=${token}`, INVITATION_TTL_DAYS, row.coach, row.tagline));
+        } catch (e) {
+          // D-152 : e-mail pas encore activé → le dire, et proposer le lien à copier, plutôt que « connexion interrompue ».
+          if (isEmailNotEnabled(e)) throw emailNotEnabled('L’envoi par e-mail n’est pas encore activé. Choisis « Je l’envoie moi-même » : CoachOS te donne le lien à copier.');
+          throw e;
+        }
       }
       return { status: 201, body: { invitationId: id, expiresAt: new Date(expires_at).toISOString() } };
     });
