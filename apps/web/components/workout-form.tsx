@@ -2,8 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { SPORTS, SPORT_LABELS, type Block, type References, type Sport, sportsFor, type Modules, type LastDone,
-} from '@coachos/domain';
+import { SPORTS, SPORT_LABELS, type Block, type References, type Sport, sportsFor, type Modules, type LastDone, SPORT_TITLE_EXAMPLES } from '@coachos/domain';
 import { fromEditor, toEditor, WorkoutBuilder, type AthleteGearInfo, type EBlock, type ExerciseOption, type SavedBlock } from './workout-builder';
 import { ErrorSummary } from './feedback-banners';
 import { fieldError, useIntent } from './use-intent';
@@ -86,7 +85,7 @@ export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, ca
       ) : null}
       <div className="field">
         <label htmlFor="title">Titre</label>
-        <input id="title" name="title" required maxLength={120} autoFocus value={values.title} onChange={set('title')} placeholder="Footing facile"
+        <input id="title" name="title" required maxLength={120} autoFocus value={values.title} onChange={set('title')} placeholder={SPORT_TITLE_EXAMPLES[values.sport as Sport] ?? 'Footing facile'}
           aria-invalid={!!err('data.title')} aria-describedby={err('data.title') ? 'title-error' : undefined} />
         {err('data.title') ? <span id="title-error" className="field-error">{err('data.title')}</span> : null}
       </div>

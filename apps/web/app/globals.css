@@ -69,7 +69,7 @@ body {
   margin: 0;
   background: var(--canvas);
   color: var(--ink);
-  font: 15px/1.5 Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font: 15px/1.5 var(--font-inter, Inter), system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 button, input, textarea, select { font: inherit; color: inherit; }
 a { color: var(--accent); }
@@ -229,8 +229,13 @@ h3 { font-size: 15px; line-height: 22px; }
   .row .btn { margin-left: auto; }
 }
 @media (max-width: 639px) {
-  .top-meta .demo-tag { display: none; }
-  .top-meta { font-size: 12px; gap: 8px; }
+  /* D-121 · En-tête compact : une ligne (icône, espace, cloche) ; la déconnexion vit dans Profil ou Paramètres. */
+  .top { min-height: 50px; padding: 6px 12px; gap: 8px; }
+  .brand { font-size: 20px; }
+  .brand-label { display: none; }
+  .top-meta .demo-tag, .top-meta .top-signout, .top-meta a[href='/demo'], .top-meta .top-role, .top-meta .who { display: none; }
+  .top-meta { font-size: 13px; gap: 8px; flex-wrap: nowrap; min-width: 0; }
+  .top-meta > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* Barre basse athlète */
   .tabbar { position: fixed; left: 0; right: 0; bottom: 0; margin: 0; border-radius: 0; border-width: 1px 0 0; padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); z-index: 5; gap: 2px; }
   .tabbar a { min-width: 0; padding: 8px 2px; font-size: 14px; gap: 4px; }
@@ -1390,3 +1395,12 @@ body:has(.chat) .guide-fab { bottom: 110px; }
 .b-warn { color: var(--attention); font-weight: 600; }
 .fw-last { margin: 0; font-size: 15px; color: var(--muted); }
 .fw-last strong { color: var(--ink); }
+
+/* D-121 · Finitions : déconnexion en bas de page sur téléphone, pastille vide masquée, répartition par sport. */
+.mobile-only { display: none; }
+@media (max-width: 639px) { .mobile-only { display: block; } }
+.ex-badge:empty { display: none; }
+.sport-share { display: grid; gap: 6px; }
+.sport-share-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--soft-neutral); }
+.sport-share-bar span { display: block; background: var(--accent); min-width: 2px; }
+.sport-share-bar span + span { margin-left: 2px; }

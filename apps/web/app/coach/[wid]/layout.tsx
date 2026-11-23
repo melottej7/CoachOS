@@ -23,7 +23,7 @@ export default async function CoachLayout({ children, params }: { children: Reac
   return (
     <>
       <TopBar home={`${base}/planning`}>
-        <span>{ctx.workspace.name} · {ctx.role === 'owner' ? 'Coach propriétaire' : 'Coach'}</span>
+        <span>{ctx.workspace.name}<span className="top-role"> · {ctx.role === 'owner' ? 'Coach propriétaire' : 'Coach'}</span></span>
       </TopBar>
       <div className="shell" data-accent={ws?.profile?.accent ?? 'emerald'}>
         <aside className="sidebar">

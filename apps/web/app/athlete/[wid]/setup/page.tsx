@@ -6,7 +6,7 @@ import { profileAnswers, readAthleteProfile, readBilanDraft } from '@/server/com
 import { readMe } from '@/server/commands/profile';
 import { listMyPrivacyRequests } from '@/server/commands/privacy';
 import { athleteContext } from '@/server/repo/context';
-import { Notice, Pill } from '@/components/ui';
+import { Notice, Pill, SignOutButton } from '@/components/ui';
 import { AthleteOnboarding } from '@/components/athlete-onboarding';
 import { BilanFlow } from '@/components/bilan-flow';
 import { PrivacyPanel } from '@/components/privacy-panel';
@@ -95,6 +95,7 @@ export default async function AthleteSetup({ params, searchParams }: { params: P
         />
       </div></div>
       <PrivacyPanel wid={wid} role="athlete" requests={requests} />
+      <div className="mobile-only" style={{ marginTop: 18 }}><SignOutButton className="btn" /></div>
     </>
   );
 }

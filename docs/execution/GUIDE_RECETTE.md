@@ -381,3 +381,9 @@ Ensuite, Resend (je te guide) : créer le compte, vérifier ton domaine d’envo
 3. Côté coach (sur le Mac) : publie une séance pour cet élève. Le téléphone reçoit « Ton coach a publié une séance » ; le toucher ouvre la séance.
 4. Envoie un message à l’élève : le rappel dit « Nouveau message de ton coach », jamais le texte. Tant que l’élève n’a pas ouvert l’app, un deuxième message ne redéclenche pas de rappel.
 5. **Désactiver sur cet appareil** arrête tout. Dis-moi si un rappel est arrivé en double, en retard, ou jamais.
+
+## Finitions et charge d’entraînement (D-121)
+
+1. Sur ton téléphone, ouvre l’espace élève : l’en-tête tient sur une ligne (icône, espace, cloche). « Se déconnecter » est maintenant en bas de **Profil** (élève) et de **Paramètres** (coach).
+2. **Progression** (élève) ou **Suivi de l’entraînement** (fiche élève, coach) : nouvelle carte **Charge d’entraînement** (minutes réalisées × effort ressenti), un graphique par semaine, et, si l’élève pratique plusieurs sports, la part de chaque sport dans le volume réalisé. Dis-moi si ces chiffres te parlent ou s’ils te semblent faux.
+3. Crée une séance pour un élève dont le bilan dit « Cyclisme » ou « Natation » : le sport proposé est le sien, avec un exemple de titre adapté.

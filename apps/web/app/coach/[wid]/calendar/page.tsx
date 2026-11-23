@@ -30,7 +30,8 @@ export default async function Calendar({ params, searchParams }: { params: Promi
       </>
     );
   }
-  const athlete = roster.find((a) => a.id === sp.athlete) ?? roster[0]!;
+  // D-121 : par défaut un élève qui a rejoint l’espace, pas une fiche encore invitée.
+  const athlete = roster.find((a) => a.id === sp.athlete) ?? roster.find((a) => a.state === 'active') ?? roster[0]!;
   const today = todayIn(athlete.timeZone);
   const monday = weekStart(sp.week && isLocalDate(sp.week) ? sp.week : today);
   const days = weekDates(monday);

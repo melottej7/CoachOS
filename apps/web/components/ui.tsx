@@ -5,7 +5,7 @@ import { demoAuthEnabled } from '@/server/auth/session';
 export function Brand({ href = '/' }: { href?: string }) {
   return (
     <Link className="brand" href={href}>
-      <span className="mark" aria-hidden="true">↗</span>CoachOS
+      <span className="mark" aria-hidden="true">↗</span><span className="brand-label">CoachOS</span>
     </Link>
   );
 }
@@ -38,6 +38,15 @@ export function Notice({ message }: { message: string | null }) {
   );
 }
 
+/** D-121 · Déconnexion : dans la barre sur grand écran, en bas du Profil ou des Paramètres sur téléphone. */
+export function SignOutButton({ className = 'btn', wrapper = '' }: { className?: string; wrapper?: string }) {
+  return (
+    <form action="/auth/signout" method="post" className={wrapper || undefined}>
+      <button type="submit" className={className}>Se déconnecter</button>
+    </form>
+  );
+}
+
 export function TopBar({ home, children }: { home: string; children?: React.ReactNode }) {
   return (
     <header className="top">
@@ -50,9 +59,7 @@ export function TopBar({ home, children }: { home: string; children?: React.Reac
             <Link href="/demo">Changer d’identité</Link>
           </>
         ) : null}
-        <form action="/auth/signout" method="post">
-          <button type="submit" className="link-btn">Se déconnecter</button>
-        </form>
+        <SignOutButton className="link-btn" wrapper="top-signout" />
       </div>
     </header>
   );

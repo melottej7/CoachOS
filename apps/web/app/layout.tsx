@@ -1,7 +1,11 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { DevStyleRefresh } from '@/components/dev-style-refresh';
 import { OfflineSupport } from '@/components/offline';
+
+// D-121 · Police déclarée depuis le début mais jamais chargée : rendu homogène sur tous les appareils.
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
 
 export const metadata: Metadata = {
   title: { default: 'CoachOS', template: '%s · CoachOS' },
@@ -19,7 +23,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr-BE">
+    <html lang="fr-BE" className={inter.variable}>
       <body>
         <a className="skip" href="#contenu">Aller au contenu</a>
         {children}

@@ -31,7 +31,7 @@ export default async function AthleteLayout({ children, params }: { children: Re
           <a href={`${base}/notifications`} className="notif-bell" aria-label={notifs ? `Notifications, ${notifs} non lue${notifs > 1 ? 's' : ''}` : 'Notifications'}>
             🔔{notifs ? <span className="count" aria-hidden="true">{notifs}</span> : null}
           </a>
-          <a href={`${base}/setup`} style={{ color: 'inherit' }}>{ctx.athlete.displayName}</a> ·
+          <a href={`${base}/setup`} className="who" style={{ color: 'inherit' }}>{ctx.athlete.displayName}</a><span className="who" aria-hidden="true">·</span>
           <a href={`${base}/coach`} style={{ color: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             {ws ? <CoachLogo data={ws} small /> : null}{ctx.workspace.name}
           </a>

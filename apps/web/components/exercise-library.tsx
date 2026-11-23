@@ -66,7 +66,7 @@ export function ExerciseLibrary({ wid, items }: { wid: string; items: Exercise[]
               <button type="button" className="ex-row" aria-expanded={open === e.id} onClick={() => { setOpen(open === e.id ? null : e.id); setCreating(false); }}>
                 <span className="ex-name">{e.name}</span>
                 <span className="ex-meta muted">{MUSCLE_SHORT[e.muscle]}{e.equipment.length ? ` · ${e.equipment.map((x) => EXERCISE_EQUIPMENT_LABELS[x]).join(', ')}` : ''}</span>
-                <span className={`ex-badge${hasVideo(e) ? ' on' : ''}`}>{e.clipId || e.videoUrl ? '▶ ta vidéo' : hasVideo(e) ? '▶ vidéo CoachOS' : 'sans vidéo'}</span>
+                <span className={`ex-badge${hasVideo(e) ? ' on' : ''}`}>{e.clipId || e.videoUrl ? '▶ ta vidéo' : hasVideo(e) ? '▶ vidéo CoachOS' : ''}</span>
               </button>
               {open === e.id ? <ExerciseForm wid={wid} initial={toDraft(e)} exercise={e} onDone={() => router.refresh()} /> : null}
             </li>

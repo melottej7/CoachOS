@@ -19,10 +19,12 @@ function column(x: number, h: number): string {
   return `M${x},${H} V${y + r} Q${x},${y} ${x + r},${y} H${x + BAR - r} Q${x + BAR},${y} ${x + BAR},${y + r} V${H} Z`;
 }
 
-export function WeeklyChart({ bars, title }: { bars: WeekBar[]; title: string }) {
+/** `unit` : minutes (graduations en heures) ou points de charge (D-121). */
+export function WeeklyChart({ bars, title, unit = 'minutes', legend }: { bars: WeekBar[]; title: string; unit?: 'minutes' | 'points'; legend?: { track?: string; fill: string } }) {
   const [hover, setHover] = useState<number | null>(null);
-  const max = Math.max(60, ...bars.map((b) => Math.max(b.plannedMin, b.doneMin)));
-  const step = max > 600 ? 180 : max > 300 ? 120 : 60; // graduations rondes : 1 h, 2 h, 3 h
+  const points = unit === 'points';
+  const max = Math.max(points ? 100 : 60, ...bars.map((b) => Math.max(b.plannedMin, b.doneMin)));
+  const step = points ? (max > 2000 ? 500 : max > 800 ? 250 : 100) : max > 600 ? 180 : max > 300 ? 120 : 60; // graduations rondes
   const top = Math.ceil(max / step) * step;
   const y = (min: number) => (min / top) * H;
   const ticks = Array.from({ length: top / step + 1 }, (_, k) => k * step);
@@ -37,15 +39,15 @@ export function WeeklyChart({ bars, title }: { bars: WeekBar[]; title: string })
   return (
     <figure className="wchart" aria-label={title}>
       <div className="wchart-legend" aria-hidden="true">
-        <span><i className="sw track" /> Prévu</span>
-        <span><i className="sw fill" /> Réalisé</span>
+        {legend?.track === undefined && !points ? <span><i className="sw track" /> Prévu</span> : legend?.track ? <span><i className="sw track" /> {legend.track}</span> : null}
+        <span><i className="sw fill" /> {legend?.fill ?? 'Réalisé'}</span>
       </div>
       <div className="wchart-frame" ref={frame}>
         <svg viewBox={`0 -8 ${width} ${H + 34}`} className="wchart-svg" style={{ minWidth: bars.length * 30 + 36 }} role="img" aria-label={`${title}. Détail dans le tableau ci-dessous.`}>
           {ticks.map((t) => (
             <g key={t}>
               <line x1={34} x2={width} y1={H - y(t)} y2={H - y(t)} className="wchart-grid" />
-              <text x={30} y={H - y(t) + 4} className="wchart-tick" textAnchor="end">{t ? `${t / 60} h` : '0'}</text>
+              <text x={30} y={H - y(t) + 4} className="wchart-tick" textAnchor="end">{t ? (points ? String(t) : `${t / 60} h`) : '0'}</text>
             </g>
           ))}
           {bars.map((b, i) => {

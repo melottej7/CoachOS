@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { deltaText, formatClock, formatKm, formatShortDate, STAT_DEFINITIONS, type PeriodDelta, type StatsSummary } from '@coachos/domain';
+import { deltaText, formatClock, formatKm, formatShortDate, SPORT_LABELS, STAT_DEFINITIONS, type PeriodDelta, type StatsSummary } from '@coachos/domain';
 import { WeeklyChart } from './weekly-chart';
 
 // Panneau de statistiques (CE-S-01 à 04, CE-E-03, D-037), commun à l’élève et au coach.
@@ -59,17 +59,34 @@ export function StatsPanel({ s, weeks, periodHref, you, delta }: { s: StatsSumma
           <p className="kpi-value">{s.streakWeeks} sem.</p>
           <p className="kpi-sub">{s.streakWeeks ? `${you ? 'tu t’entraînes' : 's’entraîne'} chaque semaine` : 'à relancer'}</p>
         </div>
+        <div className="kpi">
+          <p className="kpi-label">Charge d’entraînement</p>
+          <p className="kpi-value">{s.load ? s.load.toLocaleString('fr-BE') : '—'}</p>
+          <p className="kpi-sub">{s.loadSessions ? `points sur ${s.loadSessions} séance${s.loadSessions > 1 ? 's' : ''} avec effort noté` : 'effort à noter dans les retours'}</p>
+          <Delta value={delta?.loadPct ?? null} unit="pct" weeks={weeks} />
+        </div>
       </div>
+      {s.bySport.length > 1 ? (
+        <div className="sport-share">
+          <p className="kpi-label">Volume réalisé par sport</p>
+          <div className="sport-share-bar" aria-hidden="true">{s.bySport.map((x, i) => <span key={x.sport} style={{ width: `${x.share}%`, opacity: 1 - Math.min(i, 3) * 0.22 }} />)}</div>
+          <p className="muted">{s.bySport.map((x) => `${SPORT_LABELS[x.sport]} ${x.share} %`).join(' · ')}</p>
+        </div>
+      ) : null}
       {s.weeks.some((w) => w.planned) ? (
         <>
           <WeeklyChart bars={bars} title={`Volume par semaine sur ${weeks} semaines : prévu et réalisé`} />
+          {s.load ? (
+            <WeeklyChart unit="points" legend={{ fill: 'Charge d’entraînement (minutes × effort)' }} title={`Charge d’entraînement par semaine sur ${weeks} semaines`}
+              bars={s.weeks.map((w) => ({ key: `load-${w.monday}`, label: day(w.monday), plannedMin: 0, doneMin: w.load, detail: `Semaine du ${day(w.monday)} : charge ${w.load.toLocaleString('fr-BE')}${w.avgRpe !== null ? ` · effort moyen ${String(w.avgRpe).replace('.', ',')}/10` : ''}` }))} />
+          ) : null}
           <details className="stats-table">
             <summary>Voir le tableau</summary>
             <table>
-              <thead><tr><th scope="col">Semaine du</th><th scope="col">Séances faites</th><th scope="col">Réalisé</th><th scope="col">Prévu</th><th scope="col">Distance</th></tr></thead>
+              <thead><tr><th scope="col">Semaine du</th><th scope="col">Séances faites</th><th scope="col">Réalisé</th><th scope="col">Prévu</th><th scope="col">Distance</th><th scope="col">Charge</th></tr></thead>
               <tbody>
                 {s.weeks.map((w) => (
-                  <tr key={w.monday}><th scope="row">{day(w.monday)}</th><td>{w.done} / {w.planned}</td><td>{hours(w.doneSeconds)}</td><td>{hours(w.plannedSeconds)}</td><td>{w.doneMeters ? formatKm(w.doneMeters) : '—'}</td></tr>
+                  <tr key={w.monday}><th scope="row">{day(w.monday)}</th><td>{w.done} / {w.planned}</td><td>{hours(w.doneSeconds)}</td><td>{hours(w.plannedSeconds)}</td><td>{w.doneMeters ? formatKm(w.doneMeters) : '—'}</td><td>{w.load ? w.load.toLocaleString('fr-BE') : '—'}</td></tr>
                 ))}
               </tbody>
             </table>

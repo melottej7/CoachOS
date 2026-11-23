@@ -20,10 +20,10 @@ export async function athleteStats(userId: string, wid: string, aid: string, fro
     const ok = await tx.query<{ ok: boolean }>('select (private.assigned($1, $2) or private.own_athlete($1, $2)) as ok', [wid, aid]);
     if (!ok.rows[0]?.ok) return null;
     const rows = await tx.query<{
-      workout_id: string; title: string; local_date: string; canceled: boolean; duration_seconds: number | null; distance_m: number | null;
+      workout_id: string; title: string; local_date: string; canceled: boolean; duration_seconds: number | null; distance_m: number | null; sport_code: Sport;
       state: StatItem['state']; done_seconds: number | null; done_meters: number | null; rpe: number | null; overall_feeling: number | null;
     }>(
-      `select w.id as workout_id, r.title, to_char(r.local_date, 'YYYY-MM-DD') as local_date, r.canceled, r.duration_seconds, r.distance_m,
+      `select w.id as workout_id, r.title, to_char(r.local_date, 'YYYY-MM-DD') as local_date, r.canceled, r.duration_seconds, r.distance_m, r.sport_code,
               res.state, res.duration_seconds as done_seconds, res.distance_m as done_meters, f.rpe, f.overall_feeling
        from public.workouts w
        join public.workout_revisions r on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id and r.number = w.published_revision
@@ -34,7 +34,7 @@ export async function athleteStats(userId: string, wid: string, aid: string, fro
     );
     const items: StatItem[] = rows.rows.map((x) => ({
       localDate: x.local_date, canceled: x.canceled, plannedSeconds: x.duration_seconds, plannedMeters: x.distance_m,
-      state: x.state, doneSeconds: x.done_seconds, doneMeters: x.done_meters, rpe: x.rpe, feeling: x.overall_feeling,
+      state: x.state, doneSeconds: x.done_seconds, doneMeters: x.done_meters, rpe: x.rpe, feeling: x.overall_feeling, sport: x.sport_code,
     }));
     const g = await tx.query<{ title: string; sport_code: Sport; target_date: string | null; state: GoalState }>(
       `select title, sport_code, to_char(target_date, 'YYYY-MM-DD') as target_date, state from public.goals

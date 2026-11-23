@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { requireActor } from '@/server/auth/session';
 import { readMe } from '@/server/commands/profile';
-import { Notice, TopBar } from '@/components/ui';
+import { Notice, SignOutButton, TopBar } from '@/components/ui';
 import { ProfileForm } from '@/components/profile-form';
 
 export const metadata = { title: 'Mon profil' };
@@ -25,6 +25,7 @@ export default async function Profile({ searchParams }: { searchParams: Promise<
           <h2 id="mes-donnees">Mes données</h2>
           <p className="muted">Télécharger tes données ou demander leur effacement se fait dans chaque espace : onglet Profil pour un athlète, Paramètres pour un coach. <Link href="/confidentialite">Politique de confidentialité</Link>.</p>
         </div></section>
+        <div className="mobile-only" style={{ marginTop: 18 }}><SignOutButton className="btn" /></div>
       </main>
     </>
   );

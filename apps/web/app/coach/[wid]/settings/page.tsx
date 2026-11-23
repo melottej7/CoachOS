@@ -4,7 +4,7 @@ import { readWorkspacePublic } from '@/server/commands/workspace-profile';
 import { coachContext } from '@/server/repo/context';
 import { CoachDetails, CoachHeader } from '@/components/coach-card';
 import { CoachSpaceForm } from '@/components/coach-space-form';
-import { Notice } from '@/components/ui';
+import { Notice, SignOutButton } from '@/components/ui';
 import { RuleSettingsForm } from '@/components/rule-settings-form';
 import { autoRuleSettings } from '@/server/repo/portfolio';
 import { aiMonth, aiSource } from '@/server/commands/ai';
@@ -99,6 +99,7 @@ export default async function Settings({ params, searchParams }: { params: Promi
       {wizard ? null : followUps}
       {wizard ? null : aiCard}
       {wizard ? null : <PrivacyPanel wid={wid} role="coach" owner={ctx.role === 'owner'} requests={requests} />}
+      {wizard ? null : <div className="mobile-only" style={{ marginTop: 18 }}><SignOutButton className="btn" /></div>}
     </>
   );
 }

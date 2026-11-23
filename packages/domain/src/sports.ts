@@ -30,3 +30,14 @@ export function sportsFor(m: Modules, current?: Sport | null): Sport[] {
   const list = SPORTS.filter((s) => (s === 'strength' ? m.strength : m.endurance));
   return current && !list.includes(current) ? [...list, current] : list;
 }
+
+/** D-121 · Exemple de titre proposé à la création d’une séance, selon le sport. */
+export const SPORT_TITLE_EXAMPLES: Record<Sport, string> = {
+  running: 'Footing facile',
+  trail: 'Sortie trail en côtes',
+  cycling: 'Sortie vélo souple',
+  swimming: 'Séries de 100 m',
+  triathlon: 'Enchaînement vélo puis course',
+  duathlon: 'Enchaînement course puis vélo',
+  strength: 'Renforcement jambes et gainage',
+};
