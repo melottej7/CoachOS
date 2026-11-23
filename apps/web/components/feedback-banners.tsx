@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import type { IntentError } from './use-intent';
 
-const FIELD_LABELS: Record<string, string> = {
+export const FIELD_LABELS: Record<string, string> = {
   'data.title': 'Titre',
   'data.localDate': 'Date',
   'data.sport': 'Sport',
@@ -36,7 +36,7 @@ const FIELD_LABELS: Record<string, string> = {
   weeklySessions: 'Séances par semaine',
 };
 
-const FIELD_IDS: Record<string, string> = {
+export const FIELD_IDS: Record<string, string> = {
   'data.title': 'title',
   'data.localDate': 'localDate',
   'data.sport': 'sport',
@@ -44,7 +44,7 @@ const FIELD_IDS: Record<string, string> = {
   'data.instructions': 'instructions',
   state: 'state-completed',
   durationSeconds: 'duration',
-  rpe: 'rpe-none',
+  rpe: 'rpe-0',
   comment: 'comment',
   name: 'name',
   displayName: 'displayName',
@@ -69,7 +69,7 @@ const FIELD_IDS: Record<string, string> = {
  * Réseau coupé : la saisie reste en place et l’action peut être rejouée avec la même clé.
  */
 /** « data.intervals.1.steps.0.measure.seconds » → « Bloc 2.1 ». */
-function blockLabel(path: string): string | null {
+export function blockLabel(path: string): string | null {
   const m = /^data\.intervals\.(\d+)(?:\.steps\.(\d+))?(?:\.steps\.(\d+))?/.exec(path);
   if (!m) return null;
   return 'Bloc ' + [m[1], m[2], m[3]].filter((x) => x !== undefined).map((x) => Number(x) + 1).join('.');

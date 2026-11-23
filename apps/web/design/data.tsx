@@ -28,3 +28,29 @@ export function Meter({ value, tone = 'coach' }: { value: number; tone?: 'coach'
     </span>
   );
 }
+
+export interface KpiItem { label: string; value: ReactNode; sub?: ReactNode; meter?: number; delta?: { dir: 'up' | 'down' | 'flat'; text: string } }
+
+/**
+ * Grille d’indicateurs (progression) : la valeur en grand, ce qu’elle mesure, et l’écart avec la période d’avant,
+ * dont le sens est écrit en toutes lettres (la flèche n’est qu’un appui visuel).
+ */
+export function KpiGrid({ items }: { items: KpiItem[] }) {
+  return (
+    <dl className={s.kpis}>
+      {items.map((k) => (
+        <div key={k.label} className={s.kpi}>
+          <dt className={s.statLabel}>{k.label}</dt>
+          <dd className={s.kpiValue}>{k.value}</dd>
+          {k.meter !== undefined ? <dd><Meter value={k.meter} /></dd> : null}
+          {k.sub ? <dd className={s.statSub}>{k.sub}</dd> : null}
+          {k.delta ? (
+            <dd className={cx(s.kpiDelta, k.delta.dir === 'up' && s.deltaUp, k.delta.dir === 'down' && s.deltaDown)}>
+              <span aria-hidden="true">{k.delta.dir === 'up' ? '↑' : k.delta.dir === 'down' ? '↓' : '→'} </span>{k.delta.text}
+            </dd>
+          ) : null}
+        </div>
+      ))}
+    </dl>
+  );
+}

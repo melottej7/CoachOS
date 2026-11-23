@@ -59,6 +59,16 @@ export function IconButton({ icon, label, variant = 'ghost', size, className, ..
   );
 }
 
+/** Lien icône (navigation précédent / suivant) : son nom est obligatoire. */
+export function IconLinkButton({ icon, label, variant = 'secondary', size, className, href, ...rest }:
+  { icon: IconName; label: string; variant?: ButtonVariant; size?: ButtonSize; href: string } & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'children' | 'href'>) {
+  return (
+    <Link href={href} aria-label={label} title={label} className={classes({ variant, size }, cx(s.icon, className))} {...rest}>
+      <Icon name={icon} size={size === 'sm' ? 16 : 20} />
+    </Link>
+  );
+}
+
 /** Lien simple à l’allure d’un bouton, pour un téléchargement ou une adresse hors de l’application. */
 export function AnchorButton({ variant, size, icon, iconRight, block, className, children, ...rest }:
   Look & AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) {

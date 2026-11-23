@@ -5,7 +5,7 @@ import { requireActor } from '@/server/auth/session';
 import { athleteWorkout } from '@/server/repo/athlete';
 import { athleteContext, isUuid } from '@/server/repo/context';
 import { exerciseMap } from '@/server/repo/exercises';
-import { FollowSession } from '@/components/follow-session';
+import { FollowSession } from '@/views/athlete/follow-session';
 
 export const metadata = { title: 'Suivre la séance' };
 

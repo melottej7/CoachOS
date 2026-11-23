@@ -12,3 +12,12 @@
 .meter > span { display: block; height: 100%; border-radius: 4px; background: var(--ds-coach); transition: width var(--ds-slow) var(--ds-ease); }
 .meterSignal > span { background: var(--ds-signal); }
 .meterInk > span { background: var(--ds-ink); }
+
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-rule); overflow: hidden; margin: 0; }
+@media (min-width: 900px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.kpi { display: flex; flex-direction: column; gap: 6px; padding: var(--ds-4); background: var(--ds-surface); min-width: 0; }
+.kpi dd { margin: 0; }
+.kpiValue { font-family: var(--ds-font-display); font-weight: 700; font-size: 32px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.kpiDelta { font-size: var(--ds-text-xs); font-weight: 600; color: var(--ds-ink-2); }
+/* Le sens « mieux / moins bien » n’est pas connu ici (plus d’effort n’est pas forcément mieux) : couleur neutre-chaude. */
+.deltaUp, .deltaDown { color: var(--ds-ink); }

@@ -1,0 +1,17 @@
+.chart { margin: 0; display: flex; flex-direction: column; gap: var(--ds-2); }
+.legend { display: flex; flex-wrap: wrap; gap: var(--ds-4); font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.swatchTrack { background: color-mix(in srgb, var(--ds-coach) 35%, var(--ds-surface-3)); }
+.swatchFill { background: var(--ds-coach); }
+.frame { position: relative; overflow-x: auto; }
+.svg { display: block; width: 100%; height: auto; max-height: 240px; }
+.grid { stroke: var(--ds-rule); stroke-width: 1; }
+.tick { fill: var(--ds-ink-2); font-size: 11.5px; font-family: var(--ds-font); }
+.track { fill: color-mix(in srgb, var(--ds-coach) 35%, var(--ds-surface-3)); }
+.fill { fill: var(--ds-coach); }
+.hit { fill: transparent; }
+.col { cursor: default; outline: none; }
+.on .track { fill: color-mix(in srgb, var(--ds-coach) 50%, var(--ds-surface-3)); }
+.col:focus-visible .hit { stroke: var(--ds-focus); stroke-width: 2; }
+.tip { position: absolute; top: 0; width: max-content; max-width: min(260px, 80vw); padding: 6px 10px; border-radius: var(--ds-radius-sm); background: var(--ds-primary); color: var(--ds-on-primary); font-size: var(--ds-text-xs); font-weight: 600; line-height: 1.35; pointer-events: none; box-shadow: var(--ds-shadow-lg); }

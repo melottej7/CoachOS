@@ -12,12 +12,41 @@ textarea.control { padding: var(--ds-3); min-height: 96px; resize: vertical; lin
 
 /* Choix en gros boutons (retour rapide, ressenti) : vrais boutons radio, accessibles au clavier. */
 .choices { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: var(--ds-2); border: 0; padding: 0; margin: 0; min-width: 0; }
-.choices legend { padding: 0; margin-bottom: var(--ds-2); font-weight: 700; font-size: var(--ds-text-md); }
 .choice { position: relative; }
-.choice input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.choice input { position: absolute; z-index: 1; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
 .choiceFace { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 64px; padding: var(--ds-2); border-radius: var(--ds-radius-lg); border: 1px solid var(--ds-rule-strong); background: var(--ds-surface); font-weight: 700; font-size: var(--ds-text-md); text-align: center; transition: border-color var(--ds-fast) var(--ds-ease), background-color var(--ds-fast) var(--ds-ease), transform var(--ds-fast) var(--ds-ease); }
 .choice input:hover + .choiceFace { border-color: var(--ds-ink-2); }
 .choice input:focus-visible + .choiceFace { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
 .choice input:checked + .choiceFace { border-color: var(--ds-coach); background: var(--ds-coach-soft); color: var(--ds-coach-text); box-shadow: inset 0 0 0 1px var(--ds-coach); }
 .choice input:active + .choiceFace { transform: translateY(1px); }
 .choice input:disabled + .choiceFace { opacity: 0.5; }
+
+/* Légende de groupe : la question, puis son aide. */
+.legend { padding: 0; margin-bottom: var(--ds-3); font-weight: 700; font-size: var(--ds-text-md); grid-column: 1 / -1; }
+.legendHint { display: block; margin-top: 2px; font-weight: 400; font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+
+/* Pastilles (réponses facultatives, une ou plusieurs). */
+.chipSet { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--ds-2); }
+.chipSet > .legend { margin-bottom: var(--ds-1); }
+.chips { display: flex; flex-wrap: wrap; gap: var(--ds-2); align-items: center; }
+.chip { position: relative; }
+.chip input { position: absolute; z-index: 1; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chipFace { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 var(--ds-4); border-radius: var(--ds-radius-full); border: 1px solid var(--ds-rule-strong); background: var(--ds-surface); font-weight: 600; transition: border-color var(--ds-fast) var(--ds-ease), background-color var(--ds-fast) var(--ds-ease); }
+.chip input:hover + .chipFace { border-color: var(--ds-ink-2); }
+.chip input:focus-visible + .chipFace { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+.chip input:checked + .chipFace { border-color: var(--ds-coach); background: var(--ds-coach-soft); color: var(--ds-coach-text); box-shadow: inset 0 0 0 1px var(--ds-coach); }
+.chipTick { display: none; }
+.chip input:checked + .chipFace .chipTick { display: inline-flex; }
+.clear { min-height: 44px; padding: 0 var(--ds-2); border: 0; background: transparent; color: var(--ds-ink-2); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.clear:hover { color: var(--ds-ink); }
+
+/* Échelle 0 à 10 : chaque marche fait au moins 24 px de large (WCAG 2.2, taille de cible). */
+.scale { display: grid; grid-template-columns: repeat(var(--n, 11), minmax(24px, 1fr)); gap: 4px; }
+.scaleStep { position: relative; }
+.scaleStep input { position: absolute; z-index: 1; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.scaleFace { display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: var(--ds-radius-sm); border: 1px solid var(--ds-rule-strong); background: var(--ds-surface); font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-lg); font-variant-numeric: tabular-nums; transition: border-color var(--ds-fast) var(--ds-ease), background-color var(--ds-fast) var(--ds-ease); }
+.scaleStep input:hover + .scaleFace { border-color: var(--ds-ink-2); }
+.scaleStep input:focus-visible + .scaleFace { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+.scaleStep input:checked + .scaleFace { background: var(--ds-coach); border-color: var(--ds-coach); color: var(--ds-on-coach); }
+.scaleEnds { display: flex; justify-content: space-between; align-items: center; gap: var(--ds-3); min-height: 24px; font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.scaleEnds .clear { min-height: 32px; }

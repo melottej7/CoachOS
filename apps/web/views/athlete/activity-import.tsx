@@ -5,6 +5,8 @@ import {
   ACTIVITY_FORMAT_LABELS, activityFingerprint, formatLongDate, readActivityFile, SPORT_LABELS, utcToLocal,
   type FeedbackActivity, type Sport,
 } from '@coachos/domain';
+import { Banner, Button, Cluster, Icon, Stack, Text } from '@/design';
+import s from './activity-import.module.css';
 
 // CE-X-02 (D-048) et CE-X-03 (D-064) : l’élève choisit un ou plusieurs fichiers exportés de sa montre ; ils sont lus ici,
 // dans son navigateur. Seuls sport, début, durée et distance sont repris ; le fichier lui-même n’est jamais envoyé.
@@ -54,33 +56,36 @@ export function ActivityImport({ plannedDate, plannedSport, timeZone, items, onC
   }
 
   return (
-    <div className="ai">
+    <Stack gap={2}>
       <input ref={input} id="activity-file" type="file" multiple accept=".fit,.tcx,.gpx,application/vnd.ant.fit,application/gpx+xml,application/vnd.garmin.tcx+xml"
-        className="visually-hidden" onChange={(e) => void pick(e.target.files)} />
-      <label htmlFor="activity-file" className="btn" aria-busy={busy}>⌚ {busy ? 'Lecture…' : items.length ? 'Ajouter une autre activité' : 'Importer depuis ma montre'}</label>
-      <span className="hint">Fichier .fit, .tcx ou .gpx, un ou plusieurs (échauffement et course enregistrés à part, montre coupée…). Ils restent sur ton appareil : seuls le sport, l’heure, la durée et la distance sont repris.</span>
-      {errors.length ? <div className="field-error" role="alert">{errors.map((e, i) => <p key={i}>{e}</p>)}</div> : null}
+        className="ds-visually-hidden" tabIndex={-1} aria-hidden="true" onChange={(e) => void pick(e.target.files)} />
+      <Cluster><Button icon="watch" loading={busy} onClick={() => input.current?.click()}>{busy ? 'Lecture…' : items.length ? 'Ajouter une autre activité' : 'Importer depuis ma montre'}</Button></Cluster>
+      <Text size="sm" muted>Fichier .fit, .tcx ou .gpx, un ou plusieurs (échauffement enregistré à part, montre coupée…). Ils restent sur ton appareil : seuls le sport, l’heure, la durée et la distance sont repris.</Text>
+      {errors.length ? <Banner tone="danger">{errors.map((e, i) => <span key={i} className={s.line}>{e}</span>)}</Banner> : null}
       {items.length ? (
-        <div className="ai-done" role="status">
-          <p><strong>{items.length > 1 ? `${items.length} activités rattachées à cette séance` : 'Activité rattachée à cette séance'}</strong>
-            {items.length > 1 ? ' : durée et distance additionnées ci-dessous' : ' : durée et distance remplies ci-dessous'}, tu peux les corriger.</p>
-          <ul className="plain ai-list">
+        <div className={s.done} role="status">
+          <Text size="sm"><strong>{items.length > 1 ? `${items.length} activités rattachées` : 'Activité rattachée'}</strong>
+            {items.length > 1 ? ' : durée et distance additionnées ci-dessous' : ' : durée et distance remplies ci-dessous'}, tu peux les corriger.</Text>
+          <ul className={s.list}>
             {items.map((a) => {
               const local = a.startedAt ? utcToLocal(new Date(a.startedAt), timeZone) : null;
               const otherDay = local && local.date !== plannedDate;
               const otherSport = a.sport && a.sport !== plannedSport && !(plannedSport === 'trail' && a.sport === 'running');
               return (
-                <li key={activityFingerprint(a)}>
-                  <span>{ACTIVITY_FORMAT_LABELS[a.format]} · {describe(a, timeZone)}</span>
-                  <button type="button" className="link-btn" onClick={() => onChange(items.filter((x) => x !== a))} aria-label={`Retirer l’activité ${describe(a, timeZone)}`}>Retirer</button>
-                  {otherDay ? <p className="ai-warn">Activité du {formatLongDate(local!.date).toLowerCase()}, séance prévue le {formatLongDate(plannedDate).toLowerCase()}. Vérifie que c’est la bonne.</p> : null}
-                  {otherSport ? <p className="ai-warn">Sport différent du prévu ({SPORT_LABELS[a.sport!]}) : précise-le dans « Ma séance était différente du prévu ».</p> : null}
+                <li key={activityFingerprint(a)} className={s.item}>
+                  <Icon name="watch" size={18} />
+                  <span className={s.text}>
+                    <span>{ACTIVITY_FORMAT_LABELS[a.format]} · {describe(a, timeZone)}</span>
+                    {otherDay ? <span className={s.warn}>Activité du {formatLongDate(local!.date).toLowerCase()}, séance prévue le {formatLongDate(plannedDate).toLowerCase()}. Vérifie que c’est la bonne.</span> : null}
+                    {otherSport ? <span className={s.warn}>Sport différent du prévu ({SPORT_LABELS[a.sport!]}) : précise-le dans « Ma séance était différente du prévu ».</span> : null}
+                  </span>
+                  <Button size="sm" variant="ghost" onClick={() => onChange(items.filter((x) => x !== a))} aria-label={`Retirer l’activité ${describe(a, timeZone)}`}>Retirer</Button>
                 </li>
               );
             })}
           </ul>
         </div>
       ) : null}
-    </div>
+    </Stack>
   );
 }

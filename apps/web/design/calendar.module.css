@@ -1,0 +1,56 @@
+/* Onglets segmentés (Semaine / Mois) */
+.segmented { display: inline-flex; padding: 3px; gap: 2px; border-radius: var(--ds-radius); background: var(--ds-surface-2); }
+.segment { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 var(--ds-4); border-radius: 8px; text-decoration: none; color: var(--ds-ink-2); font-weight: 600; }
+.segment:hover { color: var(--ds-ink); }
+.segment[aria-current='page'] { background: var(--ds-surface); color: var(--ds-ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12); }
+
+/* Semaine jour par jour */
+.days { display: flex; flex-direction: column; border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); overflow: hidden; }
+.day { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: var(--ds-3); padding: var(--ds-3) var(--ds-4); min-height: 64px; align-items: center; }
+.day + .day { border-top: 1px solid var(--ds-rule); }
+.dayToday { background: var(--ds-coach-soft); }
+.date { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.dateName { font-family: var(--ds-font-display); font-weight: 600; font-size: var(--ds-text-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); }
+.dateNum { font-family: var(--ds-font-display); font-weight: 700; font-size: 26px; font-variant-numeric: tabular-nums; }
+.dayToday .dateName, .dayToday .dateNum { color: var(--ds-coach-text); }
+.items { display: flex; flex-direction: column; gap: var(--ds-2); min-width: 0; }
+.item { display: flex; align-items: center; gap: var(--ds-3); text-decoration: none; color: inherit; border-radius: var(--ds-radius-sm); padding: 2px 0; }
+.item:hover .itemTitle { text-decoration: underline; }
+.itemText { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
+.itemTitle { font-weight: 600; overflow-wrap: anywhere; }
+.itemMeta { font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+/* Colonne de tête de largeur fixe : les titres restent alignés, qu’il s’agisse de « Z5 » ou de « Force ». */
+.lead { display: flex; width: 56px; flex-shrink: 0; }
+.tag { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 24px; padding: 0 7px; border-radius: var(--ds-radius-sm); background: var(--ds-surface-3); color: var(--ds-ink); font-family: var(--ds-font-display); font-weight: 700; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; flex-shrink: 0; }
+.rest { color: var(--ds-ink-2); font-size: var(--ds-text-sm); }
+.canceled .itemTitle { text-decoration: line-through; color: var(--ds-ink-2); }
+
+/* Mois */
+.month { border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); overflow: hidden; }
+.monthHead, .monthWeek { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)) minmax(52px, 0.9fr); }
+.monthHead > span { padding: var(--ds-2) 4px; text-align: center; font-family: var(--ds-font-display); font-weight: 600; font-size: var(--ds-text-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); }
+.monthWeek { border-top: 1px solid var(--ds-rule); }
+.cell { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 64px; padding: 6px 2px; text-decoration: none; color: inherit; border-left: 1px solid var(--ds-rule); }
+.cell:first-child { border-left: 0; }
+.cell:hover { background: var(--ds-surface-2); }
+.cell.cellOut { color: var(--ds-ink-2); background: color-mix(in srgb, var(--ds-surface-2) 60%, transparent); }
+.cell.cellOut .cellNum { font-weight: 500; }
+.cellNum { font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-md); font-variant-numeric: tabular-nums; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.cellToday .cellNum { background: var(--ds-coach); color: var(--ds-on-coach); }
+.dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; }
+.dot { width: 18px; height: 6px; border-radius: 3px; }
+.dotDone { box-shadow: 0 0 0 2px var(--ds-surface), 0 0 0 3px var(--ds-ink-2); }
+.dotCanceled { opacity: 0.3; }
+/* Séance sans intensité (renforcement) : pastille neutre mais visible. */
+.dotFree { background: var(--ds-ink-2); }
+.cellTitles { display: none; }
+.total { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px; border-left: 1px solid var(--ds-rule); background: var(--ds-surface-2); text-align: center; }
+.totalMain { font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-md); font-variant-numeric: tabular-nums; }
+.totalSub { font-size: 11px; color: var(--ds-ink-2); }
+@media (min-width: 768px) {
+  .cell { align-items: stretch; min-height: 92px; padding: 6px; }
+  .cellNum { align-self: flex-start; }
+  .dots { justify-content: flex-start; }
+  .cellTitles { display: flex; flex-direction: column; gap: 2px; font-size: var(--ds-text-xs); line-height: 1.25; }
+  .cellTitles > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

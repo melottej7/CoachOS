@@ -37,10 +37,10 @@ export function Eyebrow({ tone, as: As = 'p', className, ...rest }: { tone?: 'co
 }
 
 /** Texte courant. */
-export function Text({ as: As = 'p', size, muted, strong, prose, tabular, className, ...rest }:
-  { as?: ElementType; size?: 'sm' | 'md' | 'lg'; muted?: boolean; strong?: boolean; prose?: boolean; tabular?: boolean } & HTMLAttributes<HTMLElement>) {
+export function Text({ as: As = 'p', size, muted, strong, prose, tabular, tone, className, ...rest }:
+  { as?: ElementType; size?: 'sm' | 'md' | 'lg'; muted?: boolean; strong?: boolean; prose?: boolean; tabular?: boolean; tone?: 'danger' | 'success' } & HTMLAttributes<HTMLElement>) {
   const sz = size === 'sm' ? s.textSm : size === 'md' ? s.textMd : size === 'lg' ? s.textLg : s.text;
-  return <As className={cx(sz, muted && s.muted, strong && s.strong, prose && s.prose, tabular && s.tabular, className)} {...rest} />;
+  return <As className={cx(sz, muted && s.muted, strong && s.strong, prose && s.prose, tabular && s.tabular, tone && s[`text-${tone}`], className)} {...rest} />;
 }
 
 /** Grand chiffre tabulaire façon tableau d’affichage, avec son unité. */

@@ -7,5 +7,6 @@ node_modules/
 next-env.d.ts
 backups/
 .next-e2e/
+.next-build/
 test-results/
 playwright-report/

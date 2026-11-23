@@ -32,6 +32,8 @@
 .numeric { font-family: var(--ds-font-display); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 0.95; letter-spacing: -0.01em; }
 .numericUnit { font-size: 0.45em; font-weight: 600; color: var(--ds-ink-2); margin-left: 0.15em; letter-spacing: 0; }
 .tabular { font-variant-numeric: tabular-nums; }
+.text-danger { color: var(--ds-danger); font-weight: 600; }
+.text-success { color: var(--ds-success); font-weight: 600; }
 
 /* Surfaces */
 .card { background: var(--ds-surface); border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); }

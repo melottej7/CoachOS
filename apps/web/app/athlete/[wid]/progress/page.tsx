@@ -1,76 +1,106 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { addDays, daysUntil, formatLongDate, SPORT_LABELS, todayIn, weekStart, equivalents, formatDuration2, PERFORMANCE_KIND_LABELS , loadProgress } from '@coachos/domain';
+import {
+  addDays, daysUntil, equivalents, formatDuration2, formatLongDate, loadProgress, PERFORMANCE_KIND_LABELS, SPORT_LABELS, todayIn, weekStart,
+} from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { athleteContext } from '@/server/repo/context';
 import { athleteStats, strengthHistory } from '@/server/repo/stats';
-import { LoadProgress } from '@/components/load-progress';
-import { StatsPanel } from '@/components/stats-panel';
 import { readPerformances } from '@/server/commands/performances';
+import { Card, Cluster, Eyebrow, Heading, LinkButton, Stack, Text } from '@/design';
+import { StatsPanel } from '@/views/stats/stats-panel';
+import { LoadProgress } from '@/views/stats/load-progress';
+import s from './progress.module.css';
 
 export const metadata = { title: 'Progression' };
 
-/** CE-E-03 : objectif, régularité et volumes de l’élève, sur les séances publiées par son coach. */
+const km = (m: number) => (m < 1000 ? `${m} m` : `${String(Math.round(m / 100) / 10).replace('.', ',')} km`);
+
+/** CE-E-03 · Progression (refonte Chrono, D-134) : objectif, régularité et volumes, charges, résultats de référence. */
 export default async function Progress({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<{ periode?: string }> }) {
   const { wid } = await params;
   const { periode } = await searchParams;
   const actor = await requireActor();
   const ctx = await athleteContext(actor.userId, wid);
   if (!ctx) notFound();
+  const aid = ctx.athlete.id;
   const today = todayIn(ctx.athlete.timeZone);
   const weeks = [4, 8, 12].includes(Number(periode)) ? Number(periode) : 8;
   const from = addDays(weekStart(today), -7 * (weeks - 1));
   const to = addDays(weekStart(today), 6);
-  const data = await athleteStats(actor.userId, wid, ctx.athlete.id, from, to, today);
-  const loads = loadProgress(await strengthHistory(actor.userId, wid, ctx.athlete.id));
+  const [data, history, results] = await Promise.all([
+    athleteStats(actor.userId, wid, aid, from, to, today),
+    strengthHistory(actor.userId, wid, aid),
+    readPerformances(actor.userId, wid, aid),
+  ]);
   if (!data) notFound();
-  const { summary: s, goal } = data;
-  const results = await readPerformances(actor.userId, wid, ctx.athlete.id);
+  const loads = loadProgress(history);
+  const { goal } = data;
   const left = goal?.targetDate ? daysUntil(today, goal.targetDate) : null;
+
   return (
-    <>
-      <div className="kicker">Progression</div>
-      <h1>Ta progression</h1>
+    <Stack gap={8}>
+      <Stack gap={1}>
+        <Eyebrow tone="coach">Progression</Eyebrow>
+        <Heading level={1} size={1}>Ta progression</Heading>
+      </Stack>
+
       {goal ? (
-        <section className="goal-card" aria-label="Ton objectif">
-          <p className="muted">Ton objectif · {SPORT_LABELS[goal.sport]}</p>
-          <p><strong>{goal.title}</strong></p>
-          {left !== null ? (
-            <>
-              <p className="goal-count">{left > 0 ? `J-${left}` : left === 0 ? 'C’est aujourd’hui !' : 'Échéance passée'}</p>
-              <p className="muted">{formatLongDate(goal.targetDate!)}{left > 7 ? ` · encore ${Math.floor(left / 7)} semaine${Math.floor(left / 7) > 1 ? 's' : ''}` : ''}</p>
-            </>
-          ) : <p className="muted">Pas encore de date fixée.</p>}
-        </section>
+        <Card tinted pad={5} as="section" aria-label="Ton objectif">
+          <div className={s.goal}>
+            <Stack gap={1}>
+              <Eyebrow tone="coach">Ton objectif · {SPORT_LABELS[goal.sport]}</Eyebrow>
+              <Heading level={2} size={3}>{goal.title}</Heading>
+              <Text size="sm" muted>
+                {left === null ? 'Pas encore de date fixée.' : `${formatLongDate(goal.targetDate!)}${left > 7 ? ` · encore ${Math.floor(left / 7)} semaine${Math.floor(left / 7) > 1 ? 's' : ''}` : ''}`}
+              </Text>
+            </Stack>
+            {left !== null ? <p className={s.count}>{left > 0 ? `J-${left}` : left === 0 ? 'Jour J' : 'Passé'}</p> : null}
+          </div>
+        </Card>
       ) : (
-        <p className="muted">Pas encore d’objectif fixé avec ton coach. <Link href={`/athlete/${wid}/messages/coach`}>Parlez-en ensemble</Link>.</p>
+        <Card pad={5} as="section" aria-label="Ton objectif">
+          <Cluster between gap={3}>
+            <Stack gap={1}>
+              <Heading level={2} size={4}>Pas encore d’objectif</Heading>
+              <Text size="sm" muted>Fixe-le avec ton coach : tout ton programme s’organise autour.</Text>
+            </Stack>
+            <LinkButton href={`/athlete/${wid}/messages/coach`} icon="chat">En parler</LinkButton>
+          </Cluster>
+        </Card>
       )}
-      <section className="card" aria-label="Tes entraînements">
-        <StatsPanel s={s} delta={data.delta} weeks={weeks} periodHref={(n) => `/athlete/${wid}/progress?periode=${n}`} you />
-      </section>
+
+      <StatsPanel s={data.summary} delta={data.delta} weeks={weeks} periodHref={(n) => `/athlete/${wid}/progress?periode=${n}`} you />
+
       {loads.length ? (
-        <section className="card" aria-labelledby="mes-charges" style={{ marginTop: 16 }}>
-          <div className="card-head"><h2 id="mes-charges">Tes charges</h2><span className="muted">D’après tes retours de musculation</span></div>
-          <div className="card-body"><LoadProgress series={loads} you /></div>
-        </section>
+        <Stack as="section" gap={3} aria-labelledby="mes-charges">
+          <Stack gap={1}>
+            <Heading level={2} size={4} id="mes-charges">Tes charges</Heading>
+            <Text size="sm" muted>D’après tes retours de renforcement.</Text>
+          </Stack>
+          <LoadProgress series={loads} you />
+        </Stack>
       ) : null}
+
       {results.length ? (
-        <section className="card" aria-labelledby="mes-resultats" style={{ marginTop: 16 }}>
-          <div className="card-head"><h2 id="mes-resultats">Tes résultats de référence</h2></div>
-          <ul className="plain perf-list card-body">
+        <Stack as="section" gap={3} aria-labelledby="mes-resultats">
+          <Heading level={2} size={4} id="mes-resultats">Tes résultats de référence</Heading>
+          <ul className={s.results}>
             {results.map((r) => {
               const eq = equivalents(r);
               return (
-                <li key={r.id} className="perf">
-                  <span className="perf-head"><strong>{r.name ?? PERFORMANCE_KIND_LABELS[r.kind]}</strong><span className="muted"> · {formatLongDate(r.doneOn).toLowerCase()}</span></span>
-                  <span>{r.distanceM < 1000 ? `${r.distanceM} m` : `${String(Math.round(r.distanceM / 100) / 10).replace('.', ',')} km`} en <strong>{formatDuration2(r.durationS)}</strong></span>
-                  {eq.length ? <span className="muted perf-eq">Équivalences : {eq.map((e) => `${e.label} ${formatDuration2(e.seconds)}`).join(' · ')}</span> : null}
+                <li key={r.id} className={s.result}>
+                  <span className={s.resultText}>
+                    <strong>{r.name ?? PERFORMANCE_KIND_LABELS[r.kind]}</strong>
+                    <Text as="span" size="sm" muted>{km(r.distanceM)} · {formatLongDate(r.doneOn).toLowerCase()}</Text>
+                    {eq.length ? <Text as="span" size="sm" muted>Équivalences : {eq.map((e) => `${e.label} ${formatDuration2(e.seconds)}`).join(' · ')}</Text> : null}
+                  </span>
+                  <span className={s.time}>{formatDuration2(r.durationS)}</span>
                 </li>
               );
             })}
           </ul>
-        </section>
+        </Stack>
       ) : null}
-    </>
+    </Stack>
   );
 }

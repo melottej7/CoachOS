@@ -9,7 +9,12 @@ export type ZoneLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 const zoneClass = (z: number) => s[`z${Math.max(0, Math.min(7, Math.round(z)))}`];
 
 export function ZoneChip({ zone, size = 'md', label }: { zone: ZoneLevel; size?: 'sm' | 'md' | 'lg'; label?: string }) {
-  return <span className={cx(s.chip, zoneClass(zone), size === 'lg' && s.chipLg, size === 'sm' && s.chipSm)} title={label}>{zone ? `Z${zone}` : '—'}</span>;
+  // Zone 0 : intensité non précisée par le coach. Contour discret plutôt qu’une pastille pleine qui aurait l’air d’une donnée.
+  return (
+    <span className={cx(s.chip, zone ? zoneClass(zone) : s.chipNone, size === 'lg' && s.chipLg, size === 'sm' && s.chipSm)} title={label ?? (zone ? undefined : 'Intensité non précisée')}>
+      {zone ? `Z${zone}` : <><span aria-hidden="true">—</span><span className={s.srOnly}>Intensité non précisée</span></>}
+    </span>
+  );
 }
 
 export interface ZoneSegment { zone: ZoneLevel; seconds: number; label?: string }
