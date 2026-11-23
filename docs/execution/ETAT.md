@@ -22,7 +22,12 @@ Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 coul
 
 **Fait** : étape 1, filet de sécurité (D-125 : boucle coach → élève → coach et droits dans un vrai navigateur, `npm run test:e2e`, aussi dans l’Action GitHub) ; étape 2, cible ([docs/18_REFONTE.md](../18_REFONTE.md)) ; étape 3, trois directions visuelles sur le canevas « CoachOS · trois directions » (D-126, recommandation : A · Chrono).
 
-**En attente du fondateur** : choix de la direction, validation de la carte et des changements du socle. En attendant : opérations groupées et annulation côté serveur, chargement parallèle des pages, recherche globale, test des droits table par table (rien de visible ne change avant le choix).
+**Choix du fondateur (D-128)** : direction A · Chrono, avec clair, sombre ou automatique, deux densités pour le coach et la couleur du coach chez l’élève. Carte et changements additifs du socle validés.
+
+**Refonte en cours sur la branche `refonte`** (rien de visible en ligne tant qu’un espace n’est pas entièrement refait ; aperçus Vercel coupés pour cette branche) :
+- fait : design system dans `apps/web/design/` et page interne `/systeme` (D-128, D-129) ; cadre de l’espace élève ; écran « Aujourd’hui » refait et vérifié à 390 et 1440 px, clair et sombre (D-129) ;
+- prochain : le reste de l’espace élève (séance, retour détaillé, suivre en endurance et en musculation, Programme, Progression, Échanges, Profil et réglages d’apparence), puis l’accueil du coach, la boîte de réception, le calendrier avec glisser-copier-coller et annulation, la fiche élève, la bibliothèque, les paramètres, les surfaces publiques.
+- règle : `main` ne reçoit que des corrections ou un espace entièrement refait et vérifié ; la branche se fusionne espace par espace.
 
 ## Chantiers en cours (D-120)
 
@@ -36,7 +41,7 @@ Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 coul
 
 Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, pourquoi, ce que ça débloque, le temps, les clics. Tout le reste avance sans toi.
 
-0. **Choisir la direction visuelle** · 15 minutes · ouvre le canevas « CoachOS · trois directions » (lien dans la conversation du 23 novembre), compare A, B, C en clair et en sombre, puis dis-moi : A, B, C ou un mélange (« A avec les phrases de B », par exemple). Valide aussi la carte et les changements du socle de [docs/18_REFONTE.md](../18_REFONTE.md) (sections 1.2 et 2). C’est le seul choix qui bloque la reconstruction des écrans.
+0. **Fait** : direction choisie (A · Chrono, D-128).
 1. **Rendre les mises en ligne autonomes** · 15 minutes · débloque : je pousse le code moi-même et les migrations s’appliquent seules ; tu n’as plus rien à faire pour une mise en ligne. Aujourd’hui, `git push` depuis ma session échoue (« could not read Username for github.com ») : seul GitHub Desktop a tes identifiants.
    - GitHub : en haut à droite, ton avatar › **Settings** › tout en bas **« Developer settings »** › **« Personal access tokens »** › **« Fine-grained tokens »** › **« Generate new token »** › nom `CoachOS Mac` › expiration 1 an › Repository access : **« Only select repositories »** › `CoachOS` › Permissions › **Contents : Read and write** › **« Generate token »** › copie-le (il ne s’affiche qu’une fois).
    - Terminal (onglet de l’app) : colle cette commande en remplaçant `LE_JETON` par le jeton copié, puis Entrée. Je ne vois jamais le jeton ; il reste dans le trousseau du Mac.
