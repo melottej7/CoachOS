@@ -20,7 +20,9 @@ Dernière mise à jour : 2026-11-23, fin de session (D-120 à D-122). Relire d�
 
 Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 couleurs en dur hors jetons (154 occurrences au total), 14 dans les composants, 109 styles en ligne, 7 composants dans `ui.tsx` sur 70 fichiers de composants, 38 pictogrammes emoji dans les écrans, pas de choix de thème (clair ou sombre suivent seulement le système), pas de page publique ; la police est chargée depuis D-121. Socle réel : 44 migrations, 67 tables, 48 politiques RLS, 24 fichiers de commandes, 12 de lectures, 82 routes API, 57 pages, 67 fichiers de test, 33 425 lignes TypeScript ; aucun worker (la table `jobs` n’est utilisée par aucun code), un seul paquet (`domain`), aucune application mobile : docs/07 décrit une cible, pas le code.
 
-**Prochaine étape (méthode D-123, étape 1)** : tests de bout en bout dans un vrai navigateur (Playwright 1.65, à installer) de la boucle coach → élève → coach, en mode démonstration (PGlite, `/demo`, serveur lancé avec `DATABASE_URL` et `NEXT_PUBLIC_SUPABASE_URL` vides et `COACHOS_PGLITE_DIR=.data/e2e`, port 3100), puis dans l’Action GitHub. Ensuite : verdict sur le socle, carte du produit, étude des références, puis trois directions visuelles (point d’attente du fondateur).
+**Fait** : étape 1, filet de sécurité (D-125 : boucle coach → élève → coach et droits dans un vrai navigateur, `npm run test:e2e`, aussi dans l’Action GitHub) ; étape 2, cible ([docs/18_REFONTE.md](../18_REFONTE.md)) ; étape 3, trois directions visuelles sur le canevas « CoachOS · trois directions » (D-126, recommandation : A · Chrono).
+
+**En attente du fondateur** : choix de la direction, validation de la carte et des changements du socle. En attendant : opérations groupées et annulation côté serveur, chargement parallèle des pages, recherche globale, test des droits table par table (rien de visible ne change avant le choix).
 
 ## Chantiers en cours (D-120)
 
@@ -34,6 +36,7 @@ Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 coul
 
 Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, pourquoi, ce que ça débloque, le temps, les clics. Tout le reste avance sans toi.
 
+0. **Choisir la direction visuelle** · 15 minutes · ouvre le canevas « CoachOS · trois directions » (lien dans la conversation du 23 novembre), compare A, B, C en clair et en sombre, puis dis-moi : A, B, C ou un mélange (« A avec les phrases de B », par exemple). Valide aussi la carte et les changements du socle de [docs/18_REFONTE.md](../18_REFONTE.md) (sections 1.2 et 2). C’est le seul choix qui bloque la reconstruction des écrans.
 1. **Rendre les mises en ligne autonomes** · 15 minutes · débloque : je pousse le code moi-même et les migrations s’appliquent seules ; tu n’as plus rien à faire pour une mise en ligne. Aujourd’hui, `git push` depuis ma session échoue (« could not read Username for github.com ») : seul GitHub Desktop a tes identifiants.
    - GitHub : en haut à droite, ton avatar › **Settings** › tout en bas **« Developer settings »** › **« Personal access tokens »** › **« Fine-grained tokens »** › **« Generate new token »** › nom `CoachOS Mac` › expiration 1 an › Repository access : **« Only select repositories »** › `CoachOS` › Permissions › **Contents : Read and write** › **« Generate token »** › copie-le (il ne s’affiche qu’une fois).
    - Terminal (onglet de l’app) : colle cette commande en remplaçant `LE_JETON` par le jeton copié, puis Entrée. Je ne vois jamais le jeton ; il reste dans le trousseau du Mac.
