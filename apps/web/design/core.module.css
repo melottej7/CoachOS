@@ -6,7 +6,8 @@
 .alignStart { align-items: flex-start; }
 .alignEnd { align-items: flex-end; }
 .alignBaseline { align-items: baseline; }
-.grow > * { flex: 1 1 0; min-width: 0; }
+/* Les enfants se partagent la ligne, mais passent à la ligne plutôt que d’écraser leur texte. */
+.grow > * { flex: 1 1 auto; }
 .grid { display: grid; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); }
 .gridAuto { display: grid; grid-template-columns: repeat(auto-fit, minmax(var(--min, 160px), 1fr)); }
 .g0 { gap: 0; } .g1 { gap: var(--ds-1); } .g2 { gap: var(--ds-2); } .g3 { gap: var(--ds-3); } .g4 { gap: var(--ds-4); }

@@ -1,4 +1,5 @@
-import { ZONE_NAMES, type SessionView, type Zone } from '@coachos/domain';
+import type { ReactNode } from 'react';
+import { ZONE_NAMES, type SessionRow, type SessionView, type Zone } from '@coachos/domain';
 import { Icon } from './icons';
 import { Stats } from './data';
 import { ZoneChip, ZoneStrip, type ZoneLevel } from './zones';
@@ -43,7 +44,7 @@ export function SessionStrip({ view, height = 16 }: { view: SessionView; height?
 }
 
 /** Une ligne par bloc : zone, ce qu’il faut faire, la cible traduite pour l’élève. */
-export function SessionRows({ view }: { view: SessionView }) {
+export function SessionRows({ view, extra }: { view: SessionView; extra?: (row: SessionRow) => ReactNode }) {
   if (!view.rows.length) return null;
   return (
     <ol className={s.rows}>
@@ -54,6 +55,7 @@ export function SessionRows({ view }: { view: SessionView }) {
             <span className={s.rowTitle}>{keep(r.title)}</span>
             {r.detail ? <span className={s.rowDetail}>{keep(r.detail)}</span> : null}
           </span>
+          {extra?.(r) ? <span className={s.rowExtra}>{extra(r)}</span> : null}
           {r.target ? <span className={s.rowTarget}>{r.target.replace(/ (\/km|\/100 m|W)$/, '')}<small>{/\/100 m$/.test(r.target) ? '/100 m' : /W$/.test(r.target) ? 'watts' : '/km'}</small></span> : null}
         </li>
       ))}

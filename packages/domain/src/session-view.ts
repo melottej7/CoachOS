@@ -19,6 +19,8 @@ export interface SessionRow {
   repeat: boolean;
   /** Pastille quand il n’y a pas de zone : « 4× » pour des séries. */
   badge: string | null;
+  /** Exercices du bloc (bibliothèque), pour montrer leur vidéo. */
+  exerciseIds: string[];
 }
 
 export interface SessionView {
@@ -52,7 +54,7 @@ function firstZoned(b: Block): Step | null {
 function stepRow(s: Step, sport: Sport, refs?: References): SessionRow {
   const intensity = s.intensity.kind === 'zone' ? null : describeIntensity(s.intensity);
   if (s.exercise) {
-    return { zone: 0, title: s.exercise.name, detail: [describeMeasure(s.measure), intensity, s.note].filter(Boolean).join(' · '), target: null, repeat: false, badge: '1×' };
+    return { zone: 0, title: s.exercise.name, detail: [describeMeasure(s.measure), intensity, s.note].filter(Boolean).join(' · '), target: null, repeat: false, badge: '1×', exerciseIds: s.exercise.id ? [s.exercise.id] : [] };
   }
   return {
     zone: zoneOf(s),
@@ -61,6 +63,7 @@ function stepRow(s: Step, sport: Sport, refs?: References): SessionRow {
     target: personalTarget(s, sport, refs),
     repeat: false,
     badge: null,
+    exerciseIds: [],
   };
 }
 
@@ -81,6 +84,7 @@ function strengthRow(b: Extract<Block, { type: 'repeat' }>): SessionRow {
     target: null,
     repeat: true,
     badge: `${b.times}×`,
+    exerciseIds: [...new Set(work.map((x) => x.exercise!.id).filter((x): x is string => Boolean(x)))],
   };
 }
 
@@ -99,10 +103,10 @@ export function sessionView(blocks: Block[], sport: Sport, refs?: References, de
       return {
         zone: maxZone(b), title: `${b.times} × ${describeMeasure(work.measure)}`,
         detail: `récupération ${describeMeasure(rec.measure)}${recZone ? ` en Z${recZone}` : ''}`,
-        target: key ? personalTarget(key, sport, refs) : null, repeat: true, badge: null,
+        target: key ? personalTarget(key, sport, refs) : null, repeat: true, badge: null, exerciseIds: [],
       };
     }
-    return { zone: maxZone(b), title: describeBlock(b, sport).replace(/ · Z\d \([^)]*\)/g, (m) => m.replace(/ \([^)]*\)/, '')), detail: null, target: key ? personalTarget(key, sport, refs) : null, repeat: true, badge: null };
+    return { zone: maxZone(b), title: describeBlock(b, sport).replace(/ · Z\d \([^)]*\)/g, (m) => m.replace(/ \([^)]*\)/, '')), detail: null, target: key ? personalTarget(key, sport, refs) : null, repeat: true, badge: null, exerciseIds: [] };
   });
   const strengthSession = sport === 'strength' || blocks.some(hasExercise);
   const exerciseNames = new Set(flat(blocks).filter((x) => x.exercise).map((x) => x.exercise!.name));

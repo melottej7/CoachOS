@@ -58,3 +58,13 @@ export function IconButton({ icon, label, variant = 'ghost', size, className, ..
     </button>
   );
 }
+
+/** Lien simple à l’allure d’un bouton, pour un téléchargement ou une adresse hors de l’application. */
+export function AnchorButton({ variant, size, icon, iconRight, block, className, children, ...rest }:
+  Look & AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) {
+  return (
+    <a className={classes({ variant, size, block }, className)} {...rest}>
+      <Inner icon={icon} iconRight={iconRight}>{children}</Inner>
+    </a>
+  );
+}
