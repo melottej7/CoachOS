@@ -347,7 +347,8 @@ Non prouvé : import du fichier FIT sur une vraie montre ; enregistrement au mic
 **Pour le fondateur** :
 - Crédit Anthropic pour l’IA ; le budget mensuel est de 10 $ par espace par défaut.
 - **Cocher « Musculation » (et « Course à pied ») dans Paramètres › sports encadrés** : ton espace n’a que « Trail » coché, la musculation y est donc masquée (D-102).
-- **Fait le 23 novembre** : migrations D-115 et D-118 appliquées en ligne, clés VAPID dans Vercel, code poussé ; `/api/health` en ligne : base ok, `push: true`, `email: none`, `ai: simulation`, `contact: false`.
+- **Fait le 23 novembre** : migrations D-115 et D-118 appliquées en ligne, clés VAPID dans Vercel, code poussé ; compte coach du fondateur créé en ligne ; Resend réglé avec l’adresse de test `onboarding@resend.dev` (n’envoie qu’à l’adresse du fondateur) ; `/api/health` en ligne : base ok, `push: true`, `email: resend`, `ai: simulation`, `contact: false`.
+- **Avant d’inviter de vrais élèves : un nom de domaine** (une dizaine d’euros par an), vérifié dans Resend (Domains › Add Domain, enregistrements DNS), puis `EMAIL_FROM` = `CoachOS <coach@ton-domaine>` et le réglage SMTP de Supabase pour « Mot de passe oublié ».
 - **À relire** : https://coach-os-xi-kohl.vercel.app/confidentialite. C’est un brouillon exact techniquement, mais c’est toi qui l’assumes devant tes élèves. Facultatif : `COACHOS_CONTACT_EMAIL` dans Vercel.
 - **Rappels sur ton iPhone** : app installée sur l’écran d’accueil, puis Notifications › « Activer les rappels sur cet appareil » (section « Rappels sur le téléphone » du guide de recette). Dis-moi si un rappel arrive.
 - **Sauvegarde** : une première fois, Docker ouvert, `npm run db:backup` dans le Terminal ; dis-moi le résultat.

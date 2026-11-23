@@ -13,6 +13,7 @@ Préparé le 21 novembre 2026 (D-112), **mis en ligne le 22 novembre (D-114) : h
 - La version de production se construit sans erreur ni avertissement (`npm run build`, 21 novembre).
 - L’accès de démonstration (identités fictives) est coupé d’office en production.
 - L’envoi d’e-mails par **Resend** est branché et testé avec un faux serveur. Il s’active dès que la clé est fournie ; il n’a pas encore été essayé avec un vrai compte. **Sans clé, l’invitation d’un élève est refusée avec un message clair** : règle Resend avant d’inviter.
+- **23 novembre** : compte coach du fondateur créé en ligne ; migrations D-115 et D-118 appliquées ; rappels push et Resend (adresse de test `onboarding@resend.dev`, envoi vers l’adresse du fondateur seulement) réglés ; `/api/health` : `email: resend`, `push: true`. **Avant de vrais élèves : un nom de domaine vérifié dans Resend.**
 - **22 novembre** : base Supabase « CoachOS » (Irlande, 42 migrations appliquées) ; projet Vercel `coach-os` (fonctions à Dublin). `https://coach-os-xi-kohl.vercel.app/api/health` répond `{"ok":true,"db":"ok"}` ; la page de connexion et l’aperçu d’invitation lisent la base.
 
 ## Étape 1 · Ce que tu crées (environ 30 minutes, je te guide en direct)
