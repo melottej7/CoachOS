@@ -1,8 +1,4 @@
-// Restes de l’ancien kit encore utilisés par des écrans pas encore refaits (programme d’un objectif, D-123).
-
-export function Pill({ children, tone = '' }: { children: React.ReactNode; tone?: '' | 'attn' | 'neutral' }) {
-  return <span className={`pill ${tone}`}>{children}</span>;
-}
+// Reste de l’ancien kit : initiales d’un nom, encore utilisées par la messagerie (D-157).
 
 export function initials(name: string): string {
   return name

@@ -3,10 +3,11 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { NO_TWEAKS, type AiProposal, type ProgramTweaks } from '@coachos/domain';
-import { useIntent } from './use-intent';
+import { useIntent } from '@/components/use-intent';
+import { AnchorButton, Badge, Banner, Button, Card, Cluster, Field, Heading, Stack, Text, Textarea } from '@/design';
 
-// D-071 : « Ajuster avec l’IA ». Le coach écrit ; l’IA propose des réglages ; la page recalcule le programme avec ces
-// réglages et montre ce qui change. Rien n’est enregistré avant « Créer » ou « Appliquer ».
+// D-071, refonte Chrono (D-157) : « Ajuster avec l’IA ». Le coach écrit ; l’IA propose des réglages ; la page recalcule le
+// programme avec ces réglages et montre ce qui change. Rien n’est enregistré avant « Créer » ou « Appliquer ».
 
 const EXAMPLES = ['Moins de fractionné', 'Sortie longue le samedi', 'Allège de 10 %', 'Sorties longues progressives', 'Pas de VMA'];
 
@@ -37,25 +38,27 @@ export function AiTweaks({ wid, aid, goalId, days, tweaks, href, first, source }
   }
 
   return (
-    <section className="card ai-card" aria-labelledby="ai-title">
-      <div className="card-head"><h2 id="ai-title">✨ Ajuster avec l’IA</h2>
-        <span className={`pill ${source === 'claude' ? '' : 'neutral'}`}>{source === 'claude' ? 'Claude' : 'IA simulée'}</span></div>
-      <div className="card-body stack">
-        <p className="muted">Écris ce que tu veux changer pour {first}. L’IA le traduit en réglages ; le programme est recalculé avec les mêmes garde-fous (objectif, progression, risques) et tu vois les différences avant de décider.</p>
-        <label className="field"><span>Ta demande</span>
-          <textarea maxLength={500} value={text} onChange={(e) => setText(e.target.value)} aria-label="Ta demande à l’IA"
-            placeholder="Ex. moins de fractionné, sortie longue le samedi et progressive" /></label>
-        <div className="chips" aria-label="Exemples">{EXAMPLES.map((x) => (
-          <button key={x} type="button" className="chip-btn" onClick={() => setText((t) => (t ? `${t}, ${x.toLowerCase()}` : x))}>{x}</button>
-        ))}</div>
-        {abstain ? <p className="banner warn" role="status">{abstain}</p> : null}
-        {error ? <p className="field-error" role="alert">{error.kind === 'error' ? (error.fields[0]?.rule ?? error.message) : 'Connexion perdue. Réessaie.'}</p> : null}
-        <div className="actions">
-          <button type="button" className="btn primary" disabled={pending || text.trim().length < 3} onClick={() => void propose()}>{pending ? 'Réflexion…' : '✨ Proposer des réglages'}</button>
-          <span className="muted">{source === 'claude' ? 'Envoyé à Claude sans le nom de l’élève ni ses messages.' : 'IA simulée : aucune donnée ne quitte CoachOS. Branche Claude pour de vraies réponses.'}</span>
-        </div>
-      </div>
-    </section>
+    <Card pad={5}>
+      <Stack as="section" gap={4} aria-labelledby="ai-title">
+        <Cluster between gap={2}>
+          <Heading level={3} size={4} id="ai-title">Ajuster avec l’IA</Heading>
+          <Badge tone={source === 'claude' ? 'coach' : 'neutral'}>{source === 'claude' ? 'Claude' : 'IA simulée'}</Badge>
+        </Cluster>
+        <Text size="sm" muted>Écris ce que tu veux changer pour {first}. L’IA le traduit en réglages ; le programme est recalculé avec les mêmes garde-fous (objectif, progression, risques) et tu vois les différences avant de décider.</Text>
+        <Field id="ai-text" label="Ta demande">
+          <Textarea id="ai-text" maxLength={500} value={text} onChange={(e) => setText(e.target.value)} placeholder="Ex. moins de fractionné, sortie longue le samedi et progressive" />
+        </Field>
+        <Cluster gap={2} aria-label="Exemples" role="group">
+          {EXAMPLES.map((x) => <Button key={x} size="sm" variant="ghost" icon="plus" onClick={() => setText((t) => (t ? `${t}, ${x.toLowerCase()}` : x))}>{x}</Button>)}
+        </Cluster>
+        {abstain ? <Banner tone="warning">{abstain}</Banner> : null}
+        {error ? <Text size="sm" tone="danger" role="alert">{error.kind === 'error' ? (error.fields[0]?.rule ?? error.message) : 'Connexion perdue. Réessaie.'}</Text> : null}
+        <Cluster gap={3}>
+          <Button variant="primary" icon="bolt" loading={pending} disabled={text.trim().length < 3} onClick={() => void propose()}>Proposer des réglages</Button>
+          <Text as="span" size="sm" muted>{source === 'claude' ? 'Envoyé à Claude sans le nom de l’élève ni ses messages.' : 'IA simulée : aucune donnée ne quitte CoachOS.'}</Text>
+        </Cluster>
+      </Stack>
+    </Card>
   );
 }
 
@@ -66,9 +69,9 @@ export function TweaksBanner({ lines, href, suggestionId }: { lines: string[]; h
   useEffect(() => { try { setWhy(suggestionId ? sessionStorage.getItem(`coachos:ai:${suggestionId}`) : null); } catch { /* commodité */ } }, [suggestionId]);
   if (!lines.length) return null;
   return (
-    <div className="banner next-step" role="status">
-      <span><strong>Réglages {suggestionId ? 'proposés par l’IA' : 'du programme'} :</strong> {lines.join(' · ')}.{why ? <> <span className="muted">{why}</span></> : null}</span>
-      <a className="btn small" href={withTweaks(href, NO_TWEAKS, null, null)}>Sans réglage</a>
-    </div>
+    <Banner tone="info" title={`Réglages ${suggestionId ? 'proposés par l’IA' : 'du programme'}`}
+      action={<AnchorButton href={withTweaks(href, NO_TWEAKS, null, null)} size="sm">Sans réglage</AnchorButton>}>
+      {lines.join(' · ')}.{why ? ` ${why}` : ''}
+    </Banner>
   );
 }

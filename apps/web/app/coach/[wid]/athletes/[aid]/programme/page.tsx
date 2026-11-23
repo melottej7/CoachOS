@@ -1,21 +1,24 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { addDays, DAY_LABELS, programBlocks, weekDelta, describeTweaks, formatClock, formatLongDate, formatShortDate, isLocalDate, parseTweaksParam, PROGRAM_PHASE_LABELS, weekStart, WEEKDAY_SHORT } from '@coachos/domain';
+import { DAY_LABELS, programBlocks, weekDelta, describeTweaks, formatClock, formatLongDate, formatShortDate, isLocalDate, parseTweaksParam, PROGRAM_PHASE_LABELS, weekStart, WEEKDAY_SHORT } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { isUuid } from '@/server/repo/context';
 import { buildProgram, existingInPeriod, nextMonday, programContext, readGoalPlans } from '@/server/commands/programs';
-import { ProgramCreate } from '@/components/program-create';
-import { AiTweaks, TweaksBanner } from '@/components/ai-tweaks';
 import { aiSource } from '@/server/commands/ai';
-import { Pill } from '@/components/ui';
-import { ProgramChart } from '@/components/program-chart';
+import { Badge, Banner, Button, Card, Cluster, Disclosure, Eyebrow, Field, Heading, Input, LinkButton, Stack, Text, type Tone } from '@/design';
+import { AiTweaks, TweaksBanner } from '@/views/coach/program/ai-tweaks';
+import { ProgramChart } from '@/views/coach/program/program-chart';
+import { ProgramCreate } from '@/views/coach/program/program-create';
+import s from '@/views/coach/program/program.module.css';
 
 export const metadata = { title: 'Programme' };
 
 const h = (min: number) => formatClock(Math.round(min / 5) * 5 * 60);
-const RISK_MARK = { watch: '•', risk: '!', block: '✕' } as const;
+const RISK_TONE: Record<'watch' | 'risk' | 'block', Tone> = { watch: 'info', risk: 'warning', block: 'danger' };
+const RISK_LABEL = { watch: 'À surveiller', risk: 'Risque', block: 'Bloquant' } as const;
 const WEEKDAY_LONG = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'] as const;
 const KIND_LABEL = { easy: 'Facile', long: 'Longue', quality: 'Qualité', race: 'Course' } as const;
+const PHASE_TONE: Record<string, Tone> = { tremplin: 'neutral', developpement: 'coach', recuperation: 'info', affutage: 'signal' };
 /** D-106 : nom et but de chaque bloc. */
 const BLOCK_TITLE = { tremplin: 'Tremplin', developpement: 'Développement', recuperation: 'Semaine allégée', affutage: 'Affûtage' } as const;
 const BLOCK_AIM = {
@@ -26,8 +29,9 @@ const BLOCK_AIM = {
 } as const;
 
 /**
- * D-061 : générateur de programme. À la hauteur de l’objectif validé, 4 semaines de tremplin, risques signalés au coach
- * qui décide. Paramètres en adresse (rien n’est enregistré avant « Créer »).
+ * D-061, refonte Chrono (D-157) : générateur de programme. À la hauteur de l’objectif validé, semaines de tremplin, risques
+ * signalés au coach qui décide. Paramètres en adresse (rien n’est enregistré avant « Créer »). D-101 : le programme d’abord,
+ * puis les risques et la création, les réglages repliés en bas.
  */
 export default async function ProgramPage({ params, searchParams }: { params: Promise<{ wid: string; aid: string }>; searchParams: Promise<{ objectif?: string; debut?: string; jours?: string | string[]; reglages?: string; ia?: string }> }) {
   const { wid, aid } = await params;
@@ -37,10 +41,18 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
   const ctx = await programContext(actor.userId, wid, aid, sp.objectif);
   if (!ctx) notFound();
   const first = ctx.athlete.name.split(' ')[0] ?? ctx.athlete.name;
-  const back = `/coach/${wid}/athletes/${aid}`;
+  const fiche = `/coach/${wid}/athletes/${aid}`;
+  const backLink = <Cluster><LinkButton href={`${fiche}?onglet=progression`} variant="ghost" size="sm" icon="chevronLeft">Fiche de {ctx.athlete.name}</LinkButton></Cluster>;
   if (!ctx.feasibility) {
-    return (<><Link className="back" href={`${back}#bilan`}>← Fiche de {ctx.athlete.name}</Link><h1>Programme</h1>
-      <p className="banner warn">Le générateur a besoin du bilan de {first} (pratique actuelle, disponibilités). Remplis-le avec {first} en entretien.</p></>);
+    return (
+      <Stack gap={6} className="ds-narrow-wide">
+        {backLink}
+        <Heading level={1} size={1}>Programme</Heading>
+        <Banner tone="warning" title="Le bilan manque" action={<LinkButton href={`${fiche}/bilan`} size="sm">Remplir le bilan</LinkButton>}>
+          Le générateur a besoin du bilan de {first} (pratique actuelle, disponibilités). Remplis-le avec {first} en entretien.
+        </Banner>
+      </Stack>
+    );
   }
   const start = sp.debut && isLocalDate(sp.debut) ? weekStart(sp.debut) : nextMonday(ctx.today);
   const raw = Array.isArray(sp.jours) ? sp.jours : sp.jours ? sp.jours.split(',') : null;
@@ -51,133 +63,140 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
   const program = days.length >= 2 ? buildProgram(ctx, start, days, tweaks) : null;
   const here = `/coach/${wid}/athletes/${aid}/programme?objectif=${ctx.goal.id}&debut=${start}${days.map((x) => `&jours=${x}`).join('')}${tweaks ? `&reglages=${encodeURIComponent(JSON.stringify(tweaks))}` : ''}${suggestionId ? `&ia=${suggestionId}` : ''}`;
   const total = program ? program.weeks.reduce((n, w) => n + w.sessions.length, 0) : 0;
-  const fromLib = program ? program.weeks.reduce((n, w) => n + w.sessions.filter((s) => s.source === 'library').length, 0) : 0;
-  const existing = program ? await existingInPeriod(actor.userId, wid, aid, start, ctx.feasibility.eventDate) : 0;
+  const fromLib = program ? program.weeks.reduce((n, w) => n + w.sessions.filter((x) => x.source === 'library').length, 0) : 0;
+  const [existing, plans] = await Promise.all([
+    program ? existingInPeriod(actor.userId, wid, aid, start, ctx.feasibility.eventDate) : Promise.resolve(0),
+    readGoalPlans(actor.userId, wid, aid, ctx.goal.id),
+  ]);
   const d = ctx.decision?.params;
-  const plans = await readGoalPlans(actor.userId, wid, aid, ctx.goal.id);
-
   const eventDate = ctx.feasibility.eventDate;
   const dayNames = days.map((x) => WEEKDAY_SHORT[x - 1]).join(', ');
   const longest = program ? Math.max(...program.weeks.map((w) => w.longMinutes ?? 0)) : 0;
 
-  // D-101 : le programme d’abord (aperçu, semaines), puis les risques et la création, les réglages repliés en bas.
   const adjust = (
-    <details className="card prog-adjust" id="ajuster" open={!program || Boolean(tweaks)}>
-      <summary><span className="prog-adjust-title">⚙️ Ajuster le programme</span> <span className="muted">Premier lundi, jours, ta méthode, demande à l’IA</span></summary>
-      <form className="prog-params" method="get">
-        <input type="hidden" name="objectif" value={ctx.goal.id} />
-        {tweaks ? <input type="hidden" name="reglages" value={JSON.stringify(tweaks)} /> : null}
-        {suggestionId ? <input type="hidden" name="ia" value={suggestionId} /> : null}
-        <div className="form-row">
-          <label className="field"><span>Premier lundi</span><input type="date" name="debut" defaultValue={start} min={weekStart(ctx.today)} aria-label="Premier lundi du programme" /></label>
-          <fieldset className="field prog-days"><legend>Jours d’entraînement</legend>
-            {WEEKDAY_SHORT.map((label, i) => (
-              <label key={label} className="check"><input type="checkbox" name="jours" value={i + 1} defaultChecked={days.includes(i + 1)} /> {label}</label>
-            ))}
-          </fieldset>
-          <div className="actions"><button className="btn" type="submit">Recalculer</button></div>
-        </div>
-      </form>
-      {ctx.methodLines.length ? (
-        <p className="prog-method"><span><strong>Ta méthode s’applique :</strong> {ctx.methodLines.join(' · ')}.</span>
-          <Link className="btn small" href={`/coach/${wid}/methode`}>Ma méthode</Link></p>
-      ) : null}
-      {program ? <AiTweaks wid={wid} aid={aid} goalId={ctx.goal.id} days={days} tweaks={tweaks} href={here} first={first} source={aiSource()} /> : null}
-    </details>
+    <Card pad={5} id="ajuster">
+      <Disclosure summary="Ajuster le programme : premier lundi, jours, ta méthode, l’IA" open={!program || Boolean(tweaks)}>
+        <Stack gap={5}>
+          <form method="get">
+            <input type="hidden" name="objectif" value={ctx.goal.id} />
+            {tweaks ? <input type="hidden" name="reglages" value={JSON.stringify(tweaks)} /> : null}
+            {suggestionId ? <input type="hidden" name="ia" value={suggestionId} /> : null}
+            <Stack gap={4}>
+              <Field id="debut" label="Premier lundi">
+                <Input id="debut" type="date" name="debut" defaultValue={start} min={weekStart(ctx.today)} style={{ maxWidth: 220 }} />
+              </Field>
+              <fieldset style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}>
+                <Stack gap={2}>
+                  <Text as="legend" strong>Jours d’entraînement</Text>
+                  <div className={s.days}>
+                    {WEEKDAY_SHORT.map((label, i) => (
+                      <label key={label} className={s.dayChip}><input type="checkbox" name="jours" value={i + 1} defaultChecked={days.includes(i + 1)} /> {label}</label>
+                    ))}
+                  </div>
+                </Stack>
+              </fieldset>
+              <Cluster><Button type="submit" icon="repeat">Recalculer</Button></Cluster>
+            </Stack>
+          </form>
+          {ctx.methodLines.length ? (
+            <Banner tone="info" title="Ta méthode s’applique" action={<LinkButton href={`/coach/${wid}/methode`} size="sm">Ma méthode</LinkButton>}>{ctx.methodLines.join(' · ')}.</Banner>
+          ) : null}
+          {program ? <AiTweaks wid={wid} aid={aid} goalId={ctx.goal.id} days={days} tweaks={tweaks} href={here} first={first} source={aiSource()} /> : null}
+        </Stack>
+      </Disclosure>
+    </Card>
   );
 
   return (
-    <>
-      <Link className="back" href={`${back}#faisabilite`}>← Fiche de {ctx.athlete.name}</Link>
-      <div className="kicker">Programme · {ctx.athlete.name}</div>
-      <h1>{ctx.goal.title}</h1>
-      <ul className="plain prog-facts" aria-label="Objectif">
-        {d ? <li>{String(d.distanceKm).replace('.', ',')} km</li> : null}
-        <li>{formatLongDate(eventDate)}</li>
-        {d ? <li>{d.targetSeconds ? `objectif ${formatClock(d.targetSeconds)}` : 'pour finir'}</li> : null}
-        <li>{dayNames}</li>
-      </ul>
+    <Stack gap={8}>
+      <Stack gap={3}>
+        {backLink}
+        <Stack gap={1}>
+          <Eyebrow tone="coach">Programme · {ctx.athlete.name}</Eyebrow>
+          <Heading level={1} size={1}>{ctx.goal.title}</Heading>
+        </Stack>
+        <ul className={s.facts} aria-label="Objectif">
+          {d ? <li><Badge>{String(d.distanceKm).replace('.', ',')} km</Badge></li> : null}
+          <li><Badge>{formatLongDate(eventDate)}</Badge></li>
+          {d ? <li><Badge tone="coach">{d.targetSeconds ? `objectif ${formatClock(d.targetSeconds)}` : 'pour finir'}</Badge></li> : null}
+          <li><Badge>{dayNames}</Badge></li>
+        </ul>
+      </Stack>
 
-      {plans.length ? (
-        <div className="banner prog-has" role="note">
-          {plans.map((p) => (
-            <span key={p.id} className="prog-existing">
-              <span><strong>Programme déjà créé</strong> du {formatShortDate(p.startsOn)} au {formatShortDate(p.endsOn)}
-                <span className="muted"> · {p.days.map((x) => WEEKDAY_SHORT[x - 1]).join(', ')}{p.regenerations ? ` · régénéré ${p.regenerations} fois` : ''}</span></span>
-              <Link className="btn small" href={`/coach/${wid}/athletes/${aid}/programme/regenerer?plan=${p.id}`}>Régénérer une partie</Link>
-            </span>
-          ))}
-          <span className="muted">Pour changer des jours ou des semaines, régénère plutôt que de créer un second programme : les séances passées ou retouchées sont gardées.</span>
-        </div>
-      ) : null}
+      {plans.map((p) => (
+        <Banner key={p.id} tone="info" title={`Programme déjà créé du ${formatShortDate(p.startsOn)} au ${formatShortDate(p.endsOn)}`}
+          action={<LinkButton href={`/coach/${wid}/athletes/${aid}/programme/regenerer?plan=${p.id}`} size="sm" icon="repeat">Régénérer une partie</LinkButton>}>
+          {p.days.map((x) => WEEKDAY_SHORT[x - 1]).join(', ')}{p.regenerations ? ` · régénéré ${p.regenerations} fois` : ''}. Pour changer des jours ou des semaines, régénère plutôt que de créer un second programme : les séances passées ou retouchées sont gardées.
+        </Banner>
+      ))}
 
       {!program ? (
         <>
-          <p className="banner warn">Choisis au moins 2 jours d’entraînement.</p>
+          <Banner tone="warning">Choisis au moins 2 jours d’entraînement.</Banner>
           {adjust}
         </>
       ) : (
         <>
           <TweaksBanner lines={tweaks ? describeTweaks(tweaks, DAY_LABELS) : []} href={here} suggestionId={suggestionId} />
-          <section className="card prog-glance" aria-labelledby="prog-sum">
-            <div className="card-head"><h2 id="prog-sum">{program.weeks.length} semaines · {total} séances</h2>
-              <a className="btn small primary" href="#creer">Créer en brouillons ↓</a></div>
-            <div className="card-body stack">
-              <ul className="plain prog-stats">
-                <li><span className="prog-stat-n">{h(program.startWeekly)} → {h(program.peakWeekly)}</span><span className="muted">par semaine, du départ au pic</span></li>
-                <li><span className="prog-stat-n">{h(longest || program.longNeed)}</span><span className="muted">séance longue la plus longue</span></li>
-                <li><span className="prog-stat-n">{fromLib}</span><span className="muted">séance{fromLib > 1 ? 's' : ''} de ta bibliothèque 📚</span></li>
-                <li><span className="prog-stat-n">{program.risks.length ? `${program.risks.length} point${program.risks.length > 1 ? 's' : ''}` : 'Aucun'}</span><span className="muted">{program.risks.length ? <a href="#creer">d’attention à lire</a> : 'risque signalé'}</span></li>
-              </ul>
-              <ProgramChart weeks={program.weeks} eventDate={eventDate} eventLabel={ctx.goal.title} />
-            </div>
-          </section>
+          <Stack as="section" gap={4} aria-labelledby="prog-sum">
+            <Cluster between gap={2}>
+              <Heading level={2} size={3} id="prog-sum">{program.weeks.length} semaines · {total} séances</Heading>
+              <LinkButton href="#creer" variant="primary" size="sm" iconRight="chevronDown">Créer en brouillons</LinkButton>
+            </Cluster>
+            <ul className={s.stats}>
+              <li className={s.stat}><span className={s.statN}>{h(program.startWeekly)} → {h(program.peakWeekly)}</span><Text as="span" size="sm" muted>par semaine, du départ au pic</Text></li>
+              <li className={s.stat}><span className={s.statN}>{h(longest || program.longNeed)}</span><Text as="span" size="sm" muted>séance longue la plus longue</Text></li>
+              <li className={s.stat}><span className={s.statN}>{fromLib}</span><Text as="span" size="sm" muted>séance{fromLib > 1 ? 's' : ''} de ta bibliothèque</Text></li>
+              <li className={s.stat}><span className={s.statN}>{program.risks.length ? `${program.risks.length} point${program.risks.length > 1 ? 's' : ''}` : 'Aucun'}</span>
+                <Text as="span" size="sm" muted>{program.risks.length ? <a href="#creer">d’attention à lire</a> : 'risque signalé'}</Text></li>
+            </ul>
+            <Card pad={5}><ProgramChart weeks={program.weeks} eventDate={eventDate} eventLabel={ctx.goal.title} /></Card>
+          </Stack>
 
-          <section className="card" aria-labelledby="prog-weeks">
-            <div className="card-head"><h2 id="prog-weeks">Semaine par semaine</h2><span className="muted">Touche une séance pour lire pourquoi elle est là</span></div>
-            {/* D-105 : une semaine = un bloc ; ses séances en petites tuiles. */}
-            <ol className="plain pb-list card-body">
+          <Stack as="section" gap={4} aria-labelledby="prog-weeks">
+            <Stack gap={1}>
+              <Heading level={2} size={3} id="prog-weeks">Semaine par semaine</Heading>
+              <Text size="sm" muted>Touche une séance pour lire pourquoi elle est là.</Text>
+            </Stack>
+            {/* D-105 : un bloc = des semaines ; leurs séances en petites lignes dépliables. */}
+            <ol className={s.blocks}>
               {programBlocks(program.weeks).map((b) => {
-                const first = b.weeks[0]!, last = b.weeks.at(-1)!;
+                const bf = b.weeks[0]!, bl = b.weeks.at(-1)!;
+                const top = Math.max(...b.weeks.map((w) => w.minutes));
                 return (
-                  <li key={b.n} className={`pb ${b.phase}`}>
-                    <div className="pb-head">
-                      <h3><span className="pb-n">Bloc {b.n}</span> · {BLOCK_TITLE[b.phase]} <span className="muted">· S{first.index}{last.index !== first.index ? `–S${last.index}` : ''}</span></h3>
-                      <p className="muted pb-sum">{b.phase === 'developpement' && !b.lightWeeks ? 'La charge monte jusqu’à l’affûtage.'
+                  <li key={b.n} className={`${s.block} ${s[b.phase]}`}>
+                    <Stack gap={1}>
+                      <Heading level={3} size={4}>Bloc {b.n} · {BLOCK_TITLE[b.phase]} <Text as="span" muted>· S{bf.index}{bl.index !== bf.index ? `–S${bl.index}` : ''}</Text></Heading>
+                      <Text size="sm" muted>{b.phase === 'developpement' && !b.lightWeeks ? 'La charge monte jusqu’à l’affûtage.'
                         : b.phase === 'tremplin' && b.lightWeeks ? `${b.loadWeeks} semaines pour reprendre la régularité depuis ce qui est fait aujourd’hui, puis une petite semaine de décharge.` : BLOCK_AIM[b.phase]}
-                        {b.phase === 'developpement' ? (() => {
-                          const top = Math.max(...b.weeks.map((w) => w.minutes));
-                          return ` ${b.loadWeeks} semaine${b.loadWeeks > 1 ? 's' : ''} de charge${b.lightWeeks ? ` + ${b.lightWeeks} allégée` : ''} · ${h(first.minutes) === h(top) ? h(top) : `${h(first.minutes)} → ${h(top)}`} par semaine.`;
-                        })() : ''}</p>
-                    </div>
-                    <ol className="plain pw-grid">
+                        {b.phase === 'developpement' ? ` ${b.loadWeeks} semaine${b.loadWeeks > 1 ? 's' : ''} de charge${b.lightWeeks ? ` + ${b.lightWeeks} allégée` : ''} · ${h(bf.minutes) === h(top) ? h(top) : `${h(bf.minutes)} → ${h(top)}`} par semaine.` : ''}</Text>
+                    </Stack>
+                    <ol className={s.weeks}>
                       {b.weeks.map((w) => {
                         // Semaine allégée comparée à la plus grosse semaine de son bloc (la semaine du test est plus courte).
-                        const top = Math.max(0, ...b.weeks.filter((x) => x.index < w.index).map((x) => x.minutes));
-                        const delta = top ? Math.round((w.minutes / top - 1) * 100) : weekDelta(program.weeks, w.index);
+                        const before = Math.max(0, ...b.weeks.filter((x) => x.index < w.index).map((x) => x.minutes));
+                        const delta = before ? Math.round((w.minutes / before - 1) * 100) : weekDelta(program.weeks, w.index);
                         return (
-                          <li key={w.index} id={`semaine-${w.index}`} className={`pw ${w.phase}`}>
-                            <div className="pw-head">
-                              <strong className="pw-n">S{w.index}</strong>
-                              <span className="muted">{formatShortDate(w.monday)}</span>
-                              {w.phase === 'recuperation'
-                                ? <span className="pill pw-light">↓ Semaine allégée</span>
-                                : <Pill tone={w.phase === 'tremplin' ? 'neutral' : w.phase === 'affutage' ? 'attn' : ''}>{PROGRAM_PHASE_LABELS[w.phase]}</Pill>}
-                              <span className="pw-vol"><strong>{h(w.minutes)}</strong>{w.longMinutes ? <span className="muted"> · longue {h(w.longMinutes)}</span> : null}
-                                {w.phase === 'recuperation' && delta !== null && delta < 0 ? <span className="pw-delta"> · −{Math.abs(delta)}&nbsp;% de volume pour assimiler</span> : null}</span>
+                          <li key={w.index} id={`semaine-${w.index}`} className={s.week}>
+                            <div className={s.weekHead}>
+                              <span className={s.weekN}>S{w.index}</span>
+                              <Text as="span" size="sm" muted>{formatShortDate(w.monday)}</Text>
+                              <Badge tone={PHASE_TONE[w.phase] ?? 'neutral'}>{w.phase === 'recuperation' ? 'Semaine allégée' : PROGRAM_PHASE_LABELS[w.phase]}</Badge>
                             </div>
-                            <ul className="plain pw-tiles">
-                              {w.sessions.map((s, i) => {
-                                const dow = (new Date(`${s.date}T12:00:00Z`).getUTCDay() + 6) % 7;
+                            <Text size="sm"><strong>{w.minutes ? h(w.minutes) : 'Semaine de la course'}</strong>{w.longMinutes ? <Text as="span" size="sm" muted> · longue {h(w.longMinutes)}</Text> : null}
+                              {w.phase === 'recuperation' && delta !== null && delta < 0 ? <Text as="span" size="sm" muted> · −{Math.abs(delta)} % de volume pour assimiler</Text> : null}</Text>
+                            <ul className={s.tiles}>
+                              {w.sessions.map((x, i) => {
+                                const dow = (new Date(`${x.date}T12:00:00Z`).getUTCDay() + 6) % 7;
                                 return (
-                                  <li key={i} className={`pt ${s.kind}`}>
-                                    <details>
+                                  <li key={i} className={s[x.kind]}>
+                                    <details className={s.tile}>
                                       <summary>
-                                        <span className="pt-day">{WEEKDAY_SHORT[dow]}</span>
-                                        <span className="pt-title">{s.title}</span>
-                                        <span className="pt-kind">{KIND_LABEL[s.kind]}{s.source === 'library' ? ' · 📚' : ''}</span>
+                                        <span className={s.day}>{WEEKDAY_SHORT[dow]}</span>
+                                        <span className={s.title}>{x.title}</span>
+                                        <span className={s.kind}>{KIND_LABEL[x.kind]}{x.source === 'library' ? ' · biblio' : ''}</span>
                                       </summary>
-                                      <p className="pt-why"><strong>{WEEKDAY_LONG[dow]} · pourquoi ?</strong> {s.why}</p>
+                                      <p className={s.why}><strong>{WEEKDAY_LONG[dow]} · pourquoi ?</strong> {x.why}</p>
                                     </details>
                                   </li>
                                 );
@@ -191,26 +210,31 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
                 );
               })}
             </ol>
-          </section>
+          </Stack>
 
-          <section className="card" aria-labelledby="creer-title" id="creer">
-            <div className="card-head"><h2 id="creer-title">Créer le programme</h2></div>
-            <div className="card-body stack">
-              {program.risks.length ? (
-                <div className="prog-risks" role="note">
-                  <p><strong>Points d’attention</strong> <span className="muted">· le programme vise toujours l’objectif ; à toi de décider</span></p>
-                  <ul className="plain">{program.risks.map((r, i) => <li key={i} className={`fz-c ${r.level}`}><span className="fz-mark" aria-hidden="true">{RISK_MARK[r.level]}</span><span>{r.text}</span></li>)}</ul>
-                </div>
-              ) : <p className="muted">Aucun risque particulier signalé.</p>}
-              {existing ? <p className="muted">{existing} séance{existing > 1 ? 's' : ''} déjà prévue{existing > 1 ? 's' : ''} sur la période : elles restent ; le programme s’y ajoute.</p> : null}
-              <ProgramCreate wid={wid} aid={aid} goalId={ctx.goal.id} startMonday={start} days={days} sessions={total} tweaks={tweaks} suggestionId={suggestionId}
-                needsAccept={program.risks.some((r) => r.level !== 'watch')} validated={Boolean(ctx.decision)} />
-            </div>
-          </section>
+          <Stack as="section" gap={4} aria-labelledby="creer-title" id="creer">
+            <Heading level={2} size={3} id="creer-title">Créer le programme</Heading>
+            <Card pad={5}>
+              <Stack gap={4}>
+                {program.risks.length ? (
+                  <Stack gap={2}>
+                    <Text strong>Points d’attention <Text as="span" size="sm" muted>· le programme vise toujours l’objectif ; à toi de décider</Text></Text>
+                    <ul className={s.risks}>
+                      {program.risks.map((r, i) => <li key={i} className={s.risk}><Badge tone={RISK_TONE[r.level]}>{RISK_LABEL[r.level]}</Badge><span>{r.text}</span></li>)}
+                    </ul>
+                  </Stack>
+                ) : <Text muted>Aucun risque particulier signalé.</Text>}
+                {existing ? <Text size="sm" muted>{existing} séance{existing > 1 ? 's' : ''} déjà prévue{existing > 1 ? 's' : ''} sur la période : elles restent ; le programme s’y ajoute.</Text> : null}
+                <ProgramCreate wid={wid} aid={aid} goalId={ctx.goal.id} startMonday={start} days={days} sessions={total} tweaks={tweaks} suggestionId={suggestionId}
+                  needsAccept={program.risks.some((r) => r.level !== 'watch')} validated={Boolean(ctx.decision)} />
+              </Stack>
+            </Card>
+          </Stack>
 
           {adjust}
         </>
       )}
-    </>
+      <Text size="sm" muted><Link href={`${fiche}?onglet=progression`}>Revenir à la faisabilité de {first}</Link></Text>
+    </Stack>
   );
 }
