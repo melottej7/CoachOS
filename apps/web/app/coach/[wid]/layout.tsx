@@ -8,6 +8,7 @@ import { unreadNotificationCount } from '@/server/commands/notifications';
 import { logoUrl } from '@/components/coach-card';
 import { TourHost } from '@/components/tour-host';
 import { AccountMenu, AppHeader, Avatar, BottomNav, BrandName, CoachRail, CoachShell, RailBrand, type MenuEntry, type NavItem } from '@/design';
+import { CommandPalette, PaletteButton } from '@/views/coach/palette/command-palette';
 import { CoachSectionTabs } from '@/views/coach/section-tabs';
 
 /**
@@ -52,7 +53,7 @@ export default async function CoachLayout({ children, params }: { children: Reac
       accent={ws?.profile?.accent ?? 'emerald'}
       rail={(
         <CoachRail label="Espace coach" items={items}
-          brand={<RailBrand href={`${base}/planning`} mark={mark} name={ctx.workspace.name} role={role} />}
+          brand={<><RailBrand href={`${base}/planning`} mark={mark} name={ctx.workspace.name} role={role} /><PaletteButton variant="rail" /></>}
           footer={[{ href: `${base}/settings`, label: 'Paramètres', icon: 'settings', tour: 'nav-settings' }]}
           account={(
             <AccountMenu variant="rail" placement="up" name={actor.displayName} role={role} entries={entries} signOut="/auth/signout" tour="account-menu"
@@ -61,6 +62,7 @@ export default async function CoachLayout({ children, params }: { children: Reac
       )}
       top={(
         <AppHeader home={`${base}/planning`} brand={<>{mark}<BrandName>{ctx.workspace.name}</BrandName></>}>
+          <PaletteButton variant="header" />
           <AccountMenu name={actor.displayName} role={role} entries={entries} signOut="/auth/signout" tour="account-menu"
             trigger={<Avatar name={actor.displayName} size={34} />} />
         </AppHeader>
@@ -69,6 +71,7 @@ export default async function CoachLayout({ children, params }: { children: Reac
       <CoachSectionTabs base={base} strength={ctx.modules.strength} counts={{ review: pending, messages: unread, notifications: notifs }} />
       {children}
       <TourHost space="coach" wid={wid} />
+      <CommandPalette wid={wid} owner={ctx.role === 'owner'} strength={ctx.modules.strength} />
     </CoachShell>
   );
 }

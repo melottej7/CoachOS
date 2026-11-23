@@ -1,0 +1,20 @@
+/* Palette de commandes du coach (D-160). */
+.dialog { width: min(640px, calc(100vw - 32px)); max-height: min(560px, calc(100dvh - 64px)); margin: 10vh auto auto; padding: 0; border: 1px solid var(--ds-rule-strong); border-radius: var(--ds-radius-xl); background: var(--ds-surface); color: var(--ds-ink); box-shadow: var(--ds-shadow-lg); overflow: hidden; }
+.dialog::backdrop { background: var(--ds-overlay, rgb(0 0 0 / .45)); }
+.inner { display: flex; flex-direction: column; max-height: inherit; }
+.search { display: flex; align-items: center; gap: var(--ds-2); padding: var(--ds-3) var(--ds-4); border-bottom: 1px solid var(--ds-rule); color: var(--ds-ink-2); }
+.input { flex: 1; min-width: 0; min-height: 44px; border: 0; background: transparent; color: var(--ds-ink); font: inherit; font-size: var(--ds-text-lg); outline: none; }
+.list { list-style: none; margin: 0; padding: var(--ds-2); overflow-y: auto; }
+.group { padding: var(--ds-2) var(--ds-3) var(--ds-1); font-size: var(--ds-text-xs); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ds-ink-2); }
+.option { display: flex; align-items: center; gap: var(--ds-3); min-height: 44px; padding: 0 var(--ds-3); border-radius: var(--ds-radius); cursor: pointer; }
+.option[aria-selected='true'] { background: var(--ds-coach-soft); color: var(--ds-ink); }
+.option svg { flex: none; color: var(--ds-ink-2); }
+.label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meta { font-size: var(--ds-text-sm); color: var(--ds-ink-2); white-space: nowrap; }
+.empty { padding: var(--ds-6) var(--ds-4); text-align: center; color: var(--ds-ink-2); }
+.foot { display: flex; flex-wrap: wrap; gap: var(--ds-3); padding: var(--ds-2) var(--ds-4); border-top: 1px solid var(--ds-rule); font-size: var(--ds-text-xs); color: var(--ds-ink-2); }
+.railTrigger { display: flex; align-items: center; gap: var(--ds-2); width: calc(100% - 2 * var(--ds-3)); min-height: 40px; margin: 0 var(--ds-3) var(--ds-2); padding: 0 var(--ds-3); border: 1px solid var(--ds-rail-hover, var(--ds-rule)); border-radius: var(--ds-radius); background: transparent; color: var(--ds-rail-ink, var(--ds-ink-2)); font: inherit; font-size: var(--ds-text-sm); cursor: pointer; text-align: left; }
+.railTrigger:hover { background: var(--ds-rail-hover, var(--ds-surface-2)); }
+.railTrigger:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+.railTrigger span:first-of-type { flex: 1; }
+.railTrigger kbd { font-size: var(--ds-text-xs); opacity: .8; }
