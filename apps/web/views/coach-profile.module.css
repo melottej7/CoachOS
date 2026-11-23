@@ -1,0 +1,11 @@
+/* Présentation du coach : listes sans puces, faits rangés en deux colonnes sur grand écran. */
+.tags { list-style: none; margin: 0; padding: 0; }
+.certs { list-style: none; margin: 0; padding: 0; }
+.certs li { display: flex; align-items: flex-start; gap: var(--ds-2); }
+.certs li svg { flex: none; margin-top: 3px; color: var(--ds-coach-text); }
+.facts { display: flex; flex-direction: column; gap: var(--ds-5); margin: 0; }
+.fact { display: flex; flex-direction: column; gap: var(--ds-2); }
+.fact dd { margin: 0; }
+@media (min-width: 640px) {
+  .fact { display: grid; grid-template-columns: 160px minmax(0, 1fr); align-items: baseline; gap: var(--ds-4); }
+}

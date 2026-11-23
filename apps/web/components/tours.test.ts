@@ -39,11 +39,12 @@ describe('visites du guide CoachOS (CE-C-01)', () => {
     }
   });
 
-  it('chaque visite commence sur une page connue et se termine sur le bouton du guide', () => {
-    for (const steps of Object.values(TOURS)) {
+  it('chaque visite commence sur une page connue et se termine là où elle se relance', () => {
+    for (const [id, steps] of Object.entries(TOURS)) {
       expect(steps[0]!.path).not.toBe('any');
       expect(steps[0]!.href).toBeDefined();
-      expect(steps.at(-1)!.targets).toEqual(['guide-help']);
+      // Coach : le bouton du guide ; élève (D-129, D-141) : le Profil, d’où la visite se relance.
+      expect(steps.at(-1)!.targets).toEqual([id === 'athlete' ? 'tab-profile' : 'guide-help']);
       for (const s of steps) {
         if (s.action === 'click') expect(s.targets?.length).toBeGreaterThan(0);
         for (const k of Object.keys(s.textFor ?? {})) expect(s.targets).toContain(k);

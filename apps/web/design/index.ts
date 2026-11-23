@@ -6,9 +6,9 @@ export { Stack, Cluster, Grid, Heading, Eyebrow, Text, Numeric, Card, Divider, B
 export { ZoneChip, ZoneStrip, ZoneProfile, type ZoneLevel, type ZoneSegment } from './zones';
 export { Banner, EmptyState, Skeleton, Toast } from './feedback';
 export { Stats, Meter, KpiGrid, type StatItem, type KpiItem } from './data';
-export { Field, Input, Textarea, Select, ChoiceGroup, ChipChoice, ChipChecks, ScaleChoice, type ChoiceOption, type ChipOption } from './form';
+export { Field, Input, Textarea, Select, ChoiceGroup, ChipChoice, ChipChecks, ScaleChoice, AnswerList, PasswordInput, type ChoiceOption, type ChipOption, type AnswerOption } from './form';
 export { AppHeader, BrandName, BellLink } from './header';
-export { AthleteShell, AthleteColumn, ProfileLink } from './shell';
+export { AthleteShell, AthleteColumn, ProfileLink, PublicShell, AccentScope } from './shell';
 export { SessionStats, SessionStrip, SessionRows } from './session';
 export { LinkList, LinkListItem } from './list';
 export { Disclosure, MediaVideo } from './disclosure';

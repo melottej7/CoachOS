@@ -6,7 +6,7 @@ import { profileAnswers, readAthleteProfile, readBilanDraft } from '@/server/com
 import { readMe } from '@/server/commands/profile';
 import { listMyPrivacyRequests } from '@/server/commands/privacy';
 import { athleteContext } from '@/server/repo/context';
-import { BilanFlow } from '@/components/bilan-flow';
+import { BilanFlow } from '@/views/bilan-flow';
 import {
   Avatar, Badge, Banner, Button, Card, Cluster, Eyebrow, Heading, LinkButton, Stack, Text, ThemeChoiceGroup, type ThemeChoice,
 } from '@/design';
@@ -19,7 +19,7 @@ const fmt = (iso: string, tz: string) => new Intl.DateTimeFormat('fr-BE', { day:
 
 /**
  * X07 / X45 et bilan d’arrivée (D-054), refonte Chrono (D-136) : à l’arrivée, ou tant que le bilan n’est pas envoyé,
- * une question par écran (reprise du brouillon) ; ensuite, le Profil : bilan, apparence, informations, données.
+ * une question par écran (reprise du brouillon, D-138) ; ensuite, le Profil : bilan, apparence, informations, données.
  */
 export default async function AthleteSetup({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<{ first?: string; notice?: string; bilan?: string }> }) {
   const { wid } = await params;
@@ -55,10 +55,8 @@ export default async function AthleteSetup({ params, searchParams }: { params: P
             Quelques questions pour que ton coach prépare un programme qui te ressemble. Aucune question sur ta santé.
           </Text>
         </Stack>
-        <Card pad={5}>
-          <BilanFlow wid={wid} mode="athlete" firstName={firstName} initial={initial} startAt={startAt}
-            after={wizard ? `${base}/today?notice=joined&tour=start` : `${base}/setup?notice=bilan`} />
-        </Card>
+        <BilanFlow wid={wid} mode="athlete" firstName={firstName} initial={initial} startAt={startAt}
+          after={wizard ? `${base}/today?notice=joined&tour=start` : `${base}/setup?notice=bilan`} />
       </Stack>
     );
   }

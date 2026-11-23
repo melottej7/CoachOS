@@ -7,9 +7,9 @@ import type { IntentError } from '@/components/use-intent';
 
 /**
  * Résumé d’erreurs en tête de formulaire (refonte Chrono) : reçoit le focus à son apparition, chaque champ en cause
- * est un lien vers lui. Réseau coupé : la saisie reste en place et l’action se rejoue avec la même clé.
+ * est un lien vers lui (`labels` reprend les libellés de l’écran). Réseau coupé : la saisie reste en place et l’action se rejoue avec la même clé.
  */
-export function ErrorSummary({ error, onRetry, retryLabel = 'Réessayer' }: { error: IntentError | null; onRetry?: () => void; retryLabel?: string }) {
+export function ErrorSummary({ error, onRetry, retryLabel = 'Réessayer', labels }: { error: IntentError | null; onRetry?: () => void; retryLabel?: string; labels?: Record<string, string> }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => { if (error) ref.current?.focus(); }, [error]);
   if (!error) return null;
@@ -30,7 +30,7 @@ export function ErrorSummary({ error, onRetry, retryLabel = 'Réessayer' }: { er
           <Stack as="ul" gap={1}>
             {error.fields.map((f) => (
               <li key={f.path + f.rule}>
-                <a href={`#${FIELD_IDS[f.path.split('.')[0]!] ?? FIELD_IDS[f.path] ?? ''}`}>{FIELD_LABELS[f.path] ?? blockLabel(f.path) ?? FIELD_LABELS[f.path.split('.')[0]!] ?? f.path}</a> : {f.rule}
+                <a href={`#${FIELD_IDS[f.path.split('.')[0]!] ?? FIELD_IDS[f.path] ?? ''}`}>{labels?.[f.path] ?? FIELD_LABELS[f.path] ?? blockLabel(f.path) ?? FIELD_LABELS[f.path.split('.')[0]!] ?? f.path}</a> : {f.rule}
               </li>
             ))}
           </Stack>

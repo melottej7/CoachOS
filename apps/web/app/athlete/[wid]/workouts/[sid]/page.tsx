@@ -52,10 +52,12 @@ export default async function AthleteWorkoutPage({ params, searchParams }: { par
       </Stack>
 
       <div data-tour="workout-details"><SessionStats view={view} /></div>
-      <SessionStrip view={view} />
-      <SessionRows view={view} extra={(r) => r.exerciseIds.length ? (
-        <Stack gap={1}>{r.exerciseIds.map((id) => exercises[id] ? <ExerciseHowTo key={id} wid={wid} exercise={exercises[id]} /> : null)}</Stack>
-      ) : null} />
+      {w.intervals.length ? <Stack gap={6} data-tour="structure">
+        <SessionStrip view={view} />
+        <SessionRows view={view} extra={(r) => r.exerciseIds.length ? (
+          <Stack gap={1}>{r.exerciseIds.map((id) => exercises[id] ? <ExerciseHowTo key={id} wid={wid} exercise={exercises[id]} /> : null)}</Stack>
+        ) : null} />
+      </Stack> : null}
 
       {w.instructions ? (
         <Card pad={4}><Stack gap={1}><Eyebrow>Consignes de ton coach</Eyebrow><Text prose>{w.instructions}</Text></Stack></Card>

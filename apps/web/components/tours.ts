@@ -28,13 +28,13 @@ export const TOURS: Record<TourId, TourStep[]> = {
     { path: `${A}/today`, text: 'Salut ! Je suis ton guide CoachOS. En une minute, je te montre comment t’entraîner ici avec ton coach.', mood: 'cheer', href: (w) => `/athlete/${w}/today` },
     { path: `${A}/today`, targets: ['today-card', 'today-empty'], text: 'Chaque jour, cet écran te montre la séance préparée par ton coach, avec sa durée.', textFor: { 'today-empty': 'Chaque jour, cet écran te montre la séance préparée par ton coach. Aujourd’hui, c’est repos.' }, href: (w) => `/athlete/${w}/today` },
     { path: `${A}/today`, targets: ['today-open'], action: 'click', optional: true, text: 'Touche « Voir la séance » pour l’ouvrir. Je te suis.' },
-    { path: `${A}/workouts/:id`, targets: ['structure', 'workout-details'], optional: true, text: 'Voici le déroulé, bloc par bloc : durée ou distance, et l’intensité à viser.', textFor: { 'workout-details': 'Ici, la durée prévue, puis les consignes de ton coach juste en dessous.' } },
+    { path: `${A}/workouts/:id`, targets: ['structure', 'workout-details'], optional: true, text: 'Voici le déroulé, bloc par bloc : ce qu’il faut faire, combien de temps, et à quelle intensité.', textFor: { 'workout-details': 'Ici, la durée prévue, puis les consignes de ton coach juste en dessous.' } },
     { path: `${A}/workouts/:id`, targets: ['feedback-cta'], optional: true, text: 'Après ta séance, donne ton retour ici. Il faut moins de trente secondes, et ton coach le lit.', mood: 'wink' },
     { path: 'any', targets: ['tab-schedule'], text: 'Programme : toute ta semaine, et les semaines suivantes dès que ton coach les publie.' },
     { path: 'any', targets: ['tab-progress'], text: 'Progression : ton objectif, ta régularité et ton volume d’entraînement, semaine après semaine.' },
     { path: 'any', targets: ['tab-messages'], text: 'Échanges : écris à ton coach ou envoie-lui un vocal. Tu y retrouves aussi tes groupes.' },
-    { path: 'any', targets: ['tab-profile'], text: 'Profil : tes réglages, ton profil sportif et la présentation de ton coach.' },
-    { path: 'any', targets: ['guide-help'], text: 'Je reste ici, en bas de l’écran. Touche-moi pour revoir la visite. Bonne séance !', mood: 'cheer' },
+    // D-129, D-141 : chez l’élève, le personnage n’a plus de bouton permanent ; la visite se relance depuis le Profil.
+    { path: 'any', targets: ['tab-profile'], text: 'Profil : ton bilan, tes réglages et la présentation de ton coach. C’est aussi là que tu peux revoir cette visite. Bonne séance !', mood: 'cheer' },
   ],
   coach: [
     { path: `${C}/planning`, text: 'Bonjour ! Je suis ton guide CoachOS. En une minute, je te montre comment organiser ton travail et suivre tes élèves.', mood: 'cheer', href: (w) => `/coach/${w}/planning` },

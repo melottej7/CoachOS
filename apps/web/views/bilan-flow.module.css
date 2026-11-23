@@ -1,0 +1,22 @@
+/* Bilan d’arrivée : barre d’avancement, une question en grand, ses réponses. */
+.flow { display: flex; flex-direction: column; gap: var(--ds-5); }
+.top { display: flex; align-items: center; gap: var(--ds-3); scroll-margin-top: calc(56px + var(--ds-4)); }
+.bar { flex: 1; height: 6px; border-radius: var(--ds-radius-full); background: var(--ds-surface-3); overflow: hidden; }
+.bar > span { display: block; height: 100%; border-radius: inherit; background: var(--ds-coach); transition: width var(--ds-slow) var(--ds-ease); }
+.count { font-size: var(--ds-text-sm); font-weight: 600; color: var(--ds-ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.saved { display: flex; align-items: center; gap: 6px; min-height: 20px; margin: calc(var(--ds-3) * -1) 0 0; font-size: var(--ds-text-xs); color: var(--ds-ink-2); }
+.offline { color: var(--ds-warning); font-weight: 600; }
+/* Le titre reçoit le focus à chaque question (lecteurs d’écran) : pas de cadre, il n’est pas cliquable. */
+.question:focus { outline: none; }
+
+/* Récapitulatif : une ligne par réponse, la ligne entière se touche pour modifier. */
+.recap { list-style: none; margin: 0; padding: 0; border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); overflow: hidden; }
+.recap li + li { border-top: 1px solid var(--ds-rule); }
+.row { display: flex; align-items: center; gap: var(--ds-3); width: 100%; min-height: 60px; padding: var(--ds-3) var(--ds-4); border: 0; background: transparent; color: var(--ds-ink); font: inherit; text-align: left; cursor: pointer; transition: background-color var(--ds-fast) var(--ds-ease); }
+.row:hover { background: var(--ds-surface-2); }
+.row:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: -2px; }
+.rowText { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rowLabel { font-size: var(--ds-text-sm); font-weight: 600; color: var(--ds-ink-2); }
+.rowValue { font-weight: 600; overflow-wrap: anywhere; }
+.rowEdit { flex: none; display: inline-flex; color: var(--ds-ink-2); }
+.row:hover .rowEdit { color: var(--ds-coach-text); }

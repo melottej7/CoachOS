@@ -1,26 +1,25 @@
 import Link from 'next/link';
 import { getActor } from '@/server/auth/session';
 import { supabaseConfigured } from '@/server/supabase/server';
-import { AcceptInvitation } from '@/components/accept-invitation';
-import { Brand } from '@/components/ui';
+import { Heading, PublicShell, Stack, Text } from '@/design';
+import { AcceptInvitation } from '@/views/invite/accept-invitation';
 
 export const metadata = { title: 'Invitation' };
 export const dynamic = 'force-dynamic';
 
-/** X06 : activer une relation avec une identité vérifiée. */
+/** X06 : activer une relation avec une identité vérifiée (refonte Chrono, D-140). */
 export default async function Invite() {
   const actor = await getActor();
   return (
-    <>
-      <header className="top"><Brand href="/" /></header>
-      <main id="contenu" className="athlete-zone">
-        <h1>Rejoindre un espace</h1>
-        <p className="sub">Ton coach t’a invité·e sur CoachOS pour retrouver tes séances et lui envoyer tes retours.</p>
-        <div className="card" style={{ marginTop: 18 }}><div className="card-body">
-          <AcceptInvitation signedInAs={actor?.displayName ?? null} loginEnabled={supabaseConfigured()} />
-        </div></div>
-        <p className="muted" style={{ marginTop: 14 }}>Tes données ne sont vues que par ton coach : <Link href="/confidentialite">comment CoachOS les protège</Link>.</p>
-      </main>
-    </>
+    <PublicShell>
+      <Stack gap={6}>
+        <Stack gap={2}>
+          <Heading level={1} size={1}>Rejoindre ton coach</Heading>
+          <Text size="md" muted>Ton coach t’a invité·e sur CoachOS pour retrouver tes séances et lui envoyer tes retours.</Text>
+        </Stack>
+        <AcceptInvitation signedInAs={actor?.displayName ?? null} loginEnabled={supabaseConfigured()} />
+        <Text size="sm" muted>Tes données ne sont vues que par ton coach : <Link href="/confidentialite">comment CoachOS les protège</Link>.</Text>
+      </Stack>
+    </PublicShell>
   );
 }

@@ -1,17 +1,30 @@
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import {
-  Avatar, Badge, Banner, Button, Card, Cluster, Divider, EmptyState, Eyebrow, Grid, Heading, IconButton, Kbd, LinkButton, Meter, Skeleton, Stack, Stats, Text, ZoneChip, ZoneProfile, ZoneStrip,
+  AccentScope, Avatar, Badge, Banner, Button, Card, Cluster, Divider, EmptyState, Eyebrow, Grid, Heading, IconButton, Kbd, LinkButton, Meter, Skeleton, Stack, Stats, Text, ZoneChip, ZoneProfile, ZoneStrip,
   type ZoneLevel,
 } from '@/design';
 import { DensityChoiceGroup, ThemeChoiceGroup } from '@/design/theme';
 import { DemoInteractive } from './demo-client';
+import { CoachDetails, CoachIdentity } from '@/views/coach-profile';
+import { SignedOutChoice } from '@/views/invite/accept-invitation';
+import type { CoachCardData } from '@/components/coach-card';
 
 export const metadata = { title: 'Design system' };
 export const dynamic = 'force-dynamic';
 
 const COLORS = ['bg', 'surface', 'surface-2', 'surface-3', 'ink', 'ink-2', 'rule', 'rule-strong', 'primary', 'signal', 'coach', 'success', 'warning', 'danger', 'info', 'focus'];
 const ZONE_NAMES = ['Récupération', 'Endurance', 'Endurance active', 'Seuil', 'Allure 5 km', 'VMA', 'Vitesse'];
+/** Coach fictif : toutes les rubriques de la présentation renseignées. */
+const COACH: CoachCardData = {
+  id: '00000000-0000-4000-8000-000000000000', name: 'Atelier Foulée', coachName: 'Alex Martin', logoVersion: null,
+  profile: {
+    tagline: 'Du premier 10 km au marathon, sans se blesser', bio: 'Coach depuis 2016, j’accompagne des coureurs de tous niveaux.\nJe construis chaque semaine avec toi, à partir de tes retours.',
+    approach: 'Beaucoup d’endurance facile, un peu de qualité, et du renforcement deux fois par semaine.', experienceYears: 9, certifications: ['Brevet d’État d’éducateur sportif', 'Entraîneur fédéral hors stade'],
+    sports: ['running', 'trail', 'strength'], audiences: ['beginner', 'intermediate'], goals: ['5k10k', 'half', 'marathon'],
+    city: 'Liège', languages: ['fr', 'en'], websiteUrl: 'https://example.org', socialUrl: null, contactEmail: 'contact@example.org',
+  },
+};
 const ACCENTS = [['emerald', 'Émeraude'], ['ocean', 'Océan'], ['sunset', 'Couchant'], ['berry', 'Mûre'], ['slate', 'Ardoise'], ['forest', 'Forêt']] as const;
 
 /**
@@ -112,6 +125,19 @@ export default async function DesignSystem() {
         <Stack as="section" gap={4} aria-labelledby="formulaires">
           <Heading level={2} size={3} id="formulaires">Formulaires et choix</Heading>
           <Card pad={5}><DemoInteractive /></Card>
+        </Stack>
+
+        <Stack as="section" gap={4} aria-labelledby="presentation">
+          <Heading level={2} size={3} id="presentation">Présentation du coach</Heading>
+          <Card pad={5}><Stack gap={8}><CoachIdentity data={COACH} eyebrow="Ton coach" level={2} /><CoachDetails data={COACH} empty={null} /></Stack></Card>
+        </Stack>
+
+        <Stack as="section" gap={4} aria-labelledby="invitation">
+          <Heading level={2} size={3} id="invitation">Invitation (personne pas encore connectée)</Heading>
+          <Stack gap={5} style={{ maxWidth: 520 }}>
+            <AccentScope accent="sunset"><Card tinted pad={5}><CoachIdentity data={COACH} eyebrow="Ton coach t’invite" level={2} /></Card></AccentScope>
+            <SignedOutChoice token="jeton-de-demonstration" />
+          </Stack>
         </Stack>
 
         <Stack as="section" gap={4} aria-labelledby="coachs">

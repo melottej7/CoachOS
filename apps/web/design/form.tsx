@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { useId, useState, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 import { Icon, type IconName } from './icons';
 import { cx } from './cx';
 import s from './form.module.css';
@@ -129,5 +129,43 @@ export function ScaleChoice({ legend, hint, name, min, max, value, onChange, low
         <span aria-hidden="true">{highLabel}</span>
       </div>
     </fieldset>
+  );
+}
+
+export interface AnswerOption<V extends string> { value: V; label: string; hint?: string }
+
+/**
+ * Réponses en grands boutons, une question par écran (bilan) : un toucher répond, et l’écran peut avancer aussitôt.
+ * Boutons à bascule (aria-pressed) plutôt que boutons radio : les flèches du clavier ne valident rien par surprise.
+ * `multiple` : chaque réponse s’ajoute ou se retire, la marque devient une case.
+ */
+export function AnswerList<V extends string>({ labelledBy, options, value, onPick, multiple }:
+  { labelledBy: string; options: AnswerOption<V>[]; value: V | readonly V[] | null | undefined; onPick: (v: V) => void; multiple?: boolean }) {
+  const on = (v: V) => (Array.isArray(value) ? value.includes(v) : value === v);
+  return (
+    <div className={s.answers} role="group" aria-labelledby={labelledBy} data-multiple={multiple || undefined}>
+      {options.map((o) => (
+        <button key={o.value} type="button" className={s.answer} aria-pressed={on(o.value)} onClick={() => onPick(o.value)}>
+          <span className={s.answerMark} aria-hidden="true"><Icon name="check" size={16} /></span>
+          <span className={s.answerText}>{o.label}{o.hint ? <span className={s.answerHint}>{o.hint}</span> : null}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Mot de passe avec « Afficher » (plus sûr qu’une double saisie sur téléphone). À placer dans un `Field` du même `id`.
+ */
+export function PasswordInput({ id, name = 'password', autoComplete, minLength, invalid, hasHint }:
+  { id: string; name?: string; autoComplete: 'current-password' | 'new-password'; minLength?: number; invalid?: boolean; hasHint?: boolean }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className={s.password}>
+      <Input id={id} name={name} type={visible ? 'text' : 'password'} autoComplete={autoComplete} required minLength={minLength} maxLength={72} invalid={invalid} hasHint={hasHint} />
+      <button type="button" className={s.reveal} aria-pressed={visible} aria-controls={id} onClick={() => setVisible((v) => !v)}>
+        {visible ? 'Masquer' : 'Afficher'}<span className="ds-visually-hidden"> le mot de passe</span>
+      </button>
+    </div>
   );
 }

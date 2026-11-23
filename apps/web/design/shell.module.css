@@ -6,3 +6,11 @@
 .profileLink:hover > span { box-shadow: 0 0 0 2px var(--ds-rule-strong); }
 /* D-129 · Le personnage de la visite ne recouvre plus l’écran : il n’apparaît que pendant la visite (relancée depuis le Profil). */
 .athlete :global(.guide-fab.is-idle) { display: none; }
+
+/* Pages hors espace : en-tête simple, colonne étroite (formulaire lisible d’un coup d’œil). */
+.publicHeader { display: flex; align-items: center; height: 56px; padding: 0 var(--ds-4); border-bottom: 1px solid var(--ds-rule); }
+.publicBrand { display: inline-flex; align-items: center; gap: var(--ds-2); min-height: 44px; font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-xl); color: var(--ds-ink); text-decoration: none; }
+.publicMark { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: var(--ds-radius); background: var(--ds-primary); color: var(--ds-on-primary); font-size: var(--ds-text-lg); }
+.narrow { max-width: 520px; margin: 0 auto; padding: var(--ds-6) var(--ds-4) var(--ds-12); }
+@media (min-width: 768px) { .narrow { padding-top: var(--ds-10); } }
+.scope { background: transparent; color: inherit; }
