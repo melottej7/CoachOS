@@ -112,3 +112,26 @@ export async function handleBinaryMutation(
     return errorResponse(new AppError('TEMPORARILY_UNAVAILABLE', 'Service momentanément indisponible. Réessaie.'), requestId);
   }
 }
+
+/** Lecture Web à cookie : session et identifiants vérifiés, puis requête. `run` peut renvoyer une réponse complète (fichier). */
+export async function handleQuery(
+  _req: NextRequest,
+  params: Record<string, string>,
+  module: string,
+  run: (ctx: { actorId: string; requestId: string }) => Promise<StoredResponse | NextResponse>,
+): Promise<NextResponse> {
+  const requestId = randomUUID();
+  try {
+    const actor = await getActor();
+    if (!actor) throw new AppError('AUTH_REQUIRED_OR_INVALID_SIGNATURE', 'Session expirée. Reconnecte-toi pour continuer.');
+    if (Object.values(params).some((v) => !isUuid(v))) throw new AppError('RESOURCE_NOT_VISIBLE', 'Cette ressource n’est pas disponible.');
+    const result = await run({ actorId: actor.userId, requestId });
+    if (result instanceof NextResponse) return result;
+    return NextResponse.json(result.body, { status: result.status, headers: { 'x-request-id': requestId, 'cache-control': 'private, no-store' } });
+  } catch (error) {
+    const known = asAppError(error);
+    if (known) return errorResponse(known, requestId);
+    console.error(JSON.stringify({ reqId: requestId, module, code: 'UNEXPECTED', error: (error as Error)?.name }));
+    return errorResponse(new AppError('TEMPORARILY_UNAVAILABLE', 'Service momentanément indisponible. Réessaie.'), requestId);
+  }
+}

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { getActor } from '@/server/auth/session';
 import { supabaseConfigured } from '@/server/supabase/server';
 import { AcceptInvitation } from '@/components/accept-invitation';
@@ -18,6 +19,7 @@ export default async function Invite() {
         <div className="card" style={{ marginTop: 18 }}><div className="card-body">
           <AcceptInvitation signedInAs={actor?.displayName ?? null} loginEnabled={supabaseConfigured()} />
         </div></div>
+        <p className="muted" style={{ marginTop: 14 }}>Tes données ne sont vues que par ton coach : <Link href="/confidentialite">comment CoachOS les protège</Link>.</p>
       </main>
     </>
   );

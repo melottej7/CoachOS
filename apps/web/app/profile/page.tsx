@@ -21,6 +21,10 @@ export default async function Profile({ searchParams }: { searchParams: Promise<
         <div className="card" style={{ marginTop: 18 }}><div className="card-body">
           <ProfileForm initialName={me.displayName} initialLocale={me.locale} submitLabel="Enregistrer" after="/profile?notice=saved" />
         </div></div>
+        <section className="card" style={{ marginTop: 18 }} aria-labelledby="mes-donnees"><div className="card-body stack">
+          <h2 id="mes-donnees">Mes données</h2>
+          <p className="muted">Télécharger tes données ou demander leur effacement se fait dans chaque espace : onglet Profil pour un athlète, Paramètres pour un coach. <Link href="/confidentialite">Politique de confidentialité</Link>.</p>
+        </div></section>
       </main>
     </>
   );

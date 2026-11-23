@@ -51,6 +51,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
             <p className="muted">Athlète : ton compte se crée depuis l’e-mail d’invitation de ton coach (bouton « Rejoindre l’espace »).</p>
           </div>
         </div>
+        <p className="muted" style={{ marginTop: 16 }}><Link href="/confidentialite">Comment CoachOS protège tes données</Link></p>
         {demoAuthEnabled() ? <p className="muted" style={{ marginTop: 24 }}>Développement : <Link href="/demo">identités de démonstration</Link>.</p> : null}
       </main>
     </>

@@ -41,3 +41,4 @@ export * from './week-review';
 export * from './measure-freshness';
 export * from './ai-cost';
 export * from './review-queue';
+export * from './privacy';

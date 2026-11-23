@@ -610,7 +610,7 @@ primary key(workspace_id,id)
 
 Index secondaires. `actor_id`, `workspace_id,created_at`.
 RLS SELECT. Politique `private` définie dans le SQL. Aucune mutation exposée.
-Trigger. Immutabilité par trigger.
+Trigger. Immutabilité par trigger. Exception (D-115, migration `20261123000000`) : dans une transaction d’effacement autorisée (`coachos.erasure_authorized = on`, rôle postgres ou service_role), la suppression d’un compte peut mettre `actor_id` à null ; aucune autre modification n’est acceptée.
 
 ### `privacy_requests`
 

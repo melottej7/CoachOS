@@ -4,10 +4,12 @@ import { bilanCompletion, deriveBilan } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { profileAnswers, readAthleteProfile, readBilanDraft } from '@/server/commands/athlete-profile';
 import { readMe } from '@/server/commands/profile';
+import { listMyPrivacyRequests } from '@/server/commands/privacy';
 import { athleteContext } from '@/server/repo/context';
 import { Notice, Pill } from '@/components/ui';
 import { AthleteOnboarding } from '@/components/athlete-onboarding';
 import { BilanFlow } from '@/components/bilan-flow';
+import { PrivacyPanel } from '@/components/privacy-panel';
 
 export const metadata = { title: 'Profil' };
 
@@ -26,6 +28,7 @@ export default async function AthleteSetup({ params, searchParams }: { params: P
   const me = (await readMe(actor.userId)) ?? { displayName: actor.displayName, locale: 'fr' as const };
   const profile = await readAthleteProfile(actor.userId, wid, ctx.athlete.id);
   const draft = await readBilanDraft(actor.userId, wid, ctx.athlete.id);
+  const requests = await listMyPrivacyRequests(actor.userId, wid);
   const wizard = Boolean(first);
   const firstName = ctx.athlete.displayName.split(' ')[0] ?? ctx.athlete.displayName;
 
@@ -91,6 +94,7 @@ export default async function AthleteSetup({ params, searchParams }: { params: P
           }}
         />
       </div></div>
+      <PrivacyPanel wid={wid} role="athlete" requests={requests} />
     </>
   );
 }

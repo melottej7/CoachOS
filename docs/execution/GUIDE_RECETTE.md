@@ -364,3 +364,12 @@ CoachOS est en ligne : **https://coach-os-xi-kohl.vercel.app**. L’adresse est 
 6. **Dis-moi** ce qui a été plus lent qu’en local et si une page a affiché une erreur. La page https://coach-os-xi-kohl.vercel.app/api/health doit afficher `{"ok":true,"db":"ok"}` ; sinon, envoie-moi son texte (il ne contient rien de secret).
 
 Ensuite, Resend (je te guide) : créer le compte, vérifier ton domaine d’envoi, coller `RESEND_API_KEY` et `EMAIL_FROM` dans Vercel. Tu invites alors l’élève d’essai et on refait le parcours complet en ligne : invitation reçue, compte élève, séance publiée, retour, vidéo d’exercice sur iPhone.
+
+## Mes données et effacement (D-115)
+
+1. Ouvre **http://localhost:3000/confidentialite** : la page se lit sur téléphone. Dis-moi chaque phrase qui te gêne ou que tu ne comprends pas : c’est toi qui l’assumes devant tes élèves.
+2. Côté élève (Emma) : **Profil** › en bas, **« Mes données »** › **Télécharger mes données** : un fichier `coachos-mes-donnees-….json` arrive. Ouvre-le : tes séances publiées, tes retours, tes échanges y sont ; aucun brouillon du coach, aucune vidéo.
+3. Toujours côté élève : **Demander l’effacement de mes données** › confirme. La ligne devient « Effacement demandé le … · Reçue · réponse avant le … ».
+4. Côté coach (Paul) : **Planning** montre une tâche « Demande d’effacement · Emma … » avec l’échéance. Ouvre la fiche d’Emma : la section **« Données d’Emma »** rappelle la demande.
+5. **Effacer définitivement les données d’Emma…** : écris son prénom pour confirmer. Tu reviens sur la liste des élèves : « Dossier effacé, et compte supprimé ». Emma ne peut plus se connecter (son compte n’avait pas d’autre espace). Pour refaire le test, recrée une élève avec une nouvelle adresse.
+6. **Paramètres** (coach) › **Mes données** : télécharge tes propres données (bibliothèque, méthode, notes, tâches).

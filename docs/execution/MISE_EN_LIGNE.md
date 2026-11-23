@@ -38,6 +38,7 @@ Variables à renseigner dans Vercel (les valeurs viennent de tes comptes et ne p
 | `COACHOS_INVITE_HMAC_KEY` | Signature des liens d’invitation (une longue suite aléatoire) |
 | `RESEND_API_KEY`, `EMAIL_FROM` | Envoi des e-mails (ex. `CoachOS <bonjour@ton-domaine.be>`) |
 | `ANTHROPIC_API_KEY`, `COACHOS_AI_MONTHLY_BUDGET_USD` | Facultatif : l’IA, avec un budget mensuel par espace |
+| `COACHOS_CONTACT_EMAIL` | Facultatif : adresse de contact affichée sur la page de confidentialité (sinon, le contact passe par le coach) |
 
 `DATABASE_URL` : l’adresse du **pooler de transactions** de Supabase (port 6543), qui se termine par `/postgres` sans rien après. Un espace ou un retour à la ligne collé en trop fait répondre `3D000` à `/api/health` ; un mot de passe faux, `28P01`. Après chaque modification d’une variable, Vercel doit reconstruire (un « Push origin » suffit).
 
@@ -47,13 +48,13 @@ Supabase › Authentification : l’adresse du site et l’adresse de retour (`h
 
 ## Étape 3 · Ce que je fais ensuite
 
-1. Fait le 22 novembre : les 42 migrations sont appliquées au projet Supabase (`supabase db push`). Aucune donnée de démonstration n’est créée.
+1. Fait le 22 novembre : les 42 migrations sont appliquées au projet Supabase (`supabase db push`). Aucune donnée de démonstration n’est créée. **Le 23 novembre, une 43e migration (effacement, D-115) attend ton `npx supabase db push --remote` dans le Terminal** : l’agent n’a pas le droit de modifier la base en ligne.
 2. Vérifié en ligne : page de connexion, formulaire d’inscription, contrôle de santé, lecture de la base. Reste à vérifier avec toi (section « Recette en ligne » du guide de recette) : inscription coach, invitation reçue par e-mail (après Resend), compte élève, séance publiée, retour, vidéo d’exercice sur iPhone, hors connexion.
 3. Consigné dans ETAT.md et GUIDE_RECETTE.md.
 
 ## Points d’attention avant d’inviter de vrais élèves
 
 - **Tes données locales restent sur ton Mac.** Ton espace de test et ses élèves fictifs ne sont pas copiés. En ligne, tu crées ton compte coach puis tu invites tes élèves. Ta bibliothèque Foulée s’importe en un clic.
-- **Données personnelles réelles.** Il faut une courte page de confidentialité (ce qui est collecté, pourquoi, combien de temps, comment le supprimer). Les données de santé restent exclues (D-084). Je peux t’en préparer un brouillon, à faire relire.
+- **Données personnelles réelles.** La page de confidentialité existe (`/confidentialite`, D-115) : elle décrit exactement ce que le code fait. **Relis-la** avant d’inviter de vrais élèves : c’est toi qui l’assumes. L’élève peut télécharger ses données et demander l’effacement depuis son Profil ; tu effaces un dossier depuis sa fiche (« Données de X »). Les données de santé restent exclues (D-084).
 - **Vidéos filmées.** Elles sont gardées dans la base. En ligne, l’envoi est limité à **4 Mo par vidéo** (limite de Vercel, D-113) : filme 10 à 15 secondes en qualité réduite, ou mets un lien YouTube. Pour des vidéos plus longues, ou au-delà de quelques dizaines, il faudra un stockage de fichiers dédié : je te préviendrai avant.
 - **Coûts.** Les offres gratuites de ces services suffisent souvent pour un pilote. Vérifie les tarifs le jour de l’inscription : ils changent.

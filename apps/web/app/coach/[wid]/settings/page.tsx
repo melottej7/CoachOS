@@ -11,6 +11,8 @@ import { aiMonth, aiSource } from '@/server/commands/ai';
 import { formatUsd } from '@coachos/domain';
 import { readRelanceTemplates } from '@/server/commands/relance-templates';
 import { RelanceTemplatesForm } from '@/components/relance-templates-form';
+import { listMyPrivacyRequests } from '@/server/commands/privacy';
+import { PrivacyPanel } from '@/components/privacy-panel';
 
 export const metadata = { title: 'Paramètres' };
 
@@ -26,6 +28,7 @@ export default async function Settings({ params, searchParams }: { params: Promi
   const rules = await autoRuleSettings(actor.userId, wid);
   // CE-H-04 (D-045) : réglage personnel de chaque coach, propriétaire ou non.
   const mine = await readRelanceTemplates(actor.userId, wid);
+  const requests = await listMyPrivacyRequests(actor.userId, wid);
   const followUps = (
     <>
       <section className="card" style={{ marginTop: 18 }} aria-labelledby="suivis" id="suivis">
@@ -95,6 +98,7 @@ export default async function Settings({ params, searchParams }: { params: Promi
       </div></section>
       {wizard ? null : followUps}
       {wizard ? null : aiCard}
+      {wizard ? null : <PrivacyPanel wid={wid} role="coach" owner={ctx.role === 'owner'} requests={requests} />}
     </>
   );
 }

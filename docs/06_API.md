@@ -66,6 +66,7 @@ Contenu d’erreur `error.code`, `error.message`, `error.requestId`, `error.fiel
 | MVP | privacy | `GET /workspaces/{wid}/privacy/notice` | CA | — | version:s, body:s | 60 | Version dédiée à l’espace |
 | MVP | privacy | `POST /workspaces/{wid}/privacy/requests` | CA | kind:pkind | id:u, state:s, dueAt:t | 4 | Demande liée à l’identité et au périmètre |
 | MVP | privacy | `GET /workspaces/{wid}/privacy/requests/{qid}` | CA | — | id:u, state:s, downloadUrl:?url | 30 | Identité demandeuse et autorisation vérifiées, URL courte |
+| MVP | privacy | `POST /workspaces/{wid}/athletes/{aid}/erase` | O | — | erased:b, accountDeleted:b | 4 | Effacement définitif du dossier de l’élève ; compte supprimé s’il n’est lié à aucun autre espace (D-115) |
 | MVP | ai | `POST /workspaces/{wid}/athletes/{aid}/suggestions` | C | module:module, weekStart:d | jobId:u, state:s | 10 | 202, modèle et autorisation selon gate, budget atomique |
 | MVP | ai | `GET /workspaces/{wid}/athletes/{aid}/suggestions` | C | — | items:suggestion[], nextCursor:?s | 60 | Brouillons du coach affecté, filtre state |
 | MVP | ai | `GET /workspaces/{wid}/jobs/{jid}` | C | — | id:u, state:s, suggestionId:?u | 30 | Projecter uniquement ses jobs autorisés sans payload |

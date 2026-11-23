@@ -5,12 +5,12 @@ import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { portfolio, type RosterEntry } from '@/server/repo/portfolio';
 import { ActionButton, CreateTeamForm, RenameTeam } from '@/components/portfolio-forms';
-import { Pill, initials } from '@/components/ui';
+import { Notice, Pill, initials } from '@/components/ui';
 import { relances } from '@/server/repo/relances';
 
 export const metadata = { title: 'Élèves' };
 
-type Search = { by?: string; q?: string; sport?: string; status?: string; team?: string; level?: string; goal?: string };
+type Search = { notice?: string; by?: string; q?: string; sport?: string; status?: string; team?: string; level?: string; goal?: string };
 const BY = [
   { k: 'team', label: 'Groupe' },
   { k: 'level', label: 'Niveau' },
@@ -90,6 +90,7 @@ export default async function Roster({ params, searchParams }: { params: Promise
 
   return (
     <>
+      <Notice message={sp.notice === 'erased' ? 'Dossier effacé.' : sp.notice === 'erased-account' ? 'Dossier effacé, et compte supprimé : il n’était lié à aucun autre espace.' : null} />
       <div className="head">
         <div><div className="kicker">Portefeuille</div><h1>Élèves</h1><p className="sub">{roster.length} élève{roster.length > 1 ? 's' : ''} · {activeTeams.length} groupe{activeTeams.length > 1 ? 's' : ''}</p></div>
         {owner ? <Link className="btn primary" href={`${base}/athletes/new`} data-tour="add-athlete-list">+ Ajouter un élève</Link> : null}

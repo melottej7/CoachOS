@@ -45,6 +45,7 @@ export default async function SignUp({ searchParams }: { searchParams: Promise<{
           <PasswordInput autoComplete="new-password" minLength={PASSWORD_MIN} hint={`${PASSWORD_MIN} caractères minimum`} />
           <div className="actions"><button className="btn primary" type="submit">Créer mon compte</button></div>
         </form>
+        <p className="muted" style={{ marginTop: 14 }}>En créant ton compte, tu acceptes que CoachOS traite tes données comme décrit dans la <Link href="/confidentialite">politique de confidentialité</Link>.</p>
       </main>
     </>
   );

@@ -12,6 +12,7 @@ import { readAthleteProfile, readBilanDraft, readBilanVersions } from '@/server/
 import { goalsAwaitingProgram } from '@/server/commands/programs';
 import { readAthleteReferences } from '@/server/commands/athlete-references';
 import { latestInvitation } from '@/server/commands/invitations';
+import { pendingErasure } from '@/server/commands/privacy';
 import { coachContext } from '@/server/repo/context';
 import { athleteFile } from '@/server/repo/portfolio';
 import { athleteStats, strengthHistory } from '@/server/repo/stats';
@@ -30,6 +31,7 @@ import {
   ActionButton, AppointmentForm, AppointmentReport, GoalForm, LevelConfirm, NoteForm, TaskActions, TaskForm, TeamMembership,
 } from '@/components/portfolio-forms';
 import { Notice, Pill } from '@/components/ui';
+import { EraseAthlete } from '@/components/erase-athlete';
 
 export const metadata = { title: 'Fiche élève' };
 
@@ -57,6 +59,8 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
   if (!a) notFound();
   const today = todayIn(tz);
   const inv = a.state === 'invited' ? await latestInvitation(actor.userId, wid, aid) : null;
+  // D-115 : demande d’effacement en cours, visible du propriétaire seulement.
+  const erasure = ctx.role === 'owner' ? await pendingErasure(actor.userId, wid, aid) : null;
   const profile = a.state === 'active' ? await readAthleteProfile(actor.userId, wid, aid) : null;
   const bilanDraft = a.state === 'active' && !profile ? await readBilanDraft(actor.userId, wid, aid) : null;
   const bilanVersions = profile ? await readBilanVersions(actor.userId, wid, aid) : [];
@@ -378,6 +382,18 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
           ) : bilanDraft ? (
             <p className="empty">{first} a commencé son bilan : {bilanDraftDone!.answered} réponse{bilanDraftDone!.answered > 1 ? 's' : ''} obligatoire{bilanDraftDone!.answered > 1 ? 's' : ''} sur {bilanDraftDone!.total}, dernière réponse le {fmt(bilanDraft.updatedAt, tz)}. Tu peux le terminer avec {first} pendant un appel.</p>
           ) : <p className="empty">{first} n’a pas encore commencé son bilan. Tu peux le remplir avec {first} pendant l’appel de bienvenue.</p>}
+        </section>
+      ) : null}
+
+      {ctx.role === 'owner' ? (
+        <section className="card" aria-labelledby="donnees-title" id="donnees">
+          <div className="card-head"><h2 id="donnees-title">Données de {first}</h2><Pill tone="neutral">Propriétaire</Pill></div>
+          <div className="card-body stack">
+            {erasure
+              ? <p className="banner warn">{first} a demandé l’effacement de ses données le {fmt(erasure.createdAt, tz)}. À traiter avant le {fmt(erasure.dueAt, tz)}.</p>
+              : <p className="muted">Si {first} arrête d’être suivi·e ou te demande d’effacer ses données, tu peux tout supprimer ici : séances, retours, échanges, bilan. Son compte est supprimé s’il n’est lié à aucun autre espace.</p>}
+            <EraseAthlete wid={wid} aid={aid} name={a.name} requested={Boolean(erasure)} />
+          </div>
         </section>
       ) : null}
 
