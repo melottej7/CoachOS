@@ -2010,3 +2010,9 @@ Décisions réversibles prises pendant l’implémentation. Les arbitrages D01 �
 - **Sauvegarde** : `npm run db:backup` (`scripts/db-backup.mjs`) écrit le schéma puis les données de la base en ligne dans `backups/` (ignoré par Git) avec `supabase db dump --linked` ; Docker doit être ouvert. L’offre gratuite de Supabase ne propose pas de restauration automatique : la sauvegarde manuelle est la seule copie. À faire avant chaque mise à jour importante et chaque semaine pendant le pilote ; les fichiers contiennent des données personnelles : à effacer après 30 jours (D-115).
 - **Preuves.** `security-headers.test.ts` (2 tests) ; typecheck OK ; `npm run build` OK ; version de production lancée en local : `/confidentialite` et `/login` répondent 200 avec les six en-têtes (lus avec `curl -D -`).
 - **Non prouvé.** La sauvegarde n’a pas été exécutée par l’agent : la lecture de la base en ligne lui est refusée par les règles de permission de la session. Première exécution par le fondateur (`npm run db:backup`), résultat à consigner.
+
+## D-117 · Pages d’erreur en français · 2026-11-23
+
+- **Constat.** Seule la page « introuvable » existait ; une erreur inattendue affichait l’écran anglais de Next.js (« Application error »).
+- **Décision.** `app/error.tsx` (erreur d’une page : « Un problème est survenu », référence du journal, « Réessayer », retour aux espaces) et `app/global-error.tsx` (erreur du gabarit racine : page autonome, retour à la connexion). Aucun détail technique à l’écran ; la référence (`digest`) permet de retrouver l’erreur côté serveur.
+- **Preuves.** `error-pages.test.ts` (2 tests de rendu : message, référence, issues, aucun message interne) ; typecheck OK. Non prouvé à l’écran (aucune page ne lève d’erreur volontairement).
