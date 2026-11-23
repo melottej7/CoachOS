@@ -4934,6 +4934,10 @@
                     "expiresAt": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "link": {
+                      "type": "string",
+                      "description": "D-149 : seulement en remise « link » ; jamais stocké."
                     }
                   }
                 }
@@ -5073,6 +5077,15 @@
                     "type": "string",
                     "format": "email",
                     "maxLength": 254
+                  },
+                  "delivery": {
+                    "type": "string",
+                    "enum": [
+                      "email",
+                      "link"
+                    ],
+                    "default": "email",
+                    "description": "D-149 : « link » rend le lien au coach au lieu de l’envoyer par e-mail."
                   }
                 }
               }

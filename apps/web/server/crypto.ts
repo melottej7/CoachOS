@@ -21,6 +21,14 @@ function hmacKey(): string {
   return DEV_KEY;
 }
 
+/**
+ * D-149 · Jeton d’un lien d’invitation remis au coach (« Copier le lien ») : dérivé de l’identifiant de l’invitation
+ * par la clé secrète du serveur. Il peut être redonné au coach sans jamais être stocké : la base ne garde que son empreinte.
+ */
+export function linkInvitationToken(invitationId: string): string {
+  return createHmac('sha256', hmacKey()).update(`invitation-link:${invitationId}`).digest('base64url');
+}
+
 /** Empreinte de l’adresse invitée : permet de vérifier l’identité sans stocker l’e-mail en clair. */
 export function emailHmac(email: string): Buffer {
   return createHmac('sha256', hmacKey()).update(normalizeEmail(email)).digest();

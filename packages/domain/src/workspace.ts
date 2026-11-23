@@ -22,13 +22,18 @@ export function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
-/** POST /workspaces/{wid}/athletes/{aid}/invite (C03-02). L’adresse n’est jamais stockée en clair. */
+/**
+ * POST /workspaces/{wid}/athletes/{aid}/invite (C03-02). L’adresse n’est jamais stockée en clair.
+ * D-149 : `delivery` « email » (par défaut) envoie le lien ; « link » le rend au coach, qui l’envoie lui-même (SMS, messagerie).
+ */
+export const INVITE_DELIVERIES = ['email', 'link'] as const;
 export const inviteSchema = z
   .object({
     email: z
       .string()
       .transform(normalizeEmail)
       .pipe(z.email({ message: 'Adresse e-mail invalide' }).max(254)),
+    delivery: z.enum(INVITE_DELIVERIES).default('email'),
   })
   .strict();
 

@@ -143,3 +143,62 @@ describe('inviter et accepter (C03-01 à C03-05)', () => {
     expect((await latestInvitation(USERS.marine, WORKSPACE_A, other))?.state).toBe('expired');
   });
 });
+
+describe('lien d’invitation à copier, sans e-mail (D-149)', () => {
+  const LIEN = randomUUID(); // élève qui recevra le lien par SMS
+  const linkOf = (b: unknown) => /#token=([A-Za-z0-9_-]+)$/.exec((b as { link?: string }).link ?? '')?.[1] ?? '';
+  let aid = '';
+
+  beforeAll(async () => {
+    await db.query('insert into auth.users(id, email) values ($1, $2)', [LIEN, 'lien@demo.coachos.test']);
+    await db.query('insert into public.users(id, display_name) values ($1, $2)', [LIEN, 'Lina']);
+    const r = await createAthlete({ ...meta(USERS.marine), workspaceId: WORKSPACE_A }, { displayName: 'Lina Lien', timeZone: 'Europe/Brussels' });
+    aid = (r.body as { id: string }).id;
+  });
+
+  it('rend le lien au coach sans envoyer d’e-mail ; même clé, même lien ; rien n’est stocké en clair', async () => {
+    const before = sent.length;
+    const m = { ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: aid, appOrigin: ORIGIN };
+    const r = await issueInvitation(m, { email: 'Lien@Demo.Coachos.test', delivery: 'link' });
+    expect(r.status).toBe(201);
+    expect(sent.length).toBe(before);
+    const link = (r.body as { link: string }).link;
+    expect(link.startsWith(`${ORIGIN}/invite#token=`)).toBe(true);
+    const token = linkOf(r.body);
+    expect(token.length).toBeGreaterThanOrEqual(40);
+    // Rejeu de la même clé (réseau coupé, double clic) : le même lien, recalculé.
+    expect(linkOf((await issueInvitation(m, { email: 'Lien@Demo.Coachos.test', delivery: 'link' })).body)).toBe(token);
+    const inv = await db.query<{ t: string }>(`select row_to_json(i)::text as t from public.invitations i where athlete_id = $1`, [aid]);
+    expect(inv.rows.map((x) => x.t).join()).not.toContain(token);
+    expect(inv.rows.map((x) => x.t).join()).not.toContain('lien@');
+    const keys = await db.query<{ t: string }>(`select coalesce(response::text, '') as t from public.operation_keys where workspace_id = $1`, [WORKSPACE_A]);
+    expect(keys.rows.map((x) => x.t).join()).not.toContain(token);
+  });
+
+  it('un autre coach ou un élève ne peut pas créer de lien', async () => {
+    const as = (u: string) => issueInvitation({ ...meta(u), workspaceId: WORKSPACE_A, athleteId: aid, appOrigin: ORIGIN }, { email: 'lien@demo.coachos.test', delivery: 'link' });
+    expect(await codeOf(as(USERS.hugo))).toBe('RESOURCE_NOT_VISIBLE');
+    expect(await codeOf(as(USERS.camille))).toBe('RESOURCE_NOT_VISIBLE');
+    expect(await codeOf(as(LIEN))).toBe('RESOURCE_NOT_VISIBLE');
+  });
+
+  it('un nouveau lien remplace l’ancien ; seule l’adresse saisie peut l’accepter', async () => {
+    const issue = () => issueInvitation({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: aid, appOrigin: ORIGIN }, { email: 'lien@demo.coachos.test', delivery: 'link' });
+    const old = linkOf((await issue()).body);
+    const token = linkOf((await issue()).body);
+    expect(token).not.toBe(old);
+    expect(await codeOf(acceptInvitation(meta(LIEN), { token: old }))).toBe('CONFLICT_OR_QUOTA');
+    expect(await codeOf(acceptInvitation(meta(OTHER), { token }))).toBe('ACTION_FORBIDDEN_OR_FEATURE_DISABLED');
+    const a = await acceptInvitation(meta(LIEN), { token });
+    expect(a.body).toEqual({ workspaceId: WORKSPACE_A, athleteId: aid });
+    expect((await athleteContext(LIEN, WORKSPACE_A))?.athlete.id).toBe(aid);
+  });
+
+  it('sans remise précisée, l’invitation part toujours par e-mail et ne rend pas de lien', async () => {
+    const r = await createAthlete({ ...meta(USERS.marine), workspaceId: WORKSPACE_A }, { displayName: 'Par E-mail', timeZone: 'Europe/Brussels' });
+    const before = sent.length;
+    const inv = await issueInvitation({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: (r.body as { id: string }).id, appOrigin: ORIGIN }, { email: 'mail@demo.coachos.test' });
+    expect(sent.length).toBe(before + 1);
+    expect((inv.body as { link?: string }).link).toBeUndefined();
+  });
+});

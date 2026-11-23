@@ -8,5 +8,6 @@ next-env.d.ts
 backups/
 .next-e2e/
 .next-build/
+.next-demo/
 test-results/
 playwright-report/
