@@ -31,7 +31,7 @@ export function Relances({ wid, items }: { wid: string; items: RelanceItem[] }) 
             <Heading level={2} size={4} id="relances-title">Relances</Heading>
             {todo.length ? <Badge tone="signal">{todo.length} à faire</Badge> : null}
           </Cluster>
-          <Text size="sm" muted>Message prêt : tu le relis, tu l’ajustes et tu l’envoies. <Link href={`/coach/${wid}/settings#relances`}>Mes modèles</Link></Text>
+          <Text size="sm" muted>Message prêt : tu le relis, tu l’ajustes et tu l’envoies. <Link href={`/coach/${wid}/settings?onglet=relances`}>Mes modèles</Link></Text>
         </Stack>
         {todo.length ? (
           <ul className={s.relances}>{todo.map((i) => <RelanceRow key={i.athleteId} wid={wid} item={i} />)}</ul>

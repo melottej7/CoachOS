@@ -106,7 +106,7 @@ export default async function CoachHome({ params, searchParams }: { params: Prom
             <Stack gap={5}>
               <Cluster between gap={2}>
                 <Heading level={2} size={4} id="todo-title">À faire</Heading>
-                <Text size="sm" muted>{tasks.length} au total · <Link href={`${base}/settings#suivis`}>Régler les suivis</Link></Text>
+                <Text size="sm" muted>{tasks.length} au total · <Link href={`${base}/settings?onglet=suivis`}>Régler les suivis</Link></Text>
               </Cluster>
               <Disclosure summary={filtered ? 'Filtres actifs' : 'Filtrer par élève, groupe, type ou priorité'} open={filtered}>
               <form method="get" action={`${base}/planning`}>

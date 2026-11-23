@@ -1,32 +1,40 @@
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { requireActor } from '@/server/auth/session';
 import { readMe } from '@/server/commands/profile';
-import { Notice, SignOutButton, TopBar } from '@/components/ui';
-import { ProfileForm } from '@/components/profile-form';
+import { Banner, Button, Card, Cluster, Heading, LinkButton, PublicShell, Stack, Text, ThemeChoiceGroup } from '@/design';
+import { AccountForm } from '@/views/account/account-form';
 
-export const metadata = { title: 'Mon profil' };
+export const metadata = { title: 'Mon compte' };
 
-/** Profil d’identité (C02-07) : nom d’affichage et langue. */
+/** Profil d’identité (C02-07), refonte Chrono (D-155) : nom, langue, apparence de cet appareil, données, déconnexion. */
 export default async function Profile({ searchParams }: { searchParams: Promise<{ notice?: string }> }) {
   const actor = await requireActor();
   const { notice } = await searchParams;
   const me = (await readMe(actor.userId)) ?? { displayName: actor.displayName, locale: 'fr' as const };
+  const theme = (await cookies()).get('coachos_theme')?.value;
   return (
-    <>
-      <TopBar home="/choose-workspace"><span>{me.displayName}</span></TopBar>
-      <main id="contenu" className="athlete-zone">
-        <Link className="back" href="/choose-workspace">← Mes espaces</Link>
-        <Notice message={notice === 'saved' ? 'Profil enregistré.' : notice === 'password' ? 'Mot de passe modifié. Utilise-le à ta prochaine connexion.' : null} />
-        <h1>Mon profil</h1>
-        <div className="card" style={{ marginTop: 18 }}><div className="card-body">
-          <ProfileForm initialName={me.displayName} initialLocale={me.locale} submitLabel="Enregistrer" after="/profile?notice=saved" />
-        </div></div>
-        <section className="card" style={{ marginTop: 18 }} aria-labelledby="mes-donnees"><div className="card-body stack">
-          <h2 id="mes-donnees">Mes données</h2>
-          <p className="muted">Télécharger tes données ou demander leur effacement se fait dans chaque espace : onglet Profil pour un athlète, Paramètres pour un coach. <Link href="/confidentialite">Politique de confidentialité</Link>.</p>
-        </div></section>
-        <div className="mobile-only" style={{ marginTop: 18 }}><SignOutButton className="btn" /></div>
-      </main>
-    </>
+    <PublicShell>
+      <Stack gap={6}>
+        <Cluster><LinkButton href="/choose-workspace" variant="ghost" size="sm" icon="chevronLeft">Mes espaces</LinkButton></Cluster>
+        {notice === 'saved' ? <Banner tone="success" title="Compte enregistré" />
+          : notice === 'password' ? <Banner tone="success" title="Mot de passe modifié">Utilise-le à ta prochaine connexion.</Banner> : null}
+        <Stack gap={1}>
+          <Heading level={1} size={1}>Mon compte</Heading>
+          <Text muted>{me.displayName}</Text>
+        </Stack>
+        <Card pad={5}><AccountForm initialName={me.displayName} initialLocale={me.locale} after="/profile?notice=saved" /></Card>
+        <Stack as="section" gap={3} aria-labelledby="apparence">
+          <Heading level={2} size={4} id="apparence">Apparence</Heading>
+          <Text size="sm" muted>Réglage de cet appareil seulement.</Text>
+          <ThemeChoiceGroup initial={theme === 'light' || theme === 'dark' ? theme : 'system'} hideLegend />
+        </Stack>
+        <Stack as="section" gap={2} aria-labelledby="mes-donnees">
+          <Heading level={2} size={4} id="mes-donnees">Mes données</Heading>
+          <Text size="sm" muted>Télécharger tes données ou demander leur effacement se fait dans chaque espace : onglet Profil pour un élève, Paramètres › Mes données pour un coach. <Link href="/confidentialite">Politique de confidentialité</Link>.</Text>
+        </Stack>
+        <form action="/auth/signout" method="post"><Button type="submit" icon="logout">Se déconnecter</Button></form>
+      </Stack>
+    </PublicShell>
   );
 }
