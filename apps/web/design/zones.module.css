@@ -1,0 +1,14 @@
+.chip { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 24px; padding: 0 7px; border-radius: var(--ds-radius-sm); font-family: var(--ds-font-display); font-weight: 700; font-size: 15px; letter-spacing: 0.02em; color: var(--ds-on-zone); flex-shrink: 0; }
+.chipLg { min-width: 42px; height: 30px; font-size: 18px; border-radius: 8px; }
+.chipSm { min-width: 26px; height: 18px; font-size: 12px; padding: 0 4px; border-radius: 4px; }
+.z1 { background: var(--ds-z1); } .z2 { background: var(--ds-z2); } .z3 { background: var(--ds-z3); } .z4 { background: var(--ds-z4); }
+.z5 { background: var(--ds-z5); } .z6 { background: var(--ds-z6); } .z7 { background: var(--ds-z7); } .z0 { background: var(--ds-surface-3); }
+
+.strip { display: flex; flex-direction: column; gap: 4px; }
+.stripBar { display: flex; gap: 2px; height: var(--h, 14px); border-radius: 5px; overflow: hidden; }
+.stripBar > span { display: block; min-width: 3px; }
+.stripLabels { display: flex; gap: 2px; font-family: var(--ds-font-display); font-weight: 600; font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.stripLabels > span { min-width: 3px; overflow: hidden; white-space: nowrap; text-overflow: clip; }
+
+.profile { display: flex; align-items: flex-end; gap: 2px; height: var(--h, 64px); }
+.profile > span { display: block; min-width: 2px; border-radius: 3px 3px 0 0; }

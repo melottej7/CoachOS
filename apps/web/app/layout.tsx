@@ -1,11 +1,16 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Barlow, Barlow_Condensed, Inter } from 'next/font/google';
+import { cookies } from 'next/headers';
 import './globals.css';
+import '@/design/tokens.css';
 import { DevStyleRefresh } from '@/components/dev-style-refresh';
 import { OfflineSupport } from '@/components/offline';
 
 // D-121 · Police déclarée depuis le début mais jamais chargée : rendu homogène sur tous les appareils.
 const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
+// D-128 · Direction « Chrono » : Barlow pour le texte, Barlow Condensed pour les titres et les chiffres.
+const barlow = Barlow({ subsets: ['latin'], weight: ['400', '500', '600', '700'], display: 'swap', variable: '--font-barlow' });
+const barlowCondensed = Barlow_Condensed({ subsets: ['latin'], weight: ['500', '600', '700'], display: 'swap', variable: '--font-barlow-condensed' });
 
 export const metadata: Metadata = {
   title: { default: 'CoachOS', template: '%s · CoachOS' },
@@ -21,9 +26,14 @@ export const viewport: Viewport = {
   themeColor: [{ media: '(prefers-color-scheme: light)', color: '#0a6452' }, { media: '(prefers-color-scheme: dark)', color: '#0f1d24' }],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+/** Thème et densité choisis par la personne (cookies), appliqués au rendu serveur : aucun éclair au chargement. */
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const jar = await cookies();
+  const theme = jar.get('coachos_theme')?.value;
+  const density = jar.get('coachos_density')?.value;
   return (
-    <html lang="fr-BE" className={inter.variable}>
+    <html lang="fr-BE" className={`${inter.variable} ${barlow.variable} ${barlowCondensed.variable}`}
+      data-theme={theme === 'light' || theme === 'dark' ? theme : undefined} data-density={density === 'compact' ? 'compact' : undefined}>
       <body>
         <a className="skip" href="#contenu">Aller au contenu</a>
         {children}
