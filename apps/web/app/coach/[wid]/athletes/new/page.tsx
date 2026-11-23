@@ -1,30 +1,34 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
-import { AthleteForm } from '@/components/roster-forms';
+import { Banner, Card, Cluster, EmptyState, Eyebrow, Heading, LinkButton, Stack, Text } from '@/design';
+import { AthleteForm } from '@/views/coach/roster/invitation';
 
-export const metadata = { title: 'Ajouter un athlète' };
+export const metadata = { title: 'Ajouter un élève' };
 
-/** X13 : identité, fuseau et adresse d’invitation. */
+/** X13, refonte Chrono (D-150) : identité, fuseau et invitation (lien à copier ou e-mail, D-149). */
 export default async function NewAthlete({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<{ first?: string }> }) {
   const { wid } = await params;
   const { first } = await searchParams;
   const actor = await requireActor();
   const ctx = await coachContext(actor.userId, wid);
   if (!ctx) notFound();
+  const back = <Cluster><LinkButton href={`/coach/${wid}/athletes`} variant="ghost" size="sm" icon="chevronLeft">Élèves</LinkButton></Cluster>;
   if (ctx.role !== 'owner') {
-    return (<><h1>Ajouter un athlète</h1><p className="sub">Seul le propriétaire de l’espace peut ajouter des athlètes.</p></>);
+    return <Stack gap={6}>{back}<EmptyState icon="users" title="Réservé au propriétaire">Seul le propriétaire de l’espace peut ajouter des élèves.</EmptyState></Stack>;
   }
   return (
-    <>
-      <Link className="back" href={`/coach/${wid}/athletes`}>← Athlètes</Link>
-      {first ? <p className="banner ok" role="status" style={{ marginBottom: 16 }}>Ton espace « {ctx.workspace.name} » est prêt. Ajoute ton premier athlète.</p> : null}
-      <div className="head"><div><div className="kicker">{ctx.workspace.name}</div><h1>Ajouter un athlète</h1>
-        <p className="sub">L’athlète reçoit un lien personnel par e-mail, valable 7 jours. Il rejoint ton espace en se connectant avec cette adresse.</p></div></div>
-      <section className="card" data-tour="athlete-form"><div className="card-body">
+    <Stack gap={6} className="ds-narrow">
+      {back}
+      {first ? <Banner tone="success" title={`Ton espace « ${ctx.workspace.name} » est prêt`}>Ajoute ton premier élève.</Banner> : null}
+      <Stack gap={1}>
+        <Eyebrow tone="coach">{ctx.workspace.name}</Eyebrow>
+        <Heading level={1} size={1}>Ajouter un élève</Heading>
+        <Text muted>Son nom et son fuseau suffisent pour préparer ses séances. Avec son adresse, il ou elle reçoit un lien personnel, valable 7 jours, pour rejoindre ton espace.</Text>
+      </Stack>
+      <Card pad={5} data-tour="athlete-form">
         <AthleteForm wid={wid} zones={Intl.supportedValuesOf('timeZone')} defaultZone={ctx.workspace.timeZone} />
-      </div></section>
-    </>
+      </Card>
+    </Stack>
   );
 }

@@ -1,0 +1,21 @@
+/* Élèves (D-150). */
+.teams { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--ds-3); }
+.team { position: relative; display: flex; flex-direction: column; gap: var(--ds-2); padding: var(--ds-4); border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); }
+.teamOn { border-color: var(--ds-coach); box-shadow: inset 0 0 0 1px var(--ds-coach); }
+.teamHead { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ds-2); }
+.teamName { font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: 700; color: var(--ds-ink); text-decoration: none; }
+.teamName:hover { text-decoration: underline; }
+.teamFacts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.attn { color: var(--ds-warning); font-weight: 600; }
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--ds-2); align-items: end; }
+.list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); overflow: hidden; }
+.list > li + li { border-top: 1px solid var(--ds-rule); }
+.row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ds-3); padding: var(--ds-3) var(--ds-4); }
+.rowText { flex: 1 1 260px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.rowName { font-weight: 700; color: var(--ds-ink); text-decoration: none; }
+.rowName:hover { text-decoration: underline; }
+.meta { font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.line { display: flex; align-items: center; gap: 6px; font-size: var(--ds-text-sm); }
+.line svg { flex: none; color: var(--ds-ink-2); }
+.reg { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: var(--ds-2); font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.regLow { color: var(--ds-warning); }
