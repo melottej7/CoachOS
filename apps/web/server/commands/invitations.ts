@@ -8,7 +8,8 @@ import {
   parseWith,
 } from '@coachos/domain';
 import { commandAs, systemTx, type Tx } from '../db/client';
-import { emailHmac, newInvitationToken, sha256 } from '../crypto';
+import { randomUUID } from 'node:crypto';
+import { emailHmac, linkInvitationToken, newInvitationToken, sha256 } from '../crypto';
 import { invitationEmail, sendEmail } from '../email/send';
 import { AppError, conflict, invalid, notVisible } from '../errors';
 import { audit, idempotent, type StoredResponse } from './idempotency';
@@ -74,6 +75,8 @@ export async function createAthlete(meta: Meta & { workspaceId: string }, body: 
  * issueInvitation (C03-02, C03-05) : remplace le lien actif, stocke seulement l’empreinte du jeton
  * et de l’adresse, envoie l’e-mail dans la transaction. Si l’envoi échoue, rien n’est créé et la
  * même clé peut être rejouée. Le jeton est placé après # : il n’atteint jamais les journaux serveur.
+ * D-149 : en remise « link », aucun e-mail ; le lien est rendu au coach, recalculé à chaque réponse
+ * (y compris au rejeu de la même clé) et jamais stocké, ni dans l’invitation ni dans la réponse enregistrée.
  */
 export async function issueInvitation(
   meta: Meta & { workspaceId: string; athleteId: string; appOrigin: string },
@@ -81,7 +84,7 @@ export async function issueInvitation(
 ): Promise<StoredResponse> {
   const parsed = parseWith(inviteSchema, body);
   if (!parsed.ok) throw invalid(parsed.fields);
-  const { email } = parsed.value;
+  const { email, delivery } = parsed.value;
   const { workspaceId: wid, athleteId: aid } = meta;
   return commandAs(meta.actorId, async (tx) => {
     const ok = await tx.query<{ ok: boolean; state: string | null; wname: string; coach: string | null; tagline: string | null }>(
@@ -96,23 +99,29 @@ export async function issueInvitation(
     if (!row?.ok || !row.state) throw notVisible();
     if (row.state !== 'invited') throw conflict('Cet athlète a déjà rejoint l’espace ou n’est plus actif.');
 
-    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'invitation.issue', key: meta.idempotencyKey, body }, async () => {
+    const res = await idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'invitation.issue', key: meta.idempotencyKey, body }, async () => {
       await tx.query(
         `update public.invitations set revoked_at = now()
          where workspace_id = $1 and athlete_id = $2 and used_at is null and revoked_at is null`,
         [wid, aid],
       );
-      const token = newInvitationToken();
-      const inv = await tx.query<{ id: string; expires_at: Date }>(
-        `insert into public.invitations(workspace_id, athlete_id, secret_hash, email_hmac, expires_at)
-         values ($1, $2, $3, $4, now() + make_interval(days => $5)) returning id, expires_at`,
-        [wid, aid, sha256(token), emailHmac(email), INVITATION_TTL_DAYS],
+      const id = randomUUID();
+      const token = delivery === 'link' ? linkInvitationToken(id) : newInvitationToken();
+      const inv = await tx.query<{ expires_at: Date }>(
+        `insert into public.invitations(id, workspace_id, athlete_id, secret_hash, email_hmac, expires_at)
+         values ($1, $2, $3, $4, $5, now() + make_interval(days => $6)) returning expires_at`,
+        [id, wid, aid, sha256(token), emailHmac(email), INVITATION_TTL_DAYS],
       );
-      const { id, expires_at } = inv.rows[0]!;
+      const { expires_at } = inv.rows[0]!;
       await audit(tx, wid, meta.actorId, 'invitation.issue', id, meta.requestId);
-      await sendEmail(invitationEmail(email, row.wname, `${meta.appOrigin}/invite#token=${token}`, INVITATION_TTL_DAYS, row.coach, row.tagline));
+      if (delivery === 'email') {
+        await sendEmail(invitationEmail(email, row.wname, `${meta.appOrigin}/invite#token=${token}`, INVITATION_TTL_DAYS, row.coach, row.tagline));
+      }
       return { status: 201, body: { invitationId: id, expiresAt: new Date(expires_at).toISOString() } };
     });
+    if (delivery !== 'link') return res;
+    const invitationId = (res.body as { invitationId: string }).invitationId;
+    return { ...res, body: { ...(res.body as object), link: `${meta.appOrigin}/invite#token=${linkInvitationToken(invitationId)}` } };
   });
 }
 

@@ -419,12 +419,12 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
           <div className="card-head"><h2 id="inv-title">Invitation</h2></div>
           <div className="card-body stack">
             {!inv ? <p>Aucune invitation envoyée pour l’instant.</p> : null}
-            {inv?.state === 'pending' ? <p>Envoyée le {fmt(inv.createdAt, tz)}, valable jusqu’au {fmt(inv.expiresAt, tz)}. {first} doit se connecter avec l’adresse qui l’a reçue.</p> : null}
+            {inv?.state === 'pending' ? <p>Créée le {fmt(inv.createdAt, tz)}, valable jusqu’au {fmt(inv.expiresAt, tz)}. {first} doit créer son compte avec l’adresse saisie pour l’invitation. Lien perdu ? Crée un nouveau lien ci-dessous : l’ancien cessera de fonctionner.</p> : null}
             {inv?.state === 'expired' ? <p className="banner warn">Le dernier lien a expiré le {fmt(inv.expiresAt, tz)}. Envoie-en un nouveau.</p> : null}
             {inv?.state === 'revoked' ? <p>Le dernier lien a été annulé.</p> : null}
             <p className="muted">Tu peux préparer et publier des séances dès maintenant : {first} les verra en rejoignant l’espace.</p>
             <h3>{inv ? 'Envoyer un nouveau lien' : 'Envoyer l’invitation'}</h3>
-            <ResendInvitation wid={wid} aid={aid} label={inv ? 'Renvoyer l’invitation' : 'Envoyer l’invitation'} />
+            <ResendInvitation wid={wid} aid={aid} name={first ?? ''} label={inv ? 'Renvoyer l’invitation' : 'Envoyer l’invitation'} />
             {inv?.state === 'pending' && ctx.role === 'owner' ? <RevokeInvitation wid={wid} aid={aid} iid={inv.id} /> : null}
           </div>
         </section>
