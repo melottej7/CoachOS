@@ -39,6 +39,7 @@ Variables à renseigner dans Vercel (les valeurs viennent de tes comptes et ne p
 | `RESEND_API_KEY`, `EMAIL_FROM` | Envoi des e-mails (ex. `CoachOS <bonjour@ton-domaine.be>`) |
 | `ANTHROPIC_API_KEY`, `COACHOS_AI_MONTHLY_BUDGET_USD` | Facultatif : l’IA, avec un budget mensuel par espace |
 | `COACHOS_CONTACT_EMAIL` | Facultatif : adresse de contact affichée sur la page de confidentialité (sinon, le contact passe par le coach) |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Rappels push (D-118). Dans le Terminal : `cd apps/web && npx web-push generate-vapid-keys` ; `VAPID_SUBJECT` = `mailto:` suivi de ton adresse. Sans elles, la section « Rappels » le dit et ne propose rien |
 
 `DATABASE_URL` : l’adresse du **pooler de transactions** de Supabase (port 6543), qui se termine par `/postgres` sans rien après. Un espace ou un retour à la ligne collé en trop fait répondre `3D000` à `/api/health` ; un mot de passe faux, `28P01`. Après chaque modification d’une variable, Vercel doit reconstruire (un « Push origin » suffit).
 
@@ -46,9 +47,13 @@ Variables à renseigner dans Vercel (les valeurs viennent de tes comptes et ne p
 
 Supabase › Authentification : l’adresse du site et l’adresse de retour (`https://…/auth/callback`).
 
+Supabase › Authentication › **SMTP Settings** (après Resend) : sans ce réglage, Supabase n’envoie « Mot de passe oublié » qu’aux membres de ton équipe Supabase, pas à tes élèves. Active « Enable Custom SMTP » : Sender email = ton adresse d’envoi vérifiée chez Resend, Host `smtp.resend.com`, Port `465`, Username `resend`, Password = ta clé API Resend. Puis « Save ».
+
+Après chaque réglage, ouvre `https://coach-os-xi-kohl.vercel.app/api/health` : la ligne `services` dit ce qui est branché (`email: resend`, `push: true`, `ai: claude`, `contact: true`), sans jamais montrer une clé (D-119).
+
 ## Étape 3 · Ce que je fais ensuite
 
-1. Fait le 22 novembre : les 42 migrations sont appliquées au projet Supabase (`supabase db push`). Aucune donnée de démonstration n’est créée. **Le 23 novembre, une 43e migration (effacement, D-115) attend ton `npx supabase db push --remote` dans le Terminal** : l’agent n’a pas le droit de modifier la base en ligne.
+1. Fait le 22 novembre : les 42 migrations sont appliquées au projet Supabase (`supabase db push`). Aucune donnée de démonstration n’est créée. **Le 23 novembre, deux migrations (effacement D-115, rappels push D-118) attendent ton `npx supabase db push --remote` dans le Terminal** : l’agent n’a pas le droit de modifier la base en ligne.
 2. Vérifié en ligne : page de connexion, formulaire d’inscription, contrôle de santé, lecture de la base. Reste à vérifier avec toi (section « Recette en ligne » du guide de recette) : inscription coach, invitation reçue par e-mail (après Resend), compte élève, séance publiée, retour, vidéo d’exercice sur iPhone, hors connexion.
 3. Consigné dans ETAT.md et GUIDE_RECETTE.md.
 

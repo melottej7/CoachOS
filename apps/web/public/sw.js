@@ -94,3 +94,37 @@ self.addEventListener('fetch', (event) => {
     })());
   }
 });
+
+/*
+ * D-118 · Rappels push : une alerte courte (titre, phrase, lien), jamais le texte d’un message. Le clic ouvre
+ * l’écran utile par le résolveur de notification, qui revérifie les droits.
+ */
+self.addEventListener('push', (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch { data = {}; }
+  const title = typeof data.title === 'string' && data.title ? data.title : 'CoachOS';
+  const options = {
+    body: typeof data.body === 'string' ? data.body : '',
+    icon: '/icons/192.png',
+    badge: '/icons/192.png',
+    tag: typeof data.tag === 'string' ? data.tag : undefined,
+    data: { url: typeof data.url === 'string' ? data.url : '/' },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin);
+  if (target.origin !== self.location.origin) return;
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of windows) {
+      if ('focus' in c) {
+        await c.focus();
+        if ('navigate' in c) { await c.navigate(target.href); return; }
+      }
+    }
+    await self.clients.openWindow(target.href);
+  })());
+});

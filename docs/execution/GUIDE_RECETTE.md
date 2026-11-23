@@ -373,3 +373,11 @@ Ensuite, Resend (je te guide) : créer le compte, vérifier ton domaine d’envo
 4. Côté coach (Paul) : **Planning** montre une tâche « Demande d’effacement · Emma … » avec l’échéance. Ouvre la fiche d’Emma : la section **« Données d’Emma »** rappelle la demande.
 5. **Effacer définitivement les données d’Emma…** : écris son prénom pour confirmer. Tu reviens sur la liste des élèves : « Dossier effacé, et compte supprimé ». Emma ne peut plus se connecter (son compte n’avait pas d’autre espace). Pour refaire le test, recrée une élève avec une nouvelle adresse.
 6. **Paramètres** (coach) › **Mes données** : télécharge tes propres données (bibliothèque, méthode, notes, tâches).
+
+## Rappels sur le téléphone (D-118)
+
+1. Sur ton iPhone, CoachOS doit être **installée sur l’écran d’accueil** (section « Installer CoachOS sur ton téléphone »). Ouvre-la depuis l’icône, pas depuis Safari.
+2. Côté élève : **🔔 Notifications** › **Rappels sur cet appareil** › **Activer les rappels sur cet appareil** › accepte la demande du téléphone. La ligne devient « Rappels activés sur cet appareil ».
+3. Côté coach (sur le Mac) : publie une séance pour cet élève. Le téléphone reçoit « Ton coach a publié une séance » ; le toucher ouvre la séance.
+4. Envoie un message à l’élève : le rappel dit « Nouveau message de ton coach », jamais le texte. Tant que l’élève n’a pas ouvert l’app, un deuxième message ne redéclenche pas de rappel.
+5. **Désactiver sur cet appareil** arrête tout. Dis-moi si un rappel est arrivé en double, en retard, ou jamais.

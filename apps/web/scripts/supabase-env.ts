@@ -14,6 +14,11 @@ if (missing.length) throw new Error(`Supabase local ne répond pas (${missing.jo
 if (!/^http:\/\/(127\.0\.0\.1|localhost):/.test(status.API_URL!)) throw new Error('Refus : ce script ne vise que Supabase local.');
 
 const file = path.join(root, 'apps', 'web', '.env.local');
+// Les réglages ajoutés à la main (clés VAPID des rappels, clé de l’IA…) survivent à une régénération.
+const generated = new Set(['DATABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'MAILPIT_URL']);
+const kept = fs.existsSync(file)
+  ? fs.readFileSync(file, 'utf8').split('\n').filter((l) => { const k = l.split('=')[0]?.trim(); return Boolean(k) && !k!.startsWith('#') && !generated.has(k!); })
+  : [];
 fs.writeFileSync(
   file,
   [
@@ -23,6 +28,7 @@ fs.writeFileSync(
     `NEXT_PUBLIC_SUPABASE_ANON_KEY=${status.ANON_KEY}`,
     `SUPABASE_SERVICE_ROLE_KEY=${status.SERVICE_ROLE_KEY}`,
     `MAILPIT_URL=${status.MAILPIT_URL ?? 'http://127.0.0.1:54324'}`,
+    ...(kept.length ? ['# Réglages conservés (ajoutés à la main) :', ...kept] : []),
     '',
   ].join('\n'),
 );

@@ -1,5 +1,5 @@
 import {
-  EMAIL_KINDS, EMAIL_WINDOW_HOURS, notificationEmail, notificationSettingsSchema, notificationText, parseWith,
+  EMAIL_KINDS, EMAIL_WINDOW_HOURS, notificationEmail, notificationSettingsSchema, notificationText, parseWith, PUSH_KINDS,
   type EmailPreference, type NotificationKind, type NotificationRole,
 } from '@coachos/domain';
 import { commandAs, readAs, systemTx, type Tx } from '../db/client';
@@ -18,6 +18,12 @@ type Meta = { actorId: string; idempotencyKey: string; requestId: string; worksp
 async function athleteUser(tx: Tx, wid: string, aid: string): Promise<string | null> {
   const r = await tx.query<{ user_id: string | null }>(`select user_id from public.athletes where workspace_id = $1 and id = $2 and state = 'active'`, [wid, aid]);
   return r.rows[0]?.user_id ?? null;
+}
+
+/** D-118 : au moins un appareil abonné aux rappels dans l’espace. */
+async function hasPushDevice(tx: Tx, wid: string, userId: string): Promise<boolean> {
+  const r = await tx.query('select 1 from public.push_subscriptions where workspace_id = $1 and user_id = $2 limit 1', [wid, userId]);
+  return r.rows.length > 0;
 }
 
 /** Coachs affectés à l’élève aujourd’hui. */
@@ -61,9 +67,11 @@ export async function notify(tx: Tx, n: { wid: string; aid: string; kind: Notifi
       );
       if (recent.rows.length) state = 'skipped';
     }
+    // D-118 : rappel push à la création seulement (une notification non lue regroupe les suivantes), si un appareil est abonné.
+    const push = PUSH_KINDS[r.role].includes(n.kind) && (await hasPushDevice(tx, n.wid, r.user)) ? 'pending' : 'none';
     await tx.query(
-      `insert into public.notifications(workspace_id, user_id, kind, entity_id, athlete_id, item_count, email_state) values ($1, $2, $3, $4, $5, $6, $7)`,
-      [n.wid, r.user, n.kind, n.entityId, n.aid, n.count ?? 1, state],
+      `insert into public.notifications(workspace_id, user_id, kind, entity_id, athlete_id, item_count, email_state, push_state) values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [n.wid, r.user, n.kind, n.entityId, n.aid, n.count ?? 1, state, push],
     );
   }
 }
@@ -89,9 +97,10 @@ export async function notifyTeam(tx: Tx, wid: string, tid: string, messageId: st
       [wid, user, tid, messageId],
     );
     if (open.rows.length) continue;
+    const push = (await hasPushDevice(tx, wid, user)) ? 'pending' : 'none';
     await tx.query(
-      `insert into public.notifications(workspace_id, user_id, kind, entity_id, team_id, email_state) values ($1, $2, 'group_message', $3, $4, 'none')`,
-      [wid, user, messageId, tid],
+      `insert into public.notifications(workspace_id, user_id, kind, entity_id, team_id, email_state, push_state) values ($1, $2, 'group_message', $3, $4, 'none', $5)`,
+      [wid, user, messageId, tid, push],
     );
   }
 }

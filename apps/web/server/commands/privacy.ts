@@ -262,7 +262,7 @@ const ATHLETE_ERASE_ORDER = [
 /** Lignes propres à la personne dans l’espace (hors dossier d’élève). */
 const PERSON_ERASE: readonly [table: string, column: string][] = [
   ['team_messages', 'sender_id'], ['voice_clips', 'sender_id'], ['team_reads', 'user_id'], ['read_receipts', 'user_id'],
-  ['notifications', 'user_id'], ['notification_settings', 'user_id'],
+  ['notifications', 'user_id'], ['notification_settings', 'user_id'], ['push_subscriptions', 'user_id'],
 ];
 
 /** Tables du dossier d’après le catalogue (workspace_id + athlete_id) : une table ajoutée plus tard n’est jamais oubliée. */

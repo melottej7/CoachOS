@@ -1,4 +1,5 @@
 import { flushNotificationEmails } from './commands/notifications';
+import { flushPushNotifications } from './commands/push';
 import { randomUUID } from 'node:crypto';
 import { NextResponse, type NextRequest } from 'next/server';
 import { getActor } from './auth/session';
@@ -67,6 +68,7 @@ export async function handleMutation(
     const result = await run({ actorId: actor.userId, idempotencyKey: key, requestId, body, origin: new URL(origin).origin });
     // D-067 : e-mails de notification après la validation, sans retarder la réponse ni la faire échouer.
     void flushNotificationEmails(new URL(origin).origin).catch(() => undefined);
+    void flushPushNotifications(new URL(origin).origin).catch(() => undefined); // D-118
     return NextResponse.json(result.body, { status: result.status, headers: { 'x-request-id': requestId } });
   } catch (error) {
     const known = asAppError(error);
