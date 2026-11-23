@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { requireActor } from '@/server/auth/session';
 import { isUuid } from '@/server/repo/context';
 import { resolveNotification } from '@/server/commands/notifications';
+import { EmptyState, LinkButton, PublicShell } from '@/design';
 
 export const metadata = { title: 'Notification' };
 
@@ -18,10 +18,11 @@ export default async function OpenNotification({ params }: { params: Promise<{ w
   if (!r) notFound();
   if (r.href) redirect(r.href);
   return (
-    <main id="contenu" className="main narrow">
-      <h1>Accès retiré</h1>
-      <p className="sub">Ce que signalait cette notification n’est plus accessible depuis ton compte (suivi terminé, élève archivé ou séance retirée).</p>
-      <p><Link className="btn" href="/">Retour à l’accueil</Link></p>
-    </main>
+    <PublicShell home="/choose-workspace">
+      <h1 className="ds-visually-hidden">Accès retiré</h1>
+      <EmptyState icon="info" title="Accès retiré" action={<LinkButton href="/choose-workspace" variant="primary">Revenir à mes espaces</LinkButton>}>
+        Ce que signalait cette notification n’est plus accessible depuis ton compte (suivi terminé, élève archivé ou séance retirée).
+      </EmptyState>
+    </PublicShell>
   );
 }
