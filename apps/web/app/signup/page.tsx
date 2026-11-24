@@ -4,6 +4,7 @@ import { PASSWORD_MIN } from '@coachos/domain';
 import { getActor } from '@/server/auth/session';
 import { safeNext, supabaseConfigured } from '@/server/supabase/server';
 import { Banner, Button, Card, Cluster, Field, Grid, Heading, Input, LinkButton, PasswordInput, PublicShell, Stack, Text } from '@/design';
+import { waitSentence } from '@/server/rate-limit';
 
 export const metadata = { title: 'Créer un compte coach' };
 export const dynamic = 'force-dynamic';
@@ -15,9 +16,12 @@ const ERRORS: Record<string, string> = {
   rate: 'Trop de tentatives rapprochées. Patiente une minute avant de réessayer.',
   failed: 'La création du compte a échoué. Réessaie dans un instant.',
 };
+/** D-162 : la limite atteinte donne le temps d’attente réel ; sans lui (limite de Supabase), la phrase générale. */
+const errorText = (sp: { error?: string; wait?: string }) =>
+  sp.error === 'rate' ? (waitSentence(sp.wait) ?? ERRORS.rate) : sp.error ? ERRORS[sp.error] : undefined;
 
 /** Inscription coach (C02-01), refonte Chrono (D-156) : prénom, nom (D-153), adresse, mot de passe ; puis la création d’espace (X04). */
-export default async function SignUp({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
+export default async function SignUp({ searchParams }: { searchParams: Promise<{ next?: string; error?: string; wait?: string }> }) {
   if (!supabaseConfigured()) redirect('/demo');
   const sp = await searchParams;
   const next = safeNext(sp.next);
@@ -31,7 +35,7 @@ export default async function SignUp({ searchParams }: { searchParams: Promise<{
           <Heading level={1} size={1}>Créer un compte coach</Heading>
           <Text muted>Ensuite, tu crées ton espace et tu invites tes élèves.</Text>
         </Stack>
-        {sp.error && ERRORS[sp.error] ? <Banner tone="danger">{ERRORS[sp.error]}</Banner> : null}
+        {errorText(sp) ? <Banner tone="danger">{errorText(sp)}</Banner> : null}
         <Card pad={5}>
           <form action="/auth/signup" method="post">
             <Stack gap={4}>

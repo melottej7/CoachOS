@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { demoAuthEnabled, getActor } from '@/server/auth/session';
 import { safeNext, supabaseConfigured } from '@/server/supabase/server';
 import { Banner, Button, Card, Field, Heading, Input, LinkButton, PasswordInput, PublicShell, Stack, Text } from '@/design';
+import { waitSentence } from '@/server/rate-limit';
 
 export const metadata = { title: 'Connexion' };
 export const dynamic = 'force-dynamic';
@@ -12,12 +13,15 @@ const ERRORS: Record<string, string> = {
   rate: 'Trop de tentatives rapprochées. Patiente une minute avant de réessayer.',
   link: 'Ce lien n’est plus valable (déjà utilisé ou expiré). Recommence la demande.',
 };
+/** D-162 : la limite atteinte donne le temps d’attente réel ; sans lui (limite de Supabase), la phrase générale. */
+const errorText = (sp: { error?: string; wait?: string }) =>
+  sp.error === 'rate' ? (waitSentence(sp.wait) ?? ERRORS.rate) : sp.error ? ERRORS[sp.error] : undefined;
 const NOTICES: Record<string, string> = {
   confirm: 'Compte créé. Confirme ton adresse depuis l’e-mail reçu, puis connecte-toi.',
 };
 
 /** X02, refonte Chrono (D-156) : connexion par adresse et mot de passe (D-020). Formulaire classique : marche sans JavaScript. */
-export default async function Login({ searchParams }: { searchParams: Promise<{ next?: string; error?: string; notice?: string }> }) {
+export default async function Login({ searchParams }: { searchParams: Promise<{ next?: string; error?: string; wait?: string; notice?: string }> }) {
   if (!supabaseConfigured()) redirect('/demo');
   const sp = await searchParams;
   const next = safeNext(sp.next);
@@ -31,7 +35,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
           <Heading level={1} size={1}>Connexion</Heading>
           <Text muted>Connecte-toi avec ton adresse e-mail et ton mot de passe.</Text>
         </Stack>
-        {sp.error && ERRORS[sp.error] ? <Banner tone="danger">{ERRORS[sp.error]}</Banner> : null}
+        {errorText(sp) ? <Banner tone="danger">{errorText(sp)}</Banner> : null}
         {sp.notice && NOTICES[sp.notice] ? <Banner tone="success">{NOTICES[sp.notice]}</Banner> : null}
         <Card pad={5}>
           <form action="/auth/login" method="post">

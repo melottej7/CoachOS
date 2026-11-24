@@ -2,12 +2,18 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { resetSchema } from '@coachos/domain';
 import { logAuth, redirectTo, sameOrigin } from '@/server/auth/forms';
+import { clientIp, overLimit, waitMinutes } from '@/server/rate-limit';
 import { supabaseConfigured, supabaseServer } from '@/server/supabase/server';
 
 /** Nouveau mot de passe, après le lien de réinitialisation (session de récupération). */
 export async function POST(req: NextRequest) {
   if (!supabaseConfigured()) return new NextResponse(null, { status: 404 });
   if (!sameOrigin(req)) return new NextResponse(null, { status: 403 });
+  const wait = await overLimit('reset.ip', clientIp(req)); // D-162
+  if (wait) {
+    logAuth('rate_limited', 429);
+    return redirectTo(req, '/reset-password', { error: 'rate', wait: waitMinutes(wait) });
+  }
   const form = await req.formData();
   const parsed = resetSchema.safeParse({ password: String(form.get('password') ?? '') });
   if (!parsed.success) return redirectTo(req, '/reset-password', { error: 'weak' });

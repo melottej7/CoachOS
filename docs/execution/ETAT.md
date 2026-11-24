@@ -12,7 +12,7 @@ Dernière mise à jour : 2026-11-24, espace coach refait en ligne (D-143 à D-16
 
 **Pas prouvé** : la boucle complète en ligne avec un vrai élève (il faut un domaine pour que les e-mails partent vers d’autres adresses) ; réception d’un rappel push sur un téléphone ; suppression d’un compte Auth en ligne ; sauvegarde (`npm run db:backup`) jamais exécutée ; restauration jamais essayée ; migrations automatiques à la construction (variables Vercel à saisir) ; Action GitHub (premier push à venir).
 
-**Chiffres** : `npm test` 397 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
+**Chiffres** : `npm test` 407 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
 
 **Ce que le produit fait** : la matrice [COUVERTURE.md](COUVERTURE.md) (cible coach et élève, D-024) et les décisions D-001 à D-122 dans [DECISIONS.md](DECISIONS.md). En deux lignes : un coach planifie des séances structurées par sport (zones VMA, FTP, CSS), des programmes générés selon sa méthode, des groupes, des tâches, des relances, des bilans ; l’élève lit sa séance sur téléphone (hors ligne, montre, pas à pas en musculation), envoie son retour, échange avec son coach ; les données personnelles ont leur page, leur export et leur effacement.
 
@@ -33,11 +33,11 @@ Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 coul
 
 ## Chantiers en cours (D-120)
 
-1. **Confiance.** Fait : en-têtes de sécurité, pages d’erreur, contrôle de santé avec services, script de sauvegarde, revue de sécurité du lot données personnelles, contrôles automatiques (Action GitHub), migrations à la construction Vercel, tests de bout en bout dans un vrai navigateur (D-125 ; quatre parcours : boucle coach → élève → coach, bilan, gestes du calendrier, palette), droits en base vérifiés table par table et profil par profil, sans fuite (D-127, D-161). À faire : suivi des erreurs en production (Sentry derrière une variable), sauvegarde puis restauration essayées en local, limitation des abus (fréquence sur les routes publiques), vidéos hors de la base (Supabase Storage).
+1. **Confiance.** Fait : en-têtes de sécurité, pages d’erreur, contrôle de santé avec services, script de sauvegarde, revue de sécurité du lot données personnelles, contrôles automatiques (Action GitHub), migrations à la construction Vercel, tests de bout en bout dans un vrai navigateur (D-125 ; quatre parcours : boucle coach → élève → coach, bilan, gestes du calendrier, palette), droits en base vérifiés table par table et profil par profil, sans fuite (D-127, D-161), limitation des abus sur la connexion, l’inscription, le mot de passe et l’invitation (D-162, migration à appliquer en ligne). À faire : suivi des erreurs en production (Sentry derrière une variable), sauvegarde puis restauration essayées en local, vidéos hors de la base (Supabase Storage).
 2. **Le coach inconnu.** À commencer : trois coachs fictifs (trail 25 élèves venant de Google Docs, musculation 40 clients, club à trois groupes), de l’inscription au premier retour traité, ordinateur et téléphone ; cible 15 minutes sans aide ; brief du jour et mode simple.
 3. **De quoi vendre.** À commencer après 1 et 2 : page publique, essai gratuit, offres par nombre d’élèves (29/59/99 € HT, docs/13), abonnement en mode test derrière un interrupteur, pages légales en brouillon, aide intégrée, mesure du temps gagné sans identité d’élève.
 
-**Prochaine tranche** : limitation des abus sur les routes publiques (connexion, inscription, invitation), puis « Le coach inconnu ».
+**Prochaine tranche** : la sauvegarde puis la restauration essayées en local, sur une base séparée (jamais la base de recette), puis « Le coach inconnu ».
 
 ## Pour le fondateur
 
@@ -45,6 +45,10 @@ Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, p
 
 0. **Fait** : direction choisie (A · Chrono, D-128).
 0 ter. **Fait** : espace coach refait mis en ligne (Pull Request n° 2, 24 novembre).
+0 quater. **Mettre en ligne la limitation des abus** (D-162) · 5 minutes · débloque : la connexion, l’inscription, le mot de passe oublié et l’invitation freinés contre les essais répétés. Dans cet ordre :
+   - Terminal (onglet de l’app, dossier CoachOS) : lance `npx supabase db push --remote`. Il annonce une seule migration, `20261124000000_rate_limits.sql` : tape `Y` puis Entrée. Il doit finir par « Finished supabase db push ». S’il en annonce d’autres, réponds `n` et dis-le-moi.
+   - GitHub Desktop › branche `refonte` › **« Push origin »** › menu **Branch › « Create Pull Request »** › **« Create pull request »** › **« Merge pull request »** › **« Confirm merge »**.
+   - Dis-moi « c’est fusionné » : je vérifie en ligne. Si l’ordre est inversé, rien ne casse : la limitation reste simplement éteinte jusqu’à la migration.
 0 bis. **« Confirm email » dans Supabase** · 2 minutes · utile seulement pour l’inscription d’un **nouveau coach** (D-020, D-114) ; tes élèves invités n’en dépendent pas : leur compte est créé déjà vérifié par l’invitation (D-153). Supabase › ton projet › **Authentication** › **Sign In / Providers** › **Email** › décoche **« Confirm email »** › **« Save »**. Sinon, avant le domaine, un nouveau coach ne recevrait jamais l’e-mail de confirmation.
 1. **Rendre les mises en ligne autonomes** · 15 minutes · débloque : je pousse le code moi-même et les migrations s’appliquent seules ; tu n’as plus rien à faire pour une mise en ligne. Aujourd’hui, `git push` depuis ma session échoue (« could not read Username for github.com ») : seul GitHub Desktop a tes identifiants.
    - GitHub : en haut à droite, ton avatar › **Settings** › tout en bas **« Developer settings »** › **« Personal access tokens »** › **« Fine-grained tokens »** › **« Generate new token »** › nom `CoachOS Mac` › expiration 1 an › Repository access : **« Only select repositories »** › `CoachOS` › Permissions › **Contents : Read and write** › **« Generate token »** › copie-le (il ne s’affiche qu’une fois).

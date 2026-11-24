@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { supabaseConfigured } from '@/server/supabase/server';
 import { Banner, Button, Card, Cluster, Field, Heading, Input, LinkButton, PublicShell, Stack, Text } from '@/design';
+import { waitSentence } from '@/server/rate-limit';
 
 export const metadata = { title: 'Mot de passe oublié' };
 export const dynamic = 'force-dynamic';
@@ -10,9 +11,12 @@ const ERRORS: Record<string, string> = {
   rate: 'Trop de demandes rapprochées. Patiente une minute avant de redemander.',
   expired: 'Le lien de réinitialisation n’est plus valable. Fais une nouvelle demande.',
 };
+/** D-162 : la limite atteinte donne le temps d’attente réel ; sans lui (limite de Supabase), la phrase générale. */
+const errorText = (sp: { error?: string; wait?: string }) =>
+  sp.error === 'rate' ? (waitSentence(sp.wait) ?? ERRORS.rate) : sp.error ? ERRORS[sp.error] : undefined;
 
 /** C02-06, refonte Chrono (D-156) : réponse identique pour une adresse connue ou inconnue. */
-export default async function Forgot({ searchParams }: { searchParams: Promise<{ sent?: string; error?: string }> }) {
+export default async function Forgot({ searchParams }: { searchParams: Promise<{ sent?: string; error?: string; wait?: string }> }) {
   if (!supabaseConfigured()) redirect('/demo');
   const sp = await searchParams;
   const mailpit = process.env.NODE_ENV !== 'production' ? process.env.MAILPIT_URL : undefined;
@@ -30,7 +34,7 @@ export default async function Forgot({ searchParams }: { searchParams: Promise<{
             {mailpit ? <> En local, les e-mails arrivent dans <a href={mailpit} target="_blank" rel="noreferrer">la boîte de test Mailpit</a>.</> : null}
           </Banner>
         ) : null}
-        {sp.error && ERRORS[sp.error] ? <Banner tone="danger">{ERRORS[sp.error]}</Banner> : null}
+        {errorText(sp) ? <Banner tone="danger">{errorText(sp)}</Banner> : null}
         <Card pad={5}>
           <form action="/auth/forgot" method="post">
             <Stack gap={4}>

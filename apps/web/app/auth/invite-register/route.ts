@@ -4,6 +4,7 @@ import { logAuth, sameOrigin } from '@/server/auth/forms';
 import { acceptInvitation, registerFromInvitation } from '@/server/commands/invitations';
 import { AppError } from '@/server/errors';
 import { errorPayload } from '@/server/http';
+import { clientIp, overLimit, rateLimited } from '@/server/rate-limit';
 import { createConfirmedUser } from '@/server/supabase/admin';
 import { supabaseConfigured, supabaseServer } from '@/server/supabase/server';
 
@@ -16,6 +17,9 @@ export async function POST(req: NextRequest) {
   if (!supabaseConfigured()) return new NextResponse(null, { status: 404 });
   if (!sameOrigin(req)) return NextResponse.json(errorPayload(new AppError('ACTION_FORBIDDEN_OR_FEATURE_DISABLED', 'Origine de la requête refusée.'), requestId), { status: 403 });
   try {
+    // D-162 : 10 comptes élèves par heure et par connexion internet (la création passe par l’administration, hors limites de Supabase).
+    const wait = await overLimit('invite.ip', clientIp(req));
+    if (wait) throw rateLimited(wait);
     const body: unknown = await req.json().catch(() => null);
     const reg = await registerFromInvitation(body, createConfirmedUser);
     const { error } = await (await supabaseServer()).auth.signInWithPassword({ email: reg.email, password: reg.password });
@@ -26,7 +30,10 @@ export async function POST(req: NextRequest) {
     const accepted = await acceptInvitation({ actorId: reg.userId, idempotencyKey: randomUUID(), requestId }, { token: reg.token });
     return NextResponse.json(accepted.body, { status: 200 });
   } catch (error) {
-    if (error instanceof AppError) return NextResponse.json(errorPayload(error, requestId), { status: error.status });
+    if (error instanceof AppError) {
+      const retry = error.code === 'RATE_LIMITED' ? { 'retry-after': String(error.details?.retryAfter ?? 60) } : undefined;
+      return NextResponse.json(errorPayload(error, requestId), { status: error.status, headers: retry });
+    }
     console.error(JSON.stringify({ reqId: requestId, module: 'auth', code: 'UNEXPECTED' }));
     return NextResponse.json(errorPayload(new AppError('TEMPORARILY_UNAVAILABLE', 'Service momentanément indisponible. Réessaie.'), requestId), { status: 503 });
   }
