@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 import { getDb, usingPostgres } from '@/server/db/client';
 import { aiSource } from '@/server/commands/ai';
 import { pushConfigured } from '@/server/commands/push';
+import { errorReportingEnabled } from '@/server/error-report';
 
 export const dynamic = 'force-dynamic';
 
 /** D-119 · État des services réglés sur ce serveur, sans aucun secret : ce qui est branché, pas les clés. */
 function services() {
   const email = process.env.RESEND_API_KEY && process.env.EMAIL_FROM ? 'resend' : process.env.MAILPIT_URL && process.env.NODE_ENV !== 'production' ? 'mailpit' : 'none';
-  return { email, push: pushConfigured(), ai: aiSource(), contact: Boolean((process.env.COACHOS_CONTACT_EMAIL ?? '').includes('@')) };
+  return { email, push: pushConfigured(), ai: aiSource(), contact: Boolean((process.env.COACHOS_CONTACT_EMAIL ?? '').includes('@')), errors: errorReportingEnabled() };
 }
 
 /**

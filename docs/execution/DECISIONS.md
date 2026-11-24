@@ -2437,3 +2437,12 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Repos** : « À suivre » montre en grand le prochain exercice et sa série. **Déroulé** (bouton « Étape 3 sur 11 ») : fait, en cours, à venir ; toucher une étape y va.
 - **Corrigés** : le chrono pouvait démarrer pendant une pause ; régler « Bips » ou « Voix » lançait le chronomètre de séance ; la fin d’une série affichait « Palier suivant » ; bips un peu plus forts ; écran allumé redemandé à chaque toucher et son relancé au retour sur la page.
 - **Preuves** : 4 tests d’enchaînement, 424 tests, typecheck, construction, six parcours de bout en bout verts (séries étendu : mise en place, rechargement en cours de série, Quitter puis Reprendre, déroulé, retour à la dernière étape, vue 1440). Vu à 390 et 1440 px. **Non prouvé** : sur un vrai téléphone (son en mode silencieux, écran allumé sur iPhone).
+
+## D-168 · Suivi des erreurs en production, éteint sans clé · 2026-11-24
+
+- **Quoi** : toute erreur serveur imprévue (page, action, route, invitation) part vers Sentry si `SENTRY_DSN` est réglé dans Vercel ; sans cette variable, rien ne part et rien ne change. `/api/health` indique `errors: true/false`.
+- **Sans bibliothèque** : un seul envoi HTTP (`server/error-report.ts`, `instrumentation.ts` avec `onRequestError`), borné à 2 s, qui ne fait jamais échouer la réponse. Pas de `@sentry/nextjs` : lourd, enveloppe la configuration Next.js, rien à gagner pour ce besoin.
+- **Même référence** : le digest affiché sur « Un problème est survenu » est l’étiquette `digest` de l’erreur dans Sentry ; le fondateur retrouve l’erreur qu’un élève lui transmet.
+- **Rien de personnel** : message masqué (adresses, identifiants, nombres, textes cités), gabarit de route et non l’adresse réelle, chemins de fichiers relatifs ; jamais d’en-têtes, cookies, corps ni identité.
+- **Preuves** : 5 tests (lecture de l’adresse, éteint sans clé, masquage, contenu de l’envoi, échec réseau sans effet), 429 tests, typecheck, construction, six parcours de bout en bout ; essai réel sur une construction séparée avec un faux récepteur : la page plantée affiche la référence 4163413316, reçue à l’identique avec le message masqué.
+- **Non couvert** : erreurs survenues dans le navigateur seul (sans référence serveur) ; réception dans un vrai compte Sentry (attend la clé du fondateur).
