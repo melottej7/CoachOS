@@ -2,15 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type RefObject } from 'react';
 import {
-  announce, describeIntensity, describeMeasure, exerciseKey, followChains, followSequence, formatElapsed, PHASE_LABELS, reminderAt, setLabel,
-  type Block, type Exercise, type FollowStep, type LastDone, type Sport,
+  announce, announceExercise, describeIntensity, describeMeasure, exerciseKey, followExercises, followGate, followSequence, followStart, formatElapsed,
+  lastSetLabel, PHASE_LABELS, reminderAt, setLabel,
+  type Block, type Exercise, type FollowExercise, type FollowStep, type LastDone, type Sport,
 } from '@coachos/domain';
 import { Button, Cluster, Disclosure, Eyebrow, Heading, Icon, IconButton, LinkButton, Stack, Text, ZoneChip, type ZoneLevel } from '@/design';
 import { cx } from '@/design/cx';
 import { ExerciseMedia } from './exercise-howto';
 import {
-  elapsedOf, followClockKey, followLogKey, followPosKey, keep, NO_CLOCK, readClock, readFollowLog, readPos, readRun, writeRun,
-  type ClockState, type FollowLog, type Run,
+  elapsedOf, followClockKey, followGateKey, followLogKey, followPosKey, followSkipKey, keep, NO_CLOCK, readClock, readFollowLog, readGate, readPos, readRun, readSkipped, writeRun,
+  type ClockState, type FollowLog, type Gate, type Run,
 } from './follow-store';
 import s from './follow-session.module.css';
 
@@ -18,26 +19,33 @@ import s from './follow-session.module.css';
 
 function useSessionClock(sid: string) {
   const [c, setC] = useState<ClockState>(NO_CLOCK);
+  // D-172 : un même toucher peut lancer puis mettre en pause (fin d’un exercice) ; chaque geste lit l’état le plus récent.
+  const cur = useRef<ClockState>(NO_CLOCK);
   const [now, setNow] = useState(() => Date.now());
-  useEffect(() => { setC(readClock(sid)); }, [sid]);
+  useEffect(() => { const v = readClock(sid); cur.current = v; setC(v); }, [sid]);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 500); return () => clearInterval(t); }, []);
   const save = useCallback((next: ClockState) => {
+    cur.current = next;
     setC(next);
     setNow(Date.now());
     keep(followClockKey(sid), next);
   }, [sid]);
+  const pausedFor = c.pausedAt !== null && c.endedAt === null ? Math.max(0, now - c.pausedAt) : 0;
   return {
     started: c.startedAt !== null, paused: c.pausedAt !== null, ended: c.endedAt !== null, elapsed: elapsedOf(c, now),
-    start: () => { if (c.startedAt === null) save({ ...NO_CLOCK, startedAt: Date.now() }); },
-    pause: () => { if (c.startedAt !== null && c.pausedAt === null && c.endedAt === null) save({ ...c, pausedAt: Date.now() }); },
-    resume: () => { if (c.pausedAt !== null) save({ ...c, pausedAt: null, pausedMs: c.pausedMs + Date.now() - c.pausedAt }); },
+    /** D-172 : depuis quand la séance est en pause, et le total des pauses (non comptées dans la durée). */
+    pausedFor, pauses: c.pausedMs + pausedFor,
+    start: () => { if (cur.current.startedAt === null) save({ ...NO_CLOCK, startedAt: Date.now() }); },
+    pause: () => { const v = cur.current; if (v.startedAt !== null && v.pausedAt === null && v.endedAt === null) save({ ...v, pausedAt: Date.now() }); },
+    resume: () => { const v = cur.current; if (v.pausedAt !== null) save({ ...v, pausedAt: null, pausedMs: v.pausedMs + Date.now() - v.pausedAt }); },
     end: () => {
-      if (c.startedAt === null || c.endedAt !== null) return;
+      const v = cur.current;
+      if (v.startedAt === null || v.endedAt !== null) return;
       const t = Date.now();
-      save({ ...c, pausedAt: null, pausedMs: c.pausedMs + (c.pausedAt !== null ? t - c.pausedAt : 0), endedAt: t });
+      save({ ...v, pausedAt: null, pausedMs: v.pausedMs + (v.pausedAt !== null ? t - v.pausedAt : 0), endedAt: t });
     },
     /** D-167 : terminée par erreur → la séance revient en pause, au temps où elle s’était arrêtée. */
-    reopen: () => { if (c.endedAt !== null) save({ ...c, pausedAt: c.endedAt, endedAt: null }); },
+    reopen: () => { const v = cur.current; if (v.endedAt !== null) save({ ...v, pausedAt: v.endedAt, endedAt: null }); },
     reset: () => save(NO_CLOCK),
   };
 }
@@ -156,6 +164,9 @@ const detailOf = (f: FollowStep) => [
  * D-166 : chronomètre de séance avec pause, bips (3-2-1, départ, fin), voix qui annonce chaque étape, réglages gardés.
  * D-167 : séries et circuits en temps enchaînés comme une minuterie, mise en place de 5 s, minuterie retrouvée après
  * un rechargement, « À suivre » pendant le repos, déroulé pour sauter à une étape, « Quitter » met en pause.
+ * D-172 : suivre malgré les péripéties. Entre deux exercices, un écran attend l’élève (pause de séance, à son rythme) ;
+ * la pause est toujours sous le pouce et la reprise redonne 5 s de mise en place ; un chrono fini passe à la suite ;
+ * dernière série annoncée, mi-chemin encouragé, pauses non comptées dans la durée.
  * La position, les séries notées et le chronomètre restent sur ce téléphone pour reprendre plus tard.
  */
 export function FollowSession({ wid, sid, title, blocks, exercises, backHref, feedbackHref, lastDone = {} }: {
@@ -165,14 +176,30 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
   lastDone?: Record<string, LastDone>;
 }) {
   const seq = useMemo(() => followSequence(blocks), [blocks]);
+  const parts = useMemo(() => followExercises(seq), [seq]);
+  const partOf = (n: number) => parts.findIndex((p) => n >= p.first && n <= p.last);
   const [i, setI] = useState(0);
+  // D-172 : l’écran entre deux exercices, gardé pour être retrouvé après un rechargement ; au tout début, la séance s’y ouvre.
+  const [gate, setGate] = useState<Gate | null>(null);
   const [restored, setRestored] = useState(false);
   useEffect(() => {
     const v = readPos(sid);
-    if (v <= seq.length) setI(v);
+    const at = v <= seq.length ? v : 0;
+    setI(at);
+    const g = readGate(sid);
+    const fresh = at === 0 && readClock(sid).startedAt === null;
+    setGate(g && g.at === at ? g : fresh && seq[0] && followGate(null, seq[0]) ? { at: 0, after: null } : null);
     setRestored(true);
-  }, [sid, seq.length]);
+  }, [sid, seq]);
   useEffect(() => { if (restored) keep(followPosKey(sid), String(i)); }, [i, restored, sid]);
+  useEffect(() => { if (restored) keep(followGateKey(sid), gate); }, [gate, restored, sid]);
+  const [skipped, setSkipped] = useState<number[]>([]);
+  useEffect(() => { setSkipped(readSkipped(sid)); }, [sid]);
+  const markSkipped = (k: number, on: boolean) => setSkipped((list) => {
+    const next = on ? [...new Set([...list, k])].sort((a, b) => a - b) : list.filter((x) => x !== k);
+    keep(followSkipKey(sid), next.length ? next : null);
+    return next;
+  });
   const keepAwake = useAwake();
   // D-096 (M4) : ce que l’élève a vraiment fait, série par série, gardé sur ce téléphone jusqu’à son retour.
   const [log, setLog] = useState<FollowLog>({});
@@ -197,10 +224,33 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
 
   const done = i >= seq.length;
   // Changer d’étape oublie la minuterie de l’étape quittée ; seul un rechargement la retrouve.
-  // Avancer suit le fil de la séance (un effort enchaîné part seul) ; revenir ou sauter à une étape laisse l’élève lancer.
-  const [flow, setFlow] = useState(false);
-  const go = (n: number, byFlow = false) => { writeRun(sid, i, null); setFlow(byFlow); setI(Math.max(0, Math.min(seq.length, n))); };
-  const advance = () => { clock.start(); go(i + 1, true); };
+  // « flow » : on avance dans le fil (un effort enchaîné part seul, un nouvel exercice attend l’élève) ;
+  // « ready » : l’élève vient de dire qu’il est prêt (5 s de mise en place puis départ) ; « manual » : retour ou saut.
+  const [entry, setEntry] = useState<Entry>('manual');
+  const go = (n: number, o: { flow?: boolean; after?: string | null; gate?: boolean } = {}) => {
+    writeRun(sid, i, null);
+    const to = Math.max(0, Math.min(seq.length, n));
+    const f = seq[to];
+    const gated = Boolean(f && (o.gate ?? (o.flow && followGate(seq[to - 1], f))));
+    // Entre deux exercices, la séance est en pause : la durée ne compte que le temps d’exercice.
+    if (gated) clock.pause();
+    setGate(gated ? { at: to, after: o.after ?? null } : null);
+    setEntry(o.flow ? 'flow' : 'manual');
+    setI(to);
+  };
+  const advance = () => {
+    clock.start();
+    const k = partOf(i);
+    const p = parts[k];
+    if (p && p.last === i) markSkipped(k, false);
+    go(i + 1, { flow: true, after: p && p.last === i ? p.name : null });
+  };
+  const ready = () => { clock.start(); clock.resume(); setGate(null); setEntry('ready'); };
+  const skipPart = () => {
+    markSkipped(partOf(i), true);
+    const nextPart = parts[partOf(i) + 1];
+    go(nextPart ? nextPart.first : seq.length, { flow: true, gate: Boolean(nextPart) });
+  };
   const { end: endClock, started } = clock;
   useEffect(() => {
     if (!done || !restored) return;
@@ -222,15 +272,10 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
       <Cluster between nowrap>
         {/* Quitter met la séance en pause : le chronomètre ne tourne pas pendant l’absence. */}
         <LinkButton href={backHref} variant="ghost" size="sm" icon="close" onClick={() => clock.pause()}>Quitter</LinkButton>
-        <Cluster gap={2} nowrap align="center">
-          <span className={cx(s.elapsed, !clock.started && s.idle)} aria-label={`Temps de séance : ${formatElapsed(clock.elapsed)}`}>
-            <Icon name="clock" size={16} />{formatElapsed(clock.elapsed)}
-          </span>
-          {clock.started && !done ? (
-            <IconButton icon={clock.paused ? 'play' : 'pause'} label={clock.paused ? 'Reprendre la séance' : 'Mettre la séance en pause'} variant="secondary" size="sm"
-              onClick={clock.paused ? clock.resume : clock.pause} />
-          ) : null}
-        </Cluster>
+        <span className={cx(s.elapsed, (!clock.started || (clock.paused && !done)) && s.idle)}
+          aria-label={`Temps de séance : ${formatElapsed(clock.elapsed)}${clock.paused && !done ? ', en pause' : ''}`}>
+          <Icon name={clock.paused && !done ? 'pause' : 'clock'} size={16} />{formatElapsed(clock.elapsed)}
+        </span>
       </Cluster>
       <div className={s.bar} role="progressbar" aria-label="Avancement de la séance" aria-valuemin={0} aria-valuemax={seq.length} aria-valuenow={i}>
         <span className={s.barFill} style={{ inlineSize: `${(i / seq.length) * 100}%` }} />
@@ -254,25 +299,24 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
           <Heading level={2} size={2}>Séance terminée, bravo !</Heading>
           <Text muted>{title}</Text>
           {clock.started ? <p className={s.total}><span>Durée</span>{formatElapsed(clock.elapsed)}</p> : null}
+          {clock.started && clock.pauses >= 1000 ? <Text size="sm" muted>Pauses non comptées : {formatElapsed(clock.pauses)}</Text> : null}
+          {skipped.length ? (
+            <Text size="sm">{skipped.length > 1 ? 'Exercices passés' : 'Exercice passé'} : <strong>{skipped.map((k) => parts[k]?.name).filter(Boolean).join(', ')}</strong>. Dis-le à ton coach dans ton retour.</Text>
+          ) : null}
           <Stack gap={2} className={s.actions}>
             {feedbackHref ? <LinkButton href={feedbackHref} variant="coach" size="lg" block>Donner mon retour</LinkButton> : <Text size="sm" muted>Tu pourras donner ton retour à partir du jour de la séance.</Text>}
             <Button variant="ghost" block icon="chevronLeft" onClick={() => { clock.reopen(); go(seq.length - 1); }}>Revenir à la dernière étape</Button>
-            <Button variant="ghost" block onClick={() => { clock.reset(); go(0); }}>Recommencer</Button>
+            <Button variant="ghost" block onClick={() => { clock.reset(); setSkipped([]); keep(followSkipKey(sid), null); go(0, { gate: true }); }}>Recommencer</Button>
           </Stack>
         </section>
+      ) : gate && gate.at === i && parts[partOf(i)] ? (
+        <GateScreen key={`pret-${i}`} wid={wid} f={seq[i]!} part={parts[partOf(i)]!} k={partOf(i) + 1} n={parts.length} seq={seq} after={gate.after}
+          exercises={exercises} lastDone={lastDone} started={clock.started} pausedFor={clock.pausedFor} cues={cues} speak={entry === 'flow'}
+          onGo={ready} onSkip={skipPart} onPrev={i > 0 ? () => go(i - 1) : null} />
       ) : (
-        <>
-          {clock.paused ? (
-            <section className={cx(s.card, s.paused)} aria-live="polite">
-              <Heading level={2} size={3}>Séance en pause</Heading>
-              <Text muted>Le chronomètre est arrêté. Reprends quand tu es prêt·e.</Text>
-              <Button variant="coach" size="lg" icon="play" block onClick={clock.resume}>Reprendre</Button>
-            </section>
-          ) : null}
-          <StepScreen key={i} wid={wid} sid={sid} f={seq[i]!} prev={seq[i - 1] ?? null} next={seq[i + 1] ?? null} exercises={exercises} logged={log[i]} lastDone={lastDone}
-            paused={clock.paused} started={clock.started} elapsed={clock.elapsed} cues={cues} onBegin={clock.start} flowing={flow}
-            onLog={(v) => note(i, v)} onNext={advance} onPrev={i > 0 ? () => go(i - 1) : null} />
-        </>
+        <StepScreen key={i} wid={wid} sid={sid} f={seq[i]!} prev={seq[i - 1] ?? null} next={seq[i + 1] ?? null} exercises={exercises} logged={log[i]} lastDone={lastDone}
+          paused={clock.paused} pausedFor={clock.pausedFor} started={clock.started} elapsed={clock.elapsed} cues={cues} onBegin={clock.start} entry={entry}
+          onPause={clock.pause} onResume={clock.resume} onLog={(v) => note(i, v)} onNext={advance} onPrev={i > 0 ? () => go(i - 1) : null} />
       )}
     </Stack>
   );
@@ -305,11 +349,13 @@ function Outline({ dialog, seq, current, onPick }: { dialog: RefObject<HTMLDialo
   );
 }
 
-function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext, onPrev, onBegin, flowing, lastDone, paused, started, elapsed, cues }: {
+type Entry = 'manual' | 'flow' | 'ready';
+
+function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext, onPrev, onBegin, onPause, onResume, entry, lastDone, paused, pausedFor, started, elapsed, cues }: {
   wid: string; sid: string; f: FollowStep; prev: FollowStep | null; next: FollowStep | null; exercises: Record<string, Exercise>; lastDone: Record<string, LastDone>;
   logged?: { reps: number | null; kg: number | null }; onLog: (v: { reps: number | null; kg: number | null }) => void;
-  onNext: () => void; onPrev: (() => void) | null; onBegin: () => void; flowing: boolean;
-  paused: boolean; started: boolean; elapsed: number; cues: Cues;
+  onNext: () => void; onPrev: (() => void) | null; onBegin: () => void; onPause: () => void; onResume: () => void; entry: Entry;
+  paused: boolean; pausedFor: number; started: boolean; elapsed: number; cues: Cues;
 }) {
   const st = f.step;
   const ex = st.exercise?.id ? exercises[st.exercise.id] : undefined;
@@ -322,12 +368,17 @@ function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext,
   // D-164 : un palier de cardio montre ses réglages en grand (« niveau 2 · 60 tr/min »).
   const target = stage ? stage.settings : [timed ? null : describeMeasure(st.measure), st.intensity.kind === 'zone' ? null : describeIntensity(st.intensity)].filter(Boolean).join(' · ');
   const sets = [setLabel(f.sets), stage && stage.n > 1 ? `Palier ${stage.k} sur ${stage.n}` : null].filter(Boolean).join(' · ') || null;
-  // D-165 · D-167 : dans une même carte (séries, circuit) ou un cardio en paliers, les étapes en temps s’enchaînent
-  // comme une minuterie ; la première se lance au doigt. Le repos démarre toujours seul et passe toujours à la suite.
-  const auto = rest || (flowing && followChains(prev, f));
-  const advance = rest || followChains(f, next);
-  const toEffort = Boolean(advance && next && !isRest(next));
-  const endText = rest ? (next ? 'C’est reparti !' : 'Terminé !') : stage && next?.stage ? 'Palier suivant' : toEffort ? 'Exercice suivant' : 'Terminé !';
+  const lastOne = lastSetLabel(f);
+  // D-165 · D-167 · D-172 : le repos part toujours seul ; par le fil, un effort enchaîné part seul, un effort après des
+  // répétitions ou après « C’est parti » part après 5 s de mise en place ; revenir ou sauter à une étape laisse l’élève lancer.
+  const how = rest ? 'auto' : entry === 'ready' ? 'lead' : entry === 'flow' ? followStart(prev, f) : 'idle';
+  const start: CountStart = how === 'auto' || how === 'lead' ? how : 'idle';
+  // Un chrono fini passe toujours à la suite : l’effort suivant, le repos, l’écran entre deux exercices ou la fin.
+  const nextHow = next ? followStart(f, next) : null;
+  const toEffort = nextHow === 'auto' && next !== null && !isRest(next);
+  const endSound: SoundName | null = !next ? null : toEffort ? 'go' : 'end';
+  const endText = !next ? 'Terminé !' : nextHow === 'gate' ? 'Bravo !' : rest ? 'C’est reparti !' : stage && next.stage ? 'Palier suivant'
+    : toEffort ? (next.step.exercise?.name === st.exercise?.name ? 'Série suivante' : 'Exercice suivant') : 'Terminé !';
   const last = !rest && st.exercise ? lastDone[exerciseKey(st.exercise.id, st.exercise.name)] : undefined;
   const media = !rest && ex ? ExerciseMedia({ wid, exercise: ex }) : null;
   const phrase = announce(f, next);
@@ -349,7 +400,12 @@ function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext,
     <section className={cx(s.card, rest && s.rest)} data-zone={zone || undefined} aria-labelledby="fw-name">
       <p className="ds-visually-hidden" aria-live="polite">{phrase}</p>
       <Stack gap={2}>
-        {sets && !rest ? <Eyebrow tone="coach">{sets}</Eyebrow> : rest ? <Eyebrow>Récupère</Eyebrow> : null}
+        {sets && !rest ? (
+          <Cluster gap={2} align="center">
+            <Eyebrow tone="coach">{sets}</Eyebrow>
+            {lastOne ? <span className={s.lastOne}>{lastOne} !</span> : null}
+          </Cluster>
+        ) : rest ? <Eyebrow>Récupère</Eyebrow> : null}
         <Cluster gap={3} align="center" nowrap>
           {zone ? <ZoneChip zone={zone} size="lg" /> : null}
           <h2 id="fw-name" className={s.name}>{name}</h2>
@@ -359,8 +415,8 @@ function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext,
         {last ? <Text size="sm">La dernière fois : <strong>{last.text}</strong></Text> : null}
       </Stack>
       {timed ? (
-        <Countdown sid={sid} index={f.index} seconds={timed} auto={auto} lead={!rest} advance={advance} paused={paused} cues={cues}
-          endSound={toEffort ? 'go' : 'end'} endText={endText} onStart={onStart} onEnd={onNext} />
+        <Countdown sid={sid} index={f.index} seconds={timed} start={start} lead={!rest} paused={paused} cues={cues}
+          endSound={endSound} endText={endText} onStart={onStart} onEnd={onNext} />
       ) : since !== null ? (
         <p className={s.since} aria-label={`Depuis ${formatElapsed(elapsed - since)} sur cette étape`}><Icon name="clock" size={16} />{formatElapsed(elapsed - since)}</p>
       ) : null}
@@ -376,10 +432,22 @@ function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext,
       {!rest && st.exercise && st.measure.kind === 'reps' ? (
         <DoneInputs planned={{ reps: st.measure.reps, kg: st.intensity.kind === 'load' ? st.intensity.min : null }} value={logged} onChange={onLog} />
       ) : null}
-      {paused ? null : (
+      {paused ? (
+        // D-172 : la pause se lève au même endroit, sous le pouce ; l’étape reste visible, son chrono figé.
+        <Stack gap={2} className={cx(s.actions, s.pausePanel)} aria-live="polite">
+          <Cluster between align="center" nowrap>
+            <Heading level={3} size={4}>Séance en pause</Heading>
+            <span className={s.pausedFor} aria-label={`En pause depuis ${formatElapsed(pausedFor)}`}><Icon name="pause" size={14} />{formatElapsed(pausedFor)}</span>
+          </Cluster>
+          <Text size="sm" muted>{timed && !rest ? 'Le chrono attend. À la reprise, 5 secondes pour te remettre en place, puis il repart.' : 'Le chronomètre est arrêté. Reprends quand tu es prêt·e.'}</Text>
+          <Button variant="coach" size="lg" icon="play" block onClick={onResume}>Reprendre</Button>
+        </Stack>
+      ) : (
         <Stack gap={2} className={s.actions}>
           <Cluster gap={2} nowrap grow>
-            {onPrev ? <Button size="lg" icon="chevronLeft" onClick={onPrev} aria-label="Étape précédente" className={s.prev} /> : null}
+            {onPrev ? <Button size="lg" icon="chevronLeft" onClick={onPrev} aria-label="Étape précédente" className={s.square} /> : null}
+            {/* D-172 : pause toujours à portée de pouce, une fois la séance lancée. */}
+            {started ? <Button size="lg" icon="pause" onClick={onPause} aria-label="Mettre la séance en pause" className={s.square} /> : null}
             {/* Étape chronométrée : le chrono est l’action principale, « Suivant » passe au second plan. */}
             <Button size="lg" variant={timed && !rest ? 'secondary' : 'coach'} icon={rest || timed ? undefined : 'check'} iconRight={rest || timed ? 'chevronRight' : undefined} onClick={onNext}>
               {rest ? 'Passer le repos' : timed ? 'Suivant' : 'Fait, suivant'}
@@ -390,6 +458,78 @@ function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext,
           ) : <Text size="sm" muted>Dernière étape.</Text>}
         </Stack>
       )}
+    </section>
+  );
+}
+
+/**
+ * D-172 · Entre deux exercices (et au début de la séance) : bravo pour celui qui finit, ce qui vient en grand, la pause
+ * qui court. L’élève prend son temps (boire, aller aux toilettes, changer de machine) et lance quand il est prêt :
+ * 5 s de mise en place, puis le chrono part. Le chronomètre de séance est en pause pendant ce temps.
+ */
+function GateScreen({ wid, f, part, k, n, seq, after, exercises, lastDone, started, pausedFor, cues, speak, onGo, onSkip, onPrev }: {
+  wid: string; f: FollowStep; part: FollowExercise; k: number; n: number; seq: FollowStep[]; after: string | null;
+  exercises: Record<string, Exercise>; lastDone: Record<string, LastDone>; started: boolean; pausedFor: number; cues: Cues;
+  speak: boolean; onGo: () => void; onSkip: () => void; onPrev: (() => void) | null;
+}) {
+  const st = f.step;
+  const ex = st.exercise?.id ? exercises[st.exercise.id] : undefined;
+  const media = ex ? ExerciseMedia({ wid, exercise: ex }) : null;
+  const last = st.exercise ? lastDone[exerciseKey(st.exercise.id, st.exercise.name)] : undefined;
+  const zone = zoneOf(f);
+  const stages = f.stage ? seq.slice(part.first, part.last + 1).filter((x) => x.stage) : [];
+  const phrase = announceExercise(part, k, n, after !== null);
+  useEffect(() => {
+    // Annoncé en arrivant par le fil de la séance, pas après un rechargement.
+    if (speak && started) cues.voice(phrase);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <section className={cx(s.card, s.gate)} data-zone={zone || undefined} aria-labelledby="fw-gate">
+      <p className="ds-visually-hidden" aria-live="polite">{phrase}</p>
+      {after ? (
+        <p className={s.gateDone}><span className={s.gateCheck} aria-hidden="true"><Icon name="check" size={16} /></span>Bravo, {after} : fait !</p>
+      ) : null}
+      <Stack gap={2}>
+        <Eyebrow tone="coach">{n > 1 ? `Exercice ${k} sur ${n}${k === n ? ' · le dernier' : ''}` : 'Ta séance'}</Eyebrow>
+        <Cluster gap={3} align="center" nowrap>
+          {zone ? <ZoneChip zone={zone} size="lg" /> : null}
+          <h2 id="fw-gate" className={s.name}>{part.name}</h2>
+        </Cluster>
+        {part.summary ? <p className={s.target}>{part.summary}</p> : null}
+        {stages.length > 1 ? (
+          <ol className={s.stages} aria-label="Paliers à venir">
+            {stages.map((x) => (
+              <li key={x.index}><span className={s.stageK}>Palier {x.stage!.k}</span> {[describeMeasure(x.step.measure), x.stage!.settings].filter(Boolean).join(' · ')}</li>
+            ))}
+          </ol>
+        ) : null}
+        {st.note ? <Text muted>{st.note}</Text> : null}
+        {last ? <Text size="sm">La dernière fois : <strong>{last.text}</strong></Text> : null}
+      </Stack>
+      {media || ex?.instructions ? (
+        <Stack gap={2}>
+          {media}
+          {ex?.instructions ? <Disclosure summary="Consignes"><Text prose size="sm" muted>{ex.instructions}</Text></Disclosure> : null}
+        </Stack>
+      ) : null}
+      <Stack gap={3} className={s.actions}>
+        {started ? (
+          <Cluster between align="center" nowrap>
+            <Text size="sm" muted>Prends ton temps : la séance est en pause.</Text>
+            <span className={s.pausedFor} aria-label={`En pause depuis ${formatElapsed(pausedFor)}`}><Icon name="pause" size={14} />{formatElapsed(pausedFor)}</span>
+          </Cluster>
+        ) : null}
+        <Button variant="coach" size="lg" icon="play" block onClick={onGo}>C’est parti</Button>
+        <Text size="sm" muted>{st.measure.kind === 'time' ? 'Appuie quand tu es prêt·e : 5 secondes pour te mettre en place, puis le chrono part.' : 'Appuie quand tu es prêt·e, puis avance à ton rythme.'}</Text>
+        {/* Machine prise, douleur, manque de temps : passer l’exercice reste possible (une séance d’un seul exercice, non). */}
+        {onPrev || n > 1 ? (
+          <Cluster gap={2} nowrap grow>
+            {onPrev ? <Button size="lg" icon="chevronLeft" onClick={onPrev} aria-label="Étape précédente" className={s.square} /> : null}
+            {n > 1 ? <Button size="lg" variant="ghost" iconRight="chevronRight" onClick={onSkip}>{k < n ? 'Passer cet exercice' : 'Finir sans cet exercice'}</Button> : null}
+          </Cluster>
+        ) : null}
+      </Stack>
     </section>
   );
 }
@@ -407,47 +547,61 @@ function UpNext({ f }: { f: FollowStep }) {
 
 /** D-167 · Mise en place avant un effort lancé au doigt : de quoi poser le téléphone et se mettre en position. */
 const LEAD = 5;
+const IDLE: Run = { endAt: null, frozen: null, extra: 0, goAt: null };
+type CountStart = 'auto' | 'lead' | 'idle';
 
 /**
  * Compte à rebours fondé sur l’heure de fin (juste même si le téléphone met la page en veille), gardé sur ce téléphone
  * pour être retrouvé après un rechargement (D-167). Bips sur les 3 dernières secondes, son de départ et de fin,
- * rappel vocal, pause de la séance respectée (D-166) ; mise en place de 5 s avant un effort lancé au doigt (D-167).
+ * rappels vocaux, pause de la séance respectée (D-166) ; mise en place de 5 s avant un effort lancé au doigt (D-167)
+ * et à chaque reprise après une pause (D-172) ; à la fin, la séance passe toujours à la suite (D-172).
  */
-function Countdown({ sid, index, seconds, auto, lead, advance, paused, cues, endSound, endText, onStart, onEnd }: {
-  sid: string; index: number; seconds: number; auto: boolean; lead: boolean; advance: boolean; paused: boolean; cues: Cues;
-  endSound: SoundName; endText: string; onStart: () => void; onEnd: () => void;
+function Countdown({ sid, index, seconds, start, lead, paused, cues, endSound, endText, onStart, onEnd }: {
+  sid: string; index: number; seconds: number; start: CountStart; lead: boolean; paused: boolean; cues: Cues;
+  endSound: SoundName | null; endText: string; onStart: () => void; onEnd: () => void;
 }) {
-  const [run, setRun] = useState<Run>(() => readRun(sid, index) ?? (
-    !auto ? { endAt: null, frozen: null, extra: 0 }
-      : paused ? { endAt: null, frozen: seconds * 1000, extra: 0 }
-        : { endAt: Date.now() + seconds * 1000, frozen: null, extra: 0 }));
+  const [run, setRun] = useState<Run>(() => {
+    const saved = readRun(sid, index);
+    if (saved) return saved;
+    if (start === 'idle') return IDLE;
+    if (paused) return { ...IDLE, frozen: seconds * 1000 };
+    const t = Date.now();
+    const goAt = start === 'lead' && lead ? t + LEAD * 1000 : null;
+    return { endAt: (goAt ?? t) + seconds * 1000, frozen: null, extra: 0, goAt };
+  });
   const [now, setNow] = useState(() => Date.now());
   const change = (f: (r: Run) => Run) => { setNow(Date.now()); setRun(f); };
   useEffect(() => { writeRun(sid, index, run); }, [sid, index, run]);
-  // Pause de la séance : on fige le temps restant, on le rend à la reprise.
+  // Pause de la séance : on fige le temps d’effort restant ; à la reprise, 5 s pour se remettre en place (pas pour un repos).
   useEffect(() => {
     change((r) => {
-      if (paused && r.endAt !== null) return { ...r, endAt: null, frozen: Math.max(0, r.endAt - Date.now()) };
-      if (!paused && r.frozen !== null) return { ...r, endAt: Date.now() + r.frozen, frozen: null };
+      const t = Date.now();
+      if (paused && r.endAt !== null) return { ...r, endAt: null, goAt: null, frozen: Math.max(0, r.endAt - Math.max(t, r.goAt ?? t)) };
+      if (!paused && r.frozen !== null) {
+        const goAt = lead ? t + LEAD * 1000 : null;
+        return { ...r, frozen: null, goAt, endAt: (goAt ?? t) + r.frozen };
+      }
       return r;
     });
+    // À chaque pause ou reprise seulement.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paused]);
 
   // Les rappels lisent toujours les dernières valeurs, sans relancer la minuterie à chaque affichage.
-  const latest = useRef({ cues, endSound, advance, onEnd, seconds });
-  latest.current = { cues, endSound, advance, onEnd, seconds };
+  const latest = useRef({ cues, endSound, onEnd, seconds });
+  latest.current = { cues, endSound, onEnd, seconds };
   const lastKey = useRef<string | null>(null);
   const ended = useRef(false);
   useEffect(() => {
     if (run.endAt === null || paused) return;
     const endAt = run.endAt;
+    const goAt = run.goAt;
     const span = (latest.current.seconds + run.extra) * 1000;
     const tick = () => {
       const n = Date.now();
       setNow(n);
-      const r = Math.max(0, endAt - n);
-      const leadLeft = r > span ? Math.ceil((r - span) / 1000) : 0;
-      const left = Math.ceil(Math.min(r, span) / 1000);
+      const leadLeft = goAt !== null && n < goAt ? Math.ceil((goAt - n) / 1000) : 0;
+      const left = Math.ceil(Math.min(Math.max(0, endAt - n), span) / 1000);
       const key = leadLeft ? `L${leadLeft}` : `E${left}`;
       if (key === lastKey.current) return;
       // Premier passage (départ, reprise après rechargement) : pas de son ; une minuterie déjà finie passe sans bruit.
@@ -464,24 +618,25 @@ function Countdown({ sid, index, seconds, auto, lead, advance, paused, cues, end
       }
       if (ended.current) return;
       ended.current = true;
-      if (before) c.sound(latest.current.endSound);
-      // Fin du repos ou d’une étape enchaînée : on passe à la suite ; fin d’un effort isolé : l’élève confirme.
-      if (latest.current.advance) setTimeout(() => latest.current.onEnd(), 600);
+      if (before && latest.current.endSound) c.sound(latest.current.endSound);
+      setTimeout(() => latest.current.onEnd(), 600);
     };
     tick();
     const t = setInterval(tick, 250);
     return () => clearInterval(t);
-  }, [run.endAt, run.extra, paused]);
+  }, [run.endAt, run.goAt, run.extra, paused]);
 
   const span = (seconds + run.extra) * 1000;
-  const rem = run.frozen ?? (run.endAt !== null ? Math.max(0, run.endAt - now) : null);
+  const inLead = run.endAt !== null && run.goAt !== null && now < run.goAt;
+  const rem = run.frozen ?? (run.endAt !== null ? Math.max(0, run.endAt - Math.max(now, run.goAt ?? now)) : null);
   const running = rem !== null;
-  const inLead = running && rem > span;
-  const shown = !running ? seconds : inLead ? Math.min(LEAD, Math.ceil((rem - span) / 1000)) : Math.ceil(Math.min(rem, span) / 1000);
-  const ratio = running && !inLead ? Math.min(rem, span) / span : 1;
+  const shown = !running ? seconds : inLead ? Math.min(LEAD, Math.ceil((run.goAt! - now) / 1000)) : Math.ceil(Math.min(rem, span) / 1000);
+  const ratio = running ? Math.min(rem, span) / span : 1;
   const begin = () => {
     onStart();
-    change(() => ({ endAt: Date.now() + ((lead ? LEAD : 0) + seconds) * 1000, frozen: null, extra: 0 }));
+    const t = Date.now();
+    const goAt = lead ? t + LEAD * 1000 : null;
+    change(() => ({ endAt: (goAt ?? t) + seconds * 1000, frozen: null, extra: 0, goAt }));
     if (!lead) cues.sound('go');
   };
   return (
@@ -494,7 +649,7 @@ function Countdown({ sid, index, seconds, auto, lead, advance, paused, cues, end
       {paused ? null : !running ? (
         <Button variant="primary" size="lg" icon="play" onClick={begin}>Démarrer le chrono</Button>
       ) : inLead ? (
-        <Button size="sm" variant="secondary" onClick={() => change((r) => ({ ...r, endAt: Date.now() + span }))}>Partir maintenant</Button>
+        <Button size="sm" variant="secondary" onClick={() => change((r) => (r.endAt === null || r.goAt === null ? r : { ...r, endAt: r.endAt - Math.max(0, r.goAt - Date.now()), goAt: null }))}>Partir maintenant</Button>
       ) : shown > 0 ? (
         <Button size="sm" variant="secondary" onClick={() => change((r) => (r.endAt === null ? r : { ...r, endAt: r.endAt + 15_000, extra: r.extra + 15 }))}>+15 s</Button>
       ) : null}

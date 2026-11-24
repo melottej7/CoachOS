@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { cardioName, describeStageSettings, type Block, type Step } from './structure';
+import { cardioName, describeIntensity, describeMeasure, describeStageSettings, PHASE_LABELS, type Block, type Step } from './structure';
 
 /**
  * D-096 · Bibliothèque d’exercices de musculation. Chaque exercice a un nom, des consignes, un groupe musculaire,
@@ -216,10 +216,79 @@ export function followSequence(blocks: Block[]): FollowStep[] {
       } else out.push({ index: out.length, block, step: b, sets });
     }
   };
-  blocks.forEach((b, k) => { block = k; walk([b], []); });
-  // Séance coupée à 400 étapes : rien à omettre, ce n’est pas la vraie fin.
-  while (out.length > 1 && out.length < 400 && out[out.length - 1]!.sets.length && ['rest', 'recovery'].includes(out[out.length - 1]!.step.phase)) out.pop();
+  blocks.forEach((b, k) => {
+    block = k;
+    const start = out.length;
+    walk([b], []);
+    // D-172 : le repos qui suit la dernière série d’une carte est omis ; l’écran entre deux exercices (ou la fin) le remplace.
+    // Séance coupée à 400 étapes : rien à omettre, ce n’est pas la vraie fin.
+    while (out.length < 400 && out.length - start > 1 && out[out.length - 1]!.sets.length && restLike(out[out.length - 1]!)) out.pop();
+  });
   return out;
+}
+
+const restLike = (f: FollowStep) => f.step.phase === 'rest' || f.step.phase === 'recovery';
+const stepName = (f: FollowStep) => f.stage?.name ?? f.step.exercise?.name ?? PHASE_LABELS[f.step.phase];
+
+/**
+ * D-172 · Entre deux exercices, l’élève reprend la main : avant le premier effort d’une nouvelle carte (et au début
+ * de la séance), un écran « prêt·e ? » attend son geste. Seul un repos programmé entre les deux cartes tient lieu de transition.
+ */
+export function followGate(a: FollowStep | null | undefined, b: FollowStep): boolean {
+  if (restLike(b)) return false;
+  if (!a) return true;
+  if (a.block !== b.block) return !(restLike(a) && !a.sets.length);
+  return false;
+}
+
+/**
+ * D-172 · Comment démarre l’étape `b` quand on y arrive par le fil de la séance après `a` :
+ * « gate » (écran entre deux exercices), « auto » (le chrono part seul), « lead » (5 s de mise en place puis départ),
+ * « self » (sans chrono, à son rythme).
+ */
+export type FollowStart = 'gate' | 'auto' | 'lead' | 'self';
+export function followStart(a: FollowStep | null | undefined, b: FollowStep): FollowStart {
+  if (followGate(a, b)) return 'gate';
+  if (b.step.measure.kind !== 'time') return 'self';
+  if (restLike(b) || (a && (followChains(a, b) || restLike(a)))) return 'auto';
+  return 'lead';
+}
+
+/** D-172 · « Dernière série », « Dernier tour » : la toute dernière d’une carte répétée. */
+export function lastSetLabel(f: FollowStep): string | null {
+  if (restLike(f) || !f.sets.length || !f.sets.every((p) => p.k === p.n)) return null;
+  return f.sets[0]!.kind === 'tour' ? 'Dernier tour' : 'Dernière série';
+}
+
+/** D-172 · Un exercice du mode « Suivre » : une carte de la séance (un repos seul entre deux cartes n’en est pas un). */
+export interface FollowExercise { block: number; first: number; last: number; name: string; summary: string }
+
+/** Les exercices de la séance, dans l’ordre, avec un résumé lisible : « 19 min · 4 paliers », « 6 séries · 20 s · repos 40 s ». */
+export function followExercises(seq: FollowStep[]): FollowExercise[] {
+  const groups: FollowStep[][] = [];
+  for (const f of seq) {
+    const g = groups[groups.length - 1];
+    if (g && g[0]!.block === f.block) g.push(f);
+    else if (!(restLike(f) && !f.sets.length)) groups.push([f]);
+  }
+  const measure = (f: FollowStep) => (f.step.measure.kind === 'open' ? null : describeMeasure(f.step.measure));
+  return groups.map((g) => {
+    const work = g.filter((f) => !restLike(f));
+    const first = work[0] ?? g[0]!;
+    const names = [...new Set(work.filter((f) => f.sets.every((p) => p.k === 1)).map(stepName))];
+    const circuit = first.sets[0]?.kind === 'tour' && names.length > 1;
+    const rounds = first.sets.map((p) => `${p.n} ${p.kind === 'tour' ? 'tours' : 'séries'}`).join(' de ');
+    let summary: string;
+    if (first.stage) {
+      const total = g.reduce((t, f) => t + (f.step.measure.kind === 'time' ? f.step.measure.seconds : 0), 0);
+      summary = [describeMeasure({ kind: 'time', seconds: total }), first.stage.n > 1 ? `${first.stage.n} paliers` : null].filter(Boolean).join(' · ');
+    } else if (circuit) summary = `${rounds} · ${names.join(', ')}`;
+    else {
+      const rest = g.find(restLike);
+      summary = [rounds || null, measure(first), describeIntensity(first.step.intensity), rest && measure(rest) ? `repos ${measure(rest)}` : null].filter(Boolean).join(' · ');
+    }
+    return { block: first.block, first: g[0]!.index, last: g[g.length - 1]!.index, name: circuit ? 'Circuit' : stepName(first), summary };
+  });
 }
 
 /**

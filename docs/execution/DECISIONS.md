@@ -2482,3 +2482,12 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
   - à la 2ᵉ étape de la visite guidée de l’élève ;
   - sur la page d’invitation, « Comment ça se passe » annonce les 3 étapes : compte, faire connaissance, installer.
 - **Non vérifié** : sur de vrais iPhone et Android, les libellés exacts des menus selon la version (les deux libellés courants sont donnés) et le bouton d’installation en une touche.
+
+## D-172 · Suivre sa séance malgré les péripéties · 2026-11-24
+
+- **Demande du fondateur** : l’élève suit son programme chrono en main, gère seule ses temps morts (toilettes, changer de machine), met pause à tout moment, avance ; l’outil la guide et la motive.
+- **Entre deux exercices** (et au début) : écran « prêt·e ? » avec bravo pour l’exercice fini, « Exercice 2 sur 4 », résumé et paliers, consignes, et la pause qui court. « C’est parti » donne 5 s de mise en place, puis le chrono part. La séance est en pause pendant ce temps ; un repos programmé entre deux cartes en tient lieu. On peut passer un exercice ; la fin de séance le rappelle pour le dire au coach.
+- **Pause sous le pouce** : barre d’actions collée en bas de l’écran. Reprendre un effort redonne 5 s de mise en place. Un chrono fini passe toujours à la suite. Le repos après la dernière série d’une carte est omis.
+- **Guidage** : « Dernière série ! », mi-chemin annoncé dès 4 min. Les pauses ne comptent pas dans la durée, ni donc dans la durée préremplie du retour.
+- **Où** : la logique est dans le domaine (`followStart`, `followGate`, `followExercises`) et testée ; les parcours séries et cardio sont étendus (reprise, rechargement, passer). Côté coach, rien ne change.
+- **Non vérifié** : sur un vrai téléphone. Vérifié dans le Chromium des tests à 390 et 1440 px ; le navigateur intégré ne charge pas la démo locale.
