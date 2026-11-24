@@ -45,3 +45,11 @@
 .join { display: inline-flex; align-items: center; gap: 2px; min-height: 24px; font-size: var(--ds-text-sm); font-weight: 700; color: var(--ds-coach-text); }
 .slot { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
 .muted { color: var(--ds-ink-2); }
+/* Premiers pas (D-169). */
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-3); }
+.step { display: flex; align-items: flex-start; gap: var(--ds-3); }
+.stepMark { flex: none; display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--ds-rule); font-size: var(--ds-text-sm); font-weight: 700; color: var(--ds-ink-2); }
+.step[aria-current='step'] .stepMark { border-color: var(--ds-coach); color: var(--ds-coach); }
+.step[data-done] .stepMark { background: var(--ds-coach); border-color: var(--ds-coach); color: var(--ds-on-coach, #fff); }
+.step[data-done] .stepBody { color: var(--ds-ink-2); text-decoration: line-through; text-decoration-color: var(--ds-rule); }
+.stepBody { flex: 1; min-width: 0; padding-top: 2px; }

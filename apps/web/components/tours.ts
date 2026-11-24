@@ -26,6 +26,7 @@ const C = '/coach/:wid';
 export const TOURS: Record<TourId, TourStep[]> = {
   athlete: [
     { path: `${A}/today`, text: 'Salut ! Je suis ton guide CoachOS. En une minute, je te montre comment t’entraîner ici avec ton coach.', mood: 'cheer', href: (w) => `/athlete/${w}/today` },
+    { path: `${A}/today`, targets: ['install'], optional: true, text: 'D’abord, installe CoachOS sur ton téléphone : tu l’ouvriras d’un toucher, comme une appli. Cette carte te donne les étapes exactes pour ton appareil. Tu peux les suivre après la visite.', href: (w) => `/athlete/${w}/today` },
     { path: `${A}/today`, targets: ['today-card', 'today-empty'], text: 'Chaque jour, cet écran te montre la séance préparée par ton coach, avec sa durée.', textFor: { 'today-empty': 'Chaque jour, cet écran te montre la séance préparée par ton coach. Aujourd’hui, c’est repos.' }, href: (w) => `/athlete/${w}/today` },
     { path: `${A}/today`, targets: ['today-open'], action: 'click', optional: true, text: 'Touche « Voir la séance » pour l’ouvrir. Je te suis.' },
     { path: `${A}/workouts/:id`, targets: ['structure', 'workout-details'], optional: true, text: 'Voici le déroulé, bloc par bloc : ce qu’il faut faire, combien de temps, et à quelle intensité.', textFor: { 'workout-details': 'Ici, la durée prévue, puis les consignes de ton coach juste en dessous.' } },
@@ -55,9 +56,9 @@ export const TOURS: Record<TourId, TourStep[]> = {
     { path: 'any', targets: ['account-menu'], text: 'Ton menu : ton compte, tes autres espaces, et de quoi revoir cette visite. Bon coaching !', mood: 'cheer' },
   ],
   'coach-empty': [
-    { path: `${C}/planning`, text: 'Bonjour ! Je suis ton guide CoachOS. Commençons par l’essentiel : inviter ton premier élève.', mood: 'cheer', href: (w) => `/coach/${w}/planning` },
-    { path: `${C}/planning`, targets: ['add-athlete'], action: 'click', text: 'Touche « + Ajouter un élève ». Je te suis.', href: (w) => `/coach/${w}/planning` },
-    { path: `${C}/athletes/new`, targets: ['athlete-form'], text: 'Son nom, son fuseau et son adresse : il reçoit un lien personnel pour créer son compte.' },
+    { path: `${C}/planning`, text: 'Bonjour ! Je suis ton guide CoachOS. En quatre pas, tu passes de ta liste d’élèves à leur premier retour.', mood: 'cheer', href: (w) => `/coach/${w}/planning` },
+    // D-169 : les premiers pas remplacent le seul bouton « Ajouter un élève » ; la liste se colle d’un coup.
+    { path: `${C}/planning`, targets: ['first-steps'], text: 'Tes premiers pas, dans l’ordre : ajoute tes élèves (colle ta liste depuis Google Docs ou un tableur), publie une première séance, envoie les invitations, traite un premier retour. Chaque pas a son bouton.', href: (w) => `/coach/${w}/planning` },
     { path: 'any', targets: ['nav-planning'], text: 'Ensuite, ton Accueil t’indique chaque jour quoi faire : retours à examiner, séances à préparer, appels prévus.' },
     { path: 'any', targets: ['nav-calendar'], text: 'Dans Calendrier, tu prépares ses séances bloc par bloc et tu les publies.' },
     { path: 'any', targets: ['nav-athletes'], text: 'Dans Élèves, tu ranges tes élèves par groupes et tu retrouves leur fiche.' },

@@ -1,6 +1,6 @@
 /**
  * D-096 · D-166 · D-167 · Ce que « Suivre la séance » garde sur ce téléphone pour reprendre plus tard :
- * l’étape, les séries notées, le chronomètre de séance et la minuterie de l’étape en cours.
+ * l’étape, les séries notées, le chronomètre de séance, la minuterie de l’étape en cours et l’écran entre deux exercices.
  */
 
 function load(key: string): string | null {
@@ -56,13 +56,33 @@ export function followInProgress(sid: string): boolean {
 
 // ---------- Minuterie de l’étape en cours (D-167) ----------
 
-/** Heure de fin quand elle tourne, temps restant figé pendant une pause, secondes ajoutées (« +15 s »). */
-export interface Run { endAt: number | null; frozen: number | null; extra: number }
+/**
+ * Heure de fin quand elle tourne, temps d’effort restant figé pendant une pause, secondes ajoutées (« +15 s »).
+ * D-172 : `goAt`, fin de la mise en place (au départ et à chaque reprise après une pause) ; l’effort court de goAt à endAt.
+ */
+export interface Run { endAt: number | null; frozen: number | null; extra: number; goAt: number | null }
 export const followTimerKey = (sid: string) => `coachos:suivre:${sid}:minuterie`;
 export function readRun(sid: string, i: number): Run | null {
   const v = json<Run & { i: number }>(followTimerKey(sid));
   if (!v || v.i !== i) return null;
   const num = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? x : null);
-  return { endAt: num(v.endAt), frozen: num(v.frozen), extra: num(v.extra) ?? 0 };
+  return { endAt: num(v.endAt), frozen: num(v.frozen), extra: num(v.extra) ?? 0, goAt: num(v.goAt) };
 }
 export const writeRun = (sid: string, i: number, r: Run | null) => keep(followTimerKey(sid), r ? { i, ...r } : null);
+
+// ---------- Écran entre deux exercices (D-172) ----------
+
+/** L’étape devant laquelle l’élève se prépare, et l’exercice qu’il vient de finir (pour le féliciter). */
+export interface Gate { at: number; after: string | null }
+export const followGateKey = (sid: string) => `coachos:suivre:${sid}:pret`;
+export function readGate(sid: string): Gate | null {
+  const v = json<Partial<Gate>>(followGateKey(sid));
+  return v && typeof v.at === 'number' && Number.isInteger(v.at) ? { at: v.at, after: typeof v.after === 'string' ? v.after : null } : null;
+}
+
+/** D-172 · Exercices passés (rang dans la séance), rappelés en fin de séance pour que l’élève le dise à son coach. */
+export const followSkipKey = (sid: string) => `coachos:suivre:${sid}:passes`;
+export function readSkipped(sid: string): number[] {
+  const v = json<unknown>(followSkipKey(sid));
+  return Array.isArray(v) ? v.filter((x): x is number => Number.isInteger(x)) : [];
+}

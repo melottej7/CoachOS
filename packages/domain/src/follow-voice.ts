@@ -1,4 +1,4 @@
-import { setLabel, type FollowStep } from './exercises';
+import { lastSetLabel, setLabel, type FollowExercise, type FollowStep } from './exercises';
 import { describeIntensity, describeMeasure, PHASE_LABELS } from './structure';
 
 /**
@@ -46,13 +46,22 @@ export function announce(f: FollowStep, next: FollowStep | null): string {
     return spoken([`Récupération${measure ? `, ${measure}` : ''}`, then].join('. ') + '.');
   }
   const intensity = describeIntensity(f.step.intensity);
-  return spoken([setLabel(f.sets), nameOf(f), measure, intensity].filter(Boolean).join('. ') + '.');
+  // D-172 : la dernière série s’annonce comme telle.
+  return spoken([lastSetLabel(f) ?? setLabel(f.sets), nameOf(f), measure, intensity].filter(Boolean).join('. ') + '.');
 }
 
-/** Rappels pendant un chrono : à 1 minute de la fin pour les étapes de 3 minutes et plus, à 10 secondes pour celles de 30 secondes et plus. */
+/** D-172 · Annonce de l’écran entre deux exercices : bravo pour celui qui finit, ce qui vient, à son rythme. */
+export function announceExercise(e: FollowExercise, k: number, n: number, after: boolean): string {
+  const head = n > 1 && k === n ? 'Dernier exercice' : k === 1 ? 'Premier exercice' : 'Exercice suivant';
+  return spoken([after ? 'Exercice terminé, bravo !' : null, `${head} : ${e.name}.`, e.summary ? `${e.summary}.` : null, 'Lance-toi quand tu veux.'].filter(Boolean).join(' '));
+}
+
+/** Rappels pendant un chrono : à 1 minute de la fin pour les étapes de 3 minutes et plus, à 10 secondes pour celles de 30 secondes et plus, à mi-chemin dès 4 minutes. */
 export function reminderAt(totalSeconds: number, left: number): string | null {
   if (totalSeconds >= 180 && left === 60) return 'Encore 1 minute.';
   if (totalSeconds >= 30 && left === 10) return 'Encore 10 secondes.';
+  // D-172 : à mi-chemin d’un effort de 4 minutes et plus.
+  if (totalSeconds >= 240 && left === Math.floor(totalSeconds / 2)) return 'À mi-chemin, continue !';
   return null;
 }
 

@@ -45,3 +45,24 @@ export function DensityChoiceGroup({ initial }: { initial: DensityChoice }) {
       }} />
   );
 }
+
+export type ModeChoice = 'simple' | 'full';
+
+/** Mémorise le mode simple sur cet appareil (D-169). */
+export function setSimpleMode(on: boolean) {
+  setCookie('coachos_mode', on ? 'simple' : null);
+}
+
+/** Mode simple ou complet de l’espace coach (D-169). */
+export function ModeChoiceGroup({ initial }: { initial: ModeChoice }) {
+  const router = useRouter();
+  const [value, setValue] = useState<ModeChoice>(initial);
+  return (
+    <ChoiceGroup<ModeChoice> legend="Fonctions affichées" name="mode" value={value}
+      options={[
+        { value: 'simple', label: 'Mode simple', hint: 'Retours, élèves, calendrier et bibliothèque ; le reste est masqué' },
+        { value: 'full', label: 'Tout afficher', hint: 'Tâches, rendez-vous, filtres, méthode et notifications' },
+      ]}
+      onChange={(v) => { setValue(v); setSimpleMode(v === 'simple'); router.refresh(); }} />
+  );
+}

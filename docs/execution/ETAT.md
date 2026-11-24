@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-24 (D-161 à D-168). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
+Dernière mise à jour : 2026-11-24 (D-161 à D-172). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
 
 ## Où en est CoachOS
 
@@ -12,21 +12,21 @@ Dernière mise à jour : 2026-11-24 (D-161 à D-168). Reprendre ici : ce fichier
 
 **Pas prouvé** : la boucle complète en ligne avec un vrai élève (il faut un domaine pour que les e-mails partent vers d’autres adresses) ; réception d’un rappel push sur un téléphone ; suppression d’un compte Auth en ligne ; sauvegarde de la base en ligne (`npm run db:backup`) jamais exécutée (la restauration est essayée en local, D-163) ; migrations automatiques à la construction (variables Vercel à saisir) ; Action GitHub (premier push à venir).
 
-**Chiffres** : `npm test` 429 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
+**Chiffres** : `npm test` 449 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, 8 parcours de bout en bout, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
 
 **Ce que le produit fait** : la matrice [COUVERTURE.md](COUVERTURE.md) (cible coach et élève, D-024) et les décisions D-001 à D-122 dans [DECISIONS.md](DECISIONS.md). En deux lignes : un coach planifie des séances structurées par sport (zones VMA, FTP, CSS), des programmes générés selon sa méthode, des groupes, des tâches, des relances, des bilans ; l’élève lit sa séance sur téléphone (hors ligne, montre, pas à pas en musculation), envoie son retour, échange avec son coach ; les données personnelles ont leur page, leur export et leur effacement.
 
 ## Refonte (D-123) et suite
 
-Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en direction Chrono (D-128) et **en ligne**. On travaille sur la branche `refonte`, fusionnée vers `main` par Pull Request (le fondateur pousse et fusionne). Depuis : droits vérifiés profil par profil (D-161), limitation des abus (D-162, en ligne), sauvegarde et restauration (D-163), cardio en paliers (D-164, en ligne), exercice en séries et circuit (D-165), suivre sa séance avec chronomètre, pause, bips et voix (D-166) ; tout est en ligne depuis la Pull Request n° 5 (24 novembre). Puis suivi finalisé (D-167, en ligne par la Pull Request n° 6) : circuits enchaînés, mise en place de 5 s, reprise après rechargement ou « Quitter », « À suivre », déroulé. Voix du coach enregistrée et voix de synthèse à son image : plus tard, à sa demande. Détail : [HISTORIQUE.md](HISTORIQUE.md) et [DECISIONS.md](DECISIONS.md).
+Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en direction Chrono (D-128) et **en ligne**. On travaille sur la branche `refonte`, fusionnée vers `main` par Pull Request (le fondateur pousse et fusionne). Depuis : droits vérifiés profil par profil (D-161), limitation des abus (D-162, en ligne), sauvegarde et restauration (D-163), cardio en paliers (D-164, en ligne), exercice en séries et circuit (D-165), suivre sa séance avec chronomètre, pause, bips et voix (D-166) ; tout est en ligne depuis la Pull Request n° 5 (24 novembre). Puis suivi finalisé (D-167, en ligne par la Pull Request n° 6) : circuits enchaînés, mise en place de 5 s, reprise après rechargement ou « Quitter », « À suivre », déroulé. Puis suivre malgré les péripéties (D-172, branche `refonte`) : écran entre deux exercices où l’élève lance quand elle est prête, pause sous le pouce, reprise avec mise en place, dernière série et mi-chemin annoncés. Voix du coach enregistrée et voix de synthèse à son image : plus tard, à sa demande. Détail : [HISTORIQUE.md](HISTORIQUE.md) et [DECISIONS.md](DECISIONS.md).
 
 ## Chantiers en cours (D-120)
 
 1. **Confiance.** Fait : en-têtes de sécurité, pages d’erreur, contrôle de santé avec services, sauvegarde complétée de l’historique des migrations et restauration essayée en local, avec `npm run db:restore` qui ne peut rien écraser (D-116, D-163), revue de sécurité du lot données personnelles, contrôles automatiques (Action GitHub), migrations à la construction Vercel, tests de bout en bout dans un vrai navigateur (D-125 ; quatre parcours : boucle coach → élève → coach, bilan, gestes du calendrier, palette), droits en base vérifiés table par table et profil par profil, sans fuite (D-127, D-161), limitation des abus sur la connexion, l’inscription, le mot de passe et l’invitation (D-162, en ligne et contrôlé le 24 novembre), suivi des erreurs en production prêt, éteint tant que `SENTRY_DSN` manque (D-168, branche `refonte`, pas encore sur `main`). À faire : vidéos hors de la base (Supabase Storage).
-2. **Le coach inconnu.** À commencer : trois coachs fictifs (trail 25 élèves venant de Google Docs, musculation 40 clients, club à trois groupes), de l’inscription au premier retour traité, ordinateur et téléphone ; cible 15 minutes sans aide ; brief du jour et mode simple.
+2. **Le coach inconnu.** Fait (D-169, branche `refonte`, pas encore sur `main`) : trois coachs fictifs joués de l’inscription au premier retour traité ; « Ajouter plusieurs élèves » (liste collée de Google Docs ou d’un tableur, groupes compris, liens à copier), « Premiers pas » sur l’Accueil, brief du jour complété, mode simple ; six accrocs corrigés. Reste : un vrai coach chronométré sans aide ; invitations groupées par e-mail (après le domaine). Retouches du fondateur (D-170) : déplacer un palier cardio, note d’exercice lisible. Installation sur le téléphone guidée pas à pas pour l’élève (D-171).
 3. **De quoi vendre.** À commencer après 1 et 2 : page publique, essai gratuit, offres par nombre d’élèves (29/59/99 € HT, docs/13), abonnement en mode test derrière un interrupteur, pages légales en brouillon, aide intégrée, mesure du temps gagné sans identité d’élève.
 
-**Prochaine tranche** : « Le coach inconnu » (trois coachs fictifs, de l’inscription au premier retour traité, cible 15 minutes sans aide). D-168 attend la prochaine Pull Request vers `main`.
+**Prochaine tranche** : vidéos hors de la base (Supabase Storage), dernier point du chantier Confiance ; puis « De quoi vendre ». D-168 à D-172 attendent la prochaine Pull Request vers `main` (aucune migration).
 
 ## Pour le fondateur
 
@@ -53,7 +53,7 @@ Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, p
    - Plus tard, quand de vrais élèves payeront : Supabase Pro (25 $ par mois) pour des sauvegardes automatiques restaurables en un clic. Décision et paiement : toi.
 6. **Un vrai élève volontaire** · après le point 4 · débloque : la preuve de la boucle complète en ligne (invitation reçue, compte, séance, retour, revue). C’est une vraie personne : je ne l’invite jamais à ta place.
 7. **Relire la page de confidentialité** · 10 minutes · https://coach-os-xi-kohl.vercel.app/confidentialite. Texte exact techniquement, marqué « à faire relire par un professionnel » dans nos documents ; c’est toi qui l’assumes. Facultatif : Vercel › `COACHOS_CONTACT_EMAIL` = ton adresse de contact.
-7 bis. **Essayer « Suivre la séance » sur ton téléphone** · 5 minutes, c’est en ligne · une séance du jour › « Suivre la séance » › « Démarrer le chrono ». À vérifier : les bips (s’ils ne sonnent pas, le bouton silencieux sur le côté de l’iPhone est sans doute activé), la voix, l’écran qui reste allumé, « Quitter » puis « Reprendre la séance ». Dis-moi ce qui accroche.
+7 bis. **Essayer « Suivre la séance » sur ton téléphone** · 5 minutes, après la prochaine fusion (D-172) · une séance du jour avec deux exercices › « Suivre la séance » › « C’est parti ». À vérifier : les bips (s’ils ne sonnent pas, le bouton silencieux sur le côté de l’iPhone est sans doute activé), la voix, l’écran qui reste allumé, le bouton pause en bas en plein exercice puis « Reprendre », l’écran entre deux exercices, « Quitter » puis « Reprendre la séance ». Dis-moi ce qui accroche.
 8. **Rappels sur ton iPhone** · 3 minutes · CoachOS installée sur l’écran d’accueil, ouverte depuis l’icône › 🔔 Notifications › **« Activer les rappels sur cet appareil »** › accepte. Puis publie-toi une séance depuis le Mac : dis-moi si le rappel arrive.
 9. **Paiement en mode test** · quand le chantier 3 commence · 10 minutes · https://stripe.com › compte › **mode test** (interrupteur en haut à droite) › Developers › API keys › copie la **clé secrète de test** (`sk_test_…`) dans Vercel `STRIPE_SECRET_KEY` (Sensitive). Rien ne sera facturé : l’interrupteur reste éteint en production jusqu’à ta décision. Le prix final et le nom du produit sont à toi (hypothèses : 29/59/99 € HT par mois).
 10. **Hygiène des comptes** · 5 minutes · Vercel › Account Settings › Authentication › **« Regenerate »** les codes de récupération (apparus sur une capture) et supprime cette capture. GitHub › ton avatar › **Settings** › **« Developer settings »** › **« Personal access tokens »** › **« Fine-grained tokens »** › le jeton collé dans la conversation (il commence par `github_pat_11CUYS`) › **« Delete »** : il a circulé en clair, il ne doit plus servir.
@@ -90,7 +90,9 @@ Sans `apps/web/.env.local`, l’application repasse en mode PGlite + `/demo`. Co
 
 ## Écarts et dette connus
 
-- Pas de tests de bout en bout dans un vrai navigateur ; pas de suivi des erreurs en production ; restauration jamais essayée ; vidéos et vocaux en base (4 Mo au plus par vidéo en ligne, D-113).
+- Vidéos et vocaux en base (4 Mo au plus par vidéo en ligne, D-113).
+- Mode simple mémorisé par appareil (cookie, comme le thème) : le téléphone et l’ordinateur gardent chacun le leur (D-169).
+- Supabase local contient trois comptes fictifs de la tranche D-169 (`julien.trail@`, `sofia.force@`, `camille.petit@` suivis de `demo.coachos.test`, mot de passe `DEMO_PASSWORD`) et leurs 65 fiches.
 - Langue : « English » enregistré, interface en français seulement (hors périmètre, D-120).
 - Un compte peut être coach et athlète du même espace s’il accepte sa propre invitation : cas non bloqué, à trancher.
 - `npm run build` pendant `npm run dev` corrompt le cache du serveur de développement : relancer le serveur ensuite.

@@ -357,12 +357,58 @@ function StageInput({ k, machine, value, label, onChange }: { k: StageSetting; m
   );
 }
 
+let stageSeq = 0;
+const newStageKey = () => `st${++stageSeq}`;
+
 function CardioEditor({ id, cardio, onChange }: { id: string; cardio: Cardio; onChange: (c: Cardio) => void }) {
   const available = MACHINE_SETTINGS[cardio.machine];
   const used = (m: Machine, c: Cardio) => MACHINE_SETTINGS[m].filter((k) => c.stages.some((x) => x[k] !== null));
   const [shown, setShown] = useState<StageSetting[]>(() => available.filter((k) => MACHINE_DEFAULT_SETTINGS[cardio.machine].includes(k) || used(cardio.machine, cardio).includes(k)));
   const [notes, setNotes] = useState(cardio.stages.some((x) => x.note));
+  // Clés stables des paliers : un palier déplacé garde ses champs (et ce qu’on y tape).
+  const [keys, setKeys] = useState<string[]>(() => cardio.stages.map(() => newStageKey()));
+  const ks = keys.length === cardio.stages.length ? keys : cardio.stages.map((_, i) => keys[i] ?? `p${i}`);
+  const commit = (stages: Stage[], nextKeys: string[]) => { setKeys(nextKeys); onChange({ ...cardio, stages }); };
   const setStage = (i: number, st: Stage) => onChange({ ...cardio, stages: cardio.stages.map((x, j) => (j === i ? st : x)) });
+  const list = useRef<HTMLOListElement>(null);
+  const [said, setSaid] = useState('');
+  const [dragKey, setDragKey] = useState<string | null>(null);
+  const latest = useRef({ cardio, ks, commit });
+  latest.current = { cardio, ks, commit };
+  /** D-170 : déplacer un palier (poignée glissée, flèches du clavier). */
+  const moveStage = (from: number, to: number) => {
+    const { cardio: c, ks: k, commit: save } = latest.current;
+    if (from === to || to < 0 || to >= c.stages.length) return false;
+    const stages = [...c.stages]; const nk = [...k];
+    stages.splice(to, 0, stages.splice(from, 1)[0]!);
+    nk.splice(to, 0, nk.splice(from, 1)[0]!);
+    latest.current = { ...latest.current, cardio: { ...c, stages }, ks: nk };
+    save(stages, nk);
+    return true;
+  };
+  useEffect(() => {
+    if (!dragKey) return;
+    const onMove = (e: PointerEvent) => {
+      const rows = [...(list.current?.querySelectorAll<HTMLElement>('[data-stage]') ?? [])];
+      const from = latest.current.ks.indexOf(dragKey);
+      const at = rows.findIndex((r) => { const b = r.getBoundingClientRect(); return e.clientY < b.top + b.height / 2; });
+      const p = at === -1 ? rows.length : at;
+      moveStage(from, p > from ? p - 1 : p);
+    };
+    const onUp = () => {
+      setSaid(`Palier déplacé en position ${latest.current.ks.indexOf(dragKey) + 1}`);
+      setDragKey(null);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragKey]);
   const total = stagesSeconds(cardio);
   const bars = stageProfile(cardio);
   return (
@@ -403,12 +449,31 @@ function CardioEditor({ id, cardio, onChange }: { id: string; cardio: Cardio; on
           </label>
         </span>
       </div>
-      <ol className={s.stages} aria-label="Paliers">
+      <ol className={cx(s.stages, dragKey && s.sorting)} aria-label="Paliers" ref={list}>
         {cardio.stages.map((x, i) => (
-          <li key={i} className={s.stageRow}>
-            <span className={s.stageNo} aria-hidden="true">{i + 1}</span>
+          <li key={ks[i]} data-stage={ks[i]} className={cx(s.stageRow, dragKey === ks[i] && s.stageDragging)}>
+            <span className={s.stageLead}>
+              {cardio.stages.length > 1 ? (
+                <button type="button" className={s.handle} data-stage-handle={ks[i]}
+                  aria-label={`Déplacer le palier ${i + 1} : glisser, ou flèches haut et bas`} title="Glisser pour déplacer le palier"
+                  onPointerDown={(e) => { if (e.button !== 0) return; e.preventDefault(); setDragKey(ks[i]!); }}
+                  onKeyDown={(e) => {
+                    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+                    e.preventDefault();
+                    const key = ks[i]!, to = i + (e.key === 'ArrowUp' ? -1 : 1);
+                    if (!moveStage(i, to)) return;
+                    setSaid(`Palier déplacé en position ${to + 1}`);
+                    requestAnimationFrame(() => list.current?.querySelector<HTMLElement>(`[data-stage-handle="${key}"]`)?.focus());
+                  }}>
+                  <svg width="14" height="20" viewBox="0 0 14 20" aria-hidden="true">
+                    {[3, 10, 17].map((y) => [4, 10].map((cx_) => <circle key={`${cx_}${y}`} cx={cx_} cy={y} r="1.8" fill="currentColor" />))}
+                  </svg>
+                </button>
+              ) : null}
+              <span className={s.stageNo} aria-hidden="true">{i + 1}</span>
+            </span>
             <span className={s.stageFields} role="group" aria-label={`Palier ${i + 1}`}>
-              <TimeInputs key={`${i}-${cardio.stages.length}`} seconds={x.seconds} label={`du palier ${i + 1}`} compact
+              <TimeInputs seconds={x.seconds} label={`du palier ${i + 1}`} compact
                 onChange={(sec) => setStage(i, { ...x, seconds: Math.min(14_400, Math.max(5, sec)) })} />
               {shown.map((k) => (
                 <span key={k} className={s.inline}>
@@ -423,10 +488,13 @@ function CardioEditor({ id, cardio, onChange }: { id: string; cardio: Cardio; on
             </span>
             <span className={s.stageTools}>
               <IconButton icon="copy" label={`Dupliquer le palier ${i + 1}`} variant="ghost" size="sm"
-                onClick={() => onChange({ ...cardio, stages: [...cardio.stages.slice(0, i + 1), { ...x }, ...cardio.stages.slice(i + 1)].slice(0, 30) })} />
+                onClick={() => commit(
+                  [...cardio.stages.slice(0, i + 1), { ...x }, ...cardio.stages.slice(i + 1)].slice(0, 30),
+                  [...ks.slice(0, i + 1), newStageKey(), ...ks.slice(i + 1)].slice(0, 30),
+                )} />
               {cardio.stages.length > 1 ? (
                 <IconButton icon="close" label={`Retirer le palier ${i + 1}`} variant="ghost" size="sm"
-                  onClick={() => onChange({ ...cardio, stages: cardio.stages.filter((_, j) => j !== i) })} />
+                  onClick={() => commit(cardio.stages.filter((_, j) => j !== i), ks.filter((_, j) => j !== i))} />
               ) : null}
             </span>
           </li>
@@ -434,12 +502,13 @@ function CardioEditor({ id, cardio, onChange }: { id: string; cardio: Cardio; on
       </ol>
       <Cluster gap={3} align="center">
         <Button size="sm" icon="plus" disabled={cardio.stages.length >= 30}
-          onClick={() => { const last = cardio.stages[cardio.stages.length - 1]!; onChange({ ...cardio, stages: [...cardio.stages, blankStage(last.seconds, last)] }); }}>Palier</Button>
+          onClick={() => { const last = cardio.stages[cardio.stages.length - 1]!; commit([...cardio.stages, blankStage(last.seconds, last)], [...ks, newStageKey()]); }}>Palier</Button>
         <span className={s.hint}><strong>{formatClock(total)}</strong> en {cardio.stages.length} palier{cardio.stages.length > 1 ? 's' : ''}</span>
         {bars.length ? (
           <span className={s.stageBars} aria-hidden="true">{bars.map((b, i) => <span key={i} style={{ flexGrow: b.seconds, blockSize: `${Math.round(b.height * 100)}%` }} />)}</span>
         ) : null}
       </Cluster>
+      <span className="ds-visually-hidden" role="status">{said}</span>
     </div>
   );
 }
@@ -589,9 +658,9 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools, series }:
           </>
         )}
         {noteOpen ? (
-          <div className={s.field}>
+          <div className={cx(s.field, s.noteField)}>
             <label className={s.label} htmlFor={`${id}-note`}>Note</label>
-            <input id={`${id}-note`} className={s.control} maxLength={200} value={step.note ?? ''} placeholder="Par exemple : en côte, pieds rapides, pull-buoy"
+            <textarea id={`${id}-note`} className={cx(s.control, s.noteArea)} rows={2} maxLength={200} value={step.note ?? ''} placeholder="Par exemple : en côte, pieds rapides, pull-buoy"
               onChange={(e) => onChange({ ...step, note: e.target.value || null })} />
           </div>
         ) : (

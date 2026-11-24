@@ -2446,3 +2446,48 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Rien de personnel** : message masqué (adresses, identifiants, nombres, textes cités), gabarit de route et non l’adresse réelle, chemins de fichiers relatifs ; jamais d’en-têtes, cookies, corps ni identité.
 - **Preuves** : 5 tests (lecture de l’adresse, éteint sans clé, masquage, contenu de l’envoi, échec réseau sans effet), 429 tests, typecheck, construction, six parcours de bout en bout ; essai réel sur une construction séparée avec un faux récepteur : la page plantée affiche la référence 4163413316, reçue à l’identique avec le message masqué.
 - **Non couvert** : erreurs survenues dans le navigateur seul (sans référence serveur) ; réception dans un vrai compte Sentry (attend la clé du fondateur).
+
+## D-169 · Le coach inconnu : ajouter plusieurs élèves, premiers pas, brief du jour, mode simple · 2026-11-24
+
+- **Trois coachs fictifs joués** (Supabase local, adresses `@demo.coachos.test`) : trail, 25 élèves d’un Google Doc (inscription → espace → liste collée → séance de groupe publiée → élève inscrite sur téléphone → retour → traité sur téléphone) ; musculation, 40 clients d’un export Excel (téléphone) ; club à trois groupes (parcours automatique `e2e/coach-inconnu.spec.ts`, 30 s de robot).
+- **Ajouter plusieurs élèves** (`/coach/[wid]/athletes/import`, `POST …/athletes/import`, O) : coller une liste (puces, tabulations, points-virgules, « Nom <adresse> », en-tête de tableur avec colonnes en trop ignorées, intertitres « Ultra : » qui donnent le groupe, titre du document écarté), aperçu ligne par ligne avec « Retirer », lignes écartées avec leur raison ; une transaction crée fiches, groupes et un lien par adresse (aucun e-mail, liens recalculés jamais stockés, D-149) ; « Copier les N liens ».
+- **Premiers pas** sur l’Accueil (propriétaire) : ajouter ses élèves, publier une première séance, envoyer les invitations, traiter un premier retour ; chaque pas a son bouton ; la carte disparaît à 4 sur 4 et remplace la visite « + Ajouter un élève ».
+- **Brief du jour** complété : retours à traiter et messages non lus (liens) avant tâches, rendez-vous et relances ; élèves pas encore inscrits ; « tout le monde est en rythme » sinon. Invitations en attente regroupées en une ligne dès 3.
+- **Mode simple** (cookie `coachos_mode`, par appareil comme le thème ; coché à la création de l’espace ; Paramètres › Apparence) : masque + Tâche, + Rendez-vous, filtres, temps estimé, Ma méthode et Notifications (sauf non lues). Rien n’est supprimé. Une colonne en base demanderait une migration en ligne : pas maintenant.
+- **Accrocs corrigés en route** : assistant commencé par une longue présentation (Spécialités d’abord) ; « À faire · tes élèves sont à jour » sans élève ; 25 tâches « Relancer l’invitation » ; titre du Google Doc pris pour un élève ; en-tête Excel non reconnu à cause d’une colonne en plus ; bulle de la visite qui couvrait « Ajouter 40 élèves » sur téléphone (suivre un premier pas termine la visite).
+- **Preuves** : 445 tests (10 de lecture de liste, 5 serveur dont droits propriétaire / coach associé / autre espace / élève, contrat), typecheck, construction, 7 parcours de bout en bout ; navigateur à 1440 et 390 px pour le coach et l’élève, sans débordement.
+- **Non vérifié** : 15 minutes avec un vrai coach sans aide (estimation : 10 à 12 minutes de gestes, hors envoi des liens) ; invitations groupées par e-mail (attendent le domaine) ; séance de musculation et retour du coach de musculation au navigateur (couverts par `series.spec.ts`).
+
+## D-170 · Éditeur de séance : déplacer un palier, note lisible · 2026-11-24
+
+- **Demandes du fondateur** : « pouvoir déplacer un palier » ; « note trop petite pour voir ce qu’on écrit ».
+- **Paliers cardio** : poignée à gauche du numéro, comme pour les blocs. On glisse le palier à la souris ou au doigt, ou on le déplace avec les flèches haut et bas, et la position est annoncée aux lecteurs d’écran. Chaque palier a une clé stable : il garde ses valeurs, et ce qu’on y tapait, quand il change de place. La poignée n’apparaît qu’à partir de deux paliers.
+- **Note d’exercice** : zone de texte sur toute la largeur, qui grandit avec le texte (2 lignes au moins, 200 caractères comme avant).
+- **Preuves** : `e2e/cardio-paliers.spec.ts` déplace un palier au clavier puis à la souris ; captures à 1440 et 390 px, sans débordement. Aucune migration.
+
+## D-171 · Installer CoachOS sur le téléphone, pas à pas · 2026-11-24
+
+- **Demande du fondateur** : l’élève qui ouvre son lien doit être pris par la main, jusqu’à l’installation de l’application.
+- **Guide d’installation** (`views/athlete/install-guide.tsx`) : l’appareil est reconnu (`components/install-env.ts`, testé) et les étapes exactes s’affichent, avec les boutons dessinés comme à l’écran. Les cas couverts sont :
+  - iPhone avec Safari ;
+  - iPhone avec un autre navigateur ;
+  - lien ouvert dans WhatsApp, Instagram ou Messenger : d’abord « Ouvrir dans Safari ou Chrome » ;
+  - Android avec Chrome, avec un bouton « Installer CoachOS » en une touche quand Chrome le permet ;
+  - Samsung Internet ;
+  - ordinateur : l’adresse à ouvrir sur le téléphone, avec « Copier l’adresse ».
+  « Étapes pour » permet de corriger l’appareil reconnu. Une fois CoachOS ouverte depuis son icône, la carte ne s’affiche plus.
+- **Où** :
+  - sur « Aujourd’hui » : « C’est fait » la range pour de bon, « Plus tard » pour trois jours ;
+  - dans le Profil, une fois le bilan rempli ;
+  - à la 2ᵉ étape de la visite guidée de l’élève ;
+  - sur la page d’invitation, « Comment ça se passe » annonce les 3 étapes : compte, faire connaissance, installer.
+- **Non vérifié** : sur de vrais iPhone et Android, les libellés exacts des menus selon la version (les deux libellés courants sont donnés) et le bouton d’installation en une touche.
+
+## D-172 · Suivre sa séance malgré les péripéties · 2026-11-24
+
+- **Demande du fondateur** : l’élève suit son programme chrono en main, gère seule ses temps morts (toilettes, changer de machine), met pause à tout moment, avance ; l’outil la guide et la motive.
+- **Entre deux exercices** (et au début) : écran « prêt·e ? » avec bravo pour l’exercice fini, « Exercice 2 sur 4 », résumé et paliers, consignes, et la pause qui court. « C’est parti » donne 5 s de mise en place, puis le chrono part. La séance est en pause pendant ce temps ; un repos programmé entre deux cartes en tient lieu. On peut passer un exercice ; la fin de séance le rappelle pour le dire au coach.
+- **Pause sous le pouce** : barre d’actions collée en bas de l’écran. Reprendre un effort redonne 5 s de mise en place. Un chrono fini passe toujours à la suite. Le repos après la dernière série d’une carte est omis.
+- **Guidage** : « Dernière série ! », mi-chemin annoncé dès 4 min. Les pauses ne comptent pas dans la durée, ni donc dans la durée préremplie du retour.
+- **Où** : la logique est dans le domaine (`followStart`, `followGate`, `followExercises`) et testée ; les parcours séries et cardio sont étendus (reprise, rechargement, passer). Côté coach, rien ne change.
+- **Non vérifié** : sur un vrai téléphone. Vérifié dans le Chromium des tests à 390 et 1440 px ; le navigateur intégré ne charge pas la démo locale.

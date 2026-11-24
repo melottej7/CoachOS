@@ -1,3 +1,4 @@
+import { InstallGuide } from '@/views/athlete/install-guide';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
@@ -64,6 +65,7 @@ export default async function Today({ params, searchParams }: { params: Promise<
           {progress ? `${progress.answered} réponse${progress.answered > 1 ? 's' : ''} sur ${progress.total}.` : '2 minutes'} pour que ton coach prépare un programme qui te ressemble.
         </Banner>
       ) : null}
+      <InstallGuide variant="today" />
 
       {todays.length ? todays.map((w, k) => {
         const view = sessionView(w.intervals, w.sport, refs, w.durationSeconds);

@@ -49,6 +49,20 @@ test('le coach programme un cardio en paliers ; l’élève le lit et le suit pa
     await stage(coach, n, minutes, level);
   }
   await expect(coach.getByText('19 min', { exact: true })).toBeVisible();
+  // D-170 : déplacer un palier, au clavier puis à la souris ; chaque palier garde ses valeurs.
+  const level = (n: number) => coach.getByLabel(`Niveau du palier ${n}`, { exact: true });
+  await coach.getByRole('button', { name: /^Déplacer le palier 4/ }).press('ArrowUp');
+  await expect(level(3)).toHaveValue('1');
+  await expect(level(4)).toHaveValue('3');
+  await expect(coach.getByRole('button', { name: /^Déplacer le palier 3/ })).toBeFocused();
+  const grip = await coach.getByRole('button', { name: /^Déplacer le palier 3/ }).boundingBox();
+  const last = await coach.locator('[data-stage]').nth(3).boundingBox();
+  await coach.mouse.move(grip!.x + grip!.width / 2, grip!.y + grip!.height / 2);
+  await coach.mouse.down();
+  await coach.mouse.move(grip!.x + grip!.width / 2, last!.y + last!.height - 4, { steps: 8 });
+  await coach.mouse.up();
+  await expect(level(3)).toHaveValue('3');
+  await expect(level(4)).toHaveValue('1');
   await coach.getByRole('button', { name: 'Exercice', exact: true }).click();
   await coach.getByLabel('Exercice').last().fill('Squat goblet');
   // « Ce que lira l’élève » :
@@ -75,9 +89,17 @@ test('le coach programme un cardio en paliers ; l’élève le lit et le suit pa
 
   await camille.clock.install();
   await camille.goto(`/athlete/${WS_A}/workouts/${sid}/suivre`);
-  await expect(camille.getByText('Palier 1 sur 4', { exact: true })).toBeVisible();
+  // D-172 : l’écran « prêt·e ? » montre l’exercice et ses paliers ; « C’est parti », 5 s de mise en place, puis le palier 1.
+  await expect(camille.getByText('Exercice 1 sur 2', { exact: true })).toBeVisible();
   await expect(camille.getByRole('heading', { name: 'Vélo elliptique' })).toBeVisible();
+  await expect(camille.getByText('19 min · 4 paliers', { exact: true })).toBeVisible();
+  await expect(camille.getByRole('list', { name: 'Paliers à venir' }).getByRole('listitem')).toHaveCount(4);
+  expect(await overflow(camille)).toBe(0);
+  await camille.getByRole('button', { name: 'C’est parti' }).click();
+  await expect(camille.getByText('Palier 1 sur 4', { exact: true })).toBeVisible();
   await expect(camille.getByText('niveau 1', { exact: true })).toBeVisible();
+  await expect(camille.getByRole('timer')).toHaveText('5');
+  await camille.clock.runFor(5_000);
   await expect(camille.getByRole('timer')).toHaveText('5:00');
   await expect(camille.getByText(/Ensuite : palier 2 · 7 min · niveau 2/)).toBeVisible();
   expect(await overflow(camille)).toBe(0);
@@ -89,4 +111,40 @@ test('le coach programme un cardio en paliers ; l’élève le lit et le suit pa
   await camille.clock.fastForward(7 * 60_000 + 1000);
   await expect(camille.getByText('Palier 3 sur 4', { exact: true })).toBeVisible();
   await expect(camille.getByText('niveau 3', { exact: true })).toBeVisible();
+
+  // D-172 : fin du cardio → l’écran entre deux exercices : bravo, la séance en pause (la pause se compte, pas la durée),
+  // l’exercice suivant en grand ; l’élève lance quand elle est prête.
+  await camille.clock.fastForward(5 * 60_000 + 1000);
+  await expect(camille.getByText('Palier 4 sur 4', { exact: true })).toBeVisible();
+  await camille.clock.fastForward(2 * 60_000 + 1000);
+  await expect(camille.getByText('Bravo, Vélo elliptique : fait !')).toBeVisible();
+  await expect(camille.getByText('Exercice 2 sur 2 · le dernier', { exact: true })).toBeVisible();
+  await expect(camille.getByRole('heading', { name: 'Squat goblet' })).toBeVisible();
+  const elapsed = camille.getByLabel(/^Temps de séance/);
+  await expect(elapsed).toHaveAttribute('aria-label', /, en pause$/);
+  const before = await elapsed.textContent();
+  await camille.clock.fastForward(90_000);
+  await expect(camille.getByLabel(/^En pause depuis 1:3\d$/)).toBeVisible();
+  await expect(elapsed).toHaveText(before!);
+  expect(await overflow(camille)).toBe(0);
+  await shot(camille, 'suivre-entre-deux-390');
+  // Un rechargement retrouve l’écran, la pause comprise.
+  await camille.reload();
+  await expect(camille.getByText('Bravo, Vélo elliptique : fait !')).toBeVisible();
+  await expect(elapsed).toHaveAttribute('aria-label', /, en pause$/);
+  await camille.getByRole('button', { name: 'C’est parti' }).click();
+  await expect(camille.getByText('Série 1 sur 3', { exact: true })).toBeVisible();
+  await expect(camille.getByRole('button', { name: 'Fait, suivant' })).toBeVisible();
+  await expect(elapsed).not.toHaveAttribute('aria-label', /en pause/);
+
+  // Revenir au dernier palier, le refaire passer : l’écran revient ; passer le dernier exercice finit la séance,
+  // et la fin rappelle ce qui a été passé, pour le dire au coach.
+  await camille.getByRole('button', { name: 'Étape précédente' }).click();
+  await expect(camille.getByText('Palier 4 sur 4', { exact: true })).toBeVisible();
+  await expect(camille.getByRole('button', { name: 'Démarrer le chrono' })).toBeVisible();
+  await camille.getByRole('button', { name: 'Suivant' }).click();
+  await expect(camille.getByText('Bravo, Vélo elliptique : fait !')).toBeVisible();
+  await camille.getByRole('button', { name: 'Finir sans cet exercice' }).click();
+  await expect(camille.getByRole('heading', { name: /Séance terminée, bravo\s!/ })).toBeVisible();
+  await expect(camille.getByText(/^Exercice passé : Squat goblet\. Dis-le à ton coach/)).toBeVisible();
 });

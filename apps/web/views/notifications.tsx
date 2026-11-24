@@ -142,7 +142,7 @@ export function PushSettings({ wid, publicKey, devices, role = 'athlete' }: { wi
   const note = !publicKey ? 'Les rappels sur téléphone ne sont pas encore réglés sur ce serveur.'
     : state === 'checking' ? 'Vérification…'
     : state === 'unsupported' ? 'Ce navigateur ne permet pas les rappels. Essaie Chrome, Edge, Firefox ou Safari récent.'
-    : state === 'ios-install' ? 'Sur iPhone, installe d’abord CoachOS sur l’écran d’accueil (Partager › « Sur l’écran d’accueil »), puis reviens ici.'
+    : state === 'ios-install' ? 'Sur iPhone, installe d’abord CoachOS sur l’écran d’accueil (les étapes sont dans ton Profil), puis ouvre-la depuis son icône et reviens ici.'
     : state === 'denied' ? 'Les notifications sont bloquées pour CoachOS dans les réglages de ton téléphone ou de ton navigateur.'
     : null;
 

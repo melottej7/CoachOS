@@ -3,6 +3,7 @@ import {
   inviteRegisterSchema,
   createAthleteSchema,
   createWorkspaceSchema,
+  importRosterSchema,
   INVITATION_TTL_DAYS,
   inviteSchema,
   parseWith,
@@ -68,6 +69,78 @@ export async function createAthlete(meta: Meta & { workspaceId: string }, body: 
       await audit(tx, wid, meta.actorId, 'athlete.create', id, meta.requestId);
       return { status: 201, body: { id, state: 'invited' } };
     });
+  });
+}
+
+export interface ImportedAthlete { athleteId: string; displayName: string; group: string | null; invitationId: string | null; link?: string }
+
+/**
+ * importRoster (D-169) : plusieurs fiches d’un coup, depuis une liste collée et relue par le coach. Une seule transaction :
+ * fiches « invitées » affectées au propriétaire, groupes trouvés par leur nom (sans casse) ou créés, et, pour chaque adresse,
+ * un lien d’invitation à transmettre soi-même (D-149 « link ») : aucun e-mail n’est envoyé. Les liens sont recalculés à
+ * chaque réponse, jamais stockés ; même clé rejouée → mêmes fiches, mêmes liens.
+ */
+export async function importRoster(meta: Meta & { workspaceId: string; appOrigin: string }, body: unknown): Promise<StoredResponse> {
+  const parsed = parseWith(importRosterSchema, body);
+  if (!parsed.ok) throw invalid(parsed.fields);
+  const { rows, timeZone } = parsed.value;
+  const wid = meta.workspaceId;
+  return commandAs(meta.actorId, async (tx) => {
+    await requireOwner(tx, wid);
+    const res = await idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'athlete.import', key: meta.idempotencyKey, body }, async () => {
+      const teams = new Map<string, string>();
+      let teamsCreated = 0;
+      for (const name of new Set(rows.map((r) => r.group).filter((g): g is string => !!g))) {
+        const k = name.toLowerCase();
+        if ([...teams.keys()].includes(k)) continue;
+        const found = await tx.query<{ id: string; archived: boolean }>(
+          'select id, archived_at is not null as archived from public.teams where workspace_id = $1 and lower(name) = $2',
+          [wid, k],
+        );
+        let id = found.rows[0]?.id;
+        if (id && found.rows[0]!.archived) await tx.query('update public.teams set archived_at = null where workspace_id = $1 and id = $2', [wid, id]);
+        if (!id) {
+          const t = await tx.query<{ id: string }>(
+            `insert into public.teams(workspace_id, name, sort_order)
+             values ($1, $2, coalesce((select max(sort_order) + 1 from public.teams where workspace_id = $1), 0)) returning id`,
+            [wid, name],
+          );
+          id = t.rows[0]!.id;
+          teamsCreated += 1;
+          await audit(tx, wid, meta.actorId, 'team.create', id, meta.requestId);
+        }
+        teams.set(k, id);
+      }
+      const items: ImportedAthlete[] = [];
+      for (const r of rows) {
+        const a = await tx.query<{ id: string }>(
+          `insert into public.athletes(workspace_id, display_name, time_zone, state) values ($1, $2, $3, 'invited') returning id`,
+          [wid, r.displayName, timeZone],
+        );
+        const id = a.rows[0]!.id;
+        await tx.query('insert into public.coach_assignments(workspace_id, athlete_id, coach_id) values ($1, $2, $3)', [wid, id, meta.actorId]);
+        await audit(tx, wid, meta.actorId, 'athlete.create', id, meta.requestId);
+        const team = r.group ? teams.get(r.group.toLowerCase()) : undefined;
+        if (team) await tx.query('insert into public.team_athletes(workspace_id, team_id, athlete_id) values ($1, $2, $3) on conflict do nothing', [wid, team, id]);
+        let invitationId: string | null = null;
+        if (r.email) {
+          invitationId = randomUUID();
+          await tx.query(
+            `insert into public.invitations(id, workspace_id, athlete_id, secret_hash, email_hmac, expires_at)
+             values ($1, $2, $3, $4, $5, now() + make_interval(days => $6))`,
+            [invitationId, wid, id, sha256(linkInvitationToken(invitationId)), emailHmac(r.email), INVITATION_TTL_DAYS],
+          );
+          await audit(tx, wid, meta.actorId, 'invitation.issue', invitationId, meta.requestId);
+        }
+        items.push({ athleteId: id, displayName: r.displayName, group: r.group, invitationId });
+      }
+      return { status: 201, body: { items, teamsCreated } };
+    });
+    const out = res.body as { items: ImportedAthlete[]; teamsCreated: number };
+    return {
+      ...res,
+      body: { ...out, items: out.items.map((i) => (i.invitationId ? { ...i, link: `${meta.appOrigin}/invite#token=${linkInvitationToken(i.invitationId)}` } : i)) },
+    };
   });
 }
 

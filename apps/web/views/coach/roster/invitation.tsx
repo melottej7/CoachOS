@@ -38,7 +38,7 @@ export function InvitationLinkPanel({ link, name, email, next }: { link: string;
         {canShare ? <Button icon="send" onClick={() => void navigator.share({ title: 'Ton invitation CoachOS', text: `Rejoins-moi sur CoachOS pour tes séances : ${link}` }).catch(() => undefined)}>Partager…</Button> : null}
         <LinkButton href={next} variant="ghost">Aller à la fiche</LinkButton>
       </Cluster>
-      <Text size="sm" muted>À l’ouverture du lien, {first} crée son compte avec <strong>{email}</strong> (l’adresse que tu as saisie) et choisit son mot de passe. Le lien sert une seule fois et reste valable 7 jours. Ensuite, sur son téléphone : Safari › Partager › « Sur l’écran d’accueil » (iPhone), ou Chrome › ⋮ › « Installer l’application » (Android).</Text>
+      <Text size="sm" muted>À l’ouverture du lien, {first} crée son compte avec <strong>{email}</strong> (l’adresse que tu as saisie) et choisit son mot de passe. Le lien sert une seule fois et reste valable 7 jours. Ensuite, CoachOS lui montre pas à pas comment l’installer sur son téléphone, puis lui fait faire le tour.</Text>
     </Stack>
   );
 }

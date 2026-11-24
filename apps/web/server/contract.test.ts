@@ -12,7 +12,7 @@ import { setMailer } from './email/send';
 import { AppError } from './errors';
 import { errorPayload } from './http';
 import { markFeedbackReviewed, saveFeedback, updateReview } from './commands/feedback';
-import { acceptInvitation, createAthlete, createWorkspace, issueInvitation, revokeInvitation } from './commands/invitations';
+import { acceptInvitation, createAthlete, createWorkspace, importRoster, issueInvitation, revokeInvitation } from './commands/invitations';
 import { createWorkout, publishWorkouts, updateWorkout } from './commands/workouts';
 import { confirmBilan, saveAthleteProfile, saveBilanByCoach, saveBilanDraft } from './commands/athlete-profile';
 import { saveAthleteReferences } from './commands/athlete-references';
@@ -68,6 +68,13 @@ describe('réponses conformes au contrat OpenAPI', () => {
     check(`${W}/{sid}`, 'patch', updated.status, updated.body);
     const pub = await publishWorkouts({ ...m, idempotencyKey: randomUUID() }, { changes: [{ id, revision: 2 }] });
     check('/workspaces/{wid}/athletes/{aid}/publications', 'post', pub.status, pub.body);
+  });
+
+  it('ajouter plusieurs élèves (D-169) : liens et groupes', async () => {
+    const r = await importRoster({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, appOrigin: 'http://localhost:3000' }, {
+      timeZone: TIME_ZONE, rows: [{ displayName: 'Contrat Un', email: 'contrat.un@demo.coachos.test', group: 'Contrat' }, { displayName: 'Contrat Deux' }],
+    });
+    check('/workspaces/{wid}/athletes/import', 'post', r.status, r.body);
   });
 
   it('retour et revue (RPE 0 et commentaire)', async () => {

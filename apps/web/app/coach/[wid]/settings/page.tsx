@@ -8,7 +8,7 @@ import { autoRuleSettings } from '@/server/repo/portfolio';
 import { aiMonth, aiSource } from '@/server/commands/ai';
 import { readRelanceTemplates } from '@/server/commands/relance-templates';
 import { listMyPrivacyRequests } from '@/server/commands/privacy';
-import { Badge, Banner, Card, Cluster, DensityChoiceGroup, Eyebrow, Heading, Meter, SectionTabs, Stack, Text, ThemeChoiceGroup } from '@/design';
+import { Badge, Banner, Card, Cluster, DensityChoiceGroup, Eyebrow, Heading, Meter, ModeChoiceGroup, SectionTabs, Stack, Text, ThemeChoiceGroup } from '@/design';
 import { CoachDetails, CoachIdentity } from '@/views/coach-profile';
 import { SpaceForm } from '@/views/coach/settings/space-form';
 import { AutoRulesForm, RelanceTemplates } from '@/views/coach/settings/follow-ups';
@@ -71,6 +71,7 @@ export default async function Settings({ params, searchParams }: { params: Promi
   const jar = await cookies();
   const theme = jar.get('coachos_theme')?.value;
   const density = jar.get('coachos_density')?.value;
+  const simple = jar.get('coachos_mode')?.value === 'simple';
   // Lectures de l’onglet ouvert seulement.
   const [rules, mine, requests, ai] = await Promise.all([
     tab === 'suivis' ? autoRuleSettings(actor.userId, wid) : null,
@@ -121,6 +122,7 @@ export default async function Settings({ params, searchParams }: { params: Promi
         {tab === 'apparence' ? (
           <Stack gap={5}>
             <Intro title="Apparence">Réglage de cet appareil seulement : ton téléphone et ton ordinateur gardent chacun le leur.</Intro>
+            <Card pad={5}><ModeChoiceGroup initial={simple ? 'simple' : 'full'} /></Card>
             <Card pad={5}><ThemeChoiceGroup initial={theme === 'light' || theme === 'dark' ? theme : 'system'} /></Card>
             <Card pad={5}>
               <Stack gap={2}>
