@@ -39,6 +39,8 @@ Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 coul
 
 **Fait aussi le 24 novembre** : cardio sur machine en paliers, demandé par le fondateur (D-164 ; tapis, elliptique, vélo, rameur… ; niveau, vitesse, pente, cadence, watts ; suivi palier par palier ; aucune migration ; en ligne depuis la Pull Request n° 4, avec la restauration D-163). Pour sa séance « Cardio » de Hanae : Modifier › sur chaque étape, « Cardio sur machine : passer en paliers ».
 
+**Fait aussi** : un exercice, ce sont des séries (D-165 : une carte par exercice, séries, durée ou répétitions, récupération ; « Circuit » ; séries en temps enchaînées comme une minuterie).
+
 **Prochaine tranche** : suivi des erreurs en production (Sentry derrière une variable, éteint tant qu’aucune clé n’est saisie), puis « Le coach inconnu ».
 
 ## Pour le fondateur

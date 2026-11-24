@@ -77,15 +77,15 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
           </Stack>
         </section>
       ) : (
-        <StepScreen key={i} wid={wid} f={seq[i]!} next={seq[i + 1] ?? null} exercises={exercises} logged={log[i]} lastDone={lastDone}
+        <StepScreen key={i} wid={wid} f={seq[i]!} prev={seq[i - 1] ?? null} next={seq[i + 1] ?? null} exercises={exercises} logged={log[i]} lastDone={lastDone}
           onLog={(v) => note(i, v)} onNext={() => go(i + 1)} onPrev={i > 0 ? () => go(i - 1) : null} />
       )}
     </Stack>
   );
 }
 
-function StepScreen({ wid, f, next, exercises, logged, onLog, onNext, onPrev, lastDone }: {
-  wid: string; f: FollowStep; next: FollowStep | null; exercises: Record<string, Exercise>; lastDone: Record<string, LastDone>;
+function StepScreen({ wid, f, prev, next, exercises, logged, onLog, onNext, onPrev, lastDone }: {
+  wid: string; f: FollowStep; prev: FollowStep | null; next: FollowStep | null; exercises: Record<string, Exercise>; lastDone: Record<string, LastDone>;
   logged?: { reps: number | null; kg: number | null }; onLog: (v: { reps: number | null; kg: number | null }) => void;
   onNext: () => void; onPrev: (() => void) | null;
 }) {
@@ -101,8 +101,12 @@ function StepScreen({ wid, f, next, exercises, logged, onLog, onNext, onPrev, la
   const target = stage ? stage.settings : [timed ? null : describeMeasure(st.measure), st.intensity.kind === 'zone' ? null : describeIntensity(st.intensity)].filter(Boolean).join(' · ');
   const sets = [setLabel(f.sets), stage && stage.n > 1 ? `Palier ${stage.k} sur ${stage.n}` : null].filter(Boolean).join(' · ') || null;
   // Les paliers s’enchaînent : le chrono du palier suivant part seul, comme sur la machine.
-  const chained = Boolean(stage && stage.k > 1);
-  const chainNext = Boolean(stage && stage.k < stage.n);
+  // D-165 : des séries en temps (6 × 20 s de planche, 40 s de récupération) s’enchaînent comme une minuterie :
+  // la fin de l’effort lance la récupération, la fin de la récupération lance la série suivante. La première se lance au doigt.
+  const sameRound = (a: FollowStep | null) => Boolean(a && a.sets.length && a.sets.length === f.sets.length);
+  const seriesTimed = !rest && !stage && timed !== null && f.sets.length > 0;
+  const chained = Boolean(stage && stage.k > 1) || (seriesTimed && sameRound(prev) && isRest(prev!) && (f.sets[f.sets.length - 1]?.k ?? 1) > 1);
+  const chainNext = Boolean(stage && stage.k < stage.n) || (seriesTimed && sameRound(next) && isRest(next!));
   const last = !rest && st.exercise ? lastDone[exerciseKey(st.exercise.id, st.exercise.name)] : undefined;
   const media = !rest && ex ? ExerciseMedia({ wid, exercise: ex }) : null;
   return (

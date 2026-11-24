@@ -49,7 +49,7 @@ test('le coach programme un cardio en paliers ; l’élève le lit et le suit pa
     await stage(coach, n, minutes, level);
   }
   await expect(coach.getByText('19 min', { exact: true })).toBeVisible();
-  await coach.getByRole('button', { name: 'Série', exact: true }).click();
+  await coach.getByRole('button', { name: 'Exercice', exact: true }).click();
   await coach.getByLabel('Exercice').last().fill('Squat goblet');
   // « Ce que lira l’élève » :
   await expect(coach.getByRole('listitem').filter({ hasText: /^Vélo elliptique · 19 min : 5 min · niveau 1, 7 min · niveau 2, 5 min · niveau 3, 2 min · niveau 1$/ })).toBeVisible();
@@ -73,6 +73,7 @@ test('le coach programme un cardio en paliers ; l’élève le lit et le suit pa
   expect(await overflow(camille)).toBe(0);
   await shot(camille, 'cardio-seance-eleve-390');
 
+  await camille.clock.install();
   await camille.goto(`/athlete/${WS_A}/workouts/${sid}/suivre`);
   await expect(camille.getByText('Palier 1 sur 4')).toBeVisible();
   await expect(camille.getByRole('heading', { name: 'Vélo elliptique' })).toBeVisible();
@@ -83,6 +84,9 @@ test('le coach programme un cardio en paliers ; l’élève le lit et le suit pa
   await shot(camille, 'cardio-suivre-390');
   await camille.getByRole('button', { name: 'Suivant' }).click();
   await expect(camille.getByText('Palier 2 sur 4')).toBeVisible();
-  // Le palier suivant démarre seul, comme sur la machine.
+  // Le palier suivant démarre seul, comme sur la machine, et passe seul au palier 3 à la fin de ses 7 minutes.
   await expect(camille.getByRole('button', { name: '+15 s' })).toBeVisible();
+  await camille.clock.fastForward(7 * 60_000 + 1000);
+  await expect(camille.getByText('Palier 3 sur 4')).toBeVisible();
+  await expect(camille.getByText('niveau 3', { exact: true })).toBeVisible();
 });

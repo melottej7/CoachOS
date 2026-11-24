@@ -96,3 +96,5 @@ input.control { min-width: 0; }
 .stageTools { display: inline-flex; gap: 2px; }
 .stageBars { display: inline-flex; align-items: flex-end; gap: 2px; block-size: 28px; inline-size: min(220px, 40vw); }
 .stageBars > span { min-inline-size: 5px; border-radius: 3px 3px 0 0; background: var(--ds-coach); opacity: 0.85; }
+/* D-165 · exercice en séries */
+.seriesTag { display: inline-flex; align-items: center; min-height: 32px; padding: 0 var(--ds-3); border-radius: var(--ds-radius-full); background: var(--ds-coach-soft); color: var(--ds-coach-text); font-weight: 700; font-size: var(--ds-text-sm); font-variant-numeric: tabular-nums; }
