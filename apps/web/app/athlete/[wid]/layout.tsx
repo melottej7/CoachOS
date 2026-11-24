@@ -41,7 +41,7 @@ export default async function AthleteLayout({ children, params }: { children: Re
         ]} />
         <main id="contenu">{children}</main>
       </AthleteColumn>
-      <TourHost space="athlete" wid={wid} look="chrono" />
+      <TourHost space="athlete" wid={wid} />
     </AthleteShell>
   );
 }

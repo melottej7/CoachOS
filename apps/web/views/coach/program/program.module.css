@@ -1,0 +1,64 @@
+/* Programme d’un objectif (D-157) : aperçu, graphique des semaines, blocs, risques, régénération. */
+.facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--ds-2); }
+.stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--ds-3); }
+.stat { display: flex; flex-direction: column; gap: 2px; padding: var(--ds-3); border-radius: var(--ds-radius); background: var(--ds-surface-2); }
+.statN { font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Phases : couleur et nom écrit, jamais la couleur seule. */
+.tremplin { --phase: var(--ds-ink-2); }
+.developpement { --phase: var(--ds-coach); }
+.recuperation { --phase: var(--ds-info); }
+.affutage { --phase: var(--ds-signal); }
+
+.chart { margin: 0; display: flex; flex-direction: column; gap: var(--ds-3); }
+.plot { display: grid; align-items: end; gap: 3px; height: 180px; }
+.col { position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; text-decoration: none; color: var(--ds-ink-2); border-radius: 4px; min-width: 0; }
+.col:hover .bar, .col:focus-visible .bar { filter: brightness(1.15); }
+.col:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+.bar { width: 100%; max-width: 28px; border-radius: 4px 4px 0 0; background: var(--phase); }
+.val { font-size: 10px; font-variant-numeric: tabular-nums; white-space: nowrap; opacity: 0; transition: opacity var(--ds-fast); }
+.col:hover .val, .col:focus-visible .val { opacity: 1; }
+.wk { font-size: 11px; font-variant-numeric: tabular-nums; }
+.finish { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; height: 100%; padding-left: var(--ds-1); font-size: 11px; color: var(--ds-ink); }
+.flag { width: 3px; height: 70%; border-radius: 2px; background: var(--ds-ink); }
+.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--ds-2) var(--ds-4); font-size: var(--ds-text-sm); }
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { width: 12px; height: 12px; border-radius: 3px; background: var(--phase); }
+@media (max-width: 559px) { .wk:not(.wkKeep) { visibility: hidden; } }
+
+/* Blocs et semaines. */
+.blocks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-6); }
+.block { display: flex; flex-direction: column; gap: var(--ds-3); padding-left: var(--ds-4); border-left: 3px solid var(--phase); }
+.weeks { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--ds-3); }
+.week { display: flex; flex-direction: column; gap: var(--ds-2); padding: var(--ds-3); border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); scroll-margin-top: 80px; }
+.weekHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--ds-1) var(--ds-2); }
+.weekN { font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-lg); }
+.tiles { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-1); }
+.tile summary { display: grid; grid-template-columns: 2.6em minmax(0, 1fr) auto; gap: var(--ds-2); align-items: baseline; padding: 6px var(--ds-2); border-radius: var(--ds-radius); background: var(--ds-surface-2); cursor: pointer; list-style: none; font-size: var(--ds-text-sm); }
+.tile summary::-webkit-details-marker { display: none; }
+.tile summary:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+.tile[open] summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.day { font-weight: 700; color: var(--ds-ink-2); }
+.title { min-width: 0; overflow-wrap: anywhere; }
+.kind { font-size: var(--ds-text-xs); color: var(--ds-ink-2); white-space: nowrap; }
+.quality .kind, .race .kind { color: var(--ds-signal-text); font-weight: 700; }
+.long .kind { color: var(--ds-coach-text); font-weight: 700; }
+.why { margin: 0; padding: var(--ds-2); font-size: var(--ds-text-sm); background: var(--ds-surface-2); border-top: 1px solid var(--ds-rule); border-radius: 0 0 var(--ds-radius) var(--ds-radius); }
+
+/* Risques. */
+.risks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-2); }
+.risk { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--ds-2); align-items: start; font-size: var(--ds-text-sm); }
+
+/* Régénération. */
+.days { display: flex; flex-wrap: wrap; gap: var(--ds-2); }
+.rgList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-1); }
+.rg { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: var(--ds-2); align-items: start; padding: 6px var(--ds-2); border-radius: var(--ds-radius); font-size: var(--ds-text-sm); overflow-wrap: anywhere; }
+.rg[data-off] > span { opacity: .55; }
+.rgChanged, .rgAdded, .rgRemoved { background: var(--ds-surface-2); }
+.mark { width: 20px; text-align: center; font-weight: 700; color: var(--ds-ink-2); }
+.tick { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--ds-coach); }
+.muted { color: var(--ds-ink-2); }
+.dayChip { display: inline-flex; align-items: center; gap: var(--ds-2); min-height: 44px; padding: 0 var(--ds-3); border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-full); background: var(--ds-surface); font-weight: 600; cursor: pointer; }
+.dayChip input { width: 18px; height: 18px; margin: 0; accent-color: var(--ds-coach); }
+.dayChip:has(input:checked) { border-color: var(--ds-coach); background: var(--ds-coach-soft); }
+.dayChip:has(input:focus-visible) { outline: 2px solid var(--ds-focus); outline-offset: 2px; }

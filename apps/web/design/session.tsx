@@ -14,7 +14,7 @@ export function SessionStats({ view }: { view: SessionView }) {
   if (view.kind === 'strength') {
     return (
       <Stats items={[
-        { label: 'Durée', value: view.minutes ?? '—', unit: view.minutes ? ' min' : undefined, sub: view.minutesApprox ? 'environ' : undefined },
+        { label: 'Durée', value: view.minutes ?? '—', unit: view.minutes ? ' min' : undefined, sub: view.minutes && view.minutesApprox ? 'environ' : undefined },
         { label: 'Exercices', value: view.exercises || '—' },
         { label: 'Séries', value: view.sets || '—' },
       ]} />
@@ -23,7 +23,8 @@ export function SessionStats({ view }: { view: SessionView }) {
   // Une case vide n’apprend rien : sans distance estimable (vélo sans vitesse connue), on ne la montre pas.
   return (
     <Stats items={[
-      { label: 'Durée', value: view.minutes ?? '—', unit: view.minutes ? ' min' : undefined, sub: view.minutesApprox ? 'environ' : undefined },
+      // Sans durée calculable (distance sans allure connue), on dit pourquoi au lieu d’un « environ » sans valeur.
+      { label: 'Durée', value: view.minutes ?? '—', unit: view.minutes ? ' min' : undefined, sub: view.minutes ? (view.minutesApprox ? 'environ' : undefined) : 'selon l’allure' },
       ...(view.km ? [{ label: 'Distance', value: view.km.replace(/\s?(km|m)$/, ''), unit: ` ${view.km.endsWith('km') ? 'km' : 'm'}`, sub: view.kmApprox ? 'environ' : undefined }] : []),
       { label: 'Intensité', value: view.keyZone ? `Z${view.keyZone}` : '—', sub: view.keyZone ? ZONE_NAMES[view.keyZone as Zone] : 'libre' },
     ]} />

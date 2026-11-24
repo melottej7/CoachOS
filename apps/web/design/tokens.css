@@ -238,3 +238,11 @@ html[data-density='compact'] .chrono {
 @media (prefers-reduced-motion: reduce) {
   .chrono *, .chrono *::before, .chrono *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }
 }
+/* Colonne de lecture pour les pages de texte et de réglages (coach, grand écran). */
+.chrono .ds-narrow { width: 100%; max-width: 760px; }
+/* Aide des raccourcis clavier : inutile sur un écran tactile sans clavier. */
+@media (hover: none) { .chrono .ds-keys { display: none; } }
+/* Libellé de bouton masqué sur téléphone (le bouton garde son icône et son nom pour les lecteurs d’écran). */
+@media (max-width: 559px) { .chrono .ds-hide-narrow { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; } }
+/* Colonne d’édition (formulaire de séance) : plus large que la lecture, sans s’étirer sur tout l’écran. */
+.chrono .ds-narrow-wide { width: 100%; max-width: 920px; }

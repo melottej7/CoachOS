@@ -1,41 +1,36 @@
-import Link from 'next/link';
 import { PRIVACY_SECTIONS, PRIVACY_VERSION, privacyContact } from '@/server/privacy/notice';
-import { Brand } from '@/components/ui';
+import { Card, Cluster, Heading, LinkButton, PublicShell, Stack, Text } from '@/design';
+import s from '@/views/account/account.module.css';
 
 export const metadata = { title: 'Confidentialité' };
 
-/** D-115 · Politique de confidentialité, publique, lisible sur téléphone. */
+/** D-115, refonte Chrono (D-156) · Politique de confidentialité, publique, lisible sur téléphone. */
 export default function Privacy() {
   const contact = privacyContact();
   return (
-    <>
-      <header className="top"><Brand href="/" /></header>
-      <main id="contenu" className="athlete-zone">
-        <Link className="back" href="/login">← Connexion</Link>
-        <h1>Confidentialité</h1>
-        <p className="sub">Ce que CoachOS fait de tes données, en clair. Version {PRIVACY_VERSION}.</p>
-        <nav aria-label="Sommaire" className="card" style={{ marginTop: 18 }}>
-          <ul className="plain card-body" style={{ columns: 2, gap: 16 }}>
-            {PRIVACY_SECTIONS.map((s) => <li key={s.id}><a href={`#${s.id}`}>{s.title}</a></li>)}
-          </ul>
-        </nav>
-        {PRIVACY_SECTIONS.map((s) => (
-          <section key={s.id} id={s.id} className="card" style={{ marginTop: 18 }} aria-labelledby={`t-${s.id}`}>
-            <div className="card-head"><h2 id={`t-${s.id}`}>{s.title}</h2></div>
-            <div className="card-body stack">
-              {s.paragraphs.map((p, i) => <p key={i} className="prose">{p}</p>)}
-              {s.items ? <ul className="stack">{s.items.map((it, i) => <li key={i} className="prose">{it}</li>)}</ul> : null}
-            </div>
-          </section>
+    <PublicShell wide>
+      <Stack gap={6}>
+        <Cluster><LinkButton href="/login" variant="ghost" size="sm" icon="chevronLeft">Connexion</LinkButton></Cluster>
+        <Stack gap={1}>
+          <Heading level={1} size={1}>Confidentialité</Heading>
+          <Text muted>Ce que CoachOS fait de tes données, en clair. Version {PRIVACY_VERSION}.</Text>
+        </Stack>
+        <Card as="nav" pad={5} aria-label="Sommaire">
+          <ul className={s.toc}>{PRIVACY_SECTIONS.map((x) => <li key={x.id}><a href={`#${x.id}`}>{x.title}</a></li>)}</ul>
+        </Card>
+        {PRIVACY_SECTIONS.map((x) => (
+          <Stack as="section" key={x.id} id={x.id} gap={3} aria-labelledby={`t-${x.id}`}>
+            <Heading level={2} size={3} id={`t-${x.id}`}>{x.title}</Heading>
+            {x.paragraphs.map((p, i) => <p key={i} className={s.prose}>{p}</p>)}
+            {x.items ? <ul className={s.items}>{x.items.map((it, i) => <li key={i}>{it}</li>)}</ul> : null}
+          </Stack>
         ))}
-        <section className="card" style={{ marginTop: 18 }} aria-labelledby="t-contact">
-          <div className="card-head"><h2 id="t-contact">Contact</h2></div>
-          <div className="card-body stack">
-            <p className="prose">Pour toute question sur tes données : ton coach, dont le contact figure dans sa présentation (Profil › « Voir la présentation de ton coach »).</p>
-            {contact ? <p className="prose">Opérateur de CoachOS : <a href={`mailto:${contact}`}>{contact}</a>.</p> : null}
-          </div>
-        </section>
-      </main>
-    </>
+        <Stack as="section" gap={3} aria-labelledby="t-contact">
+          <Heading level={2} size={3} id="t-contact">Contact</Heading>
+          <p className={s.prose}>Pour toute question sur tes données : ton coach, dont le contact figure dans sa présentation (Profil › « Voir la présentation de ton coach »).</p>
+          {contact ? <p className={s.prose}>Opérateur de CoachOS : <a href={`mailto:${contact}`}>{contact}</a>.</p> : null}
+        </Stack>
+      </Stack>
+    </PublicShell>
   );
 }

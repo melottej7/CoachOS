@@ -86,7 +86,7 @@ async function taskForOwner(tx: Tx, wid: string, m: Membership, kind: PrivacyReq
     ? (await tx.query<{ display_name: string }>('select display_name from public.athletes where workspace_id = $1 and id = $2', [wid, m.athleteId])).rows[0]?.display_name ?? 'un élève'
     : 'un coach de l’espace';
   const title = `${kind === 'erase' ? 'Demande d’effacement' : 'Demande de rectification'} · ${who}`.slice(0, 200);
-  const link = m.athleteId ? `/coach/${wid}/athletes/${m.athleteId}#donnees` : `/coach/${wid}/settings#donnees`;
+  const link = m.athleteId ? `/coach/${wid}/athletes/${m.athleteId}?onglet=donnees` : `/coach/${wid}/settings?onglet=donnees`;
   const notes = kind === 'erase'
     ? 'Demande déposée depuis « Mes données ». À traiter sous 30 jours : ouvre la fiche, section « Données », puis « Effacer définitivement ».'
     : 'Demande déposée depuis « Mes données ». Contacte la personne pour corriger ce qui doit l’être, puis termine la tâche.';

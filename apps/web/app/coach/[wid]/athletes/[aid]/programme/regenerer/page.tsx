@@ -1,20 +1,22 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { addDays, DAY_LABELS, describeTweaks, formatShortDate, parseTweaksParam, weekIndexOf, WEEKDAY_SHORT } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { isUuid } from '@/server/repo/context';
 import { buildRegeneration, regenContext, seenOf } from '@/server/commands/programs';
-import { ProgramRegenerate } from '@/components/program-regenerate';
-import { AiTweaks, TweaksBanner } from '@/components/ai-tweaks';
 import { aiSource } from '@/server/commands/ai';
+import { Badge, Banner, Button, Card, Cluster, Eyebrow, Field, Grid, Heading, LinkButton, Select, Stack, Text, type Tone } from '@/design';
+import { AiTweaks, TweaksBanner } from '@/views/coach/program/ai-tweaks';
+import { ProgramRegenerate } from '@/views/coach/program/program-regenerate';
+import s from '@/views/coach/program/program.module.css';
 
 export const metadata = { title: 'Régénérer le programme' };
 
-const RISK_MARK = { watch: '•', risk: '!', block: '✕' } as const;
+const RISK_TONE: Record<'watch' | 'risk' | 'block', Tone> = { watch: 'info', risk: 'warning', block: 'danger' };
+const RISK_LABEL = { watch: 'À surveiller', risk: 'Risque', block: 'Bloquant' } as const;
 
 /**
- * D-063 (CE-P-06) : régénérer seulement les semaines demandées d’un programme généré. Différences avant d’appliquer ;
- * séances passées, réalisées ou retouchées gardées. Paramètres en adresse : rien n’est modifié avant « Appliquer ».
+ * D-063 (CE-P-06), refonte Chrono (D-157) : régénérer seulement les semaines demandées d’un programme généré. Différences
+ * avant d’appliquer ; séances passées, réalisées ou retouchées gardées. Paramètres en adresse : rien n’est modifié avant « Appliquer ».
  */
 export default async function RegeneratePage({ params, searchParams }: {
   params: Promise<{ wid: string; aid: string }>; searchParams: Promise<{ plan?: string; de?: string; a?: string; jours?: string | string[]; reglages?: string; ia?: string }>;
@@ -28,6 +30,7 @@ export default async function RegeneratePage({ params, searchParams }: {
   const { ctx, plan } = rc;
   const back = `/coach/${wid}/athletes/${aid}/programme?objectif=${ctx.goal.id}`;
   if (!ctx.feasibility) notFound();
+  const first = ctx.athlete.name.split(' ')[0] ?? ctx.athlete.name;
   const raw = Array.isArray(sp.jours) ? sp.jours : sp.jours ? sp.jours.split(',') : null;
   const days = raw ? [...new Set(raw.map(Number).filter((d) => d >= 1 && d <= 7))].sort() : plan.days;
   // D-071 : réglages de l’adresse (proposés par l’IA ou retirés), sinon ceux du programme.
@@ -45,58 +48,72 @@ export default async function RegeneratePage({ params, searchParams }: {
   const label = (n: number) => `Semaine ${n} · ${formatShortDate(addDays(plan.startMonday, (n - 1) * 7))}${n === current ? ' (en cours)' : ''}`;
 
   return (
-    <>
-      <Link className="back" href={back}>← Programme de {ctx.athlete.name}</Link>
-      <div className="kicker">Régénérer · {ctx.athlete.name}</div>
-      <h1>{ctx.goal.title}</h1>
-      <p className="sub">
-        Choisis les semaines à refaire et les jours. Le programme est recalculé avec ta décision actuelle sur l’objectif et ta bibliothèque, depuis le même départ.
-        Les séances passées, réalisées par {ctx.athlete.name.split(' ')[0]} ou retouchées par toi sont gardées. Rien n’est modifié avant « Appliquer ».
-      </p>
+    <Stack gap={8}>
+      <Stack gap={3}>
+        <Cluster><LinkButton href={back} variant="ghost" size="sm" icon="chevronLeft">Programme de {ctx.athlete.name}</LinkButton></Cluster>
+        <Stack gap={1}>
+          <Eyebrow tone="coach">Régénérer · {ctx.athlete.name}</Eyebrow>
+          <Heading level={1} size={1}>{ctx.goal.title}</Heading>
+        </Stack>
+        <Text muted>
+          Choisis les semaines à refaire et les jours. Le programme est recalculé avec ta décision actuelle sur l’objectif et ta bibliothèque, depuis le même départ.
+          Les séances passées, réalisées par {first} ou retouchées par toi sont gardées. Rien n’est modifié avant « Appliquer ».
+        </Text>
+      </Stack>
 
-      <form className="card prog-params" method="get">
-        <input type="hidden" name="plan" value={plan.id} />
-        {sp.reglages !== undefined && tweaks ? <input type="hidden" name="reglages" value={JSON.stringify(tweaks)} /> : null}
-        {suggestionId ? <input type="hidden" name="ia" value={suggestionId} /> : null}
-        <div className="card-body form-row">
-          <label className="field"><span>De</span>
-            <select name="de" defaultValue={from} aria-label="Première semaine à régénérer">{weeks.map((n) => <option key={n} value={n}>{label(n)}</option>)}</select></label>
-          <label className="field"><span>À</span>
-            <select name="a" defaultValue={to} aria-label="Dernière semaine à régénérer">{weeks.map((n) => <option key={n} value={n}>{label(n)}</option>)}</select></label>
-          <fieldset className="field prog-days"><legend>Jours d’entraînement</legend>
-            {WEEKDAY_SHORT.map((l, i) => (
-              <label key={l} className="check"><input type="checkbox" name="jours" value={i + 1} defaultChecked={days.includes(i + 1)} /> {l}</label>
-            ))}
-          </fieldset>
-          <div className="actions"><button className="btn" type="submit">Voir les différences</button></div>
-        </div>
-      </form>
+      <Card pad={5}>
+        <form method="get">
+          <input type="hidden" name="plan" value={plan.id} />
+          {sp.reglages !== undefined && tweaks ? <input type="hidden" name="reglages" value={JSON.stringify(tweaks)} /> : null}
+          {suggestionId ? <input type="hidden" name="ia" value={suggestionId} /> : null}
+          <Stack gap={4}>
+            <Grid min={220} gap={4}>
+              <Field id="de" label="De"><Select id="de" name="de" defaultValue={from}>{weeks.map((n) => <option key={n} value={n}>{label(n)}</option>)}</Select></Field>
+              <Field id="a" label="À"><Select id="a" name="a" defaultValue={to}>{weeks.map((n) => <option key={n} value={n}>{label(n)}</option>)}</Select></Field>
+            </Grid>
+            <fieldset style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}>
+              <Stack gap={2}>
+                <Text as="legend" strong>Jours d’entraînement</Text>
+                <div className={s.days}>
+                  {WEEKDAY_SHORT.map((l, i) => (
+                    <label key={l} className={s.dayChip}><input type="checkbox" name="jours" value={i + 1} defaultChecked={days.includes(i + 1)} /> {l}</label>
+                  ))}
+                </div>
+              </Stack>
+            </fieldset>
+            <Cluster><Button type="submit" icon="repeat">Voir les différences</Button></Cluster>
+          </Stack>
+        </form>
+      </Card>
 
       {built ? <TweaksBanner lines={tweaks ? describeTweaks(tweaks, DAY_LABELS) : []} href={here} suggestionId={suggestionId} /> : null}
-      {built ? <AiTweaks wid={wid} aid={aid} goalId={ctx.goal.id} days={days} tweaks={tweaks} href={here} first={ctx.athlete.name.split(' ')[0] ?? ctx.athlete.name} source={aiSource()} /> : null}
+      {built ? <AiTweaks wid={wid} aid={aid} goalId={ctx.goal.id} days={days} tweaks={tweaks} href={here} first={first} source={aiSource()} /> : null}
 
-      {!built ? <p className="banner warn">Choisis au moins 2 jours d’entraînement.</p> : (
+      {!built ? <Banner tone="warning">Choisis au moins 2 jours d’entraînement.</Banner> : (
         <>
-          <section className="card" aria-labelledby="rg-sum">
-            <div className="card-head"><h2 id="rg-sum">{from === to ? `Semaine ${from}` : `Semaines ${from} à ${to}`}</h2></div>
-            <div className="card-body stack">
-              <p>
-                <strong>{built.regen.counts.changed}</strong> modifiée{built.regen.counts.changed > 1 ? 's' : ''} · <strong>{built.regen.counts.added}</strong> ajoutée{built.regen.counts.added > 1 ? 's' : ''} · <strong>{built.regen.counts.removed}</strong> retirée{built.regen.counts.removed > 1 ? 's' : ''}
-                <span className="muted"> · {built.regen.counts.kept} gardée{built.regen.counts.kept > 1 ? 's' : ''}, {built.regen.counts.same} inchangée{built.regen.counts.same > 1 ? 's' : ''}</span>
-              </p>
-              {built.program.risks.length ? (
-                <div className="prog-risks" role="note">
-                  <p><strong>Risques signalés</strong> — à toi de décider.</p>
-                  <ul className="plain">{built.program.risks.map((r, i) => <li key={i} className={`fz-c ${r.level}`}><span className="fz-mark" aria-hidden="true">{RISK_MARK[r.level]}</span><span>{r.text}</span></li>)}</ul>
-                </div>
-              ) : null}
-            </div>
-          </section>
+          <Stack as="section" gap={3} aria-labelledby="rg-sum">
+            <Heading level={2} size={3} id="rg-sum">{from === to ? `Semaine ${from}` : `Semaines ${from} à ${to}`}</Heading>
+            <Cluster gap={2}>
+              <Badge tone="coach">{built.regen.counts.changed} modifiée{built.regen.counts.changed > 1 ? 's' : ''}</Badge>
+              <Badge tone="coach">{built.regen.counts.added} ajoutée{built.regen.counts.added > 1 ? 's' : ''}</Badge>
+              <Badge tone="warning">{built.regen.counts.removed} retirée{built.regen.counts.removed > 1 ? 's' : ''}</Badge>
+              <Badge>{built.regen.counts.kept} gardée{built.regen.counts.kept > 1 ? 's' : ''}</Badge>
+              <Badge>{built.regen.counts.same} inchangée{built.regen.counts.same > 1 ? 's' : ''}</Badge>
+            </Cluster>
+            {built.program.risks.length ? (
+              <Card pad={4}>
+                <Stack gap={2}>
+                  <Text strong>Risques signalés <Text as="span" size="sm" muted>· à toi de décider</Text></Text>
+                  <ul className={s.risks}>{built.program.risks.map((r, i) => <li key={i} className={s.risk}><Badge tone={RISK_TONE[r.level]}>{RISK_LABEL[r.level]}</Badge><span>{r.text}</span></li>)}</ul>
+                </Stack>
+              </Card>
+            ) : null}
+          </Stack>
           <ProgramRegenerate wid={wid} aid={aid} planId={plan.id} fromWeek={from} toWeek={to} days={days} seen={seenOf(built.regen)} tweaks={tweaks} suggestionId={suggestionId}
             weeks={built.regen.weeks} needsAccept={built.program.risks.some((r) => r.level !== 'watch')} validated={Boolean(ctx.decision)}
             calendarHref={`/coach/${wid}/calendar?athlete=${aid}&week=${addDays(plan.startMonday, (from - 1) * 7)}&notice=regenerated`} />
         </>
       )}
-    </>
+    </Stack>
   );
 }

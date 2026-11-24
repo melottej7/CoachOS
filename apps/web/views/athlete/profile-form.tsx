@@ -8,9 +8,25 @@ import {
   type Experience, type Level, type Locale, type Sport, type WeeklyHours, type WeeklySessions,
 } from '@coachos/domain';
 import { fieldError, useIntent } from '@/components/use-intent';
-import type { OnboardingInitial } from '@/components/athlete-onboarding';
 import { Banner, Button, ChipChecks, ChipChoice, ChoiceGroup, Divider, Eyebrow, Field, Grid, Input, Select, Stack, Text, Textarea } from '@/design';
 import { ErrorSummary } from '@/views/error-summary';
+
+/** Ce que le formulaire « Mes informations » reçoit (repris de l’ancien accueil, supprimé en D-159). */
+export interface OnboardingInitial {
+  displayName: string;
+  locale: Locale;
+  timeZone: string;
+  profile: {
+    sport: Sport; level: Level; experience: Experience; weeklySessions: WeeklySessions; weeklyHours: WeeklyHours | null;
+    availableDays: number[]; mainGoal: string | null; nextEventName: string | null; nextEventDate: string | null;
+    /** Réponses du bilan (D-054) non modifiables ici : renvoyées telles quelles pour ne pas les effacer. */
+    bilan?: {
+      practiceStatus: string | null; breakLength: string | null; resumedSince: string | null; longestRecent: string | null;
+      /** D-066 : renvoyés aussi pour ne pas les effacer. */
+      weekdayMinutes?: string | null; preferredTime?: string | null; longDay?: number | null; equipment?: string[]; practicalConstraints?: string | null;
+    };
+  } | null;
+}
 
 /**
  * X07 enrichi (D-021), refonte Chrono (D-136) · « Mes informations » dans le Profil de l’élève : compte, pratique,

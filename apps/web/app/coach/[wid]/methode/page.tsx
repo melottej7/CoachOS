@@ -3,13 +3,14 @@ import { LEARNING } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { methodCandidates, readCoachMethod } from '@/server/commands/coach-method';
-import { MethodCandidates, MethodIdentity, MethodRules } from '@/components/coach-method';
+import { Disclosure, Eyebrow, Heading, Stack, Text } from '@/design';
+import { MethodCandidates, MethodIdentity, MethodRules } from '@/views/coach/library/method';
 
 export const metadata = { title: 'Ma méthode' };
 
 const fmt = (iso: string, tz: string) => new Intl.DateTimeFormat('fr-BE', { dateStyle: 'medium', timeStyle: 'short', timeZone: tz }).format(new Date(iso));
 
-/** D-072 : ma méthode (Coach DNA). Philosophie, règles appliquées par le générateur, propositions tirées de mes corrections. */
+/** D-072, refonte Chrono (D-154) : ma méthode (Coach DNA). Règles du générateur, propositions tirées de mes corrections, philosophie. */
 export default async function MethodPage({ params }: { params: Promise<{ wid: string }> }) {
   const { wid } = await params;
   const actor = await requireActor();
@@ -19,37 +20,44 @@ export default async function MethodPage({ params }: { params: Promise<{ wid: st
   const candidates = await methodCandidates(actor.userId, wid, view.method);
   const tz = ctx.workspace.timeZone;
   return (
-    <>
-      <div className="kicker">Coach DNA{view.version ? ` · version ${view.version}` : ''}</div>
-      <h1>Ma méthode</h1>
-      <p className="sub">Ce que le générateur doit respecter pour tous tes élèves. Les réglages faits pour un programme précis restent prioritaires. Ta méthode n’est jamais partagée avec un autre coach.</p>
+    <Stack gap={8} className="ds-narrow-wide">
+      <Stack gap={1}>
+        <Eyebrow>Coach DNA{view.version ? ` · version ${view.version}` : ''}</Eyebrow>
+        <Heading level={1} size={1}>Ma méthode</Heading>
+        <Text muted>Ce que le générateur doit respecter pour tous tes élèves. Les réglages faits pour un programme précis restent prioritaires. Ta méthode n’est jamais partagée avec un autre coach.</Text>
+      </Stack>
 
-      <section className="card" aria-labelledby="m-rules">
-        <div className="card-head"><h2 id="m-rules">Mes règles</h2><span className="muted">Appliquées à chaque programme généré</span></div>
-        <div className="card-body"><MethodRules wid={wid} version={view.version} method={view.method} /></div>
-      </section>
+      <Stack as="section" gap={3} aria-labelledby="m-rules">
+        <Stack gap={1}>
+          <Heading level={2} size={3} id="m-rules">Mes règles</Heading>
+          <Text size="sm" muted>Appliquées à chaque programme généré.</Text>
+        </Stack>
+        <MethodRules wid={wid} version={view.version} method={view.method} />
+      </Stack>
 
-      <section className="card" aria-labelledby="m-learn">
-        <div className="card-head"><h2 id="m-learn">Appris de tes corrections</h2><span className="muted">{LEARNING.windowDays} derniers jours</span></div>
-        <div className="card-body stack">
-          <p className="muted">CoachOS observe tes retouches sur les programmes générés (sortie longue déplacée, VMA retirée, footing raccourci…) et les réglages que tu appliques. Une règle n’est proposée qu’avec au moins {LEARNING.minSupport} observations sur {LEARNING.minWeeks} semaines et {Math.round(LEARNING.minConcordance * 100)} % dans le même sens. Elle ne s’applique que si tu l’acceptes.</p>
-          <MethodCandidates wid={wid} version={view.version} method={view.method} items={candidates} />
-        </div>
-      </section>
+      <Stack as="section" gap={3} aria-labelledby="m-learn">
+        <Stack gap={1}>
+          <Heading level={2} size={3} id="m-learn">Appris de tes corrections</Heading>
+          <Text size="sm" muted>Sur les {LEARNING.windowDays} derniers jours. CoachOS observe tes retouches sur les programmes générés (sortie longue déplacée, VMA retirée, footing raccourci…) et les réglages que tu appliques. Une règle n’est proposée qu’avec au moins {LEARNING.minSupport} observations sur {LEARNING.minWeeks} semaines et {Math.round(LEARNING.minConcordance * 100)} % dans le même sens. Elle ne s’applique que si tu l’acceptes.</Text>
+        </Stack>
+        <MethodCandidates wid={wid} version={view.version} method={view.method} items={candidates} />
+      </Stack>
 
-      <section className="card" aria-labelledby="m-identity">
-        <div className="card-head"><h2 id="m-identity">Ma philosophie</h2></div>
-        <div className="card-body"><MethodIdentity wid={wid} version={view.version} method={view.method} /></div>
-      </section>
+      <Stack as="section" gap={3} aria-labelledby="m-identity">
+        <Heading level={2} size={3} id="m-identity">Ma philosophie</Heading>
+        <MethodIdentity wid={wid} version={view.version} method={view.method} />
+      </Stack>
 
       {view.history.length ? (
-        <section className="card" aria-labelledby="m-history">
-          <div className="card-head"><h2 id="m-history">Historique</h2><span className="muted">Chaque changement crée une version ; les programmes déjà créés ne changent pas</span></div>
-          <ol className="plain card-body method-history">
-            {view.history.map((h) => <li key={h.version}><strong>Version {h.version}</strong> · {fmt(h.createdAt, tz)}{h.reason ? <span className="muted"> · {h.reason}</span> : null}</li>)}
-          </ol>
-        </section>
+        <Stack as="section" gap={3} aria-labelledby="m-history">
+          <Heading level={2} size={3} id="m-history">Historique</Heading>
+          <Disclosure summary={`${view.history.length} version${view.history.length > 1 ? 's' : ''} · les programmes déjà créés ne changent pas`}>
+            <Stack as="ol" gap={1} style={{ margin: 0, paddingLeft: '1.2em' }}>
+              {view.history.map((h) => <li key={h.version}><Text as="span" size="sm"><strong>Version {h.version}</strong> · {fmt(h.createdAt, tz)}{h.reason ? ` · ${h.reason}` : ''}</Text></li>)}
+            </Stack>
+          </Disclosure>
+        </Stack>
       ) : null}
-    </>
+    </Stack>
   );
 }

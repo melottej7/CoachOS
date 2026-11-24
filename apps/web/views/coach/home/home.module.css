@@ -1,0 +1,47 @@
+/* Accueil du coach (D-144) : brief, à faire, relances, semaine. */
+.brief { max-width: 64ch; font-size: var(--ds-text-lg); line-height: 1.5; }
+.brief a { color: inherit; text-decoration-color: var(--ds-coach); text-underline-offset: 3px; }
+.columns { display: grid; gap: var(--ds-6); }
+@media (min-width: 1100px) { .columns { grid-template-columns: minmax(0, 1.65fr) minmax(320px, 1fr); align-items: start; } }
+
+/* À faire */
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--ds-2); align-items: end; }
+.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-2); }
+.task { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ds-3); padding: var(--ds-3) var(--ds-4); border: 1px solid var(--ds-rule); border-left-width: 4px; border-radius: var(--ds-radius-lg); background: var(--ds-surface); }
+.task[data-prio='3'] { border-left-color: var(--ds-danger); }
+.task[data-prio='2'] { border-left-color: var(--ds-warning); }
+.taskMain { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.taskTitle { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.taskWhy { margin: 0; font-size: var(--ds-text-base); }
+.taskMeta { font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.taskActions { align-items: center; }
+.taskPanel { padding-top: var(--ds-4); border-top: 1px solid var(--ds-rule); }
+.slotForm { min-width: 240px; }
+@media (min-width: 760px) {
+  .task { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+  .taskActions { justify-content: flex-end; }
+  .taskPanel, .taskError { grid-column: 1 / -1; }
+}
+
+/* Relances */
+.relances { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.relance { display: flex; flex-direction: column; gap: var(--ds-2); padding: var(--ds-3) 0; border-top: 1px solid var(--ds-rule); }
+.relance:first-child { padding-top: 0; border-top: 0; }
+.relanceName { font-weight: 700; color: var(--ds-ink); text-decoration: none; }
+.relanceName:hover { text-decoration: underline; }
+
+/* Semaine */
+.agenda { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.day { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: var(--ds-3); padding: var(--ds-3) 0; border-top: 1px solid var(--ds-rule); }
+.day:first-child { border-top: 0; padding-top: 0; }
+.dayDate { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.dayDate span { font-size: var(--ds-text-xs); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ds-ink-2); }
+.dayDate strong { font-family: var(--ds-font-display); font-size: var(--ds-text-2xl); font-variant-numeric: tabular-nums; }
+.dayToday .dayDate span, .dayToday .dayDate strong { color: var(--ds-coach-text); }
+.dayPast .dayDate strong { color: var(--ds-ink-2); }
+.dayBody { min-width: 0; justify-content: center; }
+.appt { display: flex; flex-direction: column; gap: 2px; padding-left: var(--ds-3); border-left: 3px solid var(--ds-coach); }
+.time { font-variant-numeric: tabular-nums; }
+.join { display: inline-flex; align-items: center; gap: 2px; min-height: 24px; font-size: var(--ds-text-sm); font-weight: 700; color: var(--ds-coach-text); }
+.slot { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.muted { color: var(--ds-ink-2); }

@@ -3,8 +3,7 @@ import { redirect } from 'next/navigation';
 import { PASSWORD_MIN } from '@coachos/domain';
 import { getActor } from '@/server/auth/session';
 import { safeNext, supabaseConfigured } from '@/server/supabase/server';
-import { Brand } from '@/components/ui';
-import { PasswordInput } from '@/components/password-input';
+import { Banner, Button, Card, Cluster, Field, Grid, Heading, Input, LinkButton, PasswordInput, PublicShell, Stack, Text } from '@/design';
 
 export const metadata = { title: 'Créer un compte coach' };
 export const dynamic = 'force-dynamic';
@@ -17,7 +16,7 @@ const ERRORS: Record<string, string> = {
   failed: 'La création du compte a échoué. Réessaie dans un instant.',
 };
 
-/** Inscription coach (C02-01) : un compte, puis la création d’espace (X04). */
+/** Inscription coach (C02-01), refonte Chrono (D-156) : prénom, nom (D-153), adresse, mot de passe ; puis la création d’espace (X04). */
 export default async function SignUp({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
   if (!supabaseConfigured()) redirect('/demo');
   const sp = await searchParams;
@@ -25,32 +24,38 @@ export default async function SignUp({ searchParams }: { searchParams: Promise<{
   const actor = await getActor();
   if (actor?.source === 'supabase') redirect('/choose-workspace');
   return (
-    <>
-      <header className="top"><Brand href="/login" /></header>
-      <main id="contenu" className="athlete-zone">
-        <Link className="back" href="/login">← Connexion</Link>
-        <h1>Créer un compte coach</h1>
-        <p className="sub">Ensuite, tu créeras ton espace et tu inviteras tes athlètes.</p>
-        {sp.error && ERRORS[sp.error] ? <p className="banner err" role="alert" style={{ marginTop: 18 }}>{ERRORS[sp.error]}</p> : null}
-        <form className="form" action="/auth/signup" method="post" style={{ marginTop: 20 }}>
-          <input type="hidden" name="next" value={next} />
-          <div className="field">
-            <label htmlFor="firstName">Prénom</label>
-            <input id="firstName" name="firstName" autoComplete="given-name" required maxLength={50} autoFocus />
-          </div>
-          <div className="field">
-            <label htmlFor="lastName">Nom</label>
-            <input id="lastName" name="lastName" autoComplete="family-name" required maxLength={50} />
-          </div>
-          <div className="field">
-            <label htmlFor="email">Adresse e-mail</label>
-            <input id="email" name="email" type="email" autoComplete="email" inputMode="email" required maxLength={254} />
-          </div>
-          <PasswordInput autoComplete="new-password" minLength={PASSWORD_MIN} hint={`${PASSWORD_MIN} caractères minimum`} />
-          <div className="actions"><button className="btn primary" type="submit">Créer mon compte</button></div>
-        </form>
-        <p className="muted" style={{ marginTop: 14 }}>En créant ton compte, tu acceptes que CoachOS traite tes données comme décrit dans la <Link href="/confidentialite">politique de confidentialité</Link>.</p>
-      </main>
-    </>
+    <PublicShell home="/login">
+      <Stack gap={6}>
+        <Cluster><LinkButton href="/login" variant="ghost" size="sm" icon="chevronLeft">Connexion</LinkButton></Cluster>
+        <Stack gap={1}>
+          <Heading level={1} size={1}>Créer un compte coach</Heading>
+          <Text muted>Ensuite, tu crées ton espace et tu invites tes élèves.</Text>
+        </Stack>
+        {sp.error && ERRORS[sp.error] ? <Banner tone="danger">{ERRORS[sp.error]}</Banner> : null}
+        <Card pad={5}>
+          <form action="/auth/signup" method="post">
+            <Stack gap={4}>
+              <input type="hidden" name="next" value={next} />
+              <Grid min={160} gap={4}>
+                <Field id="firstName" label="Prénom">
+                  <Input id="firstName" name="firstName" autoComplete="given-name" required maxLength={50} autoFocus />
+                </Field>
+                <Field id="lastName" label="Nom">
+                  <Input id="lastName" name="lastName" autoComplete="family-name" required maxLength={50} />
+                </Field>
+              </Grid>
+              <Field id="email" label="Adresse e-mail">
+                <Input id="email" name="email" type="email" autoComplete="email" inputMode="email" required maxLength={254} />
+              </Field>
+              <Field id="password" label="Mot de passe" hint={`${PASSWORD_MIN} caractères minimum`}>
+                <PasswordInput id="password" autoComplete="new-password" minLength={PASSWORD_MIN} hasHint />
+              </Field>
+              <Button type="submit" variant="primary" size="lg" block>Créer mon compte</Button>
+            </Stack>
+          </form>
+        </Card>
+        <Text size="sm" muted>En créant ton compte, tu acceptes que CoachOS traite tes données comme décrit dans la <Link href="/confidentialite">politique de confidentialité</Link>.</Text>
+      </Stack>
+    </PublicShell>
   );
 }

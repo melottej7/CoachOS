@@ -1,33 +1,36 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import type { ReactNode } from 'react';
 import {
-  addDays, APPOINTMENT_KIND_LABELS, BUCKET_LABELS, dayLoad, formatEstimate, workDate, BUCKETS, bucketOf, dayOfMonth, formatLongDate, formatShortDate, formatWeekRange, formatWeekday,
-  isLocalDate, PRIORITY_LABELS, TASK_KIND_LABELS, TASK_KINDS, todayIn, weekStart, type Priority, type TaskKind, TASK_RECURRENCE_LABELS } from '@coachos/domain';
+  addDays, BUCKET_LABELS, BUCKETS, bucketOf, dayLoad, formatEstimate, formatLongDate, formatShortDate, formatWeekday, isLocalDate,
+  PRIORITY_LABELS, TASK_KIND_LABELS, TASK_KINDS, TASK_RECURRENCE_LABELS, todayIn, weekStart, workDate, type Priority, type TaskKind,
+} from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { home, type HomeTask } from '@/server/repo/portfolio';
-import { AppointmentForm, TaskActions, TaskForm } from '@/components/portfolio-forms';
-import { Pill } from '@/components/ui';
 import { relances } from '@/server/repo/relances';
-import { RelancesCard } from '@/components/relances-card';
+import { Button, Card, Cluster, Disclosure, EmptyState, Eyebrow, Heading, LinkButton, Select, Stack, Text } from '@/design';
+import { Agenda } from '@/views/coach/home/agenda';
+import { HomeActions } from '@/views/coach/home/home-actions';
+import { Relances } from '@/views/coach/home/relances';
+import { TaskItem } from '@/views/coach/home/task-item';
+import { taskView } from '@/views/coach/home/task-view';
+import s from '@/views/coach/home/home.module.css';
 
-export const metadata = { title: 'Planning' };
+export const metadata = { title: 'Accueil' };
 
 type Search = { week?: string; athlete?: string; team?: string; kind?: string; priority?: string };
 
-function dueText(t: HomeTask, today: string): string {
-  if (!t.dueOn) return 'Sans échéance';
-  if (t.dueOn === today) return 'Aujourd’hui';
-  if (t.dueOn < today) {
-    const days = Math.round((Date.parse(today) - Date.parse(t.dueOn)) / 86_400_000);
-    return `En retard de ${days} jour${days > 1 ? 's' : ''}`;
-  }
-  if (t.dueOn === addDays(today, 1)) return 'Demain';
-  return `${formatWeekday(t.dueOn)} ${formatShortDate(t.dueOn)}`;
-}
 
-/** CE-H-01 et CE-H-05 : ce qui demande mon attention, ma prochaine action et pour quand ; agenda de la semaine. */
-export default async function CoachPlanning({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<Search> }) {
+/** « une tâche », « un rendez-vous », « 3 élèves » : le nombre en lettres pour un, accordé au genre. */
+const n = (k: number, one: string, many: string, fem = false) => `${k === 1 ? (fem ? 'une' : 'un') : k} ${k > 1 ? many : one}`;
+const list = (parts: ReactNode[]) => parts.flatMap((p, i) => (i === 0 ? [p] : [i === parts.length - 1 ? ' et ' : ', ', p]));
+
+/**
+ * Accueil du coach (CE-H-01, CE-H-05), refonte Chrono (D-144) : le brief du jour en une phrase, puis qui a besoin de moi
+ * (relances, à faire avec leur raison et leur échéance) et ma semaine. Toutes les fonctions du Planning sont gardées.
+ */
+export default async function CoachHome({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<Search> }) {
   const { wid } = await params;
   const sp = await searchParams;
   const actor = await requireActor();
@@ -35,11 +38,13 @@ export default async function CoachPlanning({ params, searchParams }: { params: 
   if (!ctx) notFound();
   const tz = ctx.workspace.timeZone;
   const monday = weekStart(sp.week && isLocalDate(sp.week) ? sp.week : todayIn(tz));
-  const data = await home(actor.userId, wid, tz, monday);
-  // D-103 : qui relancer aujourd’hui, avec un message prêt.
-  const rl = await relances(actor.userId, wid);
+  const [data, rl] = await Promise.all([home(actor.userId, wid, tz, monday), relances(actor.userId, wid)]);
   const today = data.today;
   const base = `/coach/${wid}`;
+  const keep = (extra: Record<string, string>) => {
+    const q = new URLSearchParams(Object.entries({ ...sp, ...extra }).filter(([, v]) => v) as [string, string][]);
+    return `${base}/planning${q.size ? `?${q}` : ''}`;
+  };
 
   // Filtres (élève, groupe, type, priorité), conservés dans l’adresse.
   const inTeam = (t: HomeTask) => !sp.team || t.team?.id === sp.team || (t.athlete && data.roster.find((a) => a.id === t.athlete!.id)?.teams.some((m) => m.id === sp.team));
@@ -47,159 +52,112 @@ export default async function CoachPlanning({ params, searchParams }: { params: 
     (!sp.athlete || t.athlete?.id === sp.athlete) && inTeam(t) && (!sp.kind || t.kind === sp.kind) && (!sp.priority || t.priority >= Number(sp.priority)),
   );
   const filtered = Boolean(sp.athlete || sp.team || sp.kind || sp.priority);
-  const todayAppts = data.week.find((d) => d.date === today)?.appointments ?? [];
-  // D-065 : charge estimée d’aujourd’hui (créneaux du jour, tâches sans créneau dues ou en retard) et temps des rendez-vous.
-  const load = dayLoad(tasks, today);
-  const apptMin = todayAppts.reduce((n, a) => n + a.durationMin, 0);
-  const slotText = (t: HomeTask) => t.slotOn
-    ? `🕘 ${t.slotOn === today ? 'aujourd’hui' : t.slotOn === addDays(today, 1) ? 'demain' : `${formatWeekday(t.slotOn).toLowerCase()} ${formatShortDate(t.slotOn)}`}${t.slotTime ? ` à ${t.slotTime}` : ''}`
-    : null;
+
+  // Le brief : ce qui m’attend aujourd’hui, en une phrase (sur toutes les tâches, pas seulement celles filtrées).
+  const overdue = data.tasks.filter((t) => bucketOf(t.dueOn, today) === 'overdue').length;
+  const dueToday = data.tasks.filter((t) => bucketOf(workDate(t, today), today) === 'today').length;
+  const appts = (data.week.find((d) => d.date === today)?.appointments ?? []).filter((a) => a.status !== 'done');
+  const toRelance = rl.filter((x) => x.relance && x.relance !== 'bravo' && !x.waitingSince).length;
+  const toPlan = data.roster.filter((a) => a.state === 'active' && !a.upcoming7).length;
+  const load = dayLoad(data.tasks, today);
+  const apptMin = appts.reduce((m, a) => m + a.durationMin, 0);
+  const parts: ReactNode[] = [];
+  if (dueToday + overdue) parts.push(`${n(dueToday + overdue, 'tâche', 'tâches', true)}${overdue ? ` (dont ${overdue} en retard)` : ''}`);
+  if (appts.length) parts.push(`${n(appts.length, 'rendez-vous', 'rendez-vous')} (${appts.map((a) => a.localTime).join(', ')})`);
+  if (toRelance) parts.push(`${n(toRelance, 'élève', 'élèves')} à relancer`);
+  const brief = data.roster.length
+    ? (
+      <>
+        {parts.length ? <>Aujourd’hui, tu as {list(parts)}.</> : 'Rien d’urgent aujourd’hui : tes élèves sont à jour.'}
+        {toPlan ? <> <Link href={`${base}/to-plan`}>{n(toPlan, 'élève n’a', 'élèves n’ont')} pas de séance publiée</Link> sur les 7 prochains jours.</> : null}
+        {load.minutes + apptMin ? <> Environ {formatEstimate(load.minutes + apptMin)} de travail prévu.</> : null}
+      </>
+    )
+    : 'Ajoute ton premier élève : chaque jour, cet écran te dira ensuite quoi faire.';
+
   const athletes = data.roster.map((a) => ({ id: a.id, name: a.name, timeZone: a.timeZone }));
-  const keep = (extra: Record<string, string>) => {
-    const q = new URLSearchParams(Object.entries({ ...sp, ...extra }).filter(([, v]) => v) as [string, string][]);
-    return `${base}/planning${q.size ? `?${q}` : ''}`;
-  };
+  const first = actor.displayName.split(' ')[0] ?? actor.displayName;
 
   return (
-    <>
-      <div className="head">
-        <div>
-          <div className="kicker">{formatLongDate(today)}</div>
-          <h1>Planning</h1>
-          <p className="sub">{tasks.filter((t) => bucketOf(t.dueOn, today) === 'overdue').length} en retard · {tasks.filter((t) => bucketOf(workDate(t, today), today) === 'today').length} pour aujourd’hui · {todayAppts.length} rendez-vous aujourd’hui</p>
-          {load.minutes || apptMin ? (
-            <p className="sub plan-load">Charge estimée aujourd’hui : <strong>{formatEstimate(load.minutes + apptMin)}</strong>
-              <span className="muted"> ({[load.minutes ? `${formatEstimate(load.minutes)} de tâches` : null, apptMin ? `${formatEstimate(apptMin)} de rendez-vous` : null].filter(Boolean).join(', ')}{load.unknown ? `, ${load.unknown} tâche${load.unknown > 1 ? 's' : ''} sans estimation` : ''})</span></p>
-          ) : null}
-        </div>
-        <div className="actions" data-tour="planning-add">
-          <TaskForm wid={wid} athletes={athletes} teams={data.teams} today={today} />
-          <AppointmentForm wid={wid} athletes={athletes} timeZone={tz} today={today} />
-        </div>
-      </div>
+    <Stack gap={8}>
+      <Stack gap={5}>
+        <Stack gap={2}>
+          <Eyebrow tone="coach">{formatLongDate(today)}</Eyebrow>
+          <Heading level={1} size={1}>Bonjour {first}</Heading>
+          <Text className={s.brief}>{brief}</Text>
+        </Stack>
+        <HomeActions wid={wid} athletes={athletes} teams={data.teams} today={today} timeZone={tz} />
+      </Stack>
 
       {!data.roster.length ? (
-        <section className="card empty-start">
-          <div className="card-body stack">
-            <h2>Commence par ton premier élève</h2>
-            <p>Ajoute-le et envoie-lui son invitation : ton Planning te dira ensuite quoi faire chaque jour.</p>
-            {ctx.role === 'owner' ? <p><Link className="btn primary" href={`${base}/athletes/new`} data-tour="add-athlete">+ Ajouter un élève</Link></p> : null}
-          </div>
-        </section>
+        <EmptyState icon="users" title="Commence par ton premier élève"
+          action={ctx.role === 'owner' ? <LinkButton href={`${base}/athletes/new`} variant="primary" icon="plus" data-tour="add-athlete">Ajouter un élève</LinkButton> : null}>
+          Ajoute-le et envoie-lui son invitation : ton Accueil te dira ensuite quoi faire chaque jour.
+        </EmptyState>
       ) : null}
 
-      {data.roster.length ? (
-        <RelancesCard wid={wid} items={rl.map((x) => ({ athleteId: x.athleteId, name: x.name, first: x.first, status: x.status, reason: x.reason, relance: x.relance, draft: x.draft, waitingSince: x.waitingSince, workoutId: x.workout?.id ?? null }))} />
-      ) : null}
+      <div className={s.columns}>
+        <Stack gap={6}>
+          {data.roster.length ? (
+            <Relances wid={wid} items={rl.map((x) => ({ athleteId: x.athleteId, name: x.name, first: x.first, status: x.status, reason: x.reason, relance: x.relance, draft: x.draft, waitingSince: x.waitingSince, workoutId: x.workout?.id ?? null }))} />
+          ) : null}
 
-      <div className="planning">
-        <section className="card" aria-labelledby="todo-title" data-tour="planning-todo">
-          <div className="card-head">
-            <h2 id="todo-title">À faire</h2>
-            <span className="muted">{tasks.length} au total · <Link className="link-btn" href={`${base}/settings#suivis`}>Régler les suivis</Link></span>
-          </div>
-          <form className="filters" method="get" action={`${base}/planning`}>
-            {sp.week ? <input type="hidden" name="week" value={sp.week} /> : null}
-            <label className="visually-hidden" htmlFor="f-athlete">Élève</label>
-            <select id="f-athlete" name="athlete" className="select small" defaultValue={sp.athlete ?? ''}>
-              <option value="">Tous les élèves</option>{data.roster.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
-            {data.teams.length ? (
-              <>
-                <label className="visually-hidden" htmlFor="f-team">Groupe</label>
-                <select id="f-team" name="team" className="select small" defaultValue={sp.team ?? ''}>
-                  <option value="">Tous les groupes</option>{data.teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
-              </>
-            ) : null}
-            <label className="visually-hidden" htmlFor="f-kind">Type</label>
-            <select id="f-kind" name="kind" className="select small" defaultValue={sp.kind ?? ''}>
-              <option value="">Tous les types</option>{TASK_KINDS.map((k) => <option key={k} value={k}>{TASK_KIND_LABELS[k]}</option>)}
-            </select>
-            <label className="visually-hidden" htmlFor="f-priority">Priorité minimale</label>
-            <select id="f-priority" name="priority" className="select small" defaultValue={sp.priority ?? ''}>
-              <option value="">Toutes priorités</option><option value="2">Haute et urgente</option><option value="3">Urgente</option>
-            </select>
-            <button className="btn small" type="submit">Filtrer</button>
-            {filtered ? <Link className="link-btn" href={keep({ athlete: '', team: '', kind: '', priority: '' })}>Effacer</Link> : null}
-          </form>
-
-          {tasks.length ? BUCKETS.map((b) => {
-            // D-065 : une tâche planifiée avant son échéance se range au jour de son créneau.
-            const list = tasks.filter((t) => bucketOf(workDate(t, today), today) === b);
-            if (!list.length) return null;
-            return (
-              <div key={b} className={`bucket bucket-${b}`}>
-                <h3 className="bucket-title">{BUCKET_LABELS[b]} <span className="muted">· {list.length}</span></h3>
-                <ul className="task-list">
-                  {list.map((t) => (
-                    <li key={t.key} className={`task prio-${t.priority}`}>
-                      <div className="task-main">
-                        <p className="task-title">{t.title}{t.athlete ? <> · <Link href={`${base}/athletes/${t.athlete.id}?from=${encodeURIComponent(keep({}))}`}>{t.athlete.name}</Link></> : null}{t.team ? ` · ${t.team.name}` : ''}</p>
-                        <p className="task-meta">
-                          <span className="task-why">{t.reason}</span>
-                          {t.recurrence ? <span className="task-rec"> · 🔁 {TASK_RECURRENCE_LABELS[t.recurrence].toLowerCase()}</span> : null}
-                          {' · '}<span>{t.slotOn ? `Échéance : ${dueText(t, today).toLowerCase()}` : dueText(t, today)}</span>
-                          {slotText(t) ? <>{' · '}<span className="task-slot-text">{slotText(t)}</span></> : null}
-                          {t.estimateMin ? <>{' · '}<span>≈ {formatEstimate(t.estimateMin)}</span></> : null}
-                          {' · '}<span>Priorité {PRIORITY_LABELS[t.priority as Priority].toLowerCase()}</span>
-                          {' · '}<span>{TASK_KIND_LABELS[t.kind as TaskKind]}</span>
-                          {t.source === 'auto' ? <> {' '}<Pill tone="neutral">Suivi automatique</Pill></> : null}
-                        </p>
-                        {t.notes ? <p className="task-notes">{t.notes}</p> : null}
-                      </div>
-                      <TaskActions wid={wid} source={t.source} id={t.id} rule={t.rule} sourceRef={t.ref} revision={t.revision} today={today} link={t.link} athlete={t.athlete}
-                        slot={{ slotOn: t.slotOn ?? null, slotTime: t.slotTime ?? null, estimateMin: t.estimateMin ?? null }} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          }) : <p className="empty">{filtered ? 'Aucune tâche pour ces filtres.' : 'Rien à faire pour l’instant. Tes élèves sont à jour.'}</p>}
-          <p className="muted foot-note">Ordre : échéance (en retard d’abord), puis priorité, puis date. Les suivis automatiques se ferment seuls quand la situation est réglée (retour traité, séance publiée, profil rempli…).</p>
-        </section>
-
-        <section className="card agenda" aria-labelledby="agenda-title" data-tour="planning-agenda">
-          <div className="card-head">
-            <h2 id="agenda-title">Semaine du {formatWeekRange(monday)}</h2>
-            <span className="actions">
-              <Link className="btn small" href={keep({ week: addDays(monday, -7) })} aria-label="Semaine précédente">←</Link>
-              <Link className="btn small" href={keep({ week: '' })}>Cette semaine</Link>
-              <Link className="btn small" href={keep({ week: addDays(monday, 7) })} aria-label="Semaine suivante">→</Link>
-            </span>
-          </div>
-          <ol className="agenda-days">
-            {data.week.map((d) => (
-              <li key={d.date} className={`agenda-day${d.date === today ? ' today' : ''}${d.date < today ? ' past' : ''}`}>
-                <div className="agenda-date"><strong>{dayOfMonth(d.date)}</strong>{formatWeekday(d.date)}</div>
-                <div className="agenda-body">
-                  {d.appointments.map((a) => (
-                    <p key={a.id} className="agenda-appt">
-                      <strong>{a.localTime}</strong> · {a.title} · <Link href={`${base}/athletes/${a.athleteId}#rdv`}>{a.athleteName}</Link>
-                      {' · '}{APPOINTMENT_KIND_LABELS[a.kind]}, {a.durationMin} min
-                      {a.videoUrl ? <> · <a href={a.videoUrl} target="_blank" rel="noopener noreferrer">Rejoindre</a></> : null}
-                      {a.status === 'done' ? ' · fait' : ''}
-                    </p>
-                  ))}
-                  {d.slots.map((x) => (
-                    <p key={x.key} className="agenda-slot">
-                      <span aria-hidden="true">🕘</span> {x.time ?? 'Dans la journée'} · {x.title}{x.athlete ? <> · <Link href={`${base}/athletes/${x.athlete.id}`}>{x.athlete.name}</Link></> : null}
-                      {x.estimateMin ? <span className="muted"> · {formatEstimate(x.estimateMin)}</span> : null}
-                      <span className="muted"> · créneau de travail</span>
-                    </p>
-                  ))}
-                  <p className="agenda-counts">
-                    {d.tasksDue ? <span>{d.tasksDue} tâche{d.tasksDue > 1 ? 's' : ''} à échéance</span> : null}
-                    {d.sessions ? <span>{d.sessions} séance{d.sessions > 1 ? 's' : ''} publiée{d.sessions > 1 ? 's' : ''} pour tes élèves</span> : null}
-                    {!d.appointments.length && !d.tasksDue && !d.sessions && !d.slots.length ? <span className="muted">Libre</span> : null}
-                  </p>
+          <Card as="section" pad={5} aria-labelledby="todo-title" data-tour="planning-todo">
+            <Stack gap={5}>
+              <Cluster between gap={2}>
+                <Heading level={2} size={4} id="todo-title">À faire</Heading>
+                <Text size="sm" muted>{tasks.length} au total · <Link href={`${base}/settings?onglet=suivis`}>Régler les suivis</Link></Text>
+              </Cluster>
+              <Disclosure summary={filtered ? 'Filtres actifs' : 'Filtrer par élève, groupe, type ou priorité'} open={filtered}>
+              <form method="get" action={`${base}/planning`}>
+                {sp.week ? <input type="hidden" name="week" value={sp.week} /> : null}
+                <div className={s.filters}>
+                  <Select name="athlete" aria-label="Élève" defaultValue={sp.athlete ?? ''}>
+                    <option value="">Tous les élèves</option>{data.roster.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                  </Select>
+                  {data.teams.length ? (
+                    <Select name="team" aria-label="Groupe" defaultValue={sp.team ?? ''}>
+                      <option value="">Tous les groupes</option>{data.teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </Select>
+                  ) : null}
+                  <Select name="kind" aria-label="Type" defaultValue={sp.kind ?? ''}>
+                    <option value="">Tous les types</option>{TASK_KINDS.map((k) => <option key={k} value={k}>{TASK_KIND_LABELS[k]}</option>)}
+                  </Select>
+                  <Select name="priority" aria-label="Priorité minimale" defaultValue={sp.priority ?? ''}>
+                    <option value="">Toutes priorités</option><option value="2">Haute et urgente</option><option value="3">Urgente</option>
+                  </Select>
+                  <Cluster gap={2}>
+                    <Button type="submit" size="sm">Filtrer</Button>
+                    {filtered ? <LinkButton href={keep({ athlete: '', team: '', kind: '', priority: '' })} size="sm" variant="ghost">Effacer</LinkButton> : null}
+                  </Cluster>
                 </div>
-              </li>
-            ))}
-          </ol>
-          <p className="muted foot-note">Heures affichées dans le fuseau de ton espace ({tz.replace(/_/g, ' ')}). Pour préparer les séances d’un élève, ouvre <Link href={`${base}/calendar`}>Séances</Link>.</p>
-        </section>
+              </form>
+              </Disclosure>
+
+              {tasks.length ? BUCKETS.map((b) => {
+                // D-065 : une tâche planifiée avant son échéance se range au jour de son créneau.
+                const inBucket = tasks.filter((t) => bucketOf(workDate(t, today), today) === b);
+                if (!inBucket.length) return null;
+                return (
+                  <Stack as="section" key={b} gap={2} aria-labelledby={`bucket-${b}`}>
+                    <Eyebrow as="h3" id={`bucket-${b}`} tone={b === 'overdue' ? 'signal' : undefined}>{BUCKET_LABELS[b]} · {inBucket.length}</Eyebrow>
+                    <ul className={s.tasks}>
+                      {inBucket.map((t) => <TaskItem key={t.key} wid={wid} task={taskView(t, today, { athleteHref: t.athlete ? `${base}/athletes/${t.athlete.id}?from=${encodeURIComponent(keep({}))}` : null })} today={today} timeZone={tz} />)}
+                    </ul>
+                  </Stack>
+                );
+              }) : (
+                <EmptyState icon="check" title={filtered ? 'Aucune tâche pour ces filtres' : 'Rien à faire pour l’instant'}>
+                  {filtered ? 'Change ou efface les filtres.' : 'Tes élèves sont à jour.'}
+                </EmptyState>
+              )}
+              <Text size="sm" muted>Ordre : échéance (en retard d’abord), puis priorité, puis date. Les suivis automatiques se ferment seuls quand la situation est réglée (retour traité, séance publiée, profil rempli…).</Text>
+            </Stack>
+          </Card>
+        </Stack>
+
+        <Agenda base={base} week={data.week} monday={monday} today={today} timeZone={tz} href={(w) => keep({ week: w })} />
       </div>
-    </>
+    </Stack>
   );
 }

@@ -5,53 +5,73 @@ import { openReviewCount } from '@/server/repo/coach';
 import { coachContext } from '@/server/repo/context';
 import { coachInbox } from '@/server/repo/messages';
 import { unreadNotificationCount } from '@/server/commands/notifications';
-import { NavLink } from '@/components/nav-link';
-import { TopBar, initials } from '@/components/ui';
+import { logoUrl } from '@/components/coach-card';
 import { TourHost } from '@/components/tour-host';
+import { AccountMenu, AppHeader, Avatar, BottomNav, BrandName, CoachRail, CoachShell, RailBrand, type MenuEntry, type NavItem } from '@/design';
+import { CommandPalette, PaletteButton } from '@/views/coach/palette/command-palette';
+import { CoachSectionTabs } from '@/views/coach/section-tabs';
 
-/** Espace coach : le contexte est revérifié en base à chaque rendu (wid ne donne aucun droit). */
+/**
+ * Espace coach, direction « Chrono » (D-143) : cinq destinations (Accueil, Calendrier, Élèves, Boîte de réception,
+ * Bibliothèque), réglages et compte à part. Le contexte est revérifié en base à chaque rendu (wid ne donne aucun droit) ;
+ * les comptes de la navigation se lisent en parallèle.
+ */
 export default async function CoachLayout({ children, params }: { children: React.ReactNode; params: Promise<{ wid: string }> }) {
   const { wid } = await params;
   const actor = await requireActor();
   const ctx = await coachContext(actor.userId, wid);
   if (!ctx) notFound();
-  const pending = await openReviewCount(actor.userId, wid);
-  const unread = (await coachInbox(actor.userId, wid)).reduce((n, e) => n + e.unread, 0);
-  const ws = await readWorkspacePublic(actor.userId, wid);
-  const notifs = await unreadNotificationCount(actor.userId, wid);
+  const [pending, inbox, ws, notifs] = await Promise.all([
+    openReviewCount(actor.userId, wid),
+    coachInbox(actor.userId, wid),
+    readWorkspacePublic(actor.userId, wid),
+    unreadNotificationCount(actor.userId, wid),
+  ]);
+  const unread = inbox.reduce((n, e) => n + e.unread, 0);
   const base = `/coach/${wid}`;
+  const role = ctx.role === 'owner' ? 'Coach propriétaire' : 'Coach';
+  const waiting = pending + unread + notifs;
+  const items: NavItem[] = [
+    { href: `${base}/planning`, label: 'Accueil', icon: 'home', tour: 'nav-planning' },
+    { href: `${base}/calendar`, label: 'Calendrier', icon: 'calendar', also: [`${base}/group-sessions`, `${base}/groups`, `${base}/to-plan`], tour: 'nav-calendar' },
+    { href: `${base}/athletes`, label: 'Élèves', icon: 'users', tour: 'nav-athletes' },
+    {
+      href: `${base}/review`, label: 'Boîte de réception', short: 'Réception', icon: 'inbox', also: [`${base}/messages`, `${base}/notifications`], tour: 'nav-review',
+      count: waiting, countLabel: [pending && `${pending} retour${pending > 1 ? 's' : ''} à traiter`, unread && `${unread} message${unread > 1 ? 's' : ''} non lu${unread > 1 ? 's' : ''}`, notifs && `${notifs} notification${notifs > 1 ? 's' : ''}`].filter(Boolean).join(', '),
+    },
+    { href: `${base}/library`, label: 'Bibliothèque', icon: 'library', also: [`${base}/exercises`, `${base}/methode`], tour: 'nav-library' },
+  ];
+  const entries: MenuEntry[] = [
+    { href: `${base}/settings`, label: 'Paramètres de l’espace', icon: 'settings' },
+    { href: '/profile', label: 'Mon compte', icon: 'user' },
+    { href: '/choose-workspace', label: 'Changer d’espace', icon: 'arrowRight' },
+    { href: `${base}/planning?tour=start`, label: 'Revoir la visite guidée', icon: 'info', tour: 'tour-relaunch' },
+  ];
+  const mark = <Avatar name={ctx.workspace.name} coach src={ws ? logoUrl(ws) : null} size={36} />;
   return (
-    <>
-      <TopBar home={`${base}/planning`}>
-        <span>{ctx.workspace.name}<span className="top-role"> · {ctx.role === 'owner' ? 'Coach propriétaire' : 'Coach'}</span></span>
-      </TopBar>
-      <div className="shell" data-accent={ws?.profile?.accent ?? 'emerald'}>
-        <aside className="sidebar">
-          <div className="account">
-            <span className="avatar" aria-hidden="true">{initials(actor.displayName)}</span>
-            <div><strong><a href="/profile" style={{ color: 'inherit' }}>{actor.displayName}</a></strong><small>Espace coach</small></div>
-          </div>
-          <nav aria-label="Espace coach">
-            <NavLink className="nav-link" href={`${base}/planning`} match={`${base}/planning`} tour="nav-planning">Planning</NavLink>
-            <NavLink className="nav-link" href={`${base}/calendar`} match={`${base}/calendar`} also={[`${base}/library`, `${base}/to-plan`]} tour="nav-calendar">Séances</NavLink>
-            <NavLink className="nav-link" href={`${base}/review`} match={`${base}/review`} tour="nav-review">
-              Retours {pending ? <span className="count" aria-label={`${pending} à traiter`}>{pending}</span> : null}
-            </NavLink>
-            <NavLink className="nav-link" href={`${base}/messages`} match={`${base}/messages`} tour="nav-messages">
-              Messages {unread ? <span className="count" aria-label={`${unread} non lu${unread > 1 ? 's' : ''}`}>{unread}</span> : null}
-            </NavLink>
-            <NavLink className="nav-link" href={`${base}/notifications`} match={`${base}/notifications`}>
-              Notifications {notifs ? <span className="count" aria-label={`${notifs} non lue${notifs > 1 ? 's' : ''}`}>{notifs}</span> : null}
-            </NavLink>
-            <NavLink className="nav-link" href={`${base}/athletes`} match={`${base}/athletes`} tour="nav-athletes">Élèves</NavLink>
-            <NavLink className="nav-link" href={`${base}/methode`} match={`${base}/methode`}>Méthode</NavLink>
-            <NavLink className="nav-link" href={`${base}/settings`} match={`${base}/settings`} tour="nav-settings">Paramètres</NavLink>
-            <a className="nav-link tour-link" href={`${base}/planning?tour=start`}>Visite guidée</a>
-          </nav>
-        </aside>
-        <main id="contenu" className="main">{children}</main>
-        <TourHost space="coach" wid={wid} />
-      </div>
-    </>
+    <CoachShell
+      accent={ws?.profile?.accent ?? 'emerald'}
+      rail={(
+        <CoachRail label="Espace coach" items={items}
+          brand={<><RailBrand href={`${base}/planning`} mark={mark} name={ctx.workspace.name} role={role} /><PaletteButton variant="rail" /></>}
+          footer={[{ href: `${base}/settings`, label: 'Paramètres', icon: 'settings', tour: 'nav-settings' }]}
+          account={(
+            <AccountMenu variant="rail" placement="up" name={actor.displayName} role={role} entries={entries} signOut="/auth/signout" tour="account-menu"
+              trigger={<><Avatar name={actor.displayName} size={32} /><span>{actor.displayName}</span></>} />
+          )} />
+      )}
+      top={(
+        <AppHeader home={`${base}/planning`} brand={<>{mark}<BrandName>{ctx.workspace.name}</BrandName></>}>
+          <PaletteButton variant="header" />
+          <AccountMenu name={actor.displayName} role={role} entries={entries} signOut="/auth/signout" tour="account-menu"
+            trigger={<Avatar name={actor.displayName} size={34} />} />
+        </AppHeader>
+      )}
+      bottom={<BottomNav label="Espace coach" items={items} />}>
+      <CoachSectionTabs base={base} strength={ctx.modules.strength} counts={{ review: pending, messages: unread, notifications: notifs }} />
+      {children}
+      <TourHost space="coach" wid={wid} />
+      <CommandPalette wid={wid} owner={ctx.role === 'owner'} strength={ctx.modules.strength} />
+    </CoachShell>
   );
 }

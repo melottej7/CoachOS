@@ -1,0 +1,12 @@
+/* Pages hors espace (D-156) : identités de démonstration, sommaire de la confidentialité. */
+.identities { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--ds-3); }
+.identity { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: var(--ds-1); padding: var(--ds-4); border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); color: var(--ds-ink); font: inherit; text-align: left; cursor: pointer; }
+.identity:hover { border-color: var(--ds-coach); }
+.identity:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+.who { display: flex; align-items: center; gap: var(--ds-2); font-weight: 700; }
+.small { font-size: var(--ds-text-sm); color: var(--ds-ink-2); overflow-wrap: anywhere; }
+.toc { margin: 0; padding: 0; list-style: none; columns: 2; column-gap: var(--ds-4); }
+.toc li { break-inside: avoid; padding: 2px 0; }
+@media (max-width: 559px) { .toc { columns: 1; } }
+.prose { margin: 0; line-height: 1.6; max-width: 70ch; }
+.items { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: var(--ds-1); line-height: 1.6; }

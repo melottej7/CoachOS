@@ -50,6 +50,19 @@ export const updateWorkoutSchema = z
   .object({ expectedRevision: z.number().int().min(1), data: workoutInputSchema })
   .strict();
 
+/** D-158 · Déplacer une séance à une autre date (nouvelle révision, même contenu). */
+export const moveWorkoutSchema = z
+  .object({ expectedRevision: z.number().int().min(1), localDate: z.string().refine(isLocalDate, { message: 'Date invalide' }) })
+  .strict();
+
+/** D-158 · Copier une séance à une date, pour le même élève ou un autre élève de l’espace (brouillon). */
+export const copyWorkoutSchema = z
+  .object({ localDate: z.string().refine(isLocalDate, { message: 'Date invalide' }), athleteId: z.uuid().nullish() })
+  .strict();
+
+/** D-158 · Retirer un brouillon jamais publié, ou le rétablir (annulation du retrait). */
+export const revisionOnlySchema = z.object({ expectedRevision: z.number().int().min(1) }).strict();
+
 export const publishSchema = z
   .object({
     changes: z

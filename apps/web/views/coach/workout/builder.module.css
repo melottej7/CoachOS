@@ -1,0 +1,84 @@
+/* Constructeur de séance (D-023, refonte Chrono D-147) : blocs aux couleurs des sept zones, répétitions encadrées. */
+.builder { position: relative; display: flex; flex-direction: column; gap: var(--ds-4); padding: var(--ds-4); border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); }
+.sorting, .sorting * { cursor: grabbing !important; user-select: none; }
+.title { margin: 0; font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: 700; }
+.empty { margin: 0; padding: var(--ds-5); border: 1px dashed var(--ds-rule-strong); border-radius: var(--ds-radius-lg); color: var(--ds-ink-2); text-align: center; }
+
+/* Zones : couleur du liseré de l’étape et de la puce de zone. */
+/* (sélecteurs rattachés au constructeur : un module CSS n’accepte que des sélecteurs locaux) */
+.builder [data-zone='1'] { --z: var(--ds-z1); } .builder [data-zone='2'] { --z: var(--ds-z2); } .builder [data-zone='3'] { --z: var(--ds-z3); }
+.builder [data-zone='4'] { --z: var(--ds-z4); } .builder [data-zone='5'] { --z: var(--ds-z5); } .builder [data-zone='6'] { --z: var(--ds-z6); } .builder [data-zone='7'] { --z: var(--ds-z7); }
+
+.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-3); }
+.list > li { position: relative; }
+.dragging { opacity: 0.35; }
+.step { border: 1px solid var(--ds-rule); border-left: 6px solid var(--z, var(--ds-rule-strong)); border-radius: var(--ds-radius-lg); background: var(--ds-bg); }
+.easy { background: var(--ds-surface-2); }
+.head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-2); padding: var(--ds-2) var(--ds-3); }
+.step > .head { border-bottom: 1px solid var(--ds-rule); }
+.body { display: flex; flex-direction: column; gap: var(--ds-3); padding: var(--ds-3); }
+.index { min-width: 22px; font-size: var(--ds-text-sm); font-weight: 800; color: var(--ds-ink-2); font-variant-numeric: tabular-nums; }
+.phase { font-weight: 700; }
+.spacer { flex: 1; }
+.tools { display: inline-flex; align-items: center; gap: 2px; }
+.handle { display: inline-flex; align-items: center; justify-content: center; width: 32px; min-height: 40px; border: 0; border-radius: var(--ds-radius-sm); background: transparent; color: var(--ds-ink-2); cursor: grab; touch-action: none; }
+.handle:hover { background: var(--ds-surface-2); color: var(--ds-ink); }
+.handle:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 1px; }
+.sportTag { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 0 var(--ds-2); border: 0; border-radius: var(--ds-radius-full); background: var(--ds-info-soft); color: var(--ds-info); font: inherit; font-size: var(--ds-text-xs); font-weight: 700; cursor: pointer; }
+
+.repeat { padding: 0 var(--ds-3) var(--ds-3); border: 2px solid var(--ds-coach); border-radius: var(--ds-radius-xl); background: var(--ds-coach-soft); }
+.nested { border-width: 1px; border-style: dashed; background: var(--ds-surface-2); }
+.repeatHead { padding: var(--ds-2) 0; }
+.repeatIcon { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--ds-coach); color: var(--ds-on-coach); }
+.times { font-weight: 700; }
+.repeat > .list { margin-bottom: var(--ds-3); padding-left: var(--ds-3); border-left: 3px solid var(--ds-coach); }
+.nested > .list { border-left-style: dashed; }
+.repeatFoot { display: flex; flex-wrap: wrap; gap: var(--ds-2); }
+
+/* Champs compacts des blocs. */
+.field { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-2); }
+.label { font-size: var(--ds-text-sm); font-weight: 700; }
+.inline { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.control { min-height: 40px; padding: 0 var(--ds-2); border: 1px solid var(--ds-rule-strong); border-radius: var(--ds-radius-sm); background: var(--ds-surface); color: var(--ds-ink); font: inherit; font-size: var(--ds-text-base); }
+.control:focus-visible { outline: none; border-color: var(--ds-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ds-focus) 25%, transparent); }
+.control[aria-invalid='true'] { border-color: var(--ds-danger); }
+input.control { min-width: 0; }
+.num { width: 76px; }
+.pace { width: 70px; }
+.auto { width: auto; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.segItem { position: relative; display: inline-flex; align-items: center; min-height: 36px; padding: 0 var(--ds-3); border: 1px solid var(--ds-rule-strong); border-radius: var(--ds-radius-full); background: var(--ds-surface); font-size: var(--ds-text-sm); font-weight: 700; cursor: pointer; }
+.segItem input { position: absolute; z-index: 1; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.segItem:has(input:checked) { border-color: var(--ds-coach); background: var(--ds-coach); color: var(--ds-on-coach); }
+.segItem:has(input:focus-visible) { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+.zones .segItem { border-bottom: 3px solid var(--z, var(--ds-rule-strong)); }
+.zones .segItem:has(input:checked) { background: var(--z); border-color: var(--z); color: var(--ds-on-zone); }
+.hint { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 0; font-size: var(--ds-text-sm); color: var(--ds-ink-2); font-variant-numeric: tabular-nums; }
+.warn { color: var(--ds-warning); font-weight: 600; }
+.muted { color: var(--ds-ink-2); }
+
+/* Bibliothèque de blocs, écriture rapide, résumé. */
+.keep, .qn { border-top: 1px solid var(--ds-rule); padding-top: var(--ds-3); }
+.keepSummary, .qnSummary { display: inline-flex; align-items: center; gap: var(--ds-2); min-height: 40px; color: var(--ds-ink); font-weight: 700; list-style: none; cursor: pointer; }
+.keepSummary::-webkit-details-marker, .qnSummary::-webkit-details-marker { display: none; }
+.keepSummary:hover, .qnSummary:hover { color: var(--ds-coach-text); }
+.keepBody, .qnBody { padding-top: var(--ds-3); }
+.fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; min-width: 0; }
+.qnText { width: 100%; min-height: 84px; padding: var(--ds-2) var(--ds-3); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; line-height: 1.5; resize: vertical; }
+.qnErrors { margin: 0; padding-left: var(--ds-5); color: var(--ds-danger); font-weight: 600; font-size: var(--ds-text-sm); }
+.qnOk { padding: var(--ds-3); border-radius: var(--ds-radius); background: var(--ds-success-soft); }
+.summary { padding-top: var(--ds-3); border-top: 1px solid var(--ds-rule); }
+.preview { margin: 0; padding-left: var(--ds-5); display: flex; flex-direction: column; gap: 2px; font-size: var(--ds-text-sm); }
+
+/* Glisser-déposer : étiquette qui suit le pointeur et trait d’insertion. */
+.ghost { position: fixed; z-index: 70; max-width: 300px; padding: var(--ds-2) var(--ds-3); border-radius: var(--ds-radius); background: var(--ds-ink); color: var(--ds-bg); font-size: var(--ds-text-sm); font-weight: 700; box-shadow: var(--ds-shadow-lg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+.drop { position: fixed; z-index: 69; height: 4px; border-radius: 4px; background: var(--ds-focus); box-shadow: 0 0 0 2px var(--ds-surface); pointer-events: none; }
+
+@media (max-width: 559px) {
+  .builder { padding: var(--ds-3) var(--ds-2); }
+  .repeat { padding: 0 var(--ds-2) var(--ds-2); }
+  .repeat > .list { padding-left: var(--ds-2); }
+  .head { padding: 6px; gap: 6px; }
+  .body { padding: var(--ds-2) var(--ds-3) var(--ds-3); }
+  .handle { width: 28px; }
+}

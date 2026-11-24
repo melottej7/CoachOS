@@ -6,7 +6,10 @@ import { AnchorButton, Disclosure, MediaVideo, Stack, Text } from '@/design';
  * CoachOS s’il l’accepte, toujours avec qui on regarde ; ses consignes écrites dessous.
  */
 /** La vidéo à montrer pour un exercice (celle du coach d’abord), ou null. */
-export function ExerciseMedia({ wid, exercise }: { wid: string; exercise: Exercise }) {
+/** Ce qu’il faut d’un exercice pour choisir sa vidéo (aussi l’aperçu du coach pendant la saisie, D-154). */
+type VideoFields = Pick<Exercise, 'id' | 'name' | 'videoUrl' | 'clipId'> & { starterKey?: string | null; useBaseVideo?: boolean };
+
+export function ExerciseMedia({ wid, exercise }: { wid: string; exercise: VideoFields }) {
   const v = shownVideo({ videoUrl: exercise.videoUrl, clipId: exercise.clipId, starterKey: exercise.starterKey ?? null, useBaseVideo: exercise.useBaseVideo ?? true });
   const caption = v?.from === 'base' ? BASE_VIDEO_SOURCE_LABELS[v.source] : 'Vidéo de ton coach';
   if (v?.from === 'coach_clip') {

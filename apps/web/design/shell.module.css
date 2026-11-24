@@ -1,16 +1,30 @@
 /* Colonne de l’espace élève : téléphone d’abord, centrée sur grand écran, place pour la barre d’onglets. */
-.athlete { min-height: 100vh; min-height: 100dvh; background: var(--ds-bg); color: var(--ds-ink); font-size: var(--ds-text-md); }
+.athlete { --ds-bottom-bar: calc(65px + env(safe-area-inset-bottom)); min-height: 100vh; min-height: 100dvh; background: var(--ds-bg); color: var(--ds-ink); font-size: var(--ds-text-md); }
+@media (min-width: 768px) { .athlete { --ds-bottom-bar: 0px; } }
 .column { max-width: 640px; margin: 0 auto; padding: var(--ds-5) var(--ds-4) calc(96px + env(safe-area-inset-bottom)); }
 @media (min-width: 768px) { .column { padding: var(--ds-6) var(--ds-6) var(--ds-12); } }
 .profileLink { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; text-decoration: none; }
 .profileLink:hover > span { box-shadow: 0 0 0 2px var(--ds-rule-strong); }
-/* D-129 · Le personnage de la visite ne recouvre plus l’écran : il n’apparaît que pendant la visite (relancée depuis le Profil). */
-.athlete :global(.guide-fab.is-idle) { display: none; }
 
 /* Pages hors espace : en-tête simple, colonne étroite (formulaire lisible d’un coup d’œil). */
 .publicHeader { display: flex; align-items: center; height: 56px; padding: 0 var(--ds-4); border-bottom: 1px solid var(--ds-rule); }
 .publicBrand { display: inline-flex; align-items: center; gap: var(--ds-2); min-height: 44px; font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-xl); color: var(--ds-ink); text-decoration: none; }
 .publicMark { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: var(--ds-radius); background: var(--ds-primary); color: var(--ds-on-primary); font-size: var(--ds-text-lg); }
 .narrow { max-width: 520px; margin: 0 auto; padding: var(--ds-6) var(--ds-4) var(--ds-12); }
-@media (min-width: 768px) { .narrow { padding-top: var(--ds-10); } }
+.wide { max-width: 860px; margin: 0 auto; padding: var(--ds-6) var(--ds-4) var(--ds-12); }
+@media (min-width: 768px) { .narrow, .wide { padding-top: var(--ds-10); } }
+.publicAside { margin-left: auto; display: flex; align-items: center; gap: var(--ds-2); }
 .scope { background: transparent; color: inherit; }
+
+/* Cadre du coach : la barre latérale apparaît à partir de 1024 px, la barre basse disparaît. */
+.coach { --ds-bottom-bar: calc(65px + env(safe-area-inset-bottom)); min-height: 100vh; min-height: 100dvh; background: var(--ds-bg); color: var(--ds-ink); font-size: var(--ds-text-md); }
+.rail { display: none; }
+.coachBody { min-width: 0; }
+.coachMain { width: 100%; max-width: 1280px; margin: 0 auto; padding: var(--ds-5) var(--ds-4) calc(96px + env(safe-area-inset-bottom)); }
+@media (min-width: 768px) { .coachMain { padding-left: var(--ds-6); padding-right: var(--ds-6); } }
+@media (min-width: 1024px) {
+  .coach { --ds-bottom-bar: 0px; display: grid; grid-template-columns: 248px minmax(0, 1fr); }
+  .rail { position: sticky; top: 0; display: flex; flex-direction: column; gap: var(--ds-2); height: 100vh; height: 100dvh; padding: var(--ds-4) var(--ds-3); overflow-y: auto; background: var(--ds-rail); color: var(--ds-rail-ink); }
+  .coachTop { display: none; }
+  .coachMain { padding: var(--ds-8) var(--ds-8) var(--ds-12); }
+}

@@ -21,3 +21,11 @@
 .kpiDelta { font-size: var(--ds-text-xs); font-weight: 600; color: var(--ds-ink-2); }
 /* Le sens « mieux / moins bien » n’est pas connu ici (plus d’effort n’est pas forcément mieux) : couleur neutre-chaude. */
 .deltaUp, .deltaDown { color: var(--ds-ink); }
+
+/* Faits : libellé discret, valeur en clair ; en deux colonnes dès que la place le permet. */
+.facts { display: flex; flex-direction: column; margin: 0; }
+.fact { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; padding: var(--ds-2) 0; border-top: 1px solid var(--ds-rule); }
+.fact:first-child { border-top: 0; padding-top: 0; }
+.fact dt { font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+.fact dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+@media (min-width: 520px) { .fact { grid-template-columns: 180px minmax(0, 1fr); gap: var(--ds-3); align-items: baseline; } }
