@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getActor } from './auth/session';
 import type { StoredResponse } from './commands/idempotency';
 import { AppError } from './errors';
+import { reportError } from './error-report';
 import { isUuid } from './repo/context';
 
 const MAX_BODY = 64 * 1024;
@@ -79,6 +80,7 @@ export async function handleMutation(
     code = 'UNEXPECTED';
     // Journal technique : reqId, module, code, durée. Jamais de corps ni de texte athlète.
     console.error(JSON.stringify({ reqId: requestId, module, code, error: (error as Error)?.name }));
+    await reportError(error, { module, code, requestId }); // D-168
     return errorResponse(new AppError('TEMPORARILY_UNAVAILABLE', 'Service momentanément indisponible. Réessaie.'), requestId);
   } finally {
     console.info(JSON.stringify({ reqId: requestId, module, code, ms: Date.now() - started }));
@@ -111,6 +113,7 @@ export async function handleBinaryMutation(
     const known = asAppError(error);
     if (known) return errorResponse(known, requestId);
     console.error(JSON.stringify({ reqId: requestId, module, code: 'UNEXPECTED' }));
+    await reportError(error, { module, code: 'UNEXPECTED', requestId }); // D-168
     return errorResponse(new AppError('TEMPORARILY_UNAVAILABLE', 'Service momentanément indisponible. Réessaie.'), requestId);
   }
 }
@@ -134,6 +137,7 @@ export async function handleQuery(
     const known = asAppError(error);
     if (known) return errorResponse(known, requestId);
     console.error(JSON.stringify({ reqId: requestId, module, code: 'UNEXPECTED', error: (error as Error)?.name }));
+    await reportError(error, { module, code: 'UNEXPECTED', requestId }); // D-168
     return errorResponse(new AppError('TEMPORARILY_UNAVAILABLE', 'Service momentanément indisponible. Réessaie.'), requestId);
   }
 }

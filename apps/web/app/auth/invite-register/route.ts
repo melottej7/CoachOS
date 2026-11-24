@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { logAuth, sameOrigin } from '@/server/auth/forms';
 import { acceptInvitation, registerFromInvitation } from '@/server/commands/invitations';
 import { AppError } from '@/server/errors';
+import { reportError } from '@/server/error-report';
 import { errorPayload } from '@/server/http';
 import { clientIp, overLimit, rateLimited } from '@/server/rate-limit';
 import { createConfirmedUser } from '@/server/supabase/admin';
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(errorPayload(error, requestId), { status: error.status, headers: retry });
     }
     console.error(JSON.stringify({ reqId: requestId, module: 'auth', code: 'UNEXPECTED' }));
+    await reportError(error, { module: 'auth', code: 'UNEXPECTED', requestId }); // D-168
     return NextResponse.json(errorPayload(new AppError('TEMPORARILY_UNAVAILABLE', 'Service momentanément indisponible. Réessaie.'), requestId), { status: 503 });
   }
 }

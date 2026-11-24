@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-24 (D-161 à D-167). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
+Dernière mise à jour : 2026-11-24 (D-161 à D-168). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
 
 ## Où en est CoachOS
 
@@ -12,7 +12,7 @@ Dernière mise à jour : 2026-11-24 (D-161 à D-167). Reprendre ici : ce fichier
 
 **Pas prouvé** : la boucle complète en ligne avec un vrai élève (il faut un domaine pour que les e-mails partent vers d’autres adresses) ; réception d’un rappel push sur un téléphone ; suppression d’un compte Auth en ligne ; sauvegarde de la base en ligne (`npm run db:backup`) jamais exécutée (la restauration est essayée en local, D-163) ; migrations automatiques à la construction (variables Vercel à saisir) ; Action GitHub (premier push à venir).
 
-**Chiffres** : `npm test` 420 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
+**Chiffres** : `npm test` 429 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
 
 **Ce que le produit fait** : la matrice [COUVERTURE.md](COUVERTURE.md) (cible coach et élève, D-024) et les décisions D-001 à D-122 dans [DECISIONS.md](DECISIONS.md). En deux lignes : un coach planifie des séances structurées par sport (zones VMA, FTP, CSS), des programmes générés selon sa méthode, des groupes, des tâches, des relances, des bilans ; l’élève lit sa séance sur téléphone (hors ligne, montre, pas à pas en musculation), envoie son retour, échange avec son coach ; les données personnelles ont leur page, leur export et leur effacement.
 
@@ -22,11 +22,11 @@ Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en dire
 
 ## Chantiers en cours (D-120)
 
-1. **Confiance.** Fait : en-têtes de sécurité, pages d’erreur, contrôle de santé avec services, sauvegarde complétée de l’historique des migrations et restauration essayée en local, avec `npm run db:restore` qui ne peut rien écraser (D-116, D-163), revue de sécurité du lot données personnelles, contrôles automatiques (Action GitHub), migrations à la construction Vercel, tests de bout en bout dans un vrai navigateur (D-125 ; quatre parcours : boucle coach → élève → coach, bilan, gestes du calendrier, palette), droits en base vérifiés table par table et profil par profil, sans fuite (D-127, D-161), limitation des abus sur la connexion, l’inscription, le mot de passe et l’invitation (D-162, en ligne et contrôlé le 24 novembre). À faire : suivi des erreurs en production (Sentry derrière une variable), vidéos hors de la base (Supabase Storage).
+1. **Confiance.** Fait : en-têtes de sécurité, pages d’erreur, contrôle de santé avec services, sauvegarde complétée de l’historique des migrations et restauration essayée en local, avec `npm run db:restore` qui ne peut rien écraser (D-116, D-163), revue de sécurité du lot données personnelles, contrôles automatiques (Action GitHub), migrations à la construction Vercel, tests de bout en bout dans un vrai navigateur (D-125 ; quatre parcours : boucle coach → élève → coach, bilan, gestes du calendrier, palette), droits en base vérifiés table par table et profil par profil, sans fuite (D-127, D-161), limitation des abus sur la connexion, l’inscription, le mot de passe et l’invitation (D-162, en ligne et contrôlé le 24 novembre), suivi des erreurs en production prêt, éteint tant que `SENTRY_DSN` manque (D-168, branche `refonte`, pas encore sur `main`). À faire : vidéos hors de la base (Supabase Storage).
 2. **Le coach inconnu.** À commencer : trois coachs fictifs (trail 25 élèves venant de Google Docs, musculation 40 clients, club à trois groupes), de l’inscription au premier retour traité, ordinateur et téléphone ; cible 15 minutes sans aide ; brief du jour et mode simple.
 3. **De quoi vendre.** À commencer après 1 et 2 : page publique, essai gratuit, offres par nombre d’élèves (29/59/99 € HT, docs/13), abonnement en mode test derrière un interrupteur, pages légales en brouillon, aide intégrée, mesure du temps gagné sans identité d’élève.
 
-**Prochaine tranche** : suivi des erreurs en production (Sentry derrière une variable, éteint tant qu’aucune clé n’est saisie), puis « Le coach inconnu ».
+**Prochaine tranche** : « Le coach inconnu » (trois coachs fictifs, de l’inscription au premier retour traité, cible 15 minutes sans aide). D-168 attend la prochaine Pull Request vers `main`.
 
 ## Pour le fondateur
 
@@ -42,9 +42,10 @@ Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, p
    - Dis-moi « variables Vercel faites » : au prochain déploiement, le journal de construction affichera « base en ligne à jour ».
 2. **Être prévenu si l’app tombe** · 5 minutes · débloque : une alerte par e-mail en cas de panne, sans que personne regarde.
    - https://uptimerobot.com › **« Register for FREE »** › confirme ton adresse › **« + New monitor »** › Monitor type **HTTP(s)** › URL `https://coach-os-xi-kohl.vercel.app/api/health` › Friendly name `CoachOS` › Interval **5 minutes** › **« Create monitor »**.
-3. **Suivi des erreurs en production** · 10 minutes · débloque : chaque erreur en ligne me parvient avec sa référence (celle affichée sur la page « Un problème est survenu »). Je prépare l’intégration ; elle s’active dès que la variable existe.
-   - https://sentry.io › **« Get started »** (compte gratuit) › **« Create project »** › plateforme **Next.js** › nom `coachos` › sur la page suivante, copie la ligne `dsn: "https://…"` (seulement l’adresse entre guillemets).
-   - Vercel › Environment Variables › **« Add »** : `SENTRY_DSN` = cette adresse › **« Save »**.
+3. **Suivi des erreurs en production** · 10 minutes · débloque : chaque erreur en ligne arrive dans Sentry avec sa référence (celle affichée sur la page « Un problème est survenu »), sans donnée personnelle. L’intégration est prête (D-168) ; elle s’active dès que la variable existe, après la prochaine mise en ligne.
+   - https://sentry.io › **« Get started »** (compte gratuit) › à l’inscription, choisis la région de données **« European Union »** (tes élèves sont en Europe) › **« Create project »** › plateforme **Next.js** › nom `coachos` › sur la page suivante, copie la ligne `dsn: "https://…"` (seulement l’adresse entre guillemets). Ignore l’assistant d’installation proposé par Sentry : rien à installer.
+   - Vercel › Environment Variables › **« Add »** : `SENTRY_DSN` = cette adresse › **« Save »** › Deployments › le dernier › **« Redeploy »**.
+   - Contrôle : https://coach-os-xi-kohl.vercel.app/api/health doit afficher `"errors":true`.
 4. **Un nom de domaine** (devenu urgent : une amie à coacher en musculation attend son invitation ; sans domaine, l’invitation est refusée à l’envoi) · 15 minutes · environ 12 € par an · débloque : les invitations et notifications arrivent chez tes élèves, « Mot de passe oublié » fonctionne pour eux, la page publique porte ton nom.
    - Choisis le nom (c’est toi qui décides) et achète-le chez un registraire (OVH, Gandi, Combell…). Dis-le-moi : je te guide ensuite pour Resend (Domains › Add Domain, trois enregistrements DNS à copier chez le registraire) et pour le réglage SMTP de Supabase (guide [MISE_EN_LIGNE.md](MISE_EN_LIGNE.md)).
 5. **Sauvegarde, une première fois** · 2 minutes · débloque : une copie de la base sur ton Mac. La restauration est prête et essayée en local (D-163).

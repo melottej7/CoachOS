@@ -11,7 +11,7 @@ describe('GET /api/health (D-114)', () => {
     const body = await r.json();
     expect(body).toMatchObject({ ok: true, db: 'ok' });
     // D-119 : état des services, jamais une clé.
-    expect(Object.keys(body.services).sort()).toEqual(['ai', 'contact', 'email', 'push']);
+    expect(Object.keys(body.services).sort()).toEqual(['ai', 'contact', 'email', 'errors', 'push']);
     expect(JSON.stringify(body)).not.toMatch(/re_[A-Za-z0-9]{10,}|sk-ant|VAPID/);
     expect(r.headers.get('cache-control')).toBe('no-store');
   });
