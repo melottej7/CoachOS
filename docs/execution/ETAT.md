@@ -37,7 +37,7 @@ Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 coul
 2. **Le coach inconnu.** À commencer : trois coachs fictifs (trail 25 élèves venant de Google Docs, musculation 40 clients, club à trois groupes), de l’inscription au premier retour traité, ordinateur et téléphone ; cible 15 minutes sans aide ; brief du jour et mode simple.
 3. **De quoi vendre.** À commencer après 1 et 2 : page publique, essai gratuit, offres par nombre d’élèves (29/59/99 € HT, docs/13), abonnement en mode test derrière un interrupteur, pages légales en brouillon, aide intégrée, mesure du temps gagné sans identité d’élève.
 
-**Fait aussi le 24 novembre** : cardio sur machine en paliers, demandé par le fondateur (D-164 ; tapis, elliptique, vélo, rameur… ; niveau, vitesse, pente, cadence, watts ; suivi palier par palier ; aucune migration). Pour sa séance « Cardio » de Hanae : Modifier › sur chaque étape, « Cardio sur machine : passer en paliers ».
+**Fait aussi le 24 novembre** : cardio sur machine en paliers, demandé par le fondateur (D-164 ; tapis, elliptique, vélo, rameur… ; niveau, vitesse, pente, cadence, watts ; suivi palier par palier ; aucune migration ; en ligne depuis la Pull Request n° 4, avec la restauration D-163). Pour sa séance « Cardio » de Hanae : Modifier › sur chaque étape, « Cardio sur machine : passer en paliers ».
 
 **Prochaine tranche** : suivi des erreurs en production (Sentry derrière une variable, éteint tant qu’aucune clé n’est saisie), puis « Le coach inconnu ».
 
