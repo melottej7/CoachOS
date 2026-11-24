@@ -4,6 +4,7 @@ import { readWorkspacePublic } from '@/server/commands/workspace-profile';
 import { openReviewCount } from '@/server/repo/coach';
 import { coachContext } from '@/server/repo/context';
 import { coachInbox } from '@/server/repo/messages';
+import { isSimpleMode } from '@/server/simple-mode';
 import { unreadNotificationCount } from '@/server/commands/notifications';
 import { logoUrl } from '@/components/coach-card';
 import { TourHost } from '@/components/tour-host';
@@ -21,11 +22,12 @@ export default async function CoachLayout({ children, params }: { children: Reac
   const actor = await requireActor();
   const ctx = await coachContext(actor.userId, wid);
   if (!ctx) notFound();
-  const [pending, inbox, ws, notifs] = await Promise.all([
+  const [pending, inbox, ws, notifs, simple] = await Promise.all([
     openReviewCount(actor.userId, wid),
     coachInbox(actor.userId, wid),
     readWorkspacePublic(actor.userId, wid),
     unreadNotificationCount(actor.userId, wid),
+    isSimpleMode(),
   ]);
   const unread = inbox.reduce((n, e) => n + e.unread, 0);
   const base = `/coach/${wid}`;
@@ -68,7 +70,7 @@ export default async function CoachLayout({ children, params }: { children: Reac
         </AppHeader>
       )}
       bottom={<BottomNav label="Espace coach" items={items} />}>
-      <CoachSectionTabs base={base} strength={ctx.modules.strength} counts={{ review: pending, messages: unread, notifications: notifs }} />
+      <CoachSectionTabs base={base} strength={ctx.modules.strength} simple={simple} counts={{ review: pending, messages: unread, notifications: notifs }} />
       {children}
       <TourHost space="coach" wid={wid} />
       <CommandPalette wid={wid} owner={ctx.role === 'owner'} strength={ctx.modules.strength} />

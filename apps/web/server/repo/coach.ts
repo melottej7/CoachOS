@@ -338,3 +338,17 @@ export async function revisionByNumber(userId: string, wid: string, aid: string,
     return r.rows[0] ? toRevision(r.rows[0]) : null;
   });
 }
+
+export interface FirstSteps { published: boolean; reviewed: boolean }
+
+/** D-169 : premiers pas d’un nouveau coach — une séance publiée, un retour traité. Lecture sous RLS. */
+export async function firstSteps(userId: string, wid: string): Promise<FirstSteps> {
+  return readAs(userId, async (tx) => {
+    const r = await tx.query<FirstSteps>(
+      `select exists(select 1 from public.workouts where workspace_id = $1 and published_revision is not null) as published,
+              exists(select 1 from public.feedbacks where workspace_id = $1 and reviewed_at is not null) as reviewed`,
+      [wid],
+    );
+    return r.rows[0] ?? { published: false, reviewed: false };
+  });
+}

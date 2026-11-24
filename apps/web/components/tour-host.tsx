@@ -63,7 +63,7 @@ export function TourHost({ space, wid }: { space: 'athlete' | 'coach'; wid: stri
   }, [key]);
 
   const start = useCallback(() => {
-    const id: TourId = space === 'athlete' ? 'athlete' : document.querySelector('[data-tour="add-athlete"]') ? 'coach-empty' : 'coach';
+    const id: TourId = space === 'athlete' ? 'athlete' : document.querySelector('[data-tour="add-athlete"], [data-tour="first-steps"]') ? 'coach-empty' : 'coach';
     dir.current = 1;
     save({ id, step: 0 });
     if (!matchPath(TOURS[id][0]!.path, window.location.pathname, root)) router.push(TOURS[id][0]!.href?.(wid) ?? root);
@@ -167,6 +167,14 @@ export function TourHost({ space, wid }: { space: 'athlete' | 'coach'; wid: stri
     u.lang = 'fr-FR';
     speechSynthesis.speak(u);
   }, [step, voice]);
+
+  // D-169 : suivre une action des « Premiers pas » met fin à la visite ; sa bulle ne recouvre pas la page où l’on travaille.
+  useEffect(() => {
+    if (!state) return;
+    const onClick = (e: MouseEvent) => { if ((e.target as Element | null)?.closest?.('[data-tour-end]')) finish(); };
+    document.addEventListener('click', onClick, { capture: true });
+    return () => document.removeEventListener('click', onClick, { capture: true });
+  }, [state, finish]);
 
   useEffect(() => {
     if (!state) return;

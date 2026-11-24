@@ -19,3 +19,8 @@
 .line svg { flex: none; color: var(--ds-ink-2); }
 .reg { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: var(--ds-2); font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
 .regLow { color: var(--ds-warning); }
+/* Ajouter plusieurs élèves (D-169). */
+.paste { font-family: var(--ds-font-mono, ui-monospace, monospace); font-size: var(--ds-text-sm); min-height: 12rem; }
+.issues { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 2px; font-size: var(--ds-text-sm); }
+.linkish { all: unset; cursor: pointer; color: var(--ds-link, var(--ds-coach)); text-decoration: underline; font-weight: 600; }
+.linkish:focus-visible { outline: 2px solid var(--ds-focus, var(--ds-coach)); outline-offset: 2px; }

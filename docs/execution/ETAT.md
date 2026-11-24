@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-24 (D-161 à D-168). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
+Dernière mise à jour : 2026-11-24 (D-161 à D-169). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
 
 ## Où en est CoachOS
 
@@ -12,7 +12,7 @@ Dernière mise à jour : 2026-11-24 (D-161 à D-168). Reprendre ici : ce fichier
 
 **Pas prouvé** : la boucle complète en ligne avec un vrai élève (il faut un domaine pour que les e-mails partent vers d’autres adresses) ; réception d’un rappel push sur un téléphone ; suppression d’un compte Auth en ligne ; sauvegarde de la base en ligne (`npm run db:backup`) jamais exécutée (la restauration est essayée en local, D-163) ; migrations automatiques à la construction (variables Vercel à saisir) ; Action GitHub (premier push à venir).
 
-**Chiffres** : `npm test` 429 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
+**Chiffres** : `npm test` 445 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, 7 parcours de bout en bout, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
 
 **Ce que le produit fait** : la matrice [COUVERTURE.md](COUVERTURE.md) (cible coach et élève, D-024) et les décisions D-001 à D-122 dans [DECISIONS.md](DECISIONS.md). En deux lignes : un coach planifie des séances structurées par sport (zones VMA, FTP, CSS), des programmes générés selon sa méthode, des groupes, des tâches, des relances, des bilans ; l’élève lit sa séance sur téléphone (hors ligne, montre, pas à pas en musculation), envoie son retour, échange avec son coach ; les données personnelles ont leur page, leur export et leur effacement.
 
@@ -23,10 +23,10 @@ Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en dire
 ## Chantiers en cours (D-120)
 
 1. **Confiance.** Fait : en-têtes de sécurité, pages d’erreur, contrôle de santé avec services, sauvegarde complétée de l’historique des migrations et restauration essayée en local, avec `npm run db:restore` qui ne peut rien écraser (D-116, D-163), revue de sécurité du lot données personnelles, contrôles automatiques (Action GitHub), migrations à la construction Vercel, tests de bout en bout dans un vrai navigateur (D-125 ; quatre parcours : boucle coach → élève → coach, bilan, gestes du calendrier, palette), droits en base vérifiés table par table et profil par profil, sans fuite (D-127, D-161), limitation des abus sur la connexion, l’inscription, le mot de passe et l’invitation (D-162, en ligne et contrôlé le 24 novembre), suivi des erreurs en production prêt, éteint tant que `SENTRY_DSN` manque (D-168, branche `refonte`, pas encore sur `main`). À faire : vidéos hors de la base (Supabase Storage).
-2. **Le coach inconnu.** À commencer : trois coachs fictifs (trail 25 élèves venant de Google Docs, musculation 40 clients, club à trois groupes), de l’inscription au premier retour traité, ordinateur et téléphone ; cible 15 minutes sans aide ; brief du jour et mode simple.
+2. **Le coach inconnu.** Fait (D-169, branche `refonte`, pas encore sur `main`) : trois coachs fictifs joués de l’inscription au premier retour traité ; « Ajouter plusieurs élèves » (liste collée de Google Docs ou d’un tableur, groupes compris, liens à copier), « Premiers pas » sur l’Accueil, brief du jour complété, mode simple ; six accrocs corrigés. Reste : un vrai coach chronométré sans aide ; invitations groupées par e-mail (après le domaine).
 3. **De quoi vendre.** À commencer après 1 et 2 : page publique, essai gratuit, offres par nombre d’élèves (29/59/99 € HT, docs/13), abonnement en mode test derrière un interrupteur, pages légales en brouillon, aide intégrée, mesure du temps gagné sans identité d’élève.
 
-**Prochaine tranche** : « Le coach inconnu » (trois coachs fictifs, de l’inscription au premier retour traité, cible 15 minutes sans aide). D-168 attend la prochaine Pull Request vers `main`.
+**Prochaine tranche** : vidéos hors de la base (Supabase Storage), dernier point du chantier Confiance ; puis « De quoi vendre ». D-168 et D-169 attendent la prochaine Pull Request vers `main` (aucune migration).
 
 ## Pour le fondateur
 
@@ -90,7 +90,9 @@ Sans `apps/web/.env.local`, l’application repasse en mode PGlite + `/demo`. Co
 
 ## Écarts et dette connus
 
-- Pas de tests de bout en bout dans un vrai navigateur ; pas de suivi des erreurs en production ; restauration jamais essayée ; vidéos et vocaux en base (4 Mo au plus par vidéo en ligne, D-113).
+- Vidéos et vocaux en base (4 Mo au plus par vidéo en ligne, D-113).
+- Mode simple mémorisé par appareil (cookie, comme le thème) : le téléphone et l’ordinateur gardent chacun le leur (D-169).
+- Supabase local contient trois comptes fictifs de la tranche D-169 (`julien.trail@`, `sofia.force@`, `camille.petit@` suivis de `demo.coachos.test`, mot de passe `DEMO_PASSWORD`) et leurs 65 fiches.
 - Langue : « English » enregistré, interface en français seulement (hors périmètre, D-120).
 - Un compte peut être coach et athlète du même espace s’il accepte sa propre invitation : cas non bloqué, à trancher.
 - `npm run build` pendant `npm run dev` corrompt le cache du serveur de développement : relancer le serveur ensuite.

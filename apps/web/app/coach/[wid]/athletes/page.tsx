@@ -106,7 +106,12 @@ export default async function Roster({ params, searchParams }: { params: Promise
           <Heading level={1} size={1}>Élèves</Heading>
           <Text muted>{roster.length} élève{roster.length > 1 ? 's' : ''} · {activeTeams.length} groupe{activeTeams.length > 1 ? 's' : ''}</Text>
         </Stack>
-        {owner ? <LinkButton href={`${base}/athletes/new`} variant="primary" icon="plus" data-tour="add-athlete-list">Ajouter un élève</LinkButton> : null}
+        {owner ? (
+          <Cluster gap={2}>
+            <LinkButton href={`${base}/athletes/import`} icon="users">Ajouter plusieurs élèves</LinkButton>
+            <LinkButton href={`${base}/athletes/new`} variant="primary" icon="plus" data-tour="add-athlete-list">Ajouter un élève</LinkButton>
+          </Cluster>
+        ) : null}
       </Cluster>
 
       <Stack as="section" gap={3} aria-labelledby="teams-title" data-tour="teams">

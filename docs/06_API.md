@@ -33,6 +33,7 @@ Contenu d’erreur `error.code`, `error.message`, `error.requestId`, `error.fiel
 | MVP | auth | `PATCH /me` | U | displayName:?s, locale:?lang | displayName:s, locale:lang | 20 | Au moins un champ et nom 100 caractères au plus |
 | MVP | roster | `GET /workspaces/{wid}/athletes` | C | — | items:athlete[], nextCursor:?s | 60 | Filtrer state, search et paginateur stable |
 | MVP | roster | `POST /workspaces/{wid}/athletes` | O | displayName:s, timeZone:tz | id:u, state:astate | 20 | Créer dossier invité et affecter son propriétaire |
+| MVP | roster | `POST /workspaces/{wid}/athletes/import` | O | timeZone:tz, rows:{displayName:s, email:?email, group:?s}[1..200] | items:{athleteId:u, displayName:s, group:?s, invitationId:?u, link:?s}[], teamsCreated:i | 5 | Ajouter plusieurs élèves (D-169) : fiches invitées, groupes par nom, liens à transmettre soi-même ; aucun e-mail ; liens jamais stockés |
 | MVP | roster | `GET /workspaces/{wid}/athletes/{aid}` | CA | — | item:athlete | 60 | Affectation coach ou dossier propre |
 | MVP | roster | `PATCH /workspaces/{wid}/athletes/{aid}` | C | displayName:?s, timeZone:?tz, archive:?b | item:athlete | 20 | Archivage irréversible par cette route avec archivage des écritures |
 | MVP | roster | `POST /workspaces/{wid}/athletes/{aid}/invite` | C | email:email | invitationId:u, expiresAt:t | 5 | Remplace le lien actif. Envoi différé. |

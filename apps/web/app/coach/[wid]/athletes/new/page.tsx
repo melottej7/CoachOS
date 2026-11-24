@@ -26,6 +26,10 @@ export default async function NewAthlete({ params, searchParams }: { params: Pro
         <Heading level={1} size={1}>Ajouter un élève</Heading>
         <Text muted>Son nom et son fuseau suffisent pour préparer ses séances. Avec son adresse, il ou elle reçoit un lien personnel, valable 7 jours, pour rejoindre ton espace.</Text>
       </Stack>
+      <Banner tone="info" title="Tu as déjà ta liste d’élèves ?">
+        Colle-la depuis Google Docs ou un tableur : fiches, groupes et liens d’invitation créés en une fois.{' '}
+        <a href={`/coach/${wid}/athletes/import`}>Ajouter plusieurs élèves</a>
+      </Banner>
       <Card pad={5} data-tour="athlete-form">
         <AthleteForm wid={wid} zones={Intl.supportedValuesOf('timeZone')} defaultZone={ctx.workspace.timeZone} />
       </Card>

@@ -24,7 +24,8 @@ export interface SpaceInitial {
   websiteUrl: string; socialUrl: string; contactEmail: string; accent: Accent;
 }
 
-const STEPS = ['Présentation', 'Spécialités', 'Identité visuelle', 'Infos pratiques'] as const;
+// D-169 : les spécialités d’abord — elles décident de ce que CoachOS montre (endurance, musculation) ; la présentation ensuite.
+const STEPS = ['Spécialités', 'Présentation', 'Identité visuelle', 'Infos pratiques'] as const;
 const LABELS = {
   name: 'Nom de l’espace', tagline: 'Accroche', bio: 'Qui es-tu ?', approach: 'Ton approche', experienceYears: 'Années d’expérience',
   contactEmail: 'E-mail de contact', websiteUrl: 'Site web', socialUrl: 'Réseau social', certifications: 'Diplômes',
@@ -135,7 +136,7 @@ export function SpaceForm({ wid, initial, mode, after }: { wid: string; initial:
           </Field>
         ) : null}
 
-        {show(0) ? (
+        {show(1) ? (
           <Section id="sec-pres" title="Présentation" intro={wizard ? 'Présente-toi en quelques mots : tes élèves verront cette présentation dès l’invitation.' : undefined}>
             <Field id="tagline" label="Accroche" hint="Une phrase, par exemple « Coaching running et trail, du premier 10 km à l’ultra »" error={err('tagline')}>
               <Input id="tagline" maxLength={120} value={v.tagline} onChange={(e) => set('tagline', e.target.value)} invalid={!!err('tagline')} hasHint />
@@ -169,7 +170,7 @@ export function SpaceForm({ wid, initial, mode, after }: { wid: string; initial:
           </Section>
         ) : null}
 
-        {show(1) ? (
+        {show(0) ? (
           <Section id="sec-spe" title="Spécialités" intro={wizard ? 'Quels sports encadres-tu, et pour qui ? Tes futurs élèves sauront s’ils sont au bon endroit.' : undefined}>
             <ChipChecks legend="Sports encadrés" value={v.sports} onChange={(x) => set('sports', x)} options={SPORTS.map((x) => ({ value: x, label: SPORT_LABELS[x] }))}
               hint="Décident aussi de ce que CoachOS te montre : endurance, musculation (Exercices, séances en séries, vidéos), ou les deux. Rien de coché : tout est proposé." />
