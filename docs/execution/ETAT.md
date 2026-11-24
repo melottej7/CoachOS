@@ -12,7 +12,7 @@ Dernière mise à jour : 2026-11-24, espace coach refait en ligne (D-143 à D-16
 
 **Pas prouvé** : la boucle complète en ligne avec un vrai élève (il faut un domaine pour que les e-mails partent vers d’autres adresses) ; réception d’un rappel push sur un téléphone ; suppression d’un compte Auth en ligne ; sauvegarde (`npm run db:backup`) jamais exécutée ; restauration jamais essayée ; migrations automatiques à la construction (variables Vercel à saisir) ; Action GitHub (premier push à venir).
 
-**Chiffres** : `npm test` 366 passés (3 ignorés sans Docker), typecheck OK, `npm run build` OK, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
+**Chiffres** : `npm test` 397 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
 
 **Ce que le produit fait** : la matrice [COUVERTURE.md](COUVERTURE.md) (cible coach et élève, D-024) et les décisions D-001 à D-122 dans [DECISIONS.md](DECISIONS.md). En deux lignes : un coach planifie des séances structurées par sport (zones VMA, FTP, CSS), des programmes générés selon sa méthode, des groupes, des tâches, des relances, des bilans ; l’élève lit sa séance sur téléphone (hors ligne, montre, pas à pas en musculation), envoie son retour, échange avec son coach ; les données personnelles ont leur page, leur export et leur effacement.
 
@@ -33,11 +33,11 @@ Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 coul
 
 ## Chantiers en cours (D-120)
 
-1. **Confiance.** Fait : en-têtes de sécurité, pages d’erreur, contrôle de santé avec services, script de sauvegarde, revue de sécurité du lot données personnelles, contrôles automatiques (Action GitHub), migrations à la construction Vercel, tests de bout en bout dans un vrai navigateur (D-125 ; quatre parcours : boucle coach → élève → coach, bilan, gestes du calendrier, palette). À faire : suivi des erreurs en production (Sentry derrière une variable), sauvegarde puis restauration essayées en local, revue des droits en base table par table (test automatisé), limitation des abus (fréquence sur les routes publiques), vidéos hors de la base (Supabase Storage).
+1. **Confiance.** Fait : en-têtes de sécurité, pages d’erreur, contrôle de santé avec services, script de sauvegarde, revue de sécurité du lot données personnelles, contrôles automatiques (Action GitHub), migrations à la construction Vercel, tests de bout en bout dans un vrai navigateur (D-125 ; quatre parcours : boucle coach → élève → coach, bilan, gestes du calendrier, palette), droits en base vérifiés table par table et profil par profil, sans fuite (D-127, D-161). À faire : suivi des erreurs en production (Sentry derrière une variable), sauvegarde puis restauration essayées en local, limitation des abus (fréquence sur les routes publiques), vidéos hors de la base (Supabase Storage).
 2. **Le coach inconnu.** À commencer : trois coachs fictifs (trail 25 élèves venant de Google Docs, musculation 40 clients, club à trois groupes), de l’inscription au premier retour traité, ordinateur et téléphone ; cible 15 minutes sans aide ; brief du jour et mode simple.
 3. **De quoi vendre.** À commencer après 1 et 2 : page publique, essai gratuit, offres par nombre d’élèves (29/59/99 € HT, docs/13), abonnement en mode test derrière un interrupteur, pages légales en brouillon, aide intégrée, mesure du temps gagné sans identité d’élève.
 
-**Prochaine tranche** : la revue des droits en base table par table (test automatisé : chaque table, chaque rôle), puis « Le coach inconnu ».
+**Prochaine tranche** : limitation des abus sur les routes publiques (connexion, inscription, invitation), puis « Le coach inconnu ».
 
 ## Pour le fondateur
 
