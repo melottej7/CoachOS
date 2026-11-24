@@ -1,10 +1,10 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-24, espace coach refait en ligne (D-143 à D-160). Relire d’abord **D-120** (instruction du fondateur : produit professionnel, vendable à d’autres coachs), puis cet état, puis COUVERTURE.md. L’historique complet des sessions est dans [HISTORIQUE.md](HISTORIQUE.md).
+Dernière mise à jour : 2026-11-24 (D-161 à D-166). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
 
 ## Où en est CoachOS
 
-**En ligne** : https://coach-os-xi-kohl.vercel.app (Vercel, fonctions à Dublin ; base Supabase « CoachOS » en Irlande, 44 migrations appliquées). Compte coach du fondateur créé en ligne. `GET /api/health` répond `{"ok":true,"db":"ok","services":{"email":"resend","push":true,"ai":"simulation","contact":false}}`.
+**En ligne** : https://coach-os-xi-kohl.vercel.app (Vercel, fonctions à Dublin ; base Supabase « CoachOS » en Irlande, 45 migrations appliquées). Compte coach du fondateur créé en ligne. `GET /api/health` répond `{"ok":true,"db":"ok","services":{"email":"resend","push":true,"ai":"simulation","contact":false}}`.
 
 **Vérifié en ligne (23 novembre)** : base joignable ; page de connexion, inscription et confidentialité ; en-têtes de sécurité ; routes de données personnelles et de rappels déployées et protégées (401 sans session) ; premier e-mail réel d’invitation envoyé par Resend et reçu par le fondateur (adresse de test `onboarding@resend.dev`, qui n’envoie qu’à lui) ; rappels push prêts (clés en place).
 
@@ -12,24 +12,13 @@ Dernière mise à jour : 2026-11-24, espace coach refait en ligne (D-143 à D-16
 
 **Pas prouvé** : la boucle complète en ligne avec un vrai élève (il faut un domaine pour que les e-mails partent vers d’autres adresses) ; réception d’un rappel push sur un téléphone ; suppression d’un compte Auth en ligne ; sauvegarde de la base en ligne (`npm run db:backup`) jamais exécutée (la restauration est essayée en local, D-163) ; migrations automatiques à la construction (variables Vercel à saisir) ; Action GitHub (premier push à venir).
 
-**Chiffres** : `npm test` 417 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
+**Chiffres** : `npm test` 420 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
 
 **Ce que le produit fait** : la matrice [COUVERTURE.md](COUVERTURE.md) (cible coach et élève, D-024) et les décisions D-001 à D-122 dans [DECISIONS.md](DECISIONS.md). En deux lignes : un coach planifie des séances structurées par sport (zones VMA, FTP, CSS), des programmes générés selon sa méthode, des groupes, des tâches, des relances, des bilans ; l’élève lit sa séance sur téléphone (hors ligne, montre, pas à pas en musculation), envoie son retour, échange avec son coach ; les données personnelles ont leur page, leur export et leur effacement.
 
-## Refonte complète (D-123, instruction du 23 novembre, soir)
+## Refonte (D-123) et suite
 
-Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 couleurs en dur hors jetons (154 occurrences au total), 14 dans les composants, 109 styles en ligne, 7 composants dans `ui.tsx` sur 70 fichiers de composants, 38 pictogrammes emoji dans les écrans, pas de choix de thème (clair ou sombre suivent seulement le système), pas de page publique ; la police est chargée depuis D-121. Socle réel : 44 migrations, 67 tables, 48 politiques RLS, 24 fichiers de commandes, 12 de lectures, 82 routes API, 57 pages, 67 fichiers de test, 33 425 lignes TypeScript ; aucun worker (la table `jobs` n’est utilisée par aucun code), un seul paquet (`domain`), aucune application mobile : docs/07 décrit une cible, pas le code.
-
-**Fait** : étape 1, filet de sécurité (D-125 : boucle coach → élève → coach et droits dans un vrai navigateur, `npm run test:e2e`, aussi dans l’Action GitHub) ; étape 2, cible ([docs/18_REFONTE.md](../18_REFONTE.md)) ; étape 3, trois directions visuelles sur le canevas « CoachOS · trois directions » (D-126, recommandation : A · Chrono).
-
-**Choix du fondateur (D-128)** : direction A · Chrono, avec clair, sombre ou automatique, deux densités pour le coach et la couleur du coach chez l’élève. Carte et changements additifs du socle validés.
-
-**Refonte en cours sur la branche `refonte`** (rien de visible en ligne tant qu’un espace n’est pas entièrement refait ; aperçus Vercel coupés pour cette branche) :
-- fait (vérifié au navigateur, tests, typecheck, construction et parcours de bout en bout verts) : design system dans `apps/web/design/` et page interne `/systeme` (D-128, D-129) ; cadre de l’espace élève ; Aujourd’hui (D-129), détail d’une séance (D-130), Programme semaine et mois (D-131), retour détaillé (D-132), Suivre la séance (D-133), Progression (D-134), Échanges, liste et fil (D-135), Profil avec Clair / Sombre / Automatique (D-136), Notifications (D-137), bilan d’arrivée, présentation du coach, invitation et visite guidée (D-138 à D-141) ; passage à 1440 px et au clavier fait ;
-- **lien d’invitation à copier en ligne** (D-149, poussé sur `main` le 23 novembre) : inviter un élève par SMS ou WhatsApp sans e-mail ; puis, sur `main` aussi, e-mail pas encore activé dit clairement (D-152), prénom et nom à l’inscription et sport principal jamais coché d’office au bilan (D-153), contrôlé en ligne ; tout rapatrié sur `refonte` ;
-- **l’espace élève refait est en ligne** depuis le 23 novembre 2026 (Pull Request n° 1 fusionnée par le fondateur, `c5f0930`) : version en ligne contrôlée (état du serveur, base joignable ; invitation en Chrono avec ses polices ; page interne `/systeme` invisible en production, 404) ;
-- **l’espace coach refait est en ligne** depuis le 24 novembre 2026 (Pull Request n° 2 fusionnée par le fondateur, `52af909`, aucune migration) : version en ligne contrôlée le 24 novembre (état du serveur, base joignable ; connexion, inscription avec Prénom et Nom, Confidentialité et page indisponible en Chrono, sans débordement à 390 et 1440 px ; palette et confidentialité refusées sans session, 401 ; écriture sans origine refusée, 403 ; `/systeme` invisible, 404). Pas vérifié en ligne : les pages du coach une fois connecté (aucune session ouverte dans mon navigateur). Fait : le cadre (cinq destinations, sous-onglets, menu du compte, visite guidée, D-143), l’Accueil (brief du jour, à faire, relances, semaine, D-144), la Boîte de réception (retours au clavier, messages, notifications, D-145), le Calendrier (semaine d’un élève, À préparer, séances de groupe, D-146), l’éditeur de séance (D-147), les groupes (D-148, pas encore vus au navigateur), la liste des élèves avec l’ajout et l’invitation (D-150), la fiche d’un élève en onglets (D-151), la Bibliothèque (séances types, semaines types, blocs, imports, exercices, méthode, D-154), les Paramètres en onglets avec l’apparence du coach, Mon compte (D-155) et les pages hors espace : connexion, inscription, mot de passe, choix et création d’espace, erreurs, confidentialité (D-156), le programme d’un objectif avec sa régénération (D-157), et les gestes du calendrier : glisser, copier, coller, retirer, annuler (D-158). Nettoyage fait (D-159 : feuille globale de 1 406 à 507 lignes, composants morts retirés). Palette ⌘K faite (D-160). Plus tard : sélection multiple au calendrier, calendrier double.
-- règle : `main` ne reçoit que des corrections ou un espace entièrement refait et vérifié ; la branche se fusionne espace par espace.
+Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en direction Chrono (D-128) et **en ligne**. On travaille sur la branche `refonte`, fusionnée vers `main` par Pull Request (le fondateur pousse et fusionne). Depuis : droits vérifiés profil par profil (D-161), limitation des abus (D-162, en ligne), sauvegarde et restauration (D-163), cardio en paliers (D-164, en ligne), exercice en séries et circuit (D-165), suivre sa séance avec chronomètre, pause, bips et voix (D-166). Détail : [HISTORIQUE.md](HISTORIQUE.md) et [DECISIONS.md](DECISIONS.md).
 
 ## Chantiers en cours (D-120)
 
@@ -37,17 +26,12 @@ Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 coul
 2. **Le coach inconnu.** À commencer : trois coachs fictifs (trail 25 élèves venant de Google Docs, musculation 40 clients, club à trois groupes), de l’inscription au premier retour traité, ordinateur et téléphone ; cible 15 minutes sans aide ; brief du jour et mode simple.
 3. **De quoi vendre.** À commencer après 1 et 2 : page publique, essai gratuit, offres par nombre d’élèves (29/59/99 € HT, docs/13), abonnement en mode test derrière un interrupteur, pages légales en brouillon, aide intégrée, mesure du temps gagné sans identité d’élève.
 
-**Fait aussi le 24 novembre** : cardio sur machine en paliers, demandé par le fondateur (D-164 ; tapis, elliptique, vélo, rameur… ; niveau, vitesse, pente, cadence, watts ; suivi palier par palier ; aucune migration). Pour sa séance « Cardio » de Hanae : Modifier › sur chaque étape, « Cardio sur machine : passer en paliers ».
-
 **Prochaine tranche** : suivi des erreurs en production (Sentry derrière une variable, éteint tant qu’aucune clé n’est saisie), puis « Le coach inconnu ».
 
 ## Pour le fondateur
 
 Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, pourquoi, ce que ça débloque, le temps, les clics. Tout le reste avance sans toi.
 
-0. **Fait** : direction choisie (A · Chrono, D-128).
-0 ter. **Fait** : espace coach refait mis en ligne (Pull Request n° 2, 24 novembre).
-0 quater. **Fait** : limitation des abus en ligne (migration et Pull Request n° 3, 24 novembre).
 0 bis. **« Confirm email » dans Supabase** · 2 minutes · utile seulement pour l’inscription d’un **nouveau coach** (D-020, D-114) ; tes élèves invités n’en dépendent pas : leur compte est créé déjà vérifié par l’invitation (D-153). Supabase › ton projet › **Authentication** › **Sign In / Providers** › **Email** › décoche **« Confirm email »** › **« Save »**. Sinon, avant le domaine, un nouveau coach ne recevrait jamais l’e-mail de confirmation.
 1. **Rendre les mises en ligne autonomes** · 15 minutes · débloque : je pousse le code moi-même et les migrations s’appliquent seules ; tu n’as plus rien à faire pour une mise en ligne. Aujourd’hui, `git push` depuis ma session échoue (« could not read Username for github.com ») : seul GitHub Desktop a tes identifiants.
    - GitHub : en haut à droite, ton avatar › **Settings** › tout en bas **« Developer settings »** › **« Personal access tokens »** › **« Fine-grained tokens »** › **« Generate new token »** › nom `CoachOS Mac` › expiration 1 an › Repository access : **« Only select repositories »** › `CoachOS` › Permissions › **Contents : Read and write** › **« Generate token »** › copie-le (il ne s’affiche qu’une fois).

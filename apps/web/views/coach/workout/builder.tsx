@@ -96,8 +96,13 @@ const newStep = (phase: Phase = 'work', sport: Sport | null = null): EStep => ({
 /** D-096 : étape et série de musculation (exercice à choisir, 10 répétitions, repos 1 min 30). */
 const newStrengthStep = (phase: Phase = 'work'): EStep => ({ ...newStep(phase), measure: phase === 'work' ? { kind: 'reps', reps: 10 } : { kind: 'time', seconds: 300 } });
 const newStrengthRepeat = (): ERepeat => ({
-  type: 'repeat', times: 4, _k: key(),
+  type: 'repeat', times: 3, _k: key(),
   steps: [newStrengthStep('work'), { ...newStep('rest'), measure: { kind: 'time', seconds: 90 } }],
+});
+/** D-165 : circuit, deux exercices enchaînés puis une récupération, en 3 tours. */
+const newCircuit = (): ERepeat => ({
+  type: 'repeat', times: 3, _k: key(),
+  steps: [newStrengthStep('work'), newStrengthStep('work'), { ...newStep('rest'), measure: { kind: 'time', seconds: 90 } }],
 });
 
 /** D-164 : cardio sur machine en paliers ; d’office un palier de 10 minutes sur vélo elliptique. */
@@ -177,18 +182,22 @@ function PaceInput({ id, value, onChange, label }: { id: string; value: number |
 }
 
 /** Durée en minutes et secondes : on garde le texte tapé, un champ vidé ne réinjecte pas de seconde parasite. */
-function TimeInputs({ seconds, onChange, label, compact = false }: { seconds: number; onChange: (s: number) => void; label?: string; compact?: boolean }) {
+function TimeInputs({ seconds, onChange, label, compact = false, allowZero = false }: { seconds: number; onChange: (s: number) => void; label?: string; compact?: boolean; allowZero?: boolean }) {
   const [minText, setMinText] = useState(String(Math.floor(seconds / 60)));
   const [secText, setSecText] = useState(String(seconds % 60));
   const commit = (mt: string, st: string) => {
     const total = (Number(mt) || 0) * 60 + Math.min(59, Number(st) || 0);
-    if (total > 0) onChange(total);
+    if (total > 0 || allowZero) onChange(total);
   };
   return (
     <span className={s.inline}>
       <input aria-label={label ? `Minutes ${label}` : 'Minutes'} type="number" min={0} max={1440} value={minText} className={cx(s.control, compact ? s.numCompact : s.num)}
         onChange={(e) => { setMinText(e.target.value); commit(e.target.value, secText); }}
-        onBlur={() => { if (minText.trim() === '' && (Number(secText) || 0) === 0) { setMinText('1'); commit('1', secText); } }} /> min
+        onBlur={() => {
+          if (minText.trim() !== '') return;
+          if (allowZero) { setMinText('0'); return; }
+          if ((Number(secText) || 0) === 0) { setMinText('1'); commit('1', secText); }
+        }} /> min
       <input aria-label={label ? `Secondes ${label}` : 'Secondes'} type="number" min={0} max={59} step={5} value={secText} className={cx(s.control, compact ? s.numCompact : s.num)}
         onChange={(e) => { setSecText(e.target.value); commit(minText, e.target.value); }}
         onBlur={() => { if (secText.trim() === '') setSecText('0'); }} /> s
@@ -481,7 +490,10 @@ function Tools({ k, index, inside, dnd, onDuplicate, onRemove }: { k: string; in
 
 // ---------- Étape et répétition ----------
 
-function StepEditor({ step, sport, index, refs, onChange, head, tools }: { step: EStep; sport: Sport; index: string; refs?: References; onChange: (s: EStep) => void; head: React.ReactNode; tools: React.ReactNode }) {
+/** D-165 : un exercice en séries (séries, ce qu’on fait par série, charge, récupération entre les séries). */
+interface SeriesControls { sets: number; rest: number; onSets: (n: number) => void; onRest: (seconds: number) => void; onCircuit: () => void }
+
+function StepEditor({ step, sport, index, refs, onChange, head, tools, series }: { step: EStep; sport: Sport; index: string; refs?: References; onChange: (s: EStep) => void; head: React.ReactNode; tools: React.ReactNode; series?: SeriesControls }) {
   const id = useId();
   const [noteOpen, setNoteOpen] = useState(Boolean(step.note));
   const stepSport = step.sport ?? (MULTISPORT.includes(sport) ? null : sport);
@@ -508,9 +520,11 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools }: { step:
     <div className={cx(s.step, (step.phase === 'recovery' || step.phase === 'rest') && s.easy)} data-zone={zone ?? undefined} role="group" aria-label={`Bloc ${index}`}>
       <div className={s.head}>
         {head}
-        <select className={cx(s.control, s.phase)} aria-label={`Type du bloc ${index}`} value={step.phase} onChange={(e) => onChange({ ...step, phase: e.target.value as Phase })}>
-          {PHASES.map((p) => <option key={p} value={p}>{PHASE_LABELS[p]}</option>)}
-        </select>
+        {series ? <span className={s.seriesTag}>{series.sets > 1 ? `${series.sets} séries` : '1 série'}</span> : (
+          <select className={cx(s.control, s.phase)} aria-label={`Type du bloc ${index}`} value={step.phase} onChange={(e) => onChange({ ...step, phase: e.target.value as Phase })}>
+            {PHASES.map((p) => <option key={p} value={p}>{PHASE_LABELS[p]}</option>)}
+          </select>
+        )}
         {step.sport === 'strength' && sport !== 'strength' && !MULTISPORT.includes(sport) ? (
           <button type="button" className={s.sportTag} title="Étape de renforcement dans une séance d’endurance ; toucher pour la remettre en course"
             onClick={() => onChange({ ...step, sport: null, exercise: null, measure: step.measure.kind === 'reps' ? { kind: 'time', seconds: 600 } : step.measure, intensity: step.intensity.kind === 'load' ? { kind: 'none' } : step.intensity })}>Renfo<Icon name="close" size={14} /></button>
@@ -547,10 +561,26 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools }: { step:
           <CardioEditor id={id} cardio={step.cardio} onChange={(c) => onChange(withCardio(step, c))} />
         ) : (
           <>
+            {series ? (
+              <div className={s.field}>
+                <label className={s.label} htmlFor={`${id}-sets`}>Séries</label>
+                <input id={`${id}-sets`} type="number" min={1} max={50} className={cx(s.control, s.numCompact)} value={series.sets}
+                  onChange={(e) => series.onSets(Math.min(50, Math.max(1, Math.round(Number(e.target.value) || 1))))} />
+                <span className={s.muted}>×, chacune :</span>
+              </div>
+            ) : null}
             <MeasureEditor id={id} m={step.measure} strength={strength} onChange={(m) => onChange({ ...step, measure: m })} />
             <IntensityEditor id={id} i={step.intensity} sport={strength ? 'strength' : (stepSport ?? 'running')} onChange={(i) => onChange({ ...step, intensity: i })} />
+            {series && series.sets > 1 ? (
+              <div className={s.field}>
+                <span className={s.label} id={`${id}-rest`}>Récupération entre les séries</span>
+                <span role="group" aria-labelledby={`${id}-rest`}>
+                  <TimeInputs key={`rest-${series.sets > 1}`} seconds={series.rest} compact label="de récupération" allowZero onChange={series.onRest} />
+                </span>
+              </div>
+            ) : null}
             {hint.length ? <p className={s.hint}>{hint.join(' · ')}</p> : null}
-            {strength && step.measure.kind === 'time' && step.phase !== 'rest' && step.phase !== 'recovery' ? (
+            {strength && (!series || series.sets <= 1) && step.measure.kind === 'time' && step.phase !== 'rest' && step.phase !== 'recovery' ? (
               <span><Button size="sm" variant="ghost" icon="chart" onClick={() => onChange(withCardio(step, {
                 machine: guessMachine(step.exercise?.name),
                 stages: [blankStage(step.measure.kind === 'time' ? step.measure.seconds : 600, step.intensity.kind === 'rpe' ? { ...blankStage(0), rpe: step.intensity.min } : undefined)],
@@ -567,8 +597,59 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools }: { step:
         ) : (
           <span><Button size="sm" variant="ghost" icon="plus" onClick={() => setNoteOpen(true)}>Ajouter une note</Button></span>
         )}
+        {series ? (
+          <span><Button size="sm" variant="ghost" icon="repeat" onClick={series.onCircuit}>Enchaîner un autre exercice (circuit)</Button></span>
+        ) : null}
       </div>
     </div>
+  );
+}
+
+// ---------- Exercice en séries (D-165) ----------
+
+/** Un exercice en séries : une seule étape d’effort, répétée, éventuellement suivie d’une récupération. */
+interface SeriesShape { sets: number; work: EStep; rest: EStep | null }
+const isRestStep = (x: EBlock | undefined): x is EStep =>
+  Boolean(x && x.type === 'step' && (x.phase === 'rest' || x.phase === 'recovery') && !x.exercise && !x.cardio && x.measure.kind === 'time');
+function seriesOf(b: EBlock, strengthSession: boolean): SeriesShape | null {
+  const work = (x: EBlock | undefined): x is EStep =>
+    Boolean(x && x.type === 'step' && x.phase === 'work' && !x.cardio && (strengthSession || x.sport === 'strength'));
+  if (b.type === 'step') return work(b) ? { sets: 1, work: b, rest: null } : null;
+  const [a, r] = b.steps;
+  if (b.steps.length === 1 && work(a)) return { sets: b.times, work: a, rest: null };
+  if (b.steps.length === 2 && work(a) && isRestStep(r)) return { sets: b.times, work: a, rest: r };
+  return null;
+}
+/** Reconstruit le bloc : une série = l’étape seule ; plusieurs = une répétition (effort + récupération si elle dure). */
+function seriesBlock(k: string, shape: SeriesShape, sets: number, rest: number, work: EStep): EBlock {
+  if (sets <= 1) return { ...work, _k: k };
+  const inner = shape.sets <= 1 ? { ...work, _k: key() } : work;
+  const restStep: EStep | null = rest > 0
+    ? { ...(shape.rest ?? newStep('rest', work.sport === 'strength' ? 'strength' : null)), measure: { kind: 'time', seconds: rest } }
+    : null;
+  return { type: 'repeat', times: sets, _k: k, steps: restStep ? [inner, restStep] : [inner] };
+}
+
+function SeriesCard({ block, shape, sport, index, refs, head, tools, onChange }: {
+  block: EBlock; shape: SeriesShape; sport: Sport; index: string; refs?: References; head: React.ReactNode; tools: React.ReactNode; onChange: (b: EBlock) => void;
+}) {
+  const current = shape.rest?.measure.kind === 'time' ? shape.rest.measure.seconds : 0;
+  // Récupération gardée en mémoire quand on repasse à une seule série, pour la retrouver ensuite.
+  const [remembered, setRemembered] = useState(current || (shape.work.measure.kind === 'time' ? 30 : 90));
+  const rest = shape.sets > 1 ? current : remembered;
+  return (
+    <StepEditor step={shape.work} sport={sport} index={index} refs={refs} head={head} tools={tools}
+      onChange={(w) => onChange(seriesBlock(block._k, shape, shape.sets, rest, w))}
+      series={{
+        sets: shape.sets, rest,
+        onSets: (n) => onChange(seriesBlock(block._k, shape, n, rest, shape.work)),
+        onRest: (sec) => { setRemembered(sec || remembered); onChange(seriesBlock(block._k, shape, shape.sets, sec, shape.work)); },
+        onCircuit: () => onChange({
+          type: 'repeat', times: Math.max(2, shape.sets), _k: block._k,
+          steps: [shape.sets <= 1 ? { ...shape.work, _k: key() } : shape.work, { ...newStrengthStep('work'), sport: shape.work.sport },
+            ...(rest > 0 ? [{ ...(shape.rest ?? newStep('rest', shape.work.sport)), measure: { kind: 'time' as const, seconds: rest } }] : [])],
+        }),
+      }} />
   );
 }
 
@@ -592,9 +673,12 @@ function BlockList({ blocks, sport, depth, prefix, parent, refs, dnd, onChange }
             onDuplicate={() => onChange([...blocks.slice(0, k + 1), clone(b), ...blocks.slice(k + 1)])}
             onRemove={() => onChange(blocks.filter((_, i) => i !== k))} />
         );
+        const shape = depth === 0 ? seriesOf(b, sport === 'strength') : null;
         return (
           <li key={b._k} data-bk={b._k} data-kind={b.type} className={dnd.dragging === b._k ? s.dragging : undefined}>
-            {b.type === 'step' ? (
+            {shape ? (
+              <SeriesCard block={b} shape={shape} sport={sport} index={index} refs={refs} head={head} tools={tools} onChange={(x) => update(k, x)} />
+            ) : b.type === 'step' ? (
               <StepEditor step={b} sport={sport} index={index} refs={refs} onChange={(s) => update(k, s)} head={head} tools={tools} />
             ) : (
               <div className={cx(s.repeat, depth > 0 && s.nested)} data-b="repeat" role="group" aria-label={`Répétition ${index}`}>
@@ -781,7 +865,7 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
       <Stack gap={1}>
         <h2 id="builder-title" className={s.title}>Déroulé de la séance</h2>
         <Text size="sm" muted>{strength
-          ? 'Choisis tes exercices, leurs répétitions, la charge et le repos ; « Série » répète un exercice (4 × 10) ; « Cardio » programme une machine en paliers (niveau, vitesse, pente…). Glisse un bloc par sa poignée pour le déplacer.'
+          ? '« Exercice » : ses séries, ce qu’on fait à chaque série (répétitions ou durée), la charge et la récupération. « Circuit » enchaîne plusieurs exercices en tours ; « Cardio » programme une machine en paliers. Glisse un bloc par sa poignée pour le déplacer.'
           : 'Construis la séance bloc par bloc : durée ou distance, zone, répétitions et séries. Glisse un bloc par sa poignée pour le déplacer.'}</Text>
       </Stack>
       {value.length ? (
@@ -792,8 +876,8 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
       <Cluster gap={2} data-tour="builder-add">
         {strength ? (
           <>
-            <Button icon="plus" onClick={() => onChange([...value, newStrengthStep('work')])}>Exercice</Button>
-            <Button icon="plus" onClick={() => onChange([...value, newStrengthRepeat()])}>Série</Button>
+            <Button icon="plus" onClick={() => onChange([...value, newStrengthRepeat()])}>Exercice</Button>
+            <Button icon="repeat" title="Plusieurs exercices enchaînés, en tours" onClick={() => onChange([...value, newCircuit()])}>Circuit</Button>
             <Button icon="plus" title="Tapis, elliptique, vélo, rameur… en paliers (niveau, vitesse, pente)" onClick={() => onChange([...value, newCardioStep(value.length ? 'work' : 'warmup')])}>Cardio</Button>
           </>
         ) : (

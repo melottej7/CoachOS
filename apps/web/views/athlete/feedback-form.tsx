@@ -7,7 +7,7 @@ import {
   type Block, type Change, type Difficulty, type FeedbackActivity, type ResultState, type Sport,
 } from '@coachos/domain';
 import { fieldError, useIntent } from '@/components/use-intent';
-import { followLogKey, readFollowLog } from './follow-session';
+import { followLogKey, readFollowElapsed, readFollowLog } from './follow-session';
 import {
   Banner, Button, ChipChecks, ChipChoice, ChoiceGroup, Disclosure, Divider, Field, Grid, Heading, Input, LinkButton, ScaleChoice, Select, Stack, Text, Textarea,
   type IconName,
@@ -74,6 +74,13 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
     const noted = readFollowLog(sid);
     if (Object.keys(noted).length) setStrength(applyFollowLog(plan, noted));
   }, [existing?.strengthLog?.length, plan, sid]);
+  // D-166 : durée mesurée par le chronomètre de « Suivre la séance », proposée si l’élève n’a rien saisi.
+  const [timed, setTimed] = useState(false);
+  useEffect(() => {
+    if (existing?.durationSeconds) return;
+    const ms = readFollowElapsed(sid);
+    if (ms && ms >= 60_000) { setMinutes((m) => m || String(Math.round(ms / 60_000))); setTimed(true); }
+  }, [existing?.durationSeconds, sid]);
   // Provenance (D-048) : mesures lues dans un fichier, tant que l’élève ne les modifie pas.
   const kmText = (m: number | null) => (m ? String(Math.round(m / 10) / 100).replace('.', ',') : '');
   const [imported, setImported] = useState<{ file: 'fit' | 'tcx' | 'gpx'; minutes: string; km: string } | null>(
@@ -174,7 +181,7 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
             {err('activities') ? <Text size="sm" role="alert" tone="danger">{err('activities')}</Text> : null}
             {/* La distance n’a pas de sens pour une séance de renforcement. */}
             <Grid cols={sport === 'strength' ? 1 : 2} gap={3}>
-              <Field id="duration" label="Durée (min)" hint={plannedMinutes ? `Prévu ${plannedMinutes} min` : 'Facultatif'} error={err('durationSeconds') ?? null}>
+              <Field id="duration" label="Durée (min)" hint={[timed ? 'D’après ton chronomètre de séance' : null, plannedMinutes ? `prévu ${plannedMinutes} min` : null].filter(Boolean).join(' · ').replace(/^p/, 'P') || 'Facultatif'} error={err('durationSeconds') ?? null}>
                 <Input id="duration" type="number" inputMode="numeric" min={1} max={1440} value={minutes} onChange={(e) => setMinutes(e.target.value)} hasHint invalid={!!err('durationSeconds')} />
               </Field>
               {sport === 'strength' ? null : (

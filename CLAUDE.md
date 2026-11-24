@@ -4,14 +4,34 @@
 
 Construire une application d’endurance fluide pour deux personnes. Le coach planifie et traite les retours. L’athlète trouve sa séance sur téléphone et dit ce qu’il a réalisé. Leur boucle manuelle est prioritaire. L’IA, les intégrations et le paiement suivent les preuves d’usage.
 
-## Lecture et ordre de travail
+## Reprise et ordre de travail
 
-1. Lire README.md et DEMARRER_AVEC_CLAUDE_CODE.md. Reprendre depuis docs/execution/ETAT.md si le fichier existe.
-1 bis. Relire **D-123 (docs/execution/DECISIONS.md, instruction du fondateur du 23 novembre 2026 : refonte complète de CoachOS en six étapes, structure et interface carte blanche, socle audité et protégé, références étudiées, un seul point d’attente : le choix de la direction visuelle)** et **D-120 (même jour : produit professionnel vendable, chantiers Confiance, Coach inconnu, De quoi vendre, autonomie et garde-fous)**, docs/16_COMPLEMENT_COACH_ELEVE.md (instruction du 17 novembre 2026) et docs/execution/COUVERTURE.md à chaque reprise. D-120 prévaut sur les priorités antérieures. Ce complément définit la cible produit (groupes et niveaux, dossier élève, accueil et tâches, bibliothèque, bilan, programmes supervisés, statistiques, activités et Garmin). En cas de divergence avec les priorités antérieures, il prévaut ; la décision est consignée (D-024).
-2. Lire docs/03_UX.md et essayer prototype/index.html, puis lire les seules fiches du PRD et stories nécessaires à la prochaine tranche.
-3. Suivre les tranches de docs/11_ROADMAP.md, section « Lots de la cible coach et élève » après la tranche C. Commencer par créer une séance → publier → lire sur téléphone → envoyer un retour → traiter. Contextualiser les dépendances du CSV au lieu de terminer un module entier avant de tester la boucle.
-4. Utiliser les contrats SQL et OpenAPI pour l’implémentation. Consigner les décisions et écarts de contrat. Appliquer docs/12_CLAUDE_CODE.md pour le flux Git, les validations, la sécurité et la reprise.
-5. À chaque fin de session, écrire l’état, les preuves réellement obtenues et la prochaine action. Les décisions documentées restent en vigueur sauf nouvelle preuve ou instruction du fondateur.
+1. **Reprendre depuis docs/execution/ETAT.md, lu jusqu’à « Pour le fondateur » inclus.** Ce fichier et la mémoire suffisent pour repartir. Les autres documents (README, docs/16, COUVERTURE, docs/03_UX, docs/11_ROADMAP, docs/12_CLAUDE_CODE, DECISIONS) ne s’ouvrent que pour la section utile à la tranche en cours (recherche ciblée, extrait), jamais en entier.
+2. **Priorités en vigueur**, à appliquer sans relire leurs décisions :
+   - **D-120** (23 novembre 2026, prévaut sur les priorités antérieures) : produit professionnel vendable ; chantiers dans l’ordre Confiance, Coach inconnu, De quoi vendre ; avancer seul sur tout ce qui est réversible.
+   - **D-123** : refonte carte blanche (structure et interface), socle audité et protégé, direction Chrono (D-128) : clair, sombre ou automatique, palette ⌘K, deux densités.
+   - **docs/16** (17 novembre 2026) : cible coach et élève (groupes et niveaux, dossier élève, accueil et tâches, bibliothèque, bilan, programmes supervisés, statistiques, activités et Garmin) ; prévaut en cas de divergence (D-024).
+   - **Les demandes du fondateur dans la conversation passent avant la tranche prévue.**
+3. **Une tranche est « faite »** quand :
+   - les tests, le typecheck, la construction et les parcours de bout en bout sont verts ;
+   - les droits sont testés ;
+   - les deux rôles ont été vus au navigateur, à 1440 et 390 px.
+   Distinguer « vérifié » et « non vérifié ». Les contrats SQL et OpenAPI sont tenus à jour.
+4. **À chaque fin de tranche** : une décision courte dans DECISIONS.md, l’état et la prochaine action dans ETAT.md, un commit. Les décisions documentées restent en vigueur sauf nouvelle preuve ou instruction du fondateur.
+
+## Économie de jetons
+
+- **Une conversation par tranche.** Après chaque « c’est fusionné », l’état est écrit et le fondateur ouvre une nouvelle conversation ; une conversation qui s’allonge renvoie tout son contexte à chaque message.
+- **Lire juste ce qu’il faut** :
+  - recherche ciblée et extraits de fichiers plutôt que des fichiers entiers ;
+  - sorties de commandes filtrées (résultat, erreurs) ;
+  - pas de sous-agent sans nécessité.
+- **Photos d’écran** :
+  - deux ou trois par tranche, sur l’élément concerné ou réduites de moitié ;
+  - la page pleine seulement pour juger une mise en page ;
+  - le texte de la page plutôt qu’une photo quand il suffit.
+- **Comptes rendus courts en français** : ce qui change pour le fondateur, ce qui est vérifié ou non, la prochaine action et, s’il y en a une, sa marche à suivre. Pas de récapitulatif de ce qu’il a déjà lu.
+- **Décisions de dix lignes au plus.**
 
 ## Limites du développement
 

@@ -32,6 +32,7 @@ export * from './program-import';
 export * from './notifications';
 export * from './foulee-library';
 export * from './exercises';
+export * from './follow-voice';
 export * from './strength-log';
 export * from './relances';
 export * from './program-blocks';
