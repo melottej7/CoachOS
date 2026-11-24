@@ -29,3 +29,10 @@
 .end { align-items: center; text-align: center; border-top-color: var(--ds-success); }
 .endMark { display: inline-flex; align-items: center; justify-content: center; inline-size: 80px; block-size: 80px; border-radius: 50%; background: var(--ds-success-soft); color: var(--ds-success); }
 .end .actions { inline-size: 100%; }
+/* D-166 · chronomètre de séance, pause, temps sur une étape sans chrono, durée en fin de séance */
+.elapsed { display: inline-flex; align-items: center; gap: 6px; font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-lg); font-variant-numeric: tabular-nums; }
+.idle { color: var(--ds-ink-2); font-weight: 600; }
+.paused { gap: var(--ds-3); background: var(--ds-surface-2); border-top-color: var(--ds-warning); }
+.since { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-2xl); font-variant-numeric: tabular-nums; color: var(--ds-ink-2); }
+.total { display: flex; flex-direction: column; align-items: center; margin: 0; font-family: var(--ds-font-display); font-weight: 700; font-size: clamp(48px, 16vw, 72px); line-height: 1; font-variant-numeric: tabular-nums; }
+.total span { font-size: var(--ds-text-sm); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); }

@@ -12,7 +12,7 @@ Dernière mise à jour : 2026-11-24, espace coach refait en ligne (D-143 à D-16
 
 **Pas prouvé** : la boucle complète en ligne avec un vrai élève (il faut un domaine pour que les e-mails partent vers d’autres adresses) ; réception d’un rappel push sur un téléphone ; suppression d’un compte Auth en ligne ; sauvegarde de la base en ligne (`npm run db:backup`) jamais exécutée (la restauration est essayée en local, D-163) ; migrations automatiques à la construction (variables Vercel à saisir) ; Action GitHub (premier push à venir).
 
-**Chiffres** : `npm test` 417 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
+**Chiffres** : `npm test` 420 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
 
 **Ce que le produit fait** : la matrice [COUVERTURE.md](COUVERTURE.md) (cible coach et élève, D-024) et les décisions D-001 à D-122 dans [DECISIONS.md](DECISIONS.md). En deux lignes : un coach planifie des séances structurées par sport (zones VMA, FTP, CSS), des programmes générés selon sa méthode, des groupes, des tâches, des relances, des bilans ; l’élève lit sa séance sur téléphone (hors ligne, montre, pas à pas en musculation), envoie son retour, échange avec son coach ; les données personnelles ont leur page, leur export et leur effacement.
 
@@ -40,6 +40,8 @@ Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 coul
 **Fait aussi le 24 novembre** : cardio sur machine en paliers, demandé par le fondateur (D-164 ; tapis, elliptique, vélo, rameur… ; niveau, vitesse, pente, cadence, watts ; suivi palier par palier ; aucune migration ; en ligne depuis la Pull Request n° 4, avec la restauration D-163). Pour sa séance « Cardio » de Hanae : Modifier › sur chaque étape, « Cardio sur machine : passer en paliers ».
 
 **Fait aussi** : un exercice, ce sont des séries (D-165 : une carte par exercice, séries, durée ou répétitions, récupération ; « Circuit » ; séries en temps enchaînées comme une minuterie).
+
+**Fait aussi** : suivre sa séance avec chronomètre de séance, pause, bips 3-2-1 et voix qui annonce chaque étape, durée reprise dans le retour (D-166).
 
 **Prochaine tranche** : suivi des erreurs en production (Sentry derrière une variable, éteint tant qu’aucune clé n’est saisie), puis « Le coach inconnu ».
 

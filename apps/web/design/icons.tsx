@@ -48,6 +48,9 @@ const PATHS = {
 const FILLED = {
   play: 'M7 4.5v15l12-7.5z',
   pause: 'M6 4h4v16H6zM14 4h4v16h-4z',
+  volume: 'M11 5 6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14',
+  volumeOff: 'M11 5 6 9H2v6h4l5 4zM22 9l-6 6M16 9l6 6',
+  speech: 'M4 5h16v11H9l-5 4zM8 9.5h8M8 12.5h5',
   previous: 'M6 5h2v14H6zM20 5v14L9 12z',
   next: 'M16 5h2v14h-2zM4 5v14l11-7z',
 } as const;

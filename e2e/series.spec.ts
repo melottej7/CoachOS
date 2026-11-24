@@ -63,22 +63,79 @@ test('une carte d’exercice : 6 séries de 20 s, 40 s de récupération ; l’�
   await expect(again.getByRole('spinbutton', { name: 'Séries', exact: true })).toHaveValue('6');
   await expect(again.getByLabel('Secondes de récupération')).toHaveValue('40');
 
-  // L’élève, téléphone, horloge simulée.
+  // L’élève, téléphone, horloge simulée ; on garde ce que le téléphone dit et chaque bip joué (D-166).
   const camille = await as(browser, 'Camille Laurent', PHONE);
+  await camille.addInitScript(() => {
+    const w = window as unknown as { __said: string[]; __beeps: number[] };
+    w.__said = [];
+    w.__beeps = [];
+    if (window.speechSynthesis) window.speechSynthesis.speak = (u: SpeechSynthesisUtterance) => { if (u.text.trim()) w.__said.push(u.text); };
+    const start = OscillatorNode.prototype.start;
+    OscillatorNode.prototype.start = function (this: OscillatorNode, ...a: [number?]) { w.__beeps.push(Math.round(this.frequency.value)); return start.apply(this, a); };
+  });
+  const said = () => camille.evaluate(() => (window as unknown as { __said: string[] }).__said);
+  const beeps = () => camille.evaluate(() => (window as unknown as { __beeps: number[] }).__beeps);
+  const elapsed = camille.getByLabel(/^Temps de séance/);
   await camille.clock.install();
   await camille.goto(`/athlete/${WS_A}/workouts/${sid}/suivre`);
-  await expect(camille.getByText('Série 1 sur 6')).toBeVisible();
+  await expect(camille.getByText('Série 1 sur 6', { exact: true })).toBeVisible();
   await expect(camille.getByRole('heading', { name: 'Planche' })).toBeVisible();
   await expect(camille.getByRole('timer')).toHaveText('0:20');
+  await expect(elapsed).toHaveText('0:00');
+  await expect(camille.getByRole('button', { name: 'Bips' })).toHaveAttribute('aria-pressed', 'true');
   expect(await overflow(camille)).toBe(0);
   await shot(camille, 'series-suivre-390');
+
+  // Départ au doigt : la séance démarre, la voix annonce la série, son de départ.
   await camille.getByRole('button', { name: 'Démarrer le chrono' }).click();
-  await camille.clock.fastForward(21_000);
-  // Fin de l’effort : la récupération part seule.
+  await expect.poll(said).toContain('Série 1 sur 6. Planche. 20 secondes.');
+  await expect.poll(beeps).toEqual([880, 1320]);
+  await camille.clock.fastForward(10_000);
+  await expect(elapsed).toHaveText('0:10');
+
+  // Pause : tout se fige ; reprise : tout repart.
+  await camille.getByRole('button', { name: 'Mettre la séance en pause' }).click();
+  await expect(camille.getByRole('heading', { name: 'Séance en pause' })).toBeVisible();
+  await shot(camille, 'suivre-pause-390');
+  await camille.clock.fastForward(30_000);
+  await expect(elapsed).toHaveText('0:10');
+  await expect(camille.getByRole('timer')).toHaveText('0:10');
+  await camille.getByRole('button', { name: 'Reprendre', exact: true }).click();
+  // runFor joue chaque battement du chrono (les bips des 3 dernières secondes) ; fastForward saute d’un coup.
+  await camille.clock.runFor(11_000);
+
+  // Fin de l’effort : bips 3-2-1, son de fin, la récupération part seule et s’annonce.
   await expect(camille.getByText('Récupère')).toBeVisible();
-  await expect(camille.getByRole('button', { name: '+15 s' })).toBeVisible();
-  await camille.clock.fastForward(41_000);
+  const played = await beeps();
+  expect(played.filter((f) => f === 660)).toHaveLength(3);
+  expect(played).toContain(988);
+  await expect.poll(said).toContain('Récupération, 40 secondes. Ensuite : Planche.');
+  await camille.clock.runFor(31_000);
+  await expect.poll(said).toContain('Encore 10 secondes.');
+  await camille.clock.runFor(10_000);
   // Fin de la récupération : la série 2 part seule.
-  await expect(camille.getByText('Série 2 sur 6')).toBeVisible();
+  await expect(camille.getByText('Série 2 sur 6', { exact: true })).toBeVisible();
   await expect(camille.getByRole('button', { name: '+15 s' })).toBeVisible();
+  await expect.poll(said).toContain('Série 2 sur 6. Planche. 20 secondes.');
+
+  // Réglage gardé : sans bips, même après rechargement ; la séance reprend où elle était, chronomètre compris.
+  await camille.getByRole('button', { name: 'Bips' }).click();
+  await expect(camille.getByRole('button', { name: 'Bips' })).toHaveAttribute('aria-pressed', 'false');
+  await camille.reload();
+  await expect(camille.getByRole('button', { name: 'Bips' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(camille.getByText('Série 2 sur 6', { exact: true })).toBeVisible();
+  await expect(elapsed).not.toHaveText('0:00');
+
+  // Jusqu’au bout : durée de séance, puis le retour la reprend.
+  for (let n = 0; n < 20 && !(await camille.getByRole('heading', { name: /Séance terminée, bravo\s!/ }).isVisible()); n++) {
+    await camille.getByRole('button', { name: /^(Suivant|Passer le repos|Fait, suivant)$/ }).click();
+  }
+  await expect(camille.getByRole('heading', { name: /Séance terminée, bravo\s!/ })).toBeVisible();
+  await expect(camille.getByText('Durée', { exact: true })).toBeVisible();
+  await expect.poll(said).toContain('Séance terminée. Bravo !');
+  await shot(camille, 'suivre-fin-390');
+  await camille.getByRole('link', { name: 'Donner mon retour' }).click();
+  await camille.locator('#state-completed').check();
+  await expect(camille.locator('#duration')).toHaveValue('1');
+  await expect(camille.getByText(/D’après ton chronomètre de séance/)).toBeVisible();
 });
