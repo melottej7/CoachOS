@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-24 (D-161 à D-169). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
+Dernière mise à jour : 2026-11-24 (D-161 à D-170). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
 
 ## Où en est CoachOS
 
@@ -23,10 +23,10 @@ Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en dire
 ## Chantiers en cours (D-120)
 
 1. **Confiance.** Fait : en-têtes de sécurité, pages d’erreur, contrôle de santé avec services, sauvegarde complétée de l’historique des migrations et restauration essayée en local, avec `npm run db:restore` qui ne peut rien écraser (D-116, D-163), revue de sécurité du lot données personnelles, contrôles automatiques (Action GitHub), migrations à la construction Vercel, tests de bout en bout dans un vrai navigateur (D-125 ; quatre parcours : boucle coach → élève → coach, bilan, gestes du calendrier, palette), droits en base vérifiés table par table et profil par profil, sans fuite (D-127, D-161), limitation des abus sur la connexion, l’inscription, le mot de passe et l’invitation (D-162, en ligne et contrôlé le 24 novembre), suivi des erreurs en production prêt, éteint tant que `SENTRY_DSN` manque (D-168, branche `refonte`, pas encore sur `main`). À faire : vidéos hors de la base (Supabase Storage).
-2. **Le coach inconnu.** Fait (D-169, branche `refonte`, pas encore sur `main`) : trois coachs fictifs joués de l’inscription au premier retour traité ; « Ajouter plusieurs élèves » (liste collée de Google Docs ou d’un tableur, groupes compris, liens à copier), « Premiers pas » sur l’Accueil, brief du jour complété, mode simple ; six accrocs corrigés. Reste : un vrai coach chronométré sans aide ; invitations groupées par e-mail (après le domaine).
+2. **Le coach inconnu.** Fait (D-169, branche `refonte`, pas encore sur `main`) : trois coachs fictifs joués de l’inscription au premier retour traité ; « Ajouter plusieurs élèves » (liste collée de Google Docs ou d’un tableur, groupes compris, liens à copier), « Premiers pas » sur l’Accueil, brief du jour complété, mode simple ; six accrocs corrigés. Reste : un vrai coach chronométré sans aide ; invitations groupées par e-mail (après le domaine). Retouches du fondateur (D-170) : déplacer un palier cardio, note d’exercice lisible.
 3. **De quoi vendre.** À commencer après 1 et 2 : page publique, essai gratuit, offres par nombre d’élèves (29/59/99 € HT, docs/13), abonnement en mode test derrière un interrupteur, pages légales en brouillon, aide intégrée, mesure du temps gagné sans identité d’élève.
 
-**Prochaine tranche** : vidéos hors de la base (Supabase Storage), dernier point du chantier Confiance ; puis « De quoi vendre ». D-168 et D-169 attendent la prochaine Pull Request vers `main` (aucune migration).
+**Prochaine tranche** : vidéos hors de la base (Supabase Storage), dernier point du chantier Confiance ; puis « De quoi vendre ». D-168 à D-170 attendent la prochaine Pull Request vers `main` (aucune migration).
 
 ## Pour le fondateur
 

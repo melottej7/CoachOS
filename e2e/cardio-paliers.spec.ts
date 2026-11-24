@@ -49,6 +49,20 @@ test('le coach programme un cardio en paliers ; l’élève le lit et le suit pa
     await stage(coach, n, minutes, level);
   }
   await expect(coach.getByText('19 min', { exact: true })).toBeVisible();
+  // D-170 : déplacer un palier, au clavier puis à la souris ; chaque palier garde ses valeurs.
+  const level = (n: number) => coach.getByLabel(`Niveau du palier ${n}`, { exact: true });
+  await coach.getByRole('button', { name: /^Déplacer le palier 4/ }).press('ArrowUp');
+  await expect(level(3)).toHaveValue('1');
+  await expect(level(4)).toHaveValue('3');
+  await expect(coach.getByRole('button', { name: /^Déplacer le palier 3/ })).toBeFocused();
+  const grip = await coach.getByRole('button', { name: /^Déplacer le palier 3/ }).boundingBox();
+  const last = await coach.locator('[data-stage]').nth(3).boundingBox();
+  await coach.mouse.move(grip!.x + grip!.width / 2, grip!.y + grip!.height / 2);
+  await coach.mouse.down();
+  await coach.mouse.move(grip!.x + grip!.width / 2, last!.y + last!.height - 4, { steps: 8 });
+  await coach.mouse.up();
+  await expect(level(3)).toHaveValue('3');
+  await expect(level(4)).toHaveValue('1');
   await coach.getByRole('button', { name: 'Exercice', exact: true }).click();
   await coach.getByLabel('Exercice').last().fill('Squat goblet');
   // « Ce que lira l’élève » :

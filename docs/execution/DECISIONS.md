@@ -2457,3 +2457,10 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Accrocs corrigés en route** : assistant commencé par une longue présentation (Spécialités d’abord) ; « À faire · tes élèves sont à jour » sans élève ; 25 tâches « Relancer l’invitation » ; titre du Google Doc pris pour un élève ; en-tête Excel non reconnu à cause d’une colonne en plus ; bulle de la visite qui couvrait « Ajouter 40 élèves » sur téléphone (suivre un premier pas termine la visite).
 - **Preuves** : 445 tests (10 de lecture de liste, 5 serveur dont droits propriétaire / coach associé / autre espace / élève, contrat), typecheck, construction, 7 parcours de bout en bout ; navigateur à 1440 et 390 px pour le coach et l’élève, sans débordement.
 - **Non vérifié** : 15 minutes avec un vrai coach sans aide (estimation : 10 à 12 minutes de gestes, hors envoi des liens) ; invitations groupées par e-mail (attendent le domaine) ; séance de musculation et retour du coach de musculation au navigateur (couverts par `series.spec.ts`).
+
+## D-170 · Éditeur de séance : déplacer un palier, note lisible · 2026-11-24
+
+- **Demandes du fondateur** : « pouvoir déplacer un palier » ; « note trop petite pour voir ce qu’on écrit ».
+- **Paliers cardio** : poignée à gauche du numéro, comme pour les blocs. On glisse le palier à la souris ou au doigt, ou on le déplace avec les flèches haut et bas, et la position est annoncée aux lecteurs d’écran. Chaque palier a une clé stable : il garde ses valeurs, et ce qu’on y tapait, quand il change de place. La poignée n’apparaît qu’à partir de deux paliers.
+- **Note d’exercice** : zone de texte sur toute la largeur, qui grandit avec le texte (2 lignes au moins, 200 caractères comme avant).
+- **Preuves** : `e2e/cardio-paliers.spec.ts` déplace un palier au clavier puis à la souris ; captures à 1440 et 390 px, sans débordement. Aucune migration.
