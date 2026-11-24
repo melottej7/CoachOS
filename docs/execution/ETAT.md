@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-24 (D-161 à D-172). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
+Dernière mise à jour : 2026-11-24 (D-161 à D-173). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
 
 ## Où en est CoachOS
 
@@ -22,16 +22,21 @@ Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en dire
 
 ## Chantiers en cours (D-120)
 
-1. **Confiance.** Fait : en-têtes de sécurité, pages d’erreur, contrôle de santé avec services, sauvegarde complétée de l’historique des migrations et restauration essayée en local, avec `npm run db:restore` qui ne peut rien écraser (D-116, D-163), revue de sécurité du lot données personnelles, contrôles automatiques (Action GitHub), migrations à la construction Vercel, tests de bout en bout dans un vrai navigateur (D-125 ; quatre parcours : boucle coach → élève → coach, bilan, gestes du calendrier, palette), droits en base vérifiés table par table et profil par profil, sans fuite (D-127, D-161), limitation des abus sur la connexion, l’inscription, le mot de passe et l’invitation (D-162, en ligne et contrôlé le 24 novembre), suivi des erreurs en production prêt, éteint tant que `SENTRY_DSN` manque (D-168, branche `refonte`, pas encore sur `main`). À faire : vidéos hors de la base (Supabase Storage).
+1. **Confiance.** Fait : en-têtes de sécurité, pages d’erreur, contrôle de santé avec services, sauvegarde complétée de l’historique des migrations et restauration essayée en local, avec `npm run db:restore` qui ne peut rien écraser (D-116, D-163), revue de sécurité du lot données personnelles, contrôles automatiques (Action GitHub), migrations à la construction Vercel, tests de bout en bout dans un vrai navigateur (D-125 ; quatre parcours : boucle coach → élève → coach, bilan, gestes du calendrier, palette), droits en base vérifiés table par table et profil par profil, sans fuite (D-127, D-161), limitation des abus sur la connexion, l’inscription, le mot de passe et l’invitation (D-162, en ligne et contrôlé le 24 novembre), suivi des erreurs en production prêt, éteint tant que `SENTRY_DSN` manque (D-168, branche `refonte`, pas encore sur `main`). Vidéos filmées dans le stockage de fichiers Supabase, 50 Mio au lieu de 4 Mo en ligne (D-173, branche `refonte`, migration à appliquer en ligne avant la fusion). Chantier Confiance terminé côté code.
 2. **Le coach inconnu.** Fait (D-169, branche `refonte`, pas encore sur `main`) : trois coachs fictifs joués de l’inscription au premier retour traité ; « Ajouter plusieurs élèves » (liste collée de Google Docs ou d’un tableur, groupes compris, liens à copier), « Premiers pas » sur l’Accueil, brief du jour complété, mode simple ; six accrocs corrigés. Reste : un vrai coach chronométré sans aide ; invitations groupées par e-mail (après le domaine). Retouches du fondateur (D-170) : déplacer un palier cardio, note d’exercice lisible. Installation sur le téléphone guidée pas à pas pour l’élève (D-171).
 3. **De quoi vendre.** À commencer après 1 et 2 : page publique, essai gratuit, offres par nombre d’élèves (29/59/99 € HT, docs/13), abonnement en mode test derrière un interrupteur, pages légales en brouillon, aide intégrée, mesure du temps gagné sans identité d’élève.
 
-**Prochaine tranche** : vidéos hors de la base (Supabase Storage), dernier point du chantier Confiance ; puis « De quoi vendre ». D-168 à D-172 sont en ligne par la Pull Request n° 8 (24 novembre, aucune migration).
+**Prochaine tranche** : « De quoi vendre ». D-173 attend la migration en ligne (point 0 de la liste ci-dessous), puis la Pull Request vers `main`.
 
 ## Pour le fondateur
 
 Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, pourquoi, ce que ça débloque, le temps, les clics. Tout le reste avance sans toi.
 
+0. **Appliquer la migration des vidéos en ligne, puis fusionner (D-173)** · 5 minutes · débloque : des vidéos filmées jusqu’à 50 Mio (environ une minute) au lieu de 4 Mo. À faire **avant** la fusion : le nouveau code lit une colonne que crée cette migration.
+   - Terminal (onglet de l’app) : `cd ~/Downloads/CoachOS && npx supabase db push --remote --dry-run` ; la réponse doit citer **une seule** migration, `20261124100000_exercise_videos_storage.sql`.
+   - Puis : `npx supabase db push --remote` ; réponds `Y` si on te le demande ; attends « Finished supabase db push ».
+   - Vérifie dans Supabase › ton projet › **Storage** : le compartiment `exercise-videos` existe et n’est **pas** « Public ».
+   - Ensuite seulement, GitHub Desktop : **« Push origin »**, Pull Request `refonte` → `main`, **« Merge pull request »**.
 0 bis. **« Confirm email » dans Supabase** · 2 minutes · utile seulement pour l’inscription d’un **nouveau coach** (D-020, D-114) ; tes élèves invités n’en dépendent pas : leur compte est créé déjà vérifié par l’invitation (D-153). Supabase › ton projet › **Authentication** › **Sign In / Providers** › **Email** › décoche **« Confirm email »** › **« Save »**. Sinon, avant le domaine, un nouveau coach ne recevrait jamais l’e-mail de confirmation.
 1. **Rendre les mises en ligne autonomes** · 15 minutes · débloque : je pousse le code moi-même et les migrations s’appliquent seules ; tu n’as plus rien à faire pour une mise en ligne. Aujourd’hui, `git push` depuis ma session échoue (« could not read Username for github.com ») : seul GitHub Desktop a tes identifiants.
    - GitHub : en haut à droite, ton avatar › **Settings** › tout en bas **« Developer settings »** › **« Personal access tokens »** › **« Fine-grained tokens »** › **« Generate new token »** › nom `CoachOS Mac` › expiration 1 an › Repository access : **« Only select repositories »** › `CoachOS` › Permissions › **Contents : Read and write** › **« Generate token »** › copie-le (il ne s’affiche qu’une fois).
@@ -87,11 +92,11 @@ npm run db:restore -- <horodatage> "<adresse>"  # restaure dans un projet Supaba
 npm run supabase:stop
 ```
 
-Sans `apps/web/.env.local`, l’application repasse en mode PGlite + `/demo`. Comptes fictifs : `marine.roy@`, `camille.laurent@`, `noah.dubois@`, `hugo.petit@`, `lea.moreau@` suivis de `demo.coachos.test`, mot de passe `DEMO_PASSWORD` de `apps/web/server/db/fixtures.ts` (Supabase local uniquement). Le serveur de développement se lance dans un onglet du Terminal. La base locale contient aussi les données de recette du fondateur (comptes paul.coach et emma) : ne jamais la remettre à zéro sans son accord (D-019).
+Sans `apps/web/.env.local`, l’application repasse en mode PGlite + `/demo`. Supabase local démarre avec le stockage de fichiers (D-173) ; une sauvegarde locale des données de recette, prise avant ce redémarrage, est restée hors du dépôt. Comptes fictifs : `marine.roy@`, `camille.laurent@`, `noah.dubois@`, `hugo.petit@`, `lea.moreau@` suivis de `demo.coachos.test`, mot de passe `DEMO_PASSWORD` de `apps/web/server/db/fixtures.ts` (Supabase local uniquement). Le serveur de développement se lance dans un onglet du Terminal. La base locale contient aussi les données de recette du fondateur (comptes paul.coach et emma) : ne jamais la remettre à zéro sans son accord (D-019).
 
 ## Écarts et dette connus
 
-- Vidéos et vocaux en base (4 Mo au plus par vidéo en ligne, D-113).
+- Vocaux (3 Mo) et logos (512 Kio) restent en base, comme les vidéos envoyées avant D-173 (lues comme avant). La sauvegarde de la base n’inclut pas les fichiers du stockage (D-173).
 - Mode simple mémorisé par appareil (cookie, comme le thème) : le téléphone et l’ordinateur gardent chacun le leur (D-169).
 - Supabase local contient trois comptes fictifs de la tranche D-169 (`julien.trail@`, `sofia.force@`, `camille.petit@` suivis de `demo.coachos.test`, mot de passe `DEMO_PASSWORD`) et leurs 65 fiches.
 - Langue : « English » enregistré, interface en français seulement (hors périmètre, D-120).

@@ -1,7 +1,12 @@
-import { detectVideoType, EXERCISE_CLIP_MAX_BYTES, exerciseInputSchema, parseWith, STARTER_EXERCISES, starterKey, type ExerciseInput } from '@coachos/domain';
+import { randomUUID } from 'node:crypto';
+import {
+  detectVideoType, EXERCISE_CLIP_MAX_BYTES, EXERCISE_CLIP_STORAGE_MAX_BYTES, EXERCISE_CLIP_TYPES, exerciseInputSchema, parseWith, STARTER_EXERCISES, starterKey, type ExerciseInput,
+} from '@coachos/domain';
 import { z } from 'zod';
 import { commandAs, type Tx } from '../db/client';
-import { conflict, invalid, notVisible } from '../errors';
+import { AppError, conflict, invalid, notVisible } from '../errors';
+import { clipObjectPath, videoStore, type VideoStore } from '../storage/video-store';
+import { reportError } from '../error-report';
 import { audit, idempotent, type StoredResponse } from './idempotency';
 import { requireCoach } from './portfolio';
 
@@ -97,7 +102,8 @@ export async function uploadExerciseClip(meta: { actorId: string; requestId: str
   const type = detectVideoType(bytes);
   if (!type) throw invalid([{ path: 'video', rule: 'Format non reconnu : MP4, MOV ou WebM' }]);
   const wid = meta.workspaceId;
-  return commandAs(meta.actorId, async (tx) => {
+  let old: string | null = null;
+  const res = await commandAs(meta.actorId, async (tx) => {
     await requireCoach(tx, wid);
     const cur = await tx.query<{ clip_id: string | null }>('select clip_id from public.exercises where workspace_id = $1 and id = $2 for update', [wid, meta.exerciseId]);
     if (!cur.rows[0]) throw notVisible();
@@ -109,24 +115,118 @@ export async function uploadExerciseClip(meta: { actorId: string; requestId: str
       'update public.exercises set clip_id = $3, revision = revision + 1 where workspace_id = $1 and id = $2 returning revision',
       [wid, meta.exerciseId, c.rows[0]!.id],
     );
-    if (cur.rows[0].clip_id) await tx.query('delete from public.exercise_clips where workspace_id = $1 and id = $2', [wid, cur.rows[0].clip_id]);
+    if (cur.rows[0].clip_id) old = await dropClip(tx, wid, cur.rows[0].clip_id);
     await audit(tx, wid, meta.actorId, 'exercise.clip', meta.exerciseId, meta.requestId);
     return { status: 200, body: { id: meta.exerciseId, clipId: c.rows[0]!.id, revision: r.rows[0]!.revision } };
   });
+  await removeObjects(old ? [old] : []);
+  return res;
+}
+
+/** Supprime la ligne d’une vidéo ; rend son adresse dans le stockage s’il y en a une (à retirer après validation). */
+async function dropClip(tx: Tx, wid: string, clipId: string): Promise<string | null> {
+  const r = await tx.query<{ object_path: string | null }>('delete from public.exercise_clips where workspace_id = $1 and id = $2 returning object_path', [wid, clipId]);
+  return r.rows[0]?.object_path ?? null;
+}
+
+/** Retire les fichiers du stockage une fois la base à jour ; un échec laisse un fichier orphelin, jamais une vidéo cassée. */
+async function removeObjects(paths: string[], store: VideoStore | null = videoStore()) {
+  if (!paths.length || !store) return;
+  await store.remove(paths).catch((e: unknown) => console.error(JSON.stringify({ module: 'exercises', code: 'STORAGE_REMOVE_FAILED', error: (e as Error)?.name })));
+}
+
+const startSchema = z.object({ contentType: z.enum(EXERCISE_CLIP_TYPES), size: z.number().int().min(1) }).strict();
+const finishSchema = z.object({ clipId: z.string().uuid() }).strict();
+const tooHeavy = () => invalid([{ path: 'video', rule: 'Vidéo trop lourde (50 Mio au plus, environ une minute)' }]);
+
+async function requireExercise(actorId: string, wid: string, exerciseId: string) {
+  await commandAs(actorId, async (tx) => {
+    await requireCoach(tx, wid);
+    const r = await tx.query('select 1 from public.exercises where workspace_id = $1 and id = $2', [wid, exerciseId]);
+    if (!r.rows[0]) throw notVisible();
+  });
+}
+
+/**
+ * startExerciseClipUpload · C · D-173 : lien d’envoi direct vers le stockage privé, pour une nouvelle vidéo de l’exercice.
+ * Sans stockage configuré (démonstration), « server » : la vidéo est envoyée à CoachOS comme avant.
+ */
+export async function startExerciseClipUpload(meta: Meta & { exerciseId: string }, body: unknown, store: VideoStore | null = videoStore()): Promise<StoredResponse> {
+  const v = parse<{ contentType: string; size: number }>(startSchema, body);
+  const wid = meta.workspaceId;
+  await requireExercise(meta.actorId, wid, meta.exerciseId);
+  if (!store) return { status: 200, body: { mode: 'server' } };
+  if (v.size > EXERCISE_CLIP_STORAGE_MAX_BYTES) throw tooHeavy();
+  const clipId = randomUUID();
+  try {
+    return { status: 200, body: { mode: 'direct', clipId, uploadUrl: await store.uploadUrl(clipObjectPath(wid, clipId)) } };
+  } catch (e) {
+    // Stockage injoignable (Supabase local lancé sans stockage, panne) : la vidéo passe par CoachOS, comme avant ; l’incident est signalé.
+    console.error(JSON.stringify({ reqId: meta.requestId, module: 'exercises', code: 'STORAGE_UNAVAILABLE', error: (e as Error)?.name }));
+    await reportError(e, { module: 'exercises', code: 'STORAGE_UNAVAILABLE', requestId: meta.requestId });
+    return { status: 200, body: { mode: 'server' } };
+  }
+}
+
+/**
+ * finishExerciseClipUpload · C · D-173 : la vidéo envoyée est vérifiée (présente, reconnue par son contenu, 50 Mio au plus),
+ * puis rattachée à l’exercice ; la précédente est retirée. Un fichier refusé est supprimé du stockage.
+ */
+export async function finishExerciseClipUpload(meta: Meta & { exerciseId: string }, body: unknown, store: VideoStore | null = videoStore()): Promise<StoredResponse> {
+  const { clipId } = parse<{ clipId: string }>(finishSchema, body);
+  const wid = meta.workspaceId;
+  if (!store) throw new AppError('ACTION_FORBIDDEN_OR_FEATURE_DISABLED', 'Le stockage des vidéos n’est pas disponible ici.');
+  await requireExercise(meta.actorId, wid, meta.exerciseId);
+  const path = clipObjectPath(wid, clipId);
+  // Vérifié avant la transaction : on ne garde pas une connexion à la base pendant l’aller-retour au stockage.
+  const found = await store.head(path);
+  if (!found) throw invalid([{ path: 'video', rule: 'Vidéo introuvable : l’envoi n’est pas allé au bout. Renvoie-la.' }]);
+  const type = detectVideoType(found.head);
+  if (!type || found.size > EXERCISE_CLIP_STORAGE_MAX_BYTES) {
+    await store.remove([path]).catch(() => undefined);
+    throw type ? tooHeavy() : invalid([{ path: 'video', rule: 'Format non reconnu : MP4, MOV ou WebM' }]);
+  }
+  let old: string | null = null;
+  const res = await commandAs(meta.actorId, async (tx) => {
+    await requireCoach(tx, wid);
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'exercise.clip.finish', key: meta.idempotencyKey, body: { id: meta.exerciseId, clipId } }, async () => {
+      const cur = await tx.query<{ clip_id: string | null; revision: number }>('select clip_id, revision from public.exercises where workspace_id = $1 and id = $2 for update', [wid, meta.exerciseId]);
+      if (!cur.rows[0]) throw notVisible();
+      if (cur.rows[0].clip_id === clipId) return { status: 200, body: { id: meta.exerciseId, clipId, revision: cur.rows[0].revision } };
+      const taken = await tx.query('select 1 from public.exercise_clips where workspace_id = $1 and id = $2', [wid, clipId]);
+      if (taken.rows[0]) throw conflict('Cette vidéo est déjà rattachée à un exercice.');
+      await tx.query(
+        'insert into public.exercise_clips(workspace_id, id, owner_id, content_type, object_path, size_bytes) values ($1, $2, auth.uid(), $3, $4, $5)',
+        [wid, clipId, type, path, found.size],
+      );
+      const r = await tx.query<{ revision: number }>(
+        'update public.exercises set clip_id = $3, revision = revision + 1 where workspace_id = $1 and id = $2 returning revision',
+        [wid, meta.exerciseId, clipId],
+      );
+      if (cur.rows[0].clip_id) old = await dropClip(tx, wid, cur.rows[0].clip_id);
+      await audit(tx, wid, meta.actorId, 'exercise.clip', meta.exerciseId, meta.requestId);
+      return { status: 200, body: { id: meta.exerciseId, clipId, revision: r.rows[0]!.revision } };
+    });
+  });
+  await removeObjects(old ? [old] : [], store);
+  return res;
 }
 
 /** removeExerciseClip · C : retirer la vidéo filmée (le lien éventuel reste). */
 export async function removeExerciseClip(meta: Meta & { exerciseId: string }): Promise<StoredResponse> {
   const wid = meta.workspaceId;
-  return commandAs(meta.actorId, async (tx) => {
+  let old: string | null = null;
+  const res = await commandAs(meta.actorId, async (tx) => {
     await requireCoach(tx, wid);
     return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'exercise.clip.remove', key: meta.idempotencyKey, body: { id: meta.exerciseId } }, async () => {
       const cur = await tx.query<{ clip_id: string | null }>('select clip_id from public.exercises where workspace_id = $1 and id = $2 for update', [wid, meta.exerciseId]);
       if (!cur.rows[0]) throw notVisible();
       const r = await tx.query<{ revision: number }>('update public.exercises set clip_id = null, revision = revision + 1 where workspace_id = $1 and id = $2 returning revision', [wid, meta.exerciseId]);
-      if (cur.rows[0].clip_id) await tx.query('delete from public.exercise_clips where workspace_id = $1 and id = $2', [wid, cur.rows[0].clip_id]);
+      if (cur.rows[0].clip_id) old = await dropClip(tx, wid, cur.rows[0].clip_id);
       await audit(tx, wid, meta.actorId, 'exercise.clip.remove', meta.exerciseId, meta.requestId);
       return { status: 200, body: { id: meta.exerciseId, revision: r.rows[0]!.revision } };
     });
   });
+  await removeObjects(old ? [old] : []);
+  return res;
 }

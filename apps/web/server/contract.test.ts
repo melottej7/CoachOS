@@ -27,6 +27,8 @@ import { coachWorkout, openReviews } from './repo/coach';
 import { decideGoal } from './commands/goal-decisions';
 import { buildRegeneration, createProgram, regenContext, regenerateProgram, seenOf } from './commands/programs';
 import { addPerformance, deletePerformance } from './commands/performances';
+import { createExercise, finishExerciseClipUpload, startExerciseClipUpload } from './commands/exercises';
+import { setVideoStore } from './storage/video-store';
 import { applyWeekProposal, weekProposals } from './commands/week-proposals';
 
 // Test de contrat : chaque réponse réelle des commandes est validée contre contracts/openapi.json
@@ -58,6 +60,32 @@ beforeAll(async () => {
 });
 
 describe('réponses conformes au contrat OpenAPI', () => {
+  it('vidéo envoyée au stockage (D-173) : lien d’envoi, rattachement, repli sans stockage', async () => {
+    const files = new Map<string, Uint8Array>();
+    setVideoStore({
+      uploadUrl: async (p) => `https://stockage.test/envoi/${p}?jeton=1`,
+      head: async (p) => { const f = files.get(p); return f ? { size: f.length, head: f } : null; },
+      readUrl: async (p) => `https://stockage.test/lecture/${p}`,
+      remove: async () => undefined,
+    });
+    try {
+      const { id } = (await createExercise({ ...meta(USERS.marine), workspaceId: WORKSPACE_A }, { name: 'Contrat vidéo' })).body as { id: string };
+      const m = () => ({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, exerciseId: id });
+      const V = '/workspaces/{wid}/exercises/{eid}/video';
+      const s = await startExerciseClipUpload(m(), { contentType: 'video/mp4', size: 2048 });
+      check(`${V}/upload`, 'post', s.status, s.body);
+      const { clipId } = s.body as { clipId: string };
+      files.set(`${WORKSPACE_A}/${clipId}`, Uint8Array.from([0, 0, 0, 24, ...Buffer.from('ftypisom'), 0, 0, 2, 0, ...Buffer.from('isomiso2mp41'), 1, 2, 3]));
+      const f = await finishExerciseClipUpload(m(), { clipId });
+      check(`${V}/finish`, 'post', f.status, f.body);
+      setVideoStore(null);
+      const srv = await startExerciseClipUpload(m(), { contentType: 'video/mp4', size: 2048 });
+      check(`${V}/upload`, 'post', srv.status, srv.body);
+    } finally {
+      setVideoStore(undefined);
+    }
+  });
+
   it('séances : créer, modifier, publier (durée réelle de 35 min incluse)', async () => {
     const data = { localDate: todayIn(TIME_ZONE), timeZone: TIME_ZONE, sport: 'running', title: 'Contrat', durationSeconds: 2100, intervals: [] };
     const m = { ...meta(USERS.marine), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille };

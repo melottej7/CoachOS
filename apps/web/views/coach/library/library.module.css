@@ -51,3 +51,7 @@
 .exOpen { padding: 0 var(--ds-4) var(--ds-4); }
 .exNew { padding: var(--ds-4); border: 1px solid var(--ds-coach); border-radius: var(--ds-radius-lg); background: var(--ds-surface); }
 .media { max-width: 420px; }
+/* D-173 · Avancement de l’envoi d’une vidéo vers le stockage. */
+.upload { inline-size: 100%; max-inline-size: 420px; block-size: 6px; border-radius: 3px; background: var(--ds-surface-3); overflow: hidden; }
+.upload > span { display: block; block-size: 100%; background: var(--ds-coach); transition: inline-size 200ms linear; }
+@media (prefers-reduced-motion: reduce) { .upload > span { transition: none; } }

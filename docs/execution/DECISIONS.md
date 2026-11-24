@@ -2491,3 +2491,13 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Guidage** : « Dernière série ! », mi-chemin annoncé dès 4 min. Les pauses ne comptent pas dans la durée, ni donc dans la durée préremplie du retour.
 - **Où** : la logique est dans le domaine (`followStart`, `followGate`, `followExercises`) et testée ; les parcours séries et cardio sont étendus (reprise, rechargement, passer). Côté coach, rien ne change.
 - **Non vérifié** : sur un vrai téléphone. Vérifié dans le Chromium des tests à 390 et 1440 px ; le navigateur intégré ne charge pas la démo locale.
+
+## D-173 · Vidéos filmées dans le stockage de fichiers Supabase · 2026-11-24
+
+- **Pourquoi** : en ligne, Vercel refuse tout envoi de plus de 4,5 Mo ; une vidéo filmée au téléphone était limitée à 10 à 15 secondes. C’était le dernier point du chantier Confiance.
+- **Envoi** : le serveur contrôle les droits du coach et signe un lien d’envoi pour l’adresse « espace/vidéo » d’un compartiment privé (`exercise-videos`, 50 Mio). Le téléphone envoie directement, avec une barre d’avancement. CoachOS vérifie ensuite le fichier (présent, reconnu par son contenu, 50 Mio au plus), le rattache à l’exercice et retire la vidéo précédente. Un fichier refusé est supprimé.
+- **Lecture** : même adresse qu’avant. Après contrôle des droits, CoachOS redirige vers un lien signé de 2 heures ; le stockage sert les plages d’octets. Aucune règle d’accès client : sans signature, rien n’est lisible.
+- **Repli** : les vidéos déjà en base restent lues comme avant. Sans stockage (démonstration, tests) ou s’il ne répond pas, l’envoi passe par CoachOS comme avant, et l’incident est signalé.
+- **Migration additive** `20261124100000` (colonnes `object_path` et `size_bytes`, octets facultatifs, compartiment créé). Le code lit la nouvelle colonne : la migration doit être appliquée en ligne avant la fusion. Supabase local démarre désormais avec le stockage.
+- **Correctif D-172** : la pause fige le chrono à l’instant du toucher, même si l’écran se met à jour plus tard.
+- **Vérifié** : contre Supabase local, une vidéo de 14,3 Mo envoyée, lue (302 puis 206), refusée à un autre espace (404), sans session (401) et sans signature (400), puis retirée du stockage. **Non couvert** : la sauvegarde de la base n’inclut pas les fichiers du stockage.

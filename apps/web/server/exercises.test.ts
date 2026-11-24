@@ -2,10 +2,11 @@ import { randomUUID } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { STARTER_EXERCISES } from '@coachos/domain';
 import { openDatabase, setDb } from './db/client';
-import { USERS, WORKSPACE_A } from './db/fixtures';
+import { USERS, WORKSPACE_A, WORKSPACE_B } from './db/fixtures';
 import { AppError } from './errors';
-import { addStarterExercises, createExercise, removeExerciseClip, updateExercise, uploadExerciseClip } from './commands/exercises';
+import { addStarterExercises, createExercise, finishExerciseClipUpload, removeExerciseClip, startExerciseClipUpload, updateExercise, uploadExerciseClip } from './commands/exercises';
 import { listExercises, readExercise, readExerciseClip } from './repo/exercises';
+import { setVideoStore, type VideoStore } from './storage/video-store';
 
 // D-096 : bibliothèque d’exercices de musculation, vidéos privées à l’espace.
 
@@ -63,7 +64,7 @@ describe('exercices de musculation (D-096)', () => {
     const first = (await uploadExerciseClip(up, mp4())).body as { clipId: string };
     const clip = await readExerciseClip(USERS.camille, WORKSPACE_A, id);
     expect(clip?.type).toBe('video/mp4');
-    expect(clip?.bytes.length).toBe(mp4().length);
+    expect(clip?.bytes?.length).toBe(mp4().length);
     expect(await readExerciseClip(USERS.lea, WORKSPACE_A, id)).toBeNull();
     const second = (await uploadExerciseClip({ ...up, requestId: randomUUID() }, mp4())).body as { clipId: string };
     expect(second.clipId).not.toBe(first.clipId);
@@ -71,5 +72,79 @@ describe('exercices de musculation (D-096)', () => {
     expect(rev).toBe(3);
     await removeExerciseClip({ ...meta(USERS.marine), exerciseId: id });
     expect(await readExerciseClip(USERS.camille, WORKSPACE_A, id)).toBeNull();
+  });
+});
+
+/** Faux stockage en mémoire : ce que le téléphone a envoyé, et ce qui a été retiré. */
+function memoryStore() {
+  const files = new Map<string, Uint8Array>();
+  const removed: string[] = [];
+  const store: VideoStore = {
+    uploadUrl: async (path) => `https://stockage.test/envoi/${path}?jeton=1`,
+    head: async (path) => { const f = files.get(path); return f ? { size: f.length, head: f.slice(0, 4096) } : null; },
+    readUrl: async (path, seconds) => `https://stockage.test/lecture/${path}?s=${seconds}`,
+    remove: async (paths) => { for (const x of paths) { files.delete(x); removed.push(x); } },
+  };
+  return { store, files, removed };
+}
+
+describe('vidéo envoyée directement au stockage (D-173)', () => {
+  it('lien d’envoi au seul coach, vidéo vérifiée puis rattachée, remplacée, retirée ; fichiers refusés supprimés', async () => {
+    const { store, files, removed } = memoryStore();
+    setVideoStore(store);
+    try {
+      const { id } = (await createExercise(meta(USERS.marine), { name: 'Fentes filmées' })).body as { id: string };
+      const m = (actorId: string, workspaceId = WORKSPACE_A) => ({ ...meta(actorId), workspaceId, exerciseId: id });
+      const want = { contentType: 'video/quicktime', size: 30 * 1024 * 1024 };
+      // Droits : ni l’élève, ni le coach d’un autre espace ; taille et type bornés.
+      expect(await codeOf(startExerciseClipUpload(m(USERS.camille), want))).toBe('RESOURCE_NOT_VISIBLE');
+      expect(await codeOf(startExerciseClipUpload(m(USERS.hugo), want))).toBe('RESOURCE_NOT_VISIBLE');
+      expect(await codeOf(startExerciseClipUpload(m(USERS.hugo, WORKSPACE_B), want))).toBe('RESOURCE_NOT_VISIBLE');
+      expect(await codeOf(startExerciseClipUpload(m(USERS.marine), { ...want, size: 51 * 1024 * 1024 }))).toBe('INVALID_FIELDS');
+      expect(await codeOf(startExerciseClipUpload(m(USERS.marine), { ...want, contentType: 'text/html' }))).toBe('INVALID_FIELDS');
+
+      const start = async () => (await startExerciseClipUpload(m(USERS.marine), want)).body as { mode: string; clipId: string; uploadUrl: string };
+      const a = await start();
+      expect(a.mode).toBe('direct');
+      expect(a.uploadUrl).toContain(`${WORKSPACE_A}/${a.clipId}`);
+      // Rien d’envoyé, puis un faux fichier : refusés, le faux est supprimé du stockage.
+      expect(await codeOf(finishExerciseClipUpload(m(USERS.marine), { clipId: a.clipId }))).toBe('INVALID_FIELDS');
+      files.set(`${WORKSPACE_A}/${a.clipId}`, Uint8Array.from(Buffer.from('<html>pas une vidéo</html>')));
+      expect(await codeOf(finishExerciseClipUpload(m(USERS.marine), { clipId: a.clipId }))).toBe('INVALID_FIELDS');
+      expect(removed).toContain(`${WORKSPACE_A}/${a.clipId}`);
+
+      // Une vraie vidéo : rattachée ; l’élève de l’espace la lit par le stockage, pas un autre espace ; l’élève ne la rattache pas.
+      const b = await start();
+      files.set(`${WORKSPACE_A}/${b.clipId}`, mp4());
+      expect(await codeOf(finishExerciseClipUpload(m(USERS.camille), { clipId: b.clipId }))).toBe('RESOURCE_NOT_VISIBLE');
+      const key = randomUUID();
+      const done = await finishExerciseClipUpload({ ...m(USERS.marine), idempotencyKey: key }, { clipId: b.clipId });
+      expect(done.body).toMatchObject({ id, clipId: b.clipId, revision: 2 });
+      expect(await readExerciseClip(USERS.camille, WORKSPACE_A, id)).toEqual({ type: 'video/mp4', path: `${WORKSPACE_A}/${b.clipId}` });
+      expect(await readExerciseClip(USERS.lea, WORKSPACE_B, id)).toBeNull();
+      // Rejouée (même clé ou nouvelle) : même résultat, pas de doublon.
+      expect((await finishExerciseClipUpload({ ...m(USERS.marine), idempotencyKey: key }, { clipId: b.clipId })).body).toEqual(done.body);
+      expect((await finishExerciseClipUpload(m(USERS.marine), { clipId: b.clipId })).body).toMatchObject({ clipId: b.clipId, revision: 2 });
+
+      // Remplacée : l’ancienne quitte le stockage ; retirée : la nouvelle aussi.
+      const c = await start();
+      files.set(`${WORKSPACE_A}/${c.clipId}`, mp4());
+      await finishExerciseClipUpload(m(USERS.marine), { clipId: c.clipId });
+      expect(removed).toContain(`${WORKSPACE_A}/${b.clipId}`);
+      expect(files.has(`${WORKSPACE_A}/${b.clipId}`)).toBe(false);
+      await removeExerciseClip({ ...meta(USERS.marine), exerciseId: id });
+      expect(files.has(`${WORKSPACE_A}/${c.clipId}`)).toBe(false);
+      expect(await readExerciseClip(USERS.camille, WORKSPACE_A, id)).toBeNull();
+
+      // Stockage injoignable : repli sur l’envoi par CoachOS, sans erreur pour le coach.
+      setVideoStore({ ...store, uploadUrl: async () => { throw new Error('storage_down'); } });
+      expect((await startExerciseClipUpload(m(USERS.marine), want)).body).toEqual({ mode: 'server' });
+      // Sans stockage (démonstration) : l’envoi passe par CoachOS, comme avant.
+      setVideoStore(null);
+      expect((await startExerciseClipUpload(m(USERS.marine), want)).body).toEqual({ mode: 'server' });
+      expect(await codeOf(finishExerciseClipUpload(m(USERS.marine), { clipId: c.clipId }))).toBe('ACTION_FORBIDDEN_OR_FEATURE_DISABLED');
+    } finally {
+      setVideoStore(undefined);
+    }
   });
 });
