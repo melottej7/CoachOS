@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-24 (D-161 à D-166). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
+Dernière mise à jour : 2026-11-24 (D-161 à D-167). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
 
 ## Où en est CoachOS
 
@@ -18,7 +18,7 @@ Dernière mise à jour : 2026-11-24 (D-161 à D-166). Reprendre ici : ce fichier
 
 ## Refonte (D-123) et suite
 
-Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en direction Chrono (D-128) et **en ligne**. On travaille sur la branche `refonte`, fusionnée vers `main` par Pull Request (le fondateur pousse et fusionne). Depuis : droits vérifiés profil par profil (D-161), limitation des abus (D-162, en ligne), sauvegarde et restauration (D-163), cardio en paliers (D-164, en ligne), exercice en séries et circuit (D-165), suivre sa séance avec chronomètre, pause, bips et voix (D-166) ; tout est en ligne depuis la Pull Request n° 5 (24 novembre). À essayer par le fondateur sur un vrai téléphone : le son et la voix. Détail : [HISTORIQUE.md](HISTORIQUE.md) et [DECISIONS.md](DECISIONS.md).
+Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en direction Chrono (D-128) et **en ligne**. On travaille sur la branche `refonte`, fusionnée vers `main` par Pull Request (le fondateur pousse et fusionne). Depuis : droits vérifiés profil par profil (D-161), limitation des abus (D-162, en ligne), sauvegarde et restauration (D-163), cardio en paliers (D-164, en ligne), exercice en séries et circuit (D-165), suivre sa séance avec chronomètre, pause, bips et voix (D-166) ; tout est en ligne depuis la Pull Request n° 5 (24 novembre). Puis suivi finalisé (D-167, sur `refonte`, pas encore en ligne) : circuits enchaînés, mise en place de 5 s, reprise après rechargement ou « Quitter », « À suivre », déroulé. Voix du coach enregistrée et voix de synthèse à son image : plus tard, à sa demande. Détail : [HISTORIQUE.md](HISTORIQUE.md) et [DECISIONS.md](DECISIONS.md).
 
 ## Chantiers en cours (D-120)
 
@@ -52,6 +52,7 @@ Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, p
    - Plus tard, quand de vrais élèves payeront : Supabase Pro (25 $ par mois) pour des sauvegardes automatiques restaurables en un clic. Décision et paiement : toi.
 6. **Un vrai élève volontaire** · après le point 4 · débloque : la preuve de la boucle complète en ligne (invitation reçue, compte, séance, retour, revue). C’est une vraie personne : je ne l’invite jamais à ta place.
 7. **Relire la page de confidentialité** · 10 minutes · https://coach-os-xi-kohl.vercel.app/confidentialite. Texte exact techniquement, marqué « à faire relire par un professionnel » dans nos documents ; c’est toi qui l’assumes. Facultatif : Vercel › `COACHOS_CONTACT_EMAIL` = ton adresse de contact.
+7 bis. **Essayer « Suivre la séance » sur ton téléphone** · 5 minutes, après la prochaine fusion · une séance du jour › « Suivre la séance » › « Démarrer le chrono ». À vérifier : les bips (s’ils ne sonnent pas, le bouton silencieux sur le côté de l’iPhone est sans doute activé), la voix, l’écran qui reste allumé, « Quitter » puis « Reprendre la séance ». Dis-moi ce qui accroche.
 8. **Rappels sur ton iPhone** · 3 minutes · CoachOS installée sur l’écran d’accueil, ouverte depuis l’icône › 🔔 Notifications › **« Activer les rappels sur cet appareil »** › accepte. Puis publie-toi une séance depuis le Mac : dis-moi si le rappel arrive.
 9. **Paiement en mode test** · quand le chantier 3 commence · 10 minutes · https://stripe.com › compte › **mode test** (interrupteur en haut à droite) › Developers › API keys › copie la **clé secrète de test** (`sk_test_…`) dans Vercel `STRIPE_SECRET_KEY` (Sensitive). Rien ne sera facturé : l’interrupteur reste éteint en production jusqu’à ta décision. Le prix final et le nom du produit sont à toi (hypothèses : 29/59/99 € HT par mois).
 10. **Hygiène des comptes** · 5 minutes · Vercel › Account Settings › Authentication › **« Regenerate »** les codes de récupération (apparus sur une capture) et supprime cette capture. GitHub › ton avatar › **Settings** › **« Developer settings »** › **« Personal access tokens »** › **« Fine-grained tokens »** › le jeton collé dans la conversation (il commence par `github_pat_11CUYS`) › **« Delete »** : il a circulé en clair, il ne doit plus servir.

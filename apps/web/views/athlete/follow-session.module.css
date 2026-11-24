@@ -36,3 +36,31 @@
 .since { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-2xl); font-variant-numeric: tabular-nums; color: var(--ds-ink-2); }
 .total { display: flex; flex-direction: column; align-items: center; margin: 0; font-family: var(--ds-font-display); font-weight: 700; font-size: clamp(48px, 16vw, 72px); line-height: 1; font-variant-numeric: tabular-nums; }
 .total span { font-size: var(--ds-text-sm); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); }
+/* D-167 · déroulé, « À suivre » pendant le repos, mise en place avant un effort */
+.where { padding-inline: var(--ds-2); font-variant-numeric: tabular-nums; color: var(--ds-ink-2); }
+.outline { inline-size: min(560px, calc(100vw - 24px)); max-block-size: calc(100dvh - 48px); margin: auto; padding: 0; border: 1px solid var(--ds-rule-strong); border-radius: var(--ds-radius-xl); background: var(--ds-surface); color: var(--ds-ink); box-shadow: var(--ds-shadow-lg); overflow: hidden; }
+.outline[open] { display: flex; flex-direction: column; }
+.outline::backdrop { background: var(--ds-overlay, rgb(0 0 0 / .45)); }
+.outlineHead { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-3); padding: var(--ds-3) var(--ds-3) var(--ds-3) var(--ds-5); border-bottom: 1px solid var(--ds-rule); }
+.outlineTitle { margin: 0; font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-xl); }
+.outlineList { list-style: none; margin: 0; padding: var(--ds-2); overflow-y: auto; overscroll-behavior: contain; }
+.row { display: flex; align-items: center; gap: var(--ds-3); inline-size: 100%; min-block-size: 52px; padding: var(--ds-2) var(--ds-3); border: 0; border-radius: var(--ds-radius); background: transparent; color: var(--ds-ink); font: inherit; text-align: start; cursor: pointer; }
+.row:hover { background: var(--ds-surface-2); }
+.row:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: -2px; }
+.row[aria-current='step'] { background: var(--ds-coach-soft); }
+.rowRest { min-block-size: 40px; color: var(--ds-ink-2); }
+.rowDone { color: var(--ds-ink-2); }
+.rowMark { flex: none; display: inline-flex; align-items: center; justify-content: center; inline-size: 28px; block-size: 28px; border-radius: 50%; background: var(--ds-surface-2); font-size: var(--ds-text-xs); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ds-ink-2); }
+.rowDone .rowMark { background: var(--ds-success-soft); color: var(--ds-success); }
+.row[aria-current='step'] .rowMark { background: var(--ds-coach); color: var(--ds-on-coach, #fff); }
+.rowRest .rowMark { background: transparent; }
+.rowText { display: flex; flex-direction: column; min-inline-size: 0; }
+.rowName { font-weight: 600; overflow-wrap: anywhere; }
+.rowRest .rowName { font-weight: 500; font-size: var(--ds-text-sm); }
+.rowDetail { font-size: var(--ds-text-sm); color: var(--ds-ink-2); font-variant-numeric: tabular-nums; }
+.upNext { display: flex; flex-direction: column; gap: 2px; padding: var(--ds-3) var(--ds-4); border-radius: var(--ds-radius); background: var(--ds-surface); border: 1px solid var(--ds-rule); }
+.upLabel { font-size: var(--ds-text-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); }
+.upName { font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-2xl); line-height: 1.1; overflow-wrap: anywhere; }
+.upDetail { font-weight: 600; color: var(--ds-ink-2); font-variant-numeric: tabular-nums; }
+.leadLabel { margin: 0; font-family: var(--ds-font-display); font-weight: 600; font-size: var(--ds-text-lg); color: var(--ds-ink-2); }
+.leading .clock { color: var(--ds-coach); }
