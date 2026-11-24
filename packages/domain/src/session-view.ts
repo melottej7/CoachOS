@@ -1,8 +1,8 @@
 import type { Sport } from './sports';
 import { sessionProfile } from './session-profile';
 import {
-  describeBlock, describeIntensity, describeMeasure, formatKm, PHASE_LABELS, personalTarget, roundEstimate, structureTotals,
-  type Block, type References, type Step,
+  cardioName, describeBlock, describeIntensity, describeMeasure, describeStage, describeStageSettings, formatClock, formatKm, PHASE_LABELS,
+  personalTarget, roundEstimate, stageProfile, structureTotals, type Block, type References, type Step,
 } from './structure';
 
 /**
@@ -21,6 +21,10 @@ export interface SessionRow {
   badge: string | null;
   /** Exercices du bloc (bibliothèque), pour montrer leur vidéo. */
   exerciseIds: string[];
+  /** D-164 : paliers d’un cardio sur machine, un texte par palier (« 7 min · niveau 2 »). */
+  stages: string[];
+  /** D-164 : profil des paliers (largeur selon la durée, hauteur selon le réglage), vide s’il n’y a rien à dessiner. */
+  stageBars: { seconds: number; height: number }[];
 }
 
 export interface SessionView {
@@ -53,8 +57,20 @@ function firstZoned(b: Block): Step | null {
 
 function stepRow(s: Step, sport: Sport, refs?: References): SessionRow {
   const intensity = s.intensity.kind === 'zone' ? null : describeIntensity(s.intensity);
+  if (s.cardio) {
+    const c = s.cardio;
+    const total = formatClock(c.stages.reduce((n, x) => n + x.seconds, 0));
+    const one = c.stages.length === 1 ? describeStageSettings(c.stages[0]!, c.machine) : null;
+    return {
+      zone: 0, title: cardioName(s),
+      detail: [total, c.stages.length > 1 ? `${c.stages.length} paliers` : one, s.note].filter(Boolean).join(' · '),
+      target: null, repeat: false, badge: null, exerciseIds: s.exercise?.id ? [s.exercise.id] : [],
+      stages: c.stages.length > 1 ? c.stages.map((x) => describeStage(x, c.machine)) : [],
+      stageBars: stageProfile(c),
+    };
+  }
   if (s.exercise) {
-    return { zone: 0, title: s.exercise.name, detail: [describeMeasure(s.measure), intensity, s.note].filter(Boolean).join(' · '), target: null, repeat: false, badge: '1×', exerciseIds: s.exercise.id ? [s.exercise.id] : [] };
+    return { zone: 0, title: s.exercise.name, detail: [describeMeasure(s.measure), intensity, s.note].filter(Boolean).join(' · '), target: null, repeat: false, badge: '1×', exerciseIds: s.exercise.id ? [s.exercise.id] : [], stages: [], stageBars: [] };
   }
   return {
     zone: zoneOf(s),
@@ -64,19 +80,20 @@ function stepRow(s: Step, sport: Sport, refs?: References): SessionRow {
     repeat: false,
     badge: null,
     exerciseIds: [],
+    stages: [], stageBars: [],
   };
 }
 
 const flat = (bs: Block[]): Step[] => bs.flatMap((b) => (b.type === 'step' ? [b] : flat(b.steps)));
-const hasExercise = (b: Block) => flat([b]).some((x) => x.exercise);
+const hasExercise = (b: Block) => flat([b]).some((x) => x.exercise || x.cardio);
 
 /** Séries de musculation : « Squat goblet », « 4 séries · 10 répétitions · 16 kg · repos 1 min 30 s ». */
 function strengthRow(b: Extract<Block, { type: 'repeat' }>): SessionRow {
   const steps = flat(b.steps);
-  const work = steps.filter((x) => x.exercise);
-  const rest = steps.find((x) => !x.exercise && x.phase === 'rest');
-  const names = [...new Set(work.map((x) => x.exercise!.name))];
-  const what = work.map((x) => [describeMeasure(x.measure), x.intensity.kind === 'load' ? describeIntensity(x.intensity) : null].filter(Boolean).join(' · '));
+  const work = steps.filter((x) => x.exercise || x.cardio);
+  const rest = steps.find((x) => !x.exercise && !x.cardio && x.phase === 'rest');
+  const names = [...new Set(work.map((x) => cardioName(x) || x.exercise!.name))];
+  const what = work.map((x) => (x.cardio ? describeStep1(x) : [describeMeasure(x.measure), x.intensity.kind === 'load' ? describeIntensity(x.intensity) : null].filter(Boolean).join(' · ')));
   return {
     zone: 0,
     title: names.join(' + '),
@@ -84,9 +101,13 @@ function strengthRow(b: Extract<Block, { type: 'repeat' }>): SessionRow {
     target: null,
     repeat: true,
     badge: `${b.times}×`,
-    exerciseIds: [...new Set(work.map((x) => x.exercise!.id).filter((x): x is string => Boolean(x)))],
+    exerciseIds: [...new Set(work.map((x) => x.exercise?.id).filter((x): x is string => Boolean(x)))],
+    stages: [], stageBars: [],
   };
 }
+
+/** Cardio dans une série : « 2 min · 1:55 /500 m » ou « 6 min en 3 paliers ». */
+const describeStep1 = (x: Step) => (x.cardio!.stages.length === 1 ? describeStage(x.cardio!.stages[0]!, x.cardio!.machine) : `${formatClock(x.cardio!.stages.reduce((n, y) => n + y.seconds, 0))} en ${x.cardio!.stages.length} paliers`);
 
 export function sessionView(blocks: Block[], sport: Sport, refs?: References, declaredSeconds?: number | null): SessionView {
   const totals = structureTotals(blocks, { sport, refs });
@@ -103,13 +124,13 @@ export function sessionView(blocks: Block[], sport: Sport, refs?: References, de
       return {
         zone: maxZone(b), title: `${b.times} × ${describeMeasure(work.measure)}`,
         detail: `récupération ${describeMeasure(rec.measure)}${recZone ? ` en Z${recZone}` : ''}`,
-        target: key ? personalTarget(key, sport, refs) : null, repeat: true, badge: null, exerciseIds: [],
+        target: key ? personalTarget(key, sport, refs) : null, repeat: true, badge: null, exerciseIds: [], stages: [], stageBars: [],
       };
     }
-    return { zone: maxZone(b), title: describeBlock(b, sport).replace(/ · Z\d \([^)]*\)/g, (m) => m.replace(/ \([^)]*\)/, '')), detail: null, target: key ? personalTarget(key, sport, refs) : null, repeat: true, badge: null, exerciseIds: [] };
+    return { zone: maxZone(b), title: describeBlock(b, sport).replace(/ · Z\d \([^)]*\)/g, (m) => m.replace(/ \([^)]*\)/, '')), detail: null, target: key ? personalTarget(key, sport, refs) : null, repeat: true, badge: null, exerciseIds: [], stages: [], stageBars: [] };
   });
   const strengthSession = sport === 'strength' || blocks.some(hasExercise);
-  const exerciseNames = new Set(flat(blocks).filter((x) => x.exercise).map((x) => x.exercise!.name));
+  const exerciseNames = new Set(flat(blocks).filter((x) => x.exercise || x.cardio).map((x) => cardioName(x) || x.exercise!.name));
   const sets = blocks.reduce((n, b) => n + (b.type === 'repeat' && hasExercise(b) ? b.times : b.type === 'step' && b.exercise ? 1 : 0), 0);
   return {
     kind: strengthSession ? 'strength' : 'endurance',

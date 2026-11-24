@@ -32,7 +32,8 @@ export function strengthPlan(blocks: Block[]): PlannedEntry[] {
   const out = new Map<string, PlannedEntry>();
   for (const f of followSequence(blocks)) {
     const s = f.step;
-    if (!s.exercise || s.phase === 'rest' || s.phase === 'recovery') continue;
+    // D-164 : le cardio sur machine n’est pas une série à noter (et peut dépasser une heure).
+    if (!s.exercise || f.stage || s.phase === 'rest' || s.phase === 'recovery') continue;
     const key = keyOf(s.exercise.id, s.exercise.name);
     if (!out.has(key) && out.size >= 40) continue;
     const e = out.get(key) ?? { key, exerciseId: s.exercise.id, name: s.exercise.name, sets: [] };

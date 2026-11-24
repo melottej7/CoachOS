@@ -93,11 +93,16 @@ function StepScreen({ wid, f, next, exercises, logged, onLog, onNext, onPrev, la
   const ex = st.exercise?.id ? exercises[st.exercise.id] : undefined;
   const rest = isRest(f);
   const timed = st.measure.kind === 'time' ? st.measure.seconds : null;
-  const name = st.exercise?.name ?? (rest ? 'Repos' : PHASE_LABELS[st.phase]);
+  const stage = f.stage;
+  const name = stage?.name ?? st.exercise?.name ?? (rest ? 'Repos' : PHASE_LABELS[st.phase]);
   const zone = zoneOf(f);
   // Une étape chronométrée montre sa durée dans le chrono, pas deux fois ; la zone a sa pastille.
-  const target = [timed ? null : describeMeasure(st.measure), st.intensity.kind === 'zone' ? null : describeIntensity(st.intensity)].filter(Boolean).join(' · ');
-  const sets = setLabel(f.sets);
+  // D-164 : un palier de cardio montre ses réglages en grand (« niveau 2 · 60 tr/min »).
+  const target = stage ? stage.settings : [timed ? null : describeMeasure(st.measure), st.intensity.kind === 'zone' ? null : describeIntensity(st.intensity)].filter(Boolean).join(' · ');
+  const sets = [setLabel(f.sets), stage && stage.n > 1 ? `Palier ${stage.k} sur ${stage.n}` : null].filter(Boolean).join(' · ') || null;
+  // Les paliers s’enchaînent : le chrono du palier suivant part seul, comme sur la machine.
+  const chained = Boolean(stage && stage.k > 1);
+  const chainNext = Boolean(stage && stage.k < stage.n);
   const last = !rest && st.exercise ? lastDone[exerciseKey(st.exercise.id, st.exercise.name)] : undefined;
   const media = !rest && ex ? ExerciseMedia({ wid, exercise: ex }) : null;
   return (
@@ -112,7 +117,7 @@ function StepScreen({ wid, f, next, exercises, logged, onLog, onNext, onPrev, la
         {st.note ? <Text muted>{st.note}</Text> : null}
         {last ? <Text size="sm">La dernière fois : <strong>{last.text}</strong></Text> : null}
       </Stack>
-      {timed ? <Countdown seconds={timed} auto={rest} onEnd={onNext} rest={rest} /> : null}
+      {timed ? <Countdown seconds={timed} auto={rest || chained} onEnd={onNext} rest={rest} advance={rest || chainNext} /> : null}
       {media || ex?.instructions ? (
         <Stack gap={2}>
           {media}
@@ -133,7 +138,7 @@ function StepScreen({ wid, f, next, exercises, logged, onLog, onNext, onPrev, la
           </Button>
         </Cluster>
         {next ? (
-          <Text size="sm" muted>Ensuite : {next.step.exercise?.name ?? (isRest(next) ? 'repos' : PHASE_LABELS[next.step.phase].toLowerCase())}{next.step.measure.kind !== 'open' ? ` · ${describeMeasure(next.step.measure)}` : ''}</Text>
+          <Text size="sm" muted>Ensuite : {next.stage && next.stage.k > 1 ? `palier ${next.stage.k}` : next.stage?.name ?? next.step.exercise?.name ?? (isRest(next) ? 'repos' : PHASE_LABELS[next.step.phase].toLowerCase())}{next.step.measure.kind !== 'open' ? ` · ${describeMeasure(next.step.measure)}` : ''}{next.stage?.settings ? ` · ${next.stage.settings}` : ''}</Text>
         ) : <Text size="sm" muted>Dernière étape.</Text>}
       </Stack>
     </section>
@@ -141,7 +146,7 @@ function StepScreen({ wid, f, next, exercises, logged, onLog, onNext, onPrev, la
 }
 
 /** Compte à rebours fondé sur l’heure de fin (juste même si le téléphone met la page en pause). */
-function Countdown({ seconds, auto, rest, onEnd }: { seconds: number; auto: boolean; rest: boolean; onEnd: () => void }) {
+function Countdown({ seconds, auto, rest, advance = rest, onEnd }: { seconds: number; auto: boolean; rest: boolean; advance?: boolean; onEnd: () => void }) {
   const [endAt, setEndAt] = useState<number | null>(auto ? Date.now() + seconds * 1000 : null);
   const [left, setLeft] = useState(seconds);
   const ended = useRef(false);
@@ -153,19 +158,19 @@ function Countdown({ seconds, auto, rest, onEnd }: { seconds: number; auto: bool
       if (l === 0 && !ended.current) {
         ended.current = true;
         signal();
-        // Fin du repos : on enchaîne ; fin d’un effort chronométré : l’élève confirme.
-        if (rest) setTimeout(onEnd, 600);
+        // Fin du repos ou d’un palier qui en a un autre après : on enchaîne ; fin d’un effort chronométré : l’élève confirme.
+        if (advance) setTimeout(onEnd, 600);
       }
     };
     tick();
     const t = setInterval(tick, 250);
     return () => clearInterval(t);
-  }, [endAt, rest, onEnd]);
+  }, [endAt, advance, onEnd]);
   const ratio = endAt === null ? 1 : left / seconds;
   return (
     <div className={s.timer}>
       <p className={s.clock} aria-live={left === 0 ? 'assertive' : 'off'} role="timer">
-        {left === 0 ? (rest ? 'C’est reparti !' : 'Terminé !') : `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`}
+        {left === 0 ? (rest ? 'C’est reparti !' : advance ? 'Palier suivant' : 'Terminé !') : `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`}
       </p>
       <div className={s.timerBar} aria-hidden="true"><span style={{ inlineSize: `${ratio * 100}%` }} /></div>
       {endAt === null ? (

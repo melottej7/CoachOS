@@ -30,6 +30,9 @@ const EXAMPLES: [write: string, means: string][] = [
   ["vélo 1h Z2 + course 20' Z3", 'un enchaînement de deux sports'],
 ];
 
+/** D-164 : le cardio en paliers ne s’écrit pas en notation rapide ; « Remplacer » l’effacerait. */
+const hasCardio = (bs: Block[]): boolean => bs.some((b) => (b.type === 'step' ? Boolean(b.cardio) : hasCardio(b.steps)));
+
 /** Consignes « … » écrites dans un bloc (et ses répétitions), pour montrer qu’elles sont gardées. */
 const notesOf = (b: Block): string[] => (b.type === 'step' ? (b.note ? [b.note] : []) : b.steps.flatMap(notesOf));
 
@@ -42,17 +45,18 @@ export function QuickNotation({ sport, blocks, refs, onApply }: {
   const parsed = parseNotation(text, sport);
   const ready = !!text.trim() && !parsed.errors.length && parsed.blocks.length > 0;
   const rows = Math.min(6, Math.max(3, Math.ceil(text.length / 55)));
+  const cardio = hasCardio(blocks);
   return (
     <details className={s.qn} open={open} onToggle={(e) => {
       const o = (e.currentTarget as HTMLDetailsElement).open;
       setOpen(o);
-      if (o && !text.trim()) setText(toNotation(blocks, sport));
+      if (o && !text.trim() && !cardio) setText(toNotation(blocks, sport));
     }}>
       <summary className={s.qnSummary}><Icon name="edit" size={16} />Écrire la séance en texte</summary>
       <Stack gap={3} className={s.qnBody}>
         <Text size="sm" muted>
           Plus rapide que les boutons : écris toute la séance d’un coup, comme dans tes programmes. CoachOS la découpe en blocs et te montre ce qu’il a compris avant que tu l’appliques.
-          {blocks.length ? ' Le texte reprend la séance actuelle : modifie-le ou efface-le.' : ''}
+          {cardio ? ' Cette séance a du cardio en paliers, que le texte ne sait pas écrire : tu peux seulement ajouter des blocs à la fin.' : blocks.length ? ' Le texte reprend la séance actuelle : modifie-le ou efface-le.' : ''}
         </Text>
         <label htmlFor={`${id}-t`} className={s.label}>Ta séance en texte</label>
         <textarea id={`${id}-t`} className={cx(s.control, s.qnText)} rows={rows} spellCheck={false} autoCapitalize="off" autoComplete="off"
@@ -77,10 +81,12 @@ export function QuickNotation({ sport, blocks, refs, onApply }: {
           ) : null}
         </div>
         <Cluster gap={2}>
-          <Button variant="primary" disabled={!ready} onClick={() => { onApply(parsed.blocks, 'replace'); setText(''); setOpen(false); }}>
-            {blocks.length ? 'Remplacer la séance par ces blocs' : 'Créer ces blocs'}
-          </Button>
-          {blocks.length ? <Button disabled={!ready} onClick={() => { onApply(parsed.blocks, 'append'); setText(''); setOpen(false); }}>Ajouter ces blocs à la fin</Button> : null}
+          {cardio ? null : (
+            <Button variant="primary" disabled={!ready} onClick={() => { onApply(parsed.blocks, 'replace'); setText(''); setOpen(false); }}>
+              {blocks.length ? 'Remplacer la séance par ces blocs' : 'Créer ces blocs'}
+            </Button>
+          )}
+          {blocks.length ? <Button variant={cardio ? 'primary' : undefined} disabled={!ready} onClick={() => { onApply(parsed.blocks, 'append'); setText(''); setOpen(false); }}>Ajouter ces blocs à la fin</Button> : null}
         </Cluster>
       </Stack>
     </details>
