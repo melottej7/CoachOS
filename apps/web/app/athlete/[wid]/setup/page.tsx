@@ -1,3 +1,4 @@
+import { InstallGuide } from '@/views/athlete/install-guide';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { bilanCompletion, deriveBilan } from '@coachos/domain';
@@ -78,6 +79,8 @@ export default async function AthleteSetup({ params, searchParams }: { params: P
         <LinkButton href={`${base}/notifications`} icon="bell" size="sm">Notifications</LinkButton>
         <LinkButton href={`${base}/today?tour=start`} icon="info" size="sm" variant="ghost">Revoir la visite guidée</LinkButton>
       </Cluster>
+
+      <InstallGuide variant="profile" />
 
       <Card as="section" pad={5} aria-labelledby="bilan-state">
         <Stack gap={3}>

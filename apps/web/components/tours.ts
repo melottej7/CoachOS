@@ -26,6 +26,7 @@ const C = '/coach/:wid';
 export const TOURS: Record<TourId, TourStep[]> = {
   athlete: [
     { path: `${A}/today`, text: 'Salut ! Je suis ton guide CoachOS. En une minute, je te montre comment t’entraîner ici avec ton coach.', mood: 'cheer', href: (w) => `/athlete/${w}/today` },
+    { path: `${A}/today`, targets: ['install'], optional: true, text: 'D’abord, installe CoachOS sur ton téléphone : tu l’ouvriras d’un toucher, comme une appli. Cette carte te donne les étapes exactes pour ton appareil. Tu peux les suivre après la visite.', href: (w) => `/athlete/${w}/today` },
     { path: `${A}/today`, targets: ['today-card', 'today-empty'], text: 'Chaque jour, cet écran te montre la séance préparée par ton coach, avec sa durée.', textFor: { 'today-empty': 'Chaque jour, cet écran te montre la séance préparée par ton coach. Aujourd’hui, c’est repos.' }, href: (w) => `/athlete/${w}/today` },
     { path: `${A}/today`, targets: ['today-open'], action: 'click', optional: true, text: 'Touche « Voir la séance » pour l’ouvrir. Je te suis.' },
     { path: `${A}/workouts/:id`, targets: ['structure', 'workout-details'], optional: true, text: 'Voici le déroulé, bloc par bloc : ce qu’il faut faire, combien de temps, et à quelle intensité.', textFor: { 'workout-details': 'Ici, la durée prévue, puis les consignes de ton coach juste en dessous.' } },

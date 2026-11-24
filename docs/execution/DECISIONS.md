@@ -2464,3 +2464,21 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Paliers cardio** : poignée à gauche du numéro, comme pour les blocs. On glisse le palier à la souris ou au doigt, ou on le déplace avec les flèches haut et bas, et la position est annoncée aux lecteurs d’écran. Chaque palier a une clé stable : il garde ses valeurs, et ce qu’on y tapait, quand il change de place. La poignée n’apparaît qu’à partir de deux paliers.
 - **Note d’exercice** : zone de texte sur toute la largeur, qui grandit avec le texte (2 lignes au moins, 200 caractères comme avant).
 - **Preuves** : `e2e/cardio-paliers.spec.ts` déplace un palier au clavier puis à la souris ; captures à 1440 et 390 px, sans débordement. Aucune migration.
+
+## D-171 · Installer CoachOS sur le téléphone, pas à pas · 2026-11-24
+
+- **Demande du fondateur** : l’élève qui ouvre son lien doit être pris par la main, jusqu’à l’installation de l’application.
+- **Guide d’installation** (`views/athlete/install-guide.tsx`) : l’appareil est reconnu (`components/install-env.ts`, testé) et les étapes exactes s’affichent, avec les boutons dessinés comme à l’écran. Les cas couverts sont :
+  - iPhone avec Safari ;
+  - iPhone avec un autre navigateur ;
+  - lien ouvert dans WhatsApp, Instagram ou Messenger : d’abord « Ouvrir dans Safari ou Chrome » ;
+  - Android avec Chrome, avec un bouton « Installer CoachOS » en une touche quand Chrome le permet ;
+  - Samsung Internet ;
+  - ordinateur : l’adresse à ouvrir sur le téléphone, avec « Copier l’adresse ».
+  « Étapes pour » permet de corriger l’appareil reconnu. Une fois CoachOS ouverte depuis son icône, la carte ne s’affiche plus.
+- **Où** :
+  - sur « Aujourd’hui » : « C’est fait » la range pour de bon, « Plus tard » pour trois jours ;
+  - dans le Profil, une fois le bilan rempli ;
+  - à la 2ᵉ étape de la visite guidée de l’élève ;
+  - sur la page d’invitation, « Comment ça se passe » annonce les 3 étapes : compte, faire connaissance, installer.
+- **Non vérifié** : sur de vrais iPhone et Android, les libellés exacts des menus selon la version (les deux libellés courants sont donnés) et le bouton d’installation en une touche.
