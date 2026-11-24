@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { signUpSchema } from '@coachos/domain';
 import { logAuth, redirectTo, sameOrigin } from '@/server/auth/forms';
+import { clientIp, overLimit, waitMinutes } from '@/server/rate-limit';
 import { safeNext, supabaseConfigured, supabaseServer } from '@/server/supabase/server';
 
 /** Inscription coach : nom, adresse, mot de passe. Compte actif immédiatement en local (D-020). */
@@ -10,6 +11,11 @@ export async function POST(req: NextRequest) {
   if (!sameOrigin(req)) return new NextResponse(null, { status: 403 });
   const form = await req.formData();
   const next = safeNext(String(form.get('next') ?? '/'));
+  const wait = await overLimit('signup.ip', clientIp(req)); // D-162 : 5 inscriptions par heure et par connexion internet
+  if (wait) {
+    logAuth('rate_limited', 429);
+    return redirectTo(req, '/signup', { error: 'rate', wait: waitMinutes(wait), next });
+  }
   const parsed = signUpSchema.safeParse({
     firstName: String(form.get('firstName') ?? ''),
     lastName: String(form.get('lastName') ?? ''),

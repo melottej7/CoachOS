@@ -57,6 +57,7 @@ Après chaque réglage, ouvre `https://coach-os-xi-kohl.vercel.app/api/health` :
 1. Fait le 22 novembre : les 42 migrations sont appliquées au projet Supabase (`supabase db push`). Aucune donnée de démonstration n’est créée. **Le 23 novembre, deux migrations (effacement D-115, rappels push D-118) attendent ton `npx supabase db push --remote` dans le Terminal** : l’agent n’a pas le droit de modifier la base en ligne.
 2. Vérifié en ligne : page de connexion, formulaire d’inscription, contrôle de santé, lecture de la base. Reste à vérifier avec toi (section « Recette en ligne » du guide de recette) : inscription coach, invitation reçue par e-mail (après Resend), compte élève, séance publiée, retour, vidéo d’exercice sur iPhone, hors connexion.
 3. Consigné dans ETAT.md et GUIDE_RECETTE.md.
+4. Le 24 novembre : migration de la limitation des abus (D-162) appliquée en ligne par le fondateur (`npx supabase db push --remote`) ; 45 migrations en ligne.
 
 ## Points d’attention avant d’inviter de vrais élèves
 
