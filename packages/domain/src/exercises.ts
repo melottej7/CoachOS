@@ -180,6 +180,8 @@ export interface SetPos { k: number; n: number; kind: 'série' | 'tour' }
 /** Une étape à faire, dans l’ordre réel : les répétitions sont dépliées (« série 2 sur 4 »). */
 export interface FollowStep {
   index: number;
+  /** D-167 : rang du bloc de premier niveau (une carte d’exercice, un circuit, un cardio) dont vient l’étape. */
+  block: number;
   step: Step;
   /** De la répétition la plus extérieure à la plus intérieure. */
   sets: SetPos[];
@@ -189,9 +191,10 @@ export interface FollowStep {
 
 const workCount = (list: Block[]): number => list.reduce((n, b) => n + (b.type === 'repeat' ? workCount(b.steps) : b.phase === 'work' ? 1 : 0), 0);
 
-/** Séance dépliée pour le mode « Suivre » (400 étapes au plus). */
+/** Séance dépliée pour le mode « Suivre » (400 étapes au plus). D-167 : un repos tout à la fin de la séance est omis. */
 export function followSequence(blocks: Block[]): FollowStep[] {
   const out: FollowStep[] = [];
+  let block = 0;
   const walk = (list: Block[], sets: SetPos[]) => {
     for (const b of list) {
       if (out.length >= 400) return;
@@ -205,16 +208,29 @@ export function followSequence(blocks: Block[]): FollowStep[] {
         c.stages.forEach((x, j) => {
           if (out.length >= 400) return;
           out.push({
-            index: out.length, sets,
+            index: out.length, block, sets,
             step: { ...b, cardio: null, measure: { kind: 'time', seconds: x.seconds }, intensity: { kind: 'none' } },
             stage: { k: j + 1, n: c.stages.length, name: cardioName(b), settings: describeStageSettings(x, c.machine) },
           });
         });
-      } else out.push({ index: out.length, step: b, sets });
+      } else out.push({ index: out.length, block, step: b, sets });
     }
   };
-  walk(blocks, []);
+  blocks.forEach((b, k) => { block = k; walk([b], []); });
+  // Séance coupée à 400 étapes : rien à omettre, ce n’est pas la vraie fin.
+  while (out.length > 1 && out.length < 400 && out[out.length - 1]!.sets.length && ['rest', 'recovery'].includes(out[out.length - 1]!.step.phase)) out.pop();
   return out;
+}
+
+/**
+ * D-167 · Deux étapes chronométrées d’une même carte répétée (séries, circuit) ou deux paliers d’un cardio
+ * s’enchaînent comme une minuterie, sans toucher l’écran. Entre deux cartes, l’élève reprend la main.
+ */
+export function followChains(a: FollowStep | null | undefined, b: FollowStep | null | undefined): boolean {
+  if (!a || !b || a.block !== b.block) return false;
+  if (a.step.measure.kind !== 'time' || b.step.measure.kind !== 'time') return false;
+  if (a.stage && b.stage) return b.stage.k === a.stage.k + 1;
+  return a.sets.length > 0 && b.sets.length > 0;
 }
 
 /** « Série 2 sur 4 », « Tour 1 sur 3 · série 2 sur 5 ». */

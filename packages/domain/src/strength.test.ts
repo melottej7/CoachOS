@@ -93,7 +93,9 @@ describe('suivre la séance pas à pas (M3)', () => {
   it('répétitions dépliées dans l’ordre, séries et tours nommés', () => {
     const blocks = parseNotation("8' RPE3 + 4×(10 squats + repos 1'30) + 3×(12 fentes + 30\" planche + repos 45\")", 'strength').blocks;
     const seq = followSequence(blocks);
-    expect(seq).toHaveLength(1 + 4 * 2 + 3 * 3);
+    // D-167 : le repos qui finirait la séance est omis.
+    expect(seq).toHaveLength(1 + 4 * 2 + 3 * 3 - 1);
+    expect(seq.at(-1)!.step.exercise?.name).toBe('Planche');
     expect(seq[1]!.step.exercise?.name).toBe('Squats');
     expect(setLabel(seq[1]!.sets)).toBe('Série 1 sur 4');
     expect(setLabel(seq[7]!.sets)).toBe('Série 4 sur 4');

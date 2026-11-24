@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { followSequence } from './exercises';
+import { followChains, followSequence } from './exercises';
 import { announce, formatElapsed, reminderAt, spoken } from './follow-voice';
 import type { Block } from './structure';
 
@@ -43,5 +43,40 @@ describe('annonces vocales (D-166)', () => {
     expect(reminderAt(20, 10)).toBeNull();
     expect(formatElapsed(247_000)).toBe('4:07');
     expect(formatElapsed(3_750_000)).toBe('1:02:30');
+  });
+});
+
+describe('enchaînement comme une minuterie (D-167)', () => {
+  const work = (name: string, seconds: number): Block => ({ type: 'step', phase: 'work', sport: null, measure: { kind: 'time', seconds }, intensity: { kind: 'none' }, cadence: null, note: null, exercise: { id: null, name } });
+  const rest = (seconds: number): Block => ({ type: 'step', phase: 'rest', sport: null, measure: { kind: 'time', seconds }, intensity: { kind: 'none' }, cadence: null, note: null });
+
+  it('séries en temps : effort → repos → effort enchaînés ; le repos final de la séance est omis', () => {
+    const seq = followSequence([squat, planche]);
+    expect(seq).toHaveLength(1 + 6 * 2 - 1);
+    expect(seq.map((f) => f.block)).toEqual([0, ...Array(11).fill(1)]);
+    expect(followChains(seq[0], seq[1])).toBe(false); // le squat (en répétitions) ne lance pas la planche
+    for (let k = 1; k < seq.length - 1; k++) expect(followChains(seq[k], seq[k + 1])).toBe(true);
+    expect(followChains(seq.at(-1), null)).toBe(false);
+  });
+
+  it('circuit en temps : d’un exercice à l’autre et d’un tour au suivant, sans toucher l’écran', () => {
+    const circuit: Block = { type: 'repeat', times: 3, steps: [work('Squat sauté', 30), work('Pompes', 30), rest(15)] };
+    const seq = followSequence([circuit, planche]);
+    expect(followChains(seq[0], seq[1])).toBe(true); // squat sauté → pompes
+    expect(followChains(seq[2], seq[3])).toBe(true); // repos du tour 1 → tour 2
+    // Le repos du dernier tour reste : il mène à la carte suivante, que l’élève lance au doigt.
+    expect(seq[8]!.step.phase).toBe('rest');
+    expect(followChains(seq[8], seq[9])).toBe(false);
+  });
+
+  it('paliers d’un cardio : enchaînés entre eux, pas avec la carte suivante', () => {
+    const seq = followSequence([elliptique, planche]);
+    expect(followChains(seq[0], seq[1])).toBe(true);
+    expect(followChains(seq[1], seq[2])).toBe(false);
+  });
+
+  it('deux étapes en temps hors répétition ne s’enchaînent pas', () => {
+    const seq = followSequence([work('Vélo', 600), work('Rameur', 300)]);
+    expect(followChains(seq[0], seq[1])).toBe(false);
   });
 });

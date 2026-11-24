@@ -12,6 +12,7 @@ import {
 } from '@/design';
 import { ExerciseHowTo } from '@/views/athlete/exercise-howto';
 import { StrengthLog } from '@/views/athlete/strength-log';
+import { FollowButton } from '@/views/athlete/follow-button';
 
 export const metadata = { title: 'Séance' };
 
@@ -66,7 +67,7 @@ export default async function AthleteWorkoutPage({ params, searchParams }: { par
       {w.canceled ? null : (
         <Stack gap={2}>
           <Cluster gap={2} grow>
-            {followable ? <LinkButton href={`${base}/workouts/${sid}/suivre`} variant="coach" size="lg" icon="play">Suivre la séance</LinkButton> : null}
+            {followable ? <FollowButton href={`${base}/workouts/${sid}/suivre`} sid={sid} /> : null}
             <AnchorButton href={`/media/workspaces/${wid}/athletes/${aid}/workouts/${sid}/fit`} download size="lg" icon="watch">Pour ma montre</AnchorButton>
           </Cluster>
           <Disclosure summary="Comment la mettre sur ma montre ?">

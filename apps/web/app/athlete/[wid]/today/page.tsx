@@ -13,6 +13,7 @@ import {
   Badge, Banner, Card, Cluster, EmptyState, Eyebrow, Heading, LinkButton, LinkList, LinkListItem, SessionRows, SessionStats, SessionStrip, Stack, Text, VisuallyHidden, ZoneChip, type ZoneLevel,
 } from '@/design';
 import { FeedbackSent, QuickFeedback } from '@/views/athlete/quick-feedback';
+import { FollowButton } from '@/views/athlete/follow-button';
 
 export const metadata = { title: 'Aujourd’hui' };
 
@@ -79,7 +80,7 @@ export default async function Today({ params, searchParams }: { params: Promise<
             {w.instructions ? <Card pad={4}><Stack gap={1}><Eyebrow>Consignes de ton coach</Eyebrow><Text prose>{w.instructions}</Text></Stack></Card> : null}
             <Cluster gap={2} grow>
               {strength(w) && w.intervals.length && !w.canceled
-                ? <LinkButton href={`${base}/workouts/${w.id}/suivre`} variant="coach" size="lg" icon="play">Suivre la séance</LinkButton>
+                ? <FollowButton href={`${base}/workouts/${w.id}/suivre`} sid={w.id} />
                 : null}
               <LinkButton href={`${base}/workouts/${w.id}`} variant={strength(w) ? 'secondary' : 'coach'} size="lg" data-tour={k === 0 ? 'today-open' : undefined}>Voir la séance</LinkButton>
             </Cluster>

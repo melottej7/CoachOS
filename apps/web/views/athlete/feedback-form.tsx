@@ -7,7 +7,7 @@ import {
   type Block, type Change, type Difficulty, type FeedbackActivity, type ResultState, type Sport,
 } from '@coachos/domain';
 import { fieldError, useIntent } from '@/components/use-intent';
-import { followLogKey, readFollowElapsed, readFollowLog } from './follow-session';
+import { followLogKey, readFollowElapsed, readFollowLog } from './follow-store';
 import {
   Banner, Button, ChipChecks, ChipChoice, ChoiceGroup, Disclosure, Divider, Field, Grid, Heading, Input, LinkButton, ScaleChoice, Select, Stack, Text, Textarea,
   type IconName,
