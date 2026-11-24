@@ -2375,3 +2375,21 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Vérifié en ligne le 24 novembre** (Pull Request n° 3 fusionnée, `8d3c6e2`) : 61 présentations d’invitation avec un faux lien depuis une même connexion, chacune avec une fausse adresse différente dans `x-real-ip` et `x-forwarded-for` : 60 réponses « introuvable » (404), puis 429 avec `Retry-After: 508` et « Réessaie dans 9 minutes ». Le compteur fonctionne sur la base en ligne, et Vercel remplace l’adresse fournie par le visiteur : en changer ne contourne pas la limite.
 - **Non prouvé** : qu’un visiteur d’un autre réseau garde son propre compteur (documenté par Vercel, pas essayé depuis un second réseau) ; aucune connexion ratée essayée en ligne, pour ne pas bloquer la connexion du fondateur.
 - **Pas fait, volontairement** : limites sur les routes connectées (déjà réservées à un compte vérifié, aux droits contrôlés) ; blocage par adresse sur plusieurs jours.
+
+## D-163 · Sauvegarde complétée et restauration essayée en local · 2026-11-24
+
+- **Pourquoi** : D-116 a créé la sauvegarde (`npm run db:backup`), jamais exécutée ni restaurée. L’offre gratuite de Supabase ne garde aucune copie restaurable : cette sauvegarde est la seule. Chantier Confiance de D-120.
+- **Essai, entièrement en local** :
+  - sauvegarde de la base locale avec les mêmes options que le script (`supabase db dump --local`, schéma puis données ; lecture seule) ;
+  - base séparée `restauration_essai` créée dans le même conteneur avec le socle d’un projet Supabase neuf (schémas `auth`, `extensions`, `vault`, `storage`…, extensions, aucune donnée), jamais la base de recette ;
+  - restauration en une seule transaction sous le rôle `postgres` sans droits d’administrateur, comme sur Supabase en ligne ;
+  - comparaison avec l’original : nombre de lignes, sécurité par ligne, 48 politiques, 516 droits, 406 contraintes, 155 index, déclencheurs, fonctions, et **ce que voit chacun des 8 comptes dans chaque table** ; puis **empreinte du contenu de 71 tables** (publiques, compteur, historique des migrations, comptes et identités, mots de passe chiffrés compris) : identiques. Seule différence : `auth.schema_migrations`, table interne de Supabase Auth qu’un projet neuf remplit lui-même.
+- **Manque trouvé et corrigé** : la sauvegarde n’emportait pas l’**historique des migrations**. Sur une base restaurée, la mise en ligne suivante aurait rejoué les 45 migrations et échoué. `scripts/db-backup.mjs` écrit désormais un troisième fichier, `…-migrations.sql`. Après restauration, `supabase db push --dry-run` sur la base restaurée répond « up to date ».
+- **Restauration outillée** : `npm run db:restore -- <horodatage> "<adresse de la base>"` (`scripts/db-restore.mjs`, Node et `pg`, pas besoin de `psql` sur le Mac) :
+  - refuse toute base dont le schéma public ou private contient déjà une table : il ne peut rien écraser (essayé : refus sur la base restaurée et sur la base de recette locale, sans y toucher) ;
+  - refuse une base sans le socle de Supabase ;
+  - une seule transaction : en cas d’erreur, la base cible reste vide ;
+  - affiche un bilan (comptes, espaces, élèves, séances, migrations). Essai : « 8 comptes, 3 espaces, 7 élèves, 105 séances, 45 migrations ».
+- **Procédure en cas de perte** : [MISE_EN_LIGNE.md](MISE_EN_LIGNE.md), section « Restauration ». Les mots de passe des comptes sont conservés ; les sessions ouvertes, non (nouveau projet, nouvelle clé) : chacun se reconnecte.
+- **Nettoyage** : base d’essai supprimée, copies de la sauvegarde effacées (elles contenaient les données de recette) ; base de recette intacte (8 comptes, 3 espaces).
+- **Non prouvé** : la sauvegarde de la base en ligne (`npm run db:backup`, refusée à l’agent, point 5 de la liste du fondateur) ; une restauration dans un vrai projet Supabase neuf.
