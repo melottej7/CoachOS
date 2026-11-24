@@ -25,6 +25,7 @@
     "test:pg": "COACHOS_TEST_PG=1 vitest run --no-file-parallelism apps/web/server/loop.test.ts apps/web/server/concurrency.test.ts",
     "supabase:migrate": "PATH=\"$PATH:$HOME/.docker/bin\" supabase migration up",
     "db:backup": "node scripts/db-backup.mjs",
+    "db:restore": "node scripts/db-restore.mjs",
     "test:e2e": "playwright test"
   },
   "devDependencies": {

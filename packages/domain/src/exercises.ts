@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Block, Step } from './structure';
+import { cardioName, describeStageSettings, type Block, type Step } from './structure';
 
 /**
  * D-096 · Bibliothèque d’exercices de musculation. Chaque exercice a un nom, des consignes, un groupe musculaire,
@@ -183,6 +183,8 @@ export interface FollowStep {
   step: Step;
   /** De la répétition la plus extérieure à la plus intérieure. */
   sets: SetPos[];
+  /** D-164 : palier d’un cardio sur machine (« palier 2 sur 4 », réglages à afficher en grand). */
+  stage?: { k: number; n: number; name: string; settings: string };
 }
 
 const workCount = (list: Block[]): number => list.reduce((n, b) => n + (b.type === 'repeat' ? workCount(b.steps) : b.phase === 'work' ? 1 : 0), 0);
@@ -197,6 +199,17 @@ export function followSequence(blocks: Block[]): FollowStep[] {
         // Un circuit (plusieurs exercices) ou un bloc de séries se compte en tours ; un exercice répété, en séries.
         const kind = workCount(b.steps) > 1 || b.steps.some((x) => x.type === 'repeat') ? 'tour' : 'série';
         for (let k = 1; k <= b.times; k++) walk(b.steps, [...sets, { k, n: b.times, kind }]);
+      } else if (b.cardio) {
+        // D-164 : un écran et un chrono par palier ; les paliers s’enchaînent.
+        const c = b.cardio;
+        c.stages.forEach((x, j) => {
+          if (out.length >= 400) return;
+          out.push({
+            index: out.length, sets,
+            step: { ...b, cardio: null, measure: { kind: 'time', seconds: x.seconds }, intensity: { kind: 'none' } },
+            stage: { k: j + 1, n: c.stages.length, name: cardioName(b), settings: describeStageSettings(x, c.machine) },
+          });
+        });
       } else out.push({ index: out.length, step: b, sets });
     }
   };

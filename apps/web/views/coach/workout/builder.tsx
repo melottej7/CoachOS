@@ -5,6 +5,8 @@ import {
   describeBlock, describeTotals, formatClock, formatKm, formatPace, PHASES, PHASE_LABELS, presetsFor, SPORTS, SPORT_LABELS, stepEstimate,
   personalTarget, sessionView, structureTotals, usesCss, usesFtp, usesVma, ZONE_NAMES, ZONES,
   type Block, type Intensity, type Measure, type Phase, type References, type Sport, type Step, type Zone, exerciseFits, missingEquipment, type AthleteGear, type ExerciseEquipment, exerciseKey, formatShortDate, type LastDone,
+  CADENCE_UNIT, MACHINE_DEFAULT_SETTINGS, MACHINE_LABELS, MACHINE_SETTINGS, MACHINES, STAGE_SETTING_LABELS, stageProfile, stagesSeconds,
+  type Cardio, type Machine, type Stage, type StageSetting,
 } from '@coachos/domain';
 import { canDrop, find, lift, moveBlock, shift, type DropTarget } from '@/components/block-tree';
 import { mutate, newKey } from '@/components/api-client';
@@ -98,6 +100,26 @@ const newStrengthRepeat = (): ERepeat => ({
   steps: [newStrengthStep('work'), { ...newStep('rest'), measure: { kind: 'time', seconds: 90 } }],
 });
 
+/** D-164 : cardio sur machine en paliers ; d’office un palier de 10 minutes sur vélo elliptique. */
+const blankStage = (seconds: number, from?: Stage): Stage => ({
+  seconds, level: null, speedKmh: null, inclinePct: null, cadence: null, watts: null, split500: null, rpe: null, note: null, ...(from ? { ...from, seconds } : {}),
+});
+const newCardioStep = (phase: Phase, machine: Machine = 'elliptical'): EStep => ({
+  ...newStep(phase), cardio: { machine, stages: [blankStage(600)] }, measure: { kind: 'time', seconds: 600 },
+});
+/** Machine devinée d’après le nom d’un exercice déjà écrit (« Marche rapide » → tapis). */
+function guessMachine(name: string | undefined): Machine {
+  const n = (name ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+  if (/tapis|marche|treadmill|course|footing/.test(n)) return 'treadmill';
+  if (/ellip/.test(n)) return 'elliptical';
+  if (/velo|bike|spinning|cycl/.test(n)) return 'bike';
+  if (/rame|rower|aviron/.test(n)) return 'rower';
+  if (/escalier|stepper|stair|marches/.test(n)) return 'stairs';
+  if (/ski/.test(n)) return 'skierg';
+  return 'other';
+}
+const withCardio = (step: EStep, c: Cardio): EStep => ({ ...step, cardio: c, measure: { kind: 'time', seconds: stagesSeconds(c) }, intensity: { kind: 'none' } });
+
 /** D-102 : renforcement ajouté à une séance d’endurance (séance mixte) : 3 séries d’un exercice, étapes en musculation. */
 const newMixedStrength = (): ERepeat => ({
   type: 'repeat', times: 3, _k: key(),
@@ -155,7 +177,7 @@ function PaceInput({ id, value, onChange, label }: { id: string; value: number |
 }
 
 /** Durée en minutes et secondes : on garde le texte tapé, un champ vidé ne réinjecte pas de seconde parasite. */
-function TimeInputs({ seconds, onChange }: { seconds: number; onChange: (s: number) => void }) {
+function TimeInputs({ seconds, onChange, label, compact = false }: { seconds: number; onChange: (s: number) => void; label?: string; compact?: boolean }) {
   const [minText, setMinText] = useState(String(Math.floor(seconds / 60)));
   const [secText, setSecText] = useState(String(seconds % 60));
   const commit = (mt: string, st: string) => {
@@ -164,10 +186,10 @@ function TimeInputs({ seconds, onChange }: { seconds: number; onChange: (s: numb
   };
   return (
     <span className={s.inline}>
-      <input aria-label="Minutes" type="number" min={0} max={1440} value={minText} className={cx(s.control, s.num)}
+      <input aria-label={label ? `Minutes ${label}` : 'Minutes'} type="number" min={0} max={1440} value={minText} className={cx(s.control, compact ? s.numCompact : s.num)}
         onChange={(e) => { setMinText(e.target.value); commit(e.target.value, secText); }}
         onBlur={() => { if (minText.trim() === '' && (Number(secText) || 0) === 0) { setMinText('1'); commit('1', secText); } }} /> min
-      <input aria-label="Secondes" type="number" min={0} max={59} step={5} value={secText} className={cx(s.control, s.num)}
+      <input aria-label={label ? `Secondes ${label}` : 'Secondes'} type="number" min={0} max={59} step={5} value={secText} className={cx(s.control, compact ? s.numCompact : s.num)}
         onChange={(e) => { setSecText(e.target.value); commit(minText, e.target.value); }}
         onBlur={() => { if (secText.trim() === '') setSecText('0'); }} /> s
     </span>
@@ -291,6 +313,128 @@ function IntensityEditor({ id, i, sport, onChange }: { id: string; i: Intensity;
   );
 }
 
+// ---------- Cardio sur machine en paliers (D-164) ----------
+
+const UNIT: Record<StageSetting, (m: Machine) => string> = {
+  level: () => '', speedKmh: () => 'km/h', inclinePct: () => '%', cadence: (m) => CADENCE_UNIT[m], watts: () => 'W', split500: () => '/500 m', rpe: () => '/10',
+};
+const BOUNDS: Record<Exclude<StageSetting, 'split500'>, { min: number; max: number; step: number }> = {
+  level: { min: 1, max: 40, step: 1 }, speedKmh: { min: 0.5, max: 40, step: 0.1 }, inclinePct: { min: -10, max: 40, step: 0.5 },
+  cadence: { min: 10, max: 250, step: 1 }, watts: { min: 1, max: 2500, step: 5 }, rpe: { min: 1, max: 10, step: 1 },
+};
+const fit = (v: number, b: { min: number; max: number; step: number }) => Math.min(b.max, Math.max(b.min, Math.round(v / b.step) * b.step));
+const round1 = (v: number) => Math.round(v * 10) / 10;
+
+/** Un réglage d’un palier ; vide = non précisé. */
+function StageInput({ k, machine, value, label, onChange }: { k: StageSetting; machine: Machine; value: number | null; label: string; onChange: (v: number | null) => void }) {
+  const [text, setText] = useState(value === null ? '' : String(value).replace('.', ','));
+  if (k === 'split500') {
+    return <span className={s.inline}><PaceInput id={`${label}-split`} label={label} value={value} onChange={(v) => onChange(v === null ? null : Math.min(600, Math.max(60, v)))} /><span className={s.muted}>/500 m</span></span>;
+  }
+  const b = BOUNDS[k];
+  return (
+    <span className={s.inline}>
+      <input className={cx(s.control, s.stageNum)} aria-label={label} inputMode="decimal" value={text} placeholder="—"
+        onChange={(e) => setText(e.target.value)}
+        onBlur={() => {
+          const t = text.trim().replace(',', '.');
+          if (t === '' || Number.isNaN(Number(t))) { setText(''); return onChange(null); }
+          const v = k === 'speedKmh' || k === 'inclinePct' ? round1(fit(Number(t), b)) : fit(Number(t), b);
+          setText(String(v).replace('.', ','));
+          onChange(v);
+        }} />
+      {UNIT[k](machine) ? <span className={s.muted}>{UNIT[k](machine)}</span> : null}
+    </span>
+  );
+}
+
+function CardioEditor({ id, cardio, onChange }: { id: string; cardio: Cardio; onChange: (c: Cardio) => void }) {
+  const available = MACHINE_SETTINGS[cardio.machine];
+  const used = (m: Machine, c: Cardio) => MACHINE_SETTINGS[m].filter((k) => c.stages.some((x) => x[k] !== null));
+  const [shown, setShown] = useState<StageSetting[]>(() => available.filter((k) => MACHINE_DEFAULT_SETTINGS[cardio.machine].includes(k) || used(cardio.machine, cardio).includes(k)));
+  const [notes, setNotes] = useState(cardio.stages.some((x) => x.note));
+  const setStage = (i: number, st: Stage) => onChange({ ...cardio, stages: cardio.stages.map((x, j) => (j === i ? st : x)) });
+  const total = stagesSeconds(cardio);
+  const bars = stageProfile(cardio);
+  return (
+    <div className={s.cardio}>
+      <div className={s.field}>
+        <label className={s.label} htmlFor={`${id}-machine`}>Machine</label>
+        <select id={`${id}-machine`} className={s.control} value={cardio.machine} onChange={(e) => {
+          const m = e.target.value as Machine;
+          // Les réglages que la nouvelle machine n’a pas sont retirés des paliers.
+          const keep = new Set(MACHINE_SETTINGS[m]);
+          const stages = cardio.stages.map((x) => ({ ...x, ...Object.fromEntries(MACHINE_SETTINGS.other.concat(['split500']).filter((k) => !keep.has(k)).map((k) => [k, null])) }) as Stage);
+          const next = { machine: m, stages };
+          setShown(MACHINE_SETTINGS[m].filter((k) => MACHINE_DEFAULT_SETTINGS[m].includes(k) || used(m, next).includes(k)));
+          onChange(next);
+        }}>
+          {MACHINES.map((m) => <option key={m} value={m}>{MACHINE_LABELS[m]}</option>)}
+        </select>
+      </div>
+      <div className={s.field} role="group" aria-label="Réglages à donner pour chaque palier">
+        <span className={s.label}>Réglages</span>
+        <span className={s.seg}>
+          {available.map((k) => (
+            <label key={k} className={s.segItem}>
+              <input type="checkbox" checked={shown.includes(k)} onChange={(e) => {
+                if (e.target.checked) setShown(available.filter((x) => x === k || shown.includes(x)));
+                else {
+                  setShown(shown.filter((x) => x !== k));
+                  onChange({ ...cardio, stages: cardio.stages.map((x) => ({ ...x, [k]: null })) });
+                }
+              }} />{STAGE_SETTING_LABELS[k]}
+            </label>
+          ))}
+          <label className={s.segItem}>
+            <input type="checkbox" checked={notes} onChange={(e) => {
+              setNotes(e.target.checked);
+              if (!e.target.checked) onChange({ ...cardio, stages: cardio.stages.map((x) => ({ ...x, note: null })) });
+            }} />Note
+          </label>
+        </span>
+      </div>
+      <ol className={s.stages} aria-label="Paliers">
+        {cardio.stages.map((x, i) => (
+          <li key={i} className={s.stageRow}>
+            <span className={s.stageNo} aria-hidden="true">{i + 1}</span>
+            <span className={s.stageFields} role="group" aria-label={`Palier ${i + 1}`}>
+              <TimeInputs key={`${i}-${cardio.stages.length}`} seconds={x.seconds} label={`du palier ${i + 1}`} compact
+                onChange={(sec) => setStage(i, { ...x, seconds: Math.min(14_400, Math.max(5, sec)) })} />
+              {shown.map((k) => (
+                <span key={k} className={s.inline}>
+                  <span className={s.stageLabel}>{STAGE_SETTING_LABELS[k]}</span>
+                  <StageInput k={k} machine={cardio.machine} value={x[k]} label={`${STAGE_SETTING_LABELS[k]} du palier ${i + 1}`} onChange={(v) => setStage(i, { ...x, [k]: v })} />
+                </span>
+              ))}
+              {notes ? (
+                <input className={cx(s.control, s.stageNote)} aria-label={`Note du palier ${i + 1}`} maxLength={80} value={x.note ?? ''} placeholder="Par exemple : sans les mains"
+                  onChange={(e) => setStage(i, { ...x, note: e.target.value || null })} />
+              ) : null}
+            </span>
+            <span className={s.stageTools}>
+              <IconButton icon="copy" label={`Dupliquer le palier ${i + 1}`} variant="ghost" size="sm"
+                onClick={() => onChange({ ...cardio, stages: [...cardio.stages.slice(0, i + 1), { ...x }, ...cardio.stages.slice(i + 1)].slice(0, 30) })} />
+              {cardio.stages.length > 1 ? (
+                <IconButton icon="close" label={`Retirer le palier ${i + 1}`} variant="ghost" size="sm"
+                  onClick={() => onChange({ ...cardio, stages: cardio.stages.filter((_, j) => j !== i) })} />
+              ) : null}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <Cluster gap={3} align="center">
+        <Button size="sm" icon="plus" disabled={cardio.stages.length >= 30}
+          onClick={() => { const last = cardio.stages[cardio.stages.length - 1]!; onChange({ ...cardio, stages: [...cardio.stages, blankStage(last.seconds, last)] }); }}>Palier</Button>
+        <span className={s.hint}><strong>{formatClock(total)}</strong> en {cardio.stages.length} palier{cardio.stages.length > 1 ? 's' : ''}</span>
+        {bars.length ? (
+          <span className={s.stageBars} aria-hidden="true">{bars.map((b, i) => <span key={i} style={{ flexGrow: b.seconds, blockSize: `${Math.round(b.height * 100)}%` }} />)}</span>
+        ) : null}
+      </Cluster>
+    </div>
+  );
+}
+
 // ---------- Déplacement (glisser-déposer, clavier, menu) ----------
 
 interface DnD {
@@ -381,10 +525,11 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools }: { step:
         {tools}
       </div>
       <div className={s.body}>
-        {strength && step.phase !== 'rest' && step.phase !== 'recovery' ? (
+        {(strength || step.cardio) && step.phase !== 'rest' && step.phase !== 'recovery' ? (
           <div className={s.field}>
-            <label className={s.label} htmlFor={`${id}-ex`}>Exercice</label>
-            <input id={`${id}-ex`} className={s.control} list={`${id}-exl`} maxLength={80} value={step.exercise?.name ?? ''} placeholder={exercises.length ? 'Choisis ou écris un exercice' : 'Ex. Squat goblet'}
+            <label className={s.label} htmlFor={`${id}-ex`}>{step.cardio ? 'Nom (facultatif)' : 'Exercice'}</label>
+            <input id={`${id}-ex`} className={s.control} list={`${id}-exl`} maxLength={80} value={step.exercise?.name ?? ''}
+              placeholder={step.cardio ? MACHINE_LABELS[step.cardio.machine] : exercises.length ? 'Choisis ou écris un exercice' : 'Ex. Squat goblet'}
               onChange={(e) => {
                 const name = e.target.value;
                 const hit = exercises.find((x) => x.name.toLowerCase() === name.trim().toLowerCase());
@@ -398,9 +543,21 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools }: { step:
             ) : null}
           </div>
         ) : null}
-        <MeasureEditor id={id} m={step.measure} strength={strength} onChange={(m) => onChange({ ...step, measure: m })} />
-        <IntensityEditor id={id} i={step.intensity} sport={strength ? 'strength' : (stepSport ?? 'running')} onChange={(i) => onChange({ ...step, intensity: i })} />
-        {hint.length ? <p className={s.hint}>{hint.join(' · ')}</p> : null}
+        {step.cardio ? (
+          <CardioEditor id={id} cardio={step.cardio} onChange={(c) => onChange(withCardio(step, c))} />
+        ) : (
+          <>
+            <MeasureEditor id={id} m={step.measure} strength={strength} onChange={(m) => onChange({ ...step, measure: m })} />
+            <IntensityEditor id={id} i={step.intensity} sport={strength ? 'strength' : (stepSport ?? 'running')} onChange={(i) => onChange({ ...step, intensity: i })} />
+            {hint.length ? <p className={s.hint}>{hint.join(' · ')}</p> : null}
+            {strength && step.measure.kind === 'time' && step.phase !== 'rest' && step.phase !== 'recovery' ? (
+              <span><Button size="sm" variant="ghost" icon="chart" onClick={() => onChange(withCardio(step, {
+                machine: guessMachine(step.exercise?.name),
+                stages: [blankStage(step.measure.kind === 'time' ? step.measure.seconds : 600, step.intensity.kind === 'rpe' ? { ...blankStage(0), rpe: step.intensity.min } : undefined)],
+              }))}>Cardio sur machine : passer en paliers</Button></span>
+            ) : null}
+          </>
+        )}
         {noteOpen ? (
           <div className={s.field}>
             <label className={s.label} htmlFor={`${id}-note`}>Note</label>
@@ -624,7 +781,7 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
       <Stack gap={1}>
         <h2 id="builder-title" className={s.title}>Déroulé de la séance</h2>
         <Text size="sm" muted>{strength
-          ? 'Choisis tes exercices, leurs répétitions, la charge et le repos ; « Série » répète un exercice (4 × 10). Glisse un bloc par sa poignée pour le déplacer.'
+          ? 'Choisis tes exercices, leurs répétitions, la charge et le repos ; « Série » répète un exercice (4 × 10) ; « Cardio » programme une machine en paliers (niveau, vitesse, pente…). Glisse un bloc par sa poignée pour le déplacer.'
           : 'Construis la séance bloc par bloc : durée ou distance, zone, répétitions et séries. Glisse un bloc par sa poignée pour le déplacer.'}</Text>
       </Stack>
       {value.length ? (
@@ -637,6 +794,7 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
           <>
             <Button icon="plus" onClick={() => onChange([...value, newStrengthStep('work')])}>Exercice</Button>
             <Button icon="plus" onClick={() => onChange([...value, newStrengthRepeat()])}>Série</Button>
+            <Button icon="plus" title="Tapis, elliptique, vélo, rameur… en paliers (niveau, vitesse, pente)" onClick={() => onChange([...value, newCardioStep(value.length ? 'work' : 'warmup')])}>Cardio</Button>
           </>
         ) : (
           <>

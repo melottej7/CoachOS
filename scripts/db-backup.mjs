@@ -1,4 +1,4 @@
-// D-116 · Sauvegarde de la base en ligne (schéma puis données) dans backups/, dossier ignoré par Git.
+// D-116, D-163 · Sauvegarde de la base en ligne (schéma, données, historique des migrations) dans backups/, dossier ignoré par Git.
 // Usage : npm run db:backup  (Docker ouvert ; projet Supabase lié). Les fichiers contiennent des données personnelles :
 // à garder sur le Mac, à effacer au plus tard après 30 jours (politique de confidentialité, D-115).
 import { spawnSync } from 'node:child_process';
@@ -21,4 +21,7 @@ function run(args, label) {
 
 run(['db', 'dump', '--linked', '-f', path.join(dir, `${stamp}-schema.sql`)], 'schéma');
 run(['db', 'dump', '--linked', '--data-only', '-f', path.join(dir, `${stamp}-data.sql`)], 'données');
-console.log(`Sauvegarde écrite dans backups/${stamp}-schema.sql et backups/${stamp}-data.sql`);
+// D-163 · Historique des migrations : sans lui, la prochaine mise en ligne rejouerait les 45 migrations sur une base restaurée.
+run(['db', 'dump', '--linked', '--data-only', '--schema', 'supabase_migrations', '-f', path.join(dir, `${stamp}-migrations.sql`)], 'historique des migrations');
+console.log(`Sauvegarde écrite dans backups/ : ${stamp}-schema.sql, ${stamp}-data.sql, ${stamp}-migrations.sql`);
+console.log(`Pour restaurer un jour dans un projet Supabase neuf : npm run db:restore -- ${stamp} "<adresse de la nouvelle base>"`);

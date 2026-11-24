@@ -82,3 +82,17 @@ input.control { min-width: 0; }
   .body { padding: var(--ds-2) var(--ds-3) var(--ds-3); }
   .handle { width: 28px; }
 }
+/* D-164 · cardio sur machine en paliers */
+.cardio { display: flex; flex-direction: column; gap: var(--ds-3); }
+.stages { display: flex; flex-direction: column; gap: var(--ds-2); margin: 0; padding: 0; list-style: none; }
+.stageRow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: var(--ds-2); padding: var(--ds-2); border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-md, 10px); background: var(--ds-surface); }
+.stageNo { display: inline-flex; align-items: center; justify-content: center; min-inline-size: 28px; block-size: 40px; font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-lg); color: var(--ds-ink-2); font-variant-numeric: tabular-nums; }
+.stageFields { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-2) var(--ds-3); min-inline-size: 0; }
+.stageLabel { font-size: var(--ds-text-sm); font-weight: 600; color: var(--ds-ink-2); }
+.stageNum { inline-size: 60px; }
+.numCompact { inline-size: 58px; }
+.stageFields > .inline { flex-wrap: nowrap; }
+.stageNote { flex: 1 1 200px; min-inline-size: 0; }
+.stageTools { display: inline-flex; gap: 2px; }
+.stageBars { display: inline-flex; align-items: flex-end; gap: 2px; block-size: 28px; inline-size: min(220px, 40vw); }
+.stageBars > span { min-inline-size: 5px; border-radius: 3px 3px 0 0; background: var(--ds-coach); opacity: 0.85; }

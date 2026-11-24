@@ -1,6 +1,6 @@
 import { stepLevel } from './session-profile';
 import type { Sport } from './sports';
-import type { Block, Intensity, Measure, Phase, Step } from './structure';
+import { cardioName, type Block, type Intensity, type Measure, type Phase, type Step } from './structure';
 
 // CE-B-09 (D-041) : saisie rapide d’une séance en notation texte, comme sur papier, et l’inverse.
 //   « 15' Z1 + 8×(400m Z5 + R200m) + 10' Z1 »
@@ -400,7 +400,8 @@ function fmtStep(s: Step, sport: Sport, inRepeat: boolean, explicit: boolean): s
   else if (explicit || (inRepeat && s.phase !== 'work') || s.phase === 'other') ph = `${PHASE_WORD[s.phase]} `;
   const intensity = fmtIntensity(s.intensity);
   // D-096 : « 10 Squat 40kg », « 30" Planche ».
-  const measure = s.exercise ? (s.measure.kind === 'reps' ? `${s.measure.reps} ${s.exercise.name}` : `${fmtMeasure(s.measure)} ${s.exercise.name}`) : fmtMeasure(s.measure);
+  // D-164 : un cardio en paliers s’écrit par sa durée et son nom ; ses paliers ne passent pas par la notation rapide.
+  const measure = s.cardio ? `${fmtMeasure(s.measure)} ${cardioName(s)}` : s.exercise ? (s.measure.kind === 'reps' ? `${s.measure.reps} ${s.exercise.name}` : `${fmtMeasure(s.measure)} ${s.exercise.name}`) : fmtMeasure(s.measure);
   return `${sp}${ph}${measure}${intensity ? ` ${intensity}` : ''}${s.note ? ` « ${s.note} »` : ''}`;
 }
 

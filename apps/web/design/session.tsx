@@ -44,17 +44,34 @@ export function SessionStrip({ view, height = 16 }: { view: SessionView; height?
   return <ZoneStrip title={title} height={height} segments={merged.map((m) => ({ ...m, label: m.seconds >= 60 ? `${Math.round(m.seconds / 60)} min` : undefined }))} labels />;
 }
 
+/** D-164 : paliers d’un cardio sur machine, avec leur profil (largeur = durée, hauteur = niveau ou vitesse). */
+function Stages({ stages, bars }: { stages: string[]; bars: { seconds: number; height: number }[] }) {
+  return (
+    <span className={s.stages}>
+      {bars.length ? (
+        <span className={s.stageBars} aria-hidden="true">
+          {bars.map((b, i) => <span key={i} style={{ flexGrow: b.seconds, blockSize: `${Math.round(b.height * 100)}%` }} />)}
+        </span>
+      ) : null}
+      <ol className={s.stageList} aria-label="Paliers">
+        {stages.map((t, i) => <li key={i}><span className={s.stageNum}>{i + 1}</span>{keep(t)}</li>)}
+      </ol>
+    </span>
+  );
+}
+
 /** Une ligne par bloc : zone, ce qu’il faut faire, la cible traduite pour l’élève. */
 export function SessionRows({ view, extra }: { view: SessionView; extra?: (row: SessionRow) => ReactNode }) {
   if (!view.rows.length) return null;
   return (
     <ol className={s.rows}>
       {view.rows.map((r, i) => (
-        <li key={i} className={s.row}>
+        <li key={i} className={r.stages.length ? `${s.row} ${s.rowTall}` : s.row}>
           {r.zone ? <ZoneChip zone={z(r.zone)} size="lg" /> : <span className={s.badge}>{r.badge ?? <Icon name="clock" size={16} />}</span>}
           <span className={s.rowText}>
             <span className={s.rowTitle}>{keep(r.title)}</span>
             {r.detail ? <span className={s.rowDetail}>{keep(r.detail)}</span> : null}
+            {r.stages.length ? <Stages stages={r.stages} bars={r.stageBars} /> : null}
           </span>
           {extra?.(r) ? <span className={s.rowExtra}>{extra(r)}</span> : null}
           {r.target ? <span className={s.rowTarget}>{r.target.replace(/ (\/km|\/100 m|W)$/, '')}<small>{/\/100 m$/.test(r.target) ? '/100 m' : /W$/.test(r.target) ? 'watts' : '/km'}</small></span> : null}

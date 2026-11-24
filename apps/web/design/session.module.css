@@ -9,3 +9,11 @@
 @media (max-width: 380px) { .row { grid-template-columns: auto minmax(0, 1fr); } .rowTarget { grid-column: 2; text-align: left; } }
 .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 42px; height: 30px; padding: 0 6px; border-radius: 8px; background: var(--ds-surface-3); color: var(--ds-ink); font-family: var(--ds-font-display); font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; }
 .rowExtra { grid-column: 2 / -1; grid-row: 2; }
+/* D-164 · paliers d’un cardio sur machine */
+.stages { display: flex; flex-direction: column; gap: var(--ds-2); margin-top: var(--ds-2); }
+.stageBars { display: flex; align-items: flex-end; gap: 2px; block-size: 36px; max-inline-size: 320px; }
+.stageBars > span { min-inline-size: 6px; border-radius: 4px 4px 0 0; background: var(--ds-coach); opacity: 0.85; }
+.stageList { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; font-size: var(--ds-text-sm); color: var(--ds-ink-2); font-variant-numeric: tabular-nums; }
+.stageList li { display: flex; align-items: baseline; gap: var(--ds-2); }
+.stageNum { display: inline-flex; justify-content: center; min-inline-size: 1.6em; font-size: var(--ds-text-xs); font-weight: 700; color: var(--ds-ink-2); }
+.rowTall { align-items: start; }

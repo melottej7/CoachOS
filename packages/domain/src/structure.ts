@@ -65,6 +65,63 @@ export const intensitySchema = z
   .refine((i) => !('max' in i) || i.max === null || i.max >= i.min, { message: 'La valeur haute doit dépasser la valeur basse' });
 export type Intensity = z.output<typeof intensitySchema>;
 
+// ---------- Cardio sur machine (D-164) ----------
+
+/** Machines de salle : chacune a ses réglages (niveau, vitesse, pente, cadence…). */
+export const MACHINES = ['treadmill', 'elliptical', 'bike', 'rower', 'stairs', 'skierg', 'other'] as const;
+export type Machine = (typeof MACHINES)[number];
+export const MACHINE_LABELS: Record<Machine, string> = {
+  treadmill: 'Tapis de course', elliptical: 'Vélo elliptique', bike: 'Vélo d’appartement', rower: 'Rameur',
+  stairs: 'Escalier ou stepper', skierg: 'SkiErg', other: 'Autre machine',
+};
+export const STAGE_SETTINGS = ['level', 'speedKmh', 'inclinePct', 'cadence', 'watts', 'split500', 'rpe'] as const;
+export type StageSetting = (typeof STAGE_SETTINGS)[number];
+/** Réglages proposés par machine, dans l’ordre d’affichage ; le premier sert à dessiner le profil des paliers. */
+export const MACHINE_SETTINGS: Record<Machine, StageSetting[]> = {
+  treadmill: ['speedKmh', 'inclinePct', 'rpe'],
+  elliptical: ['level', 'cadence', 'rpe'],
+  bike: ['level', 'cadence', 'watts', 'rpe'],
+  rower: ['split500', 'cadence', 'level', 'watts', 'rpe'],
+  stairs: ['level', 'cadence', 'rpe'],
+  skierg: ['split500', 'cadence', 'level', 'watts', 'rpe'],
+  other: ['level', 'speedKmh', 'inclinePct', 'cadence', 'watts', 'rpe'],
+};
+/** Réglages montrés d’office pour une nouvelle étape. */
+export const MACHINE_DEFAULT_SETTINGS: Record<Machine, StageSetting[]> = {
+  treadmill: ['speedKmh', 'inclinePct'], elliptical: ['level'], bike: ['level', 'cadence'], rower: ['split500'],
+  stairs: ['level'], skierg: ['split500'], other: ['level'],
+};
+export const CADENCE_UNIT: Record<Machine, string> = {
+  treadmill: 'pas/min', elliptical: 'tr/min', bike: 'tr/min', rower: 'coups/min', stairs: 'marches/min', skierg: 'coups/min', other: '/min',
+};
+export const STAGE_SETTING_LABELS: Record<StageSetting, string> = {
+  level: 'Niveau', speedKmh: 'Vitesse', inclinePct: 'Pente', cadence: 'Cadence', watts: 'Puissance', split500: 'Allure /500 m', rpe: 'Effort',
+};
+
+const opt = <T extends z.ZodType>(t: T) => t.nullish().transform((v) => v ?? null);
+/** Un palier : une durée et les réglages de la machine ; tout réglage est facultatif. */
+export const stageSchema = z
+  .object({
+    seconds: int(5, 14_400),
+    level: opt(int(1, 40)),
+    speedKmh: opt(z.number().min(0.5).max(40)),
+    inclinePct: opt(z.number().min(-10).max(40)),
+    cadence: opt(int(10, 250)),
+    watts: opt(int(1, 2500)),
+    /** Allure au 500 m en secondes (rameur, SkiErg) : 125 = 2:05 /500 m. */
+    split500: opt(int(60, 600)),
+    rpe: opt(int(1, 10)),
+    note: z.string().max(80, { message: '80 caractères au plus' }).nullish().transform((v) => (v?.trim() ? v.trim() : null)),
+  })
+  .strict();
+export type Stage = z.output<typeof stageSchema>;
+export const cardioSchema = z
+  .object({ machine: z.enum(MACHINES), stages: z.array(stageSchema).min(1, { message: 'Au moins un palier' }).max(30, { message: '30 paliers au plus' }) })
+  .strict();
+export type Cardio = z.output<typeof cardioSchema>;
+
+export const stagesSeconds = (c: Pick<Cardio, 'stages'>) => c.stages.reduce((n, x) => n + x.seconds, 0);
+
 export const stepSchema = z
   .object({
     type: z.literal('step'),
@@ -83,8 +140,13 @@ export const stepSchema = z
       .max(200, { message: '200 caractères au plus' })
       .nullish()
       .transform((v) => (v?.trim() ? v.trim() : null)),
+    /** D-164 : cardio sur machine en paliers (« 5 min niveau 1, 7 min niveau 2… ») ; la durée de l’étape en est la somme. */
+    cardio: cardioSchema.nullish(),
   })
-  .strict();
+  .strict()
+  .refine((x) => !x.cardio || (x.measure.kind === 'time' && x.measure.seconds === stagesSeconds(x.cardio)), {
+    message: 'La durée du cardio doit être la somme de ses paliers', path: ['measure'],
+  });
 export type Step = z.output<typeof stepSchema>;
 
 export interface RepeatBlock {
@@ -249,6 +311,17 @@ export function structureTotals(blocks: Block[], opts: { sport?: Sport; refs?: R
       return;
     }
     const v = speedOf(b, opts.sport, opts.refs);
+    if (b.cardio && b.measure.kind === 'time') {
+      // D-164 : distance estimée seulement pour les paliers dont la vitesse est donnée (tapis).
+      t.seconds += b.measure.seconds * factor;
+      const fast = b.cardio.stages.filter((x) => x.speedKmh);
+      if (fast.length) {
+        estMeters += fast.reduce((n, x) => n + (x.seconds * x.speedKmh!) / 3.6, 0) * factor;
+        t.distanceEstimated = true;
+        if (fast.length < b.cardio.stages.length) t.unknownDistance = true;
+      }
+      return;
+    }
     if (b.measure.kind === 'time') {
       t.seconds += b.measure.seconds * factor;
       // Repos sans cible : à l’arrêt, aucune distance.
@@ -318,7 +391,53 @@ export function describeIntensity(i: Intensity): string | null {
   }
 }
 
+const dec = (n: number) => n.toLocaleString('fr-BE', { maximumFractionDigits: 1 });
+const split = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+
+/** Réglages d’un palier, sans sa durée : « niveau 2 · 60 tr/min », « 6 km/h · pente 3 % ». */
+export function describeStageSettings(x: Stage, machine: Machine): string {
+  return [
+    x.level !== null ? `niveau ${x.level}` : null,
+    x.speedKmh !== null ? `${dec(x.speedKmh)} km/h` : null,
+    x.inclinePct !== null ? `pente ${dec(x.inclinePct)} %` : null,
+    x.cadence !== null ? `${x.cadence} ${CADENCE_UNIT[machine]}` : null,
+    x.watts !== null ? `${x.watts} W` : null,
+    x.split500 !== null ? `${split(x.split500)} /500 m` : null,
+    x.rpe !== null ? `effort ${x.rpe}/10` : null,
+    x.note,
+  ].filter(Boolean).join(' · ');
+}
+
+/** Un palier lisible : « 7 min · niveau 2 ». */
+export function describeStage(x: Stage, machine: Machine): string {
+  const settings = describeStageSettings(x, machine);
+  return settings ? `${formatClock(x.seconds)} · ${settings}` : formatClock(x.seconds);
+}
+
+/**
+ * Profil des paliers pour un petit graphique : largeur selon la durée, hauteur selon le premier réglage renseigné
+ * de la machine (niveau, vitesse…). Une allure au 500 m plus courte est plus dure : elle monte. Vide sans réglage chiffré.
+ */
+export function stageProfile(c: Cardio): { seconds: number; height: number }[] {
+  const key = MACHINE_SETTINGS[c.machine].find((k) => k !== 'rpe' && c.stages.some((x) => x[k] !== null))
+    ?? (c.stages.some((x) => x.rpe !== null) ? 'rpe' : null);
+  if (!key || c.stages.length < 2) return [];
+  const raw = c.stages.map((x) => (x[key] === null ? null : key === 'split500' ? -(x[key] as number) : (x[key] as number)));
+  const known = raw.filter((v): v is number => v !== null);
+  const lo = Math.min(...known);
+  const hi = Math.max(...known);
+  return c.stages.map((x, i) => ({ seconds: x.seconds, height: raw[i] === null ? 0.15 : hi === lo ? 0.6 : 0.3 + (0.7 * ((raw[i] as number) - lo)) / (hi - lo) }));
+}
+
+/** Nom d’une étape de cardio : l’exercice choisi, sinon la machine. */
+export const cardioName = (s: Pick<Step, 'exercise' | 'cardio'>) => s.exercise?.name ?? (s.cardio ? MACHINE_LABELS[s.cardio.machine] : '');
+
 export function describeStep(s: Step, sessionSport?: Sport): string {
+  if (s.cardio) {
+    // « Vélo elliptique · 19 min : 5 min · niveau 1, 7 min · niveau 2, … »
+    const stages = s.cardio.stages.length > 1 ? ` : ${s.cardio.stages.map((x) => describeStage(x, s.cardio!.machine)).join(', ')}` : (() => { const t = describeStageSettings(s.cardio.stages[0]!, s.cardio.machine); return t ? ` · ${t}` : ''; })();
+    return `${cardioName(s)} · ${formatClock(s.measure.kind === 'time' ? s.measure.seconds : stagesSeconds(s.cardio))}${stages}${s.note ? ` (${s.note})` : ''}`;
+  }
   const parts = [describeMeasure(s.measure)];
   const intensity = describeIntensity(s.intensity);
   if (intensity) parts.push(intensity);
@@ -332,7 +451,7 @@ export function describeStep(s: Step, sessionSport?: Sport): string {
 /** Une ligne par bloc, lisible par l’athlète : « 5 × (400 m · Z5 / 200 m · Z1) ». */
 export function describeBlock(b: Block, sessionSport?: Sport): string {
   if (b.type === 'step') return describeStep(b, sessionSport);
-  const inner = b.steps.map((s) => (s.type === 'step' ? `${s.exercise ? `${s.exercise.name} · ` : s.phase === 'rest' ? 'repos ' : ''}${describeMeasure(s.measure)}${describeIntensity(s.intensity) ? ` · ${describeIntensity(s.intensity)}` : ''}` : describeBlock(s, sessionSport)));
+  const inner = b.steps.map((s) => (s.type === 'step' && s.cardio ? describeStep(s, sessionSport) : s.type === 'step' ? `${s.exercise ? `${s.exercise.name} · ` : s.phase === 'rest' ? 'repos ' : ''}${describeMeasure(s.measure)}${describeIntensity(s.intensity) ? ` · ${describeIntensity(s.intensity)}` : ''}` : describeBlock(s, sessionSport)));
   return `${b.times} × (${inner.join(' / ')})`;
 }
 

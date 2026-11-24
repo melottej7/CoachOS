@@ -10,9 +10,9 @@ Dernière mise à jour : 2026-11-24, espace coach refait en ligne (D-143 à D-16
 
 **Vérifié en local seulement (Supabase local, données fictives, navigateur)** : la boucle complète coach → élève → coach, les données personnelles (export, demande, effacement), les rappels (abonnement, désabonnement), les finitions D-121.
 
-**Pas prouvé** : la boucle complète en ligne avec un vrai élève (il faut un domaine pour que les e-mails partent vers d’autres adresses) ; réception d’un rappel push sur un téléphone ; suppression d’un compte Auth en ligne ; sauvegarde (`npm run db:backup`) jamais exécutée ; restauration jamais essayée ; migrations automatiques à la construction (variables Vercel à saisir) ; Action GitHub (premier push à venir).
+**Pas prouvé** : la boucle complète en ligne avec un vrai élève (il faut un domaine pour que les e-mails partent vers d’autres adresses) ; réception d’un rappel push sur un téléphone ; suppression d’un compte Auth en ligne ; sauvegarde de la base en ligne (`npm run db:backup`) jamais exécutée (la restauration est essayée en local, D-163) ; migrations automatiques à la construction (variables Vercel à saisir) ; Action GitHub (premier push à venir).
 
-**Chiffres** : `npm test` 407 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
+**Chiffres** : `npm test` 417 passés au 24 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
 
 **Ce que le produit fait** : la matrice [COUVERTURE.md](COUVERTURE.md) (cible coach et élève, D-024) et les décisions D-001 à D-122 dans [DECISIONS.md](DECISIONS.md). En deux lignes : un coach planifie des séances structurées par sport (zones VMA, FTP, CSS), des programmes générés selon sa méthode, des groupes, des tâches, des relances, des bilans ; l’élève lit sa séance sur téléphone (hors ligne, montre, pas à pas en musculation), envoie son retour, échange avec son coach ; les données personnelles ont leur page, leur export et leur effacement.
 
@@ -33,11 +33,13 @@ Relevé du fondateur vérifié sur le code : `globals.css` 1 406 lignes, 90 coul
 
 ## Chantiers en cours (D-120)
 
-1. **Confiance.** Fait : en-têtes de sécurité, pages d’erreur, contrôle de santé avec services, script de sauvegarde, revue de sécurité du lot données personnelles, contrôles automatiques (Action GitHub), migrations à la construction Vercel, tests de bout en bout dans un vrai navigateur (D-125 ; quatre parcours : boucle coach → élève → coach, bilan, gestes du calendrier, palette), droits en base vérifiés table par table et profil par profil, sans fuite (D-127, D-161), limitation des abus sur la connexion, l’inscription, le mot de passe et l’invitation (D-162, migration appliquée en ligne le 24 novembre, code en attente de fusion). À faire : suivi des erreurs en production (Sentry derrière une variable), sauvegarde puis restauration essayées en local, vidéos hors de la base (Supabase Storage).
+1. **Confiance.** Fait : en-têtes de sécurité, pages d’erreur, contrôle de santé avec services, sauvegarde complétée de l’historique des migrations et restauration essayée en local, avec `npm run db:restore` qui ne peut rien écraser (D-116, D-163), revue de sécurité du lot données personnelles, contrôles automatiques (Action GitHub), migrations à la construction Vercel, tests de bout en bout dans un vrai navigateur (D-125 ; quatre parcours : boucle coach → élève → coach, bilan, gestes du calendrier, palette), droits en base vérifiés table par table et profil par profil, sans fuite (D-127, D-161), limitation des abus sur la connexion, l’inscription, le mot de passe et l’invitation (D-162, en ligne et contrôlé le 24 novembre). À faire : suivi des erreurs en production (Sentry derrière une variable), vidéos hors de la base (Supabase Storage).
 2. **Le coach inconnu.** À commencer : trois coachs fictifs (trail 25 élèves venant de Google Docs, musculation 40 clients, club à trois groupes), de l’inscription au premier retour traité, ordinateur et téléphone ; cible 15 minutes sans aide ; brief du jour et mode simple.
 3. **De quoi vendre.** À commencer après 1 et 2 : page publique, essai gratuit, offres par nombre d’élèves (29/59/99 € HT, docs/13), abonnement en mode test derrière un interrupteur, pages légales en brouillon, aide intégrée, mesure du temps gagné sans identité d’élève.
 
-**Prochaine tranche** : la sauvegarde puis la restauration essayées en local, sur une base séparée (jamais la base de recette), puis « Le coach inconnu ».
+**Fait aussi le 24 novembre** : cardio sur machine en paliers, demandé par le fondateur (D-164 ; tapis, elliptique, vélo, rameur… ; niveau, vitesse, pente, cadence, watts ; suivi palier par palier ; aucune migration). Pour sa séance « Cardio » de Hanae : Modifier › sur chaque étape, « Cardio sur machine : passer en paliers ».
+
+**Prochaine tranche** : suivi des erreurs en production (Sentry derrière une variable, éteint tant qu’aucune clé n’est saisie), puis « Le coach inconnu ».
 
 ## Pour le fondateur
 
@@ -45,10 +47,7 @@ Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, p
 
 0. **Fait** : direction choisie (A · Chrono, D-128).
 0 ter. **Fait** : espace coach refait mis en ligne (Pull Request n° 2, 24 novembre).
-0 quater. **Mettre en ligne la limitation des abus** (D-162) · 5 minutes · débloque : la connexion, l’inscription, le mot de passe oublié et l’invitation freinés contre les essais répétés. Dans cet ordre :
-   - **Fait le 24 novembre** : migration `20261124000000_rate_limits.sql` appliquée en ligne (« Finished supabase db push »).
-   - GitHub Desktop › branche `refonte` › **« Push origin »** › menu **Branch › « Create Pull Request »** › **« Create pull request »** › **« Merge pull request »** › **« Confirm merge »**.
-   - Dis-moi « c’est fusionné » : je vérifie en ligne. Si l’ordre est inversé, rien ne casse : la limitation reste simplement éteinte jusqu’à la migration.
+0 quater. **Fait** : limitation des abus en ligne (migration et Pull Request n° 3, 24 novembre).
 0 bis. **« Confirm email » dans Supabase** · 2 minutes · utile seulement pour l’inscription d’un **nouveau coach** (D-020, D-114) ; tes élèves invités n’en dépendent pas : leur compte est créé déjà vérifié par l’invitation (D-153). Supabase › ton projet › **Authentication** › **Sign In / Providers** › **Email** › décoche **« Confirm email »** › **« Save »**. Sinon, avant le domaine, un nouveau coach ne recevrait jamais l’e-mail de confirmation.
 1. **Rendre les mises en ligne autonomes** · 15 minutes · débloque : je pousse le code moi-même et les migrations s’appliquent seules ; tu n’as plus rien à faire pour une mise en ligne. Aujourd’hui, `git push` depuis ma session échoue (« could not read Username for github.com ») : seul GitHub Desktop a tes identifiants.
    - GitHub : en haut à droite, ton avatar › **Settings** › tout en bas **« Developer settings »** › **« Personal access tokens »** › **« Fine-grained tokens »** › **« Generate new token »** › nom `CoachOS Mac` › expiration 1 an › Repository access : **« Only select repositories »** › `CoachOS` › Permissions › **Contents : Read and write** › **« Generate token »** › copie-le (il ne s’affiche qu’une fois).
@@ -64,8 +63,8 @@ Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, p
    - Vercel › Environment Variables › **« Add »** : `SENTRY_DSN` = cette adresse › **« Save »**.
 4. **Un nom de domaine** (devenu urgent : une amie à coacher en musculation attend son invitation ; sans domaine, l’invitation est refusée à l’envoi) · 15 minutes · environ 12 € par an · débloque : les invitations et notifications arrivent chez tes élèves, « Mot de passe oublié » fonctionne pour eux, la page publique porte ton nom.
    - Choisis le nom (c’est toi qui décides) et achète-le chez un registraire (OVH, Gandi, Combell…). Dis-le-moi : je te guide ensuite pour Resend (Domains › Add Domain, trois enregistrements DNS à copier chez le registraire) et pour le réglage SMTP de Supabase (guide [MISE_EN_LIGNE.md](MISE_EN_LIGNE.md)).
-5. **Sauvegarde, une première fois** · 2 minutes · débloque : une copie de la base sur ton Mac, et pour moi la possibilité d’essayer une restauration en local.
-   - Docker ouvert (baleine immobile), puis dans le Terminal : `npm run db:backup`. Dis-moi ce qui s’affiche. Les fichiers sont dans `backups/`, jamais envoyés sur GitHub ; efface ceux de plus de 30 jours.
+5. **Sauvegarde, une première fois** · 2 minutes · débloque : une copie de la base sur ton Mac. La restauration est prête et essayée en local (D-163).
+   - Docker ouvert (baleine immobile), puis dans le Terminal : `npm run db:backup`. Il écrit trois fichiers (schéma, données, historique des migrations) et finit par « Sauvegarde écrite dans backups/ ». Dis-moi ce qui s’affiche. Les fichiers sont dans `backups/`, jamais envoyés sur GitHub ; efface ceux de plus de 30 jours.
    - Plus tard, quand de vrais élèves payeront : Supabase Pro (25 $ par mois) pour des sauvegardes automatiques restaurables en un clic. Décision et paiement : toi.
 6. **Un vrai élève volontaire** · après le point 4 · débloque : la preuve de la boucle complète en ligne (invitation reçue, compte, séance, retour, revue). C’est une vraie personne : je ne l’invite jamais à ta place.
 7. **Relire la page de confidentialité** · 10 minutes · https://coach-os-xi-kohl.vercel.app/confidentialite. Texte exact techniquement, marqué « à faire relire par un professionnel » dans nos documents ; c’est toi qui l’assumes. Facultatif : Vercel › `COACHOS_CONTACT_EMAIL` = ton adresse de contact.
@@ -96,7 +95,8 @@ npm run supabase:seed    # comptes Auth fictifs + données métier
 npm run dev              # http://localhost:3000/login
 npm run supabase:migrate # applique les nouvelles migrations à Supabase local
 npm run test:pg          # boucle/droits + concurrence sur Supabase. Refuse si la base contient d’autres comptes que le jeu fictif (D-019)
-npm run db:backup        # copie schéma et données de la base EN LIGNE dans backups/ (hors Git)
+npm run db:backup        # copie schéma, données et historique des migrations de la base EN LIGNE dans backups/ (hors Git)
+npm run db:restore -- <horodatage> "<adresse>"  # restaure dans un projet Supabase NEUF ; refuse toute base non vide (D-163)
 npm run supabase:stop
 ```
 

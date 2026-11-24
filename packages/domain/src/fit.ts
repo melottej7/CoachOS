@@ -1,4 +1,4 @@
-import { usesCss, usesFtp, usesVma, zonePace, zonePower, zoneSwimPace, PHASE_LABELS, ZONE_NAMES, type Block, type References, type Step, type Zone } from './structure';
+import { cardioName, describeStageSettings, usesCss, usesFtp, usesVma, zonePace, zonePower, zoneSwimPace, PHASE_LABELS, ZONE_NAMES, type Block, type References, type Step, type Zone } from './structure';
 import type { Sport } from './sports';
 
 /**
@@ -205,7 +205,18 @@ export function fitSteps(blocks: Block[], sport: Sport, refs?: References): FitS
   const multi = singleSport(blocks, sport) === null;
   const walk = (bs: Block[]) => {
     for (const b of bs) {
-      if (b.type === 'step') out.push(stepToFit(b, out.length, sport, multi, refs));
+      if (b.type === 'step' && b.cardio) {
+        // D-164 : un pas de montre par palier ; la cadence devient la cible, les autres réglages vont en note.
+        const c = b.cardio;
+        const name = cardioName(b);
+        for (const x of c.stages) {
+          const settings = describeStageSettings({ ...x, cadence: null }, c.machine);
+          out.push(stepToFit({
+            ...b, cardio: null, exercise: { id: null, name }, measure: { kind: 'time', seconds: x.seconds }, intensity: { kind: 'none' },
+            cadence: x.cadence ? { min: x.cadence, max: null } : null, note: [settings, b.note].filter(Boolean).join(' · ') || null,
+          }, out.length, sport, multi, refs));
+        }
+      } else if (b.type === 'step') out.push(stepToFit(b, out.length, sport, multi, refs));
       else {
         const from = out.length;
         walk(b.steps);
