@@ -2,7 +2,7 @@
 // qui ne partage rien avec A). Compte fictif de Supabase local, e-mails lus dans Mailpit.
 import { chromium } from '@playwright/test';
 
-const BASE = process.env.BASE ?? 'http://localhost:3100';
+const BASE = process.env.BASE ?? 'http://localhost:3300';
 const MAIL = 'http://127.0.0.1:54324';
 const EMAIL = 'marine.roy@demo.coachos.test';
 const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1';

@@ -66,3 +66,11 @@ export function matchesReviewFilter(r: { athleteId: string; teamIds: string[]; h
   if (f.only === 'readiness' && !(r.readiness === 'not_quite' || r.readiness === 'no')) return false;
   return true;
 }
+
+/**
+ * Bilan produit (fluidité) · retour « sans signal » : séance réalisée, effort sous 8/10 (ou non dit), sans commentaire,
+ * élève à 100 %. Le coach peut les traiter d’un geste ; tout le reste demande sa lecture.
+ */
+export function isRoutineReview(r: { resultState: string | null; hasComment: boolean; rpe: number | null; readiness?: string | null }): boolean {
+  return r.resultState === 'completed' && !r.hasComment && (r.rpe === null || r.rpe < 8) && r.readiness !== 'not_quite' && r.readiness !== 'no';
+}

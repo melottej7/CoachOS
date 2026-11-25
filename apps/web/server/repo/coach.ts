@@ -252,6 +252,8 @@ export interface ReviewRow {
   snoozedUntil: string | null;
   /** D-088 : réponse à « à 100 % en ce moment ? ». */
   readiness: Readiness | null;
+  /** Version du retour lue, exigée pour le marquer traité (bilan produit : traitement groupé). */
+  revision: number | null;
 }
 
 /** Cas ouverts, triés par rang, échéance puis id (PRD §24). Seuls les retours sans revue (C09-01). */
@@ -259,10 +261,10 @@ export async function openReviews(userId: string, wid: string, athleteId?: strin
   return readAs(userId, async (tx) => {
     const r = await tx.query<{
       id: string; athlete_id: string; display_name: string; workout_id: string | null; title: string | null; local_date: string | null;
-      state: ResultState | null; rpe: number | null; has_comment: boolean; created_at: Date; team_ids: string[] | null; snoozed_until: Date | null; readiness: Readiness | null;
+      state: ResultState | null; rpe: number | null; has_comment: boolean; created_at: Date; team_ids: string[] | null; snoozed_until: Date | null; readiness: Readiness | null; revision: number | null;
     }>(
       `select ri.id, ri.athlete_id, a.display_name, res.workout_id, rev.title, to_char(rev.local_date, 'YYYY-MM-DD') as local_date,
-              res.state, f.rpe, (f.comment is not null) as has_comment, ri.created_at, f.readiness,
+              res.state, f.rpe, (f.comment is not null) as has_comment, ri.created_at, f.readiness, f.revision,
               (select array_agg(ta.team_id) from public.team_athletes ta where ta.workspace_id = ri.workspace_id and ta.athlete_id = ri.athlete_id) as team_ids,
               case when ri.state = 'snoozed' and ri.due_at > now() then ri.due_at end as snoozed_until
        from public.review_items ri
@@ -293,6 +295,7 @@ export async function openReviews(userId: string, wid: string, athleteId?: strin
       teamIds: x.team_ids ?? [],
       snoozedUntil: x.snoozed_until ? x.snoozed_until.toISOString() : null,
       readiness: x.readiness,
+      revision: x.revision,
     }));
   });
 }

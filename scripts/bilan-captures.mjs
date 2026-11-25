@@ -30,11 +30,24 @@ await shot(camille, 'eleve-aujourdhui');
 const faite = await camille.getByRole('button', { name: 'Faite', exact: true }).boundingBox();
 console.log(`élève : bouton « Faite » à ${Math.round(faite?.y ?? -1)} px du haut (écran de 844 px, barre basse comprise)`);
 
+// L’élève répond en deux touchers (Faite, Facile) : un retour sans signal arrive chez le coach.
+if (phase === 'apres' && await camille.getByRole('button', { name: 'Faite', exact: true }).isVisible()) {
+  await camille.getByRole('button', { name: 'Faite', exact: true }).click();
+  await camille.getByRole('button', { name: 'Facile', exact: true }).click();
+  await camille.getByText('Retour envoyé').waitFor();
+}
+
 // Coach : la file des retours.
 const marine = await as('Marine Roy');
 await marine.goto(`${BASE}/coach/${WS}/review`);
 await marine.waitForLoadState('networkidle');
 await shot(marine, 'coach-retours');
+if (phase === 'apres') {
+  await marine.getByRole('button', { name: 'Tout marquer traité' }).click();
+  await marine.getByText(/marqués? comme traités?/).waitFor();
+  await marine.waitForLoadState('networkidle');
+  await shot(marine, 'coach-retours-traites');
+}
 
 await browser.close();
 console.log(`captures ${phase} écrites dans ${out}`);
