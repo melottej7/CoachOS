@@ -2,6 +2,7 @@ import { expect, test, type Browser, type Page } from '@playwright/test';
 
 /**
  * Bilan produit (branche fluidite) · les gestes de tous les jours, sur téléphone (390 px), données fictives.
+ * Nommé « aa- » pour passer en premier : il part de la base fictive neuve (retour du jour de Camille pas encore envoyé).
  */
 const WS_A = '10000000-0000-4000-8000-00000000000a';
 const PHONE = { width: 390, height: 844 };
