@@ -56,7 +56,10 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
   ]);
   const current = w.published;
   const next = queue.find((r) => r.id !== rid && matchesReviewFilter(r, filter));
-  const after = `${base}/review/${rid}${keep(`notice=reviewed${from ? `&from=${from}` : ''}`)}`;
+  // Bilan produit (fluidité) : depuis la file, « Marquer comme traité » enchaîne sur le retour suivant (un toucher de moins).
+  const after = next && from !== 'calendar'
+    ? `${base}/review/${next.id}${keep('notice=enchaine')}`
+    : `${base}/review/${rid}${keep(`notice=reviewed${from ? `&from=${from}` : ''}`)}`;
   const tz = ctx.workspace.timeZone;
   const snoozeAfter = from === 'calendar' ? calendarHref : `${base}/review${keep('notice=snoozed')}`;
   const done = fb.reviewedAt !== null;
@@ -99,6 +102,7 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
     <Stack gap={6}>
       <Cluster><LinkButton href={back.href} variant="ghost" size="sm" icon="chevronLeft">{back.label}</LinkButton></Cluster>
       {notice === 'reviewed' && done ? <Banner tone="success" title="Retour marqué comme traité" /> : null}
+      {notice === 'enchaine' ? <Banner tone="success" title="Retour précédent traité · voici le suivant" /> : null}
       <Stack gap={2}>
         <Eyebrow tone="coach">{item.athleteName}{observed ? ` · ${formatLongDate(observed.localDate)}` : ''}</Eyebrow>
         <Heading level={1} size={1}>Retour de {first}</Heading>

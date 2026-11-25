@@ -125,7 +125,8 @@ test('club à trois groupes : de la création de l’espace au premier retour tr
   await coach.getByRole('link', { name: 'un retour à traiter' }).click();
   await coach.getByRole('list', { name: 'Retours à traiter' }).getByRole('link').filter({ hasText: title }).click();
   await coach.getByRole('button', { name: 'Marquer comme traité' }).click();
-  await expect(coach.getByText(/Traité le/)).toBeVisible();
+  // Bilan produit : s’il reste un retour dans la file, le traitement enchaîne sur lui.
+  await expect(coach.getByText(/Traité le|Retour précédent traité/).first()).toBeVisible();
 
   // 9. Premiers pas terminés : la carte disparaît ; le brief rassure et signale les élèves à inviter ; mode simple.
   await coach.goto(`/coach/${wid}/planning`);
