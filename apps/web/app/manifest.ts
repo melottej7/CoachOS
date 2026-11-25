@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 
 /**
  * CE-E-06 (D-070) : CoachOS s’installe sur l’écran d’accueil du téléphone et s’ouvre en plein écran.
- * L’adresse de départ renvoie chacun vers son espace (coach ou élève) après connexion.
+ * L’adresse de départ renvoie chacun vers son espace (coach ou élève) après connexion ; « / » est la page publique (D-174).
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'CoachOS',
     description: 'Tes séances, tes retours et ton coach, au même endroit.',
     lang: 'fr-BE',
-    start_url: '/',
+    start_url: '/choose-workspace',
     scope: '/',
     display: 'standalone',
     orientation: 'portrait',

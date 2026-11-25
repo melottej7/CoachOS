@@ -24,14 +24,23 @@ export function ProfileLink({ href, label, tour, children }: { href: string; lab
  * Pages hors espace (connexion, inscription, choix d’espace, compte, erreurs) : marque, colonne étroite par défaut,
  * plus large pour un texte long ou une grille (`wide`), éléments à droite de l’en-tête (`aside`).
  */
-export function PublicShell({ children, wide, aside, home = '/' }: { children: ReactNode; wide?: boolean; aside?: ReactNode; home?: string }) {
+export function PublicShell({ children, wide, page, aside, home = '/' }: { children: ReactNode; wide?: boolean; page?: boolean; aside?: ReactNode; home?: string }) {
   return (
-    <div className={`chrono ${s.athlete}`} data-accent="emerald">
+    <div className={`chrono ${s.athlete} ${s.public}`} data-accent="emerald">
       <header className={s.publicHeader}>
         <Link href={home} className={s.publicBrand}><span className={s.publicMark} aria-hidden="true">C</span>CoachOS</Link>
         {aside ? <div className={s.publicAside}>{aside}</div> : null}
       </header>
-      <main id="contenu" className={wide ? s.wide : s.narrow}>{children}</main>
+      <main id="contenu" className={page ? s.page : wide ? s.wide : s.narrow}>{children}</main>
+      <footer className={s.publicFooter}>
+        {/* D-174 : les pages publiques et légales, à portée de chaque page hors espace. */}
+        <nav aria-label="Informations">
+          <Link href="/offres">Offres</Link>
+          <Link href="/conditions">Conditions d’utilisation</Link>
+          <Link href="/confidentialite">Confidentialité</Link>
+          <Link href="/mentions-legales">Mentions légales</Link>
+        </nav>
+      </footer>
     </div>
   );
 }

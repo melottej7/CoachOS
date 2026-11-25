@@ -2501,3 +2501,12 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Migration additive** `20261124100000` (colonnes `object_path` et `size_bytes`, octets facultatifs, compartiment créé). Le code lit la nouvelle colonne : la migration doit être appliquée en ligne avant la fusion. Supabase local démarre désormais avec le stockage.
 - **Correctif D-172** : la pause fige le chrono à l’instant du toucher, même si l’écran se met à jour plus tard.
 - **Vérifié** : contre Supabase local, une vidéo de 14,3 Mo envoyée, lue (302 puis 206), refusée à un autre espace (404), sans session (401) et sans signature (400), puis retirée du stockage. **Non couvert** : la sauvegarde de la base n’inclut pas les fichiers du stockage.
+
+## D-174 · Page publique, offres et pages légales · 2026-11-25
+
+- **Pourquoi** : premier pas de « De quoi vendre » (D-120) ; un coach inconnu arrivait sur la page de connexion sans savoir ce qu’est CoachOS.
+- **Page publique** : « / » présente CoachOS au visiteur (boucle planifier, faire, revoir ; temps rendu ; élèves ; confiance ; offres ; questions fréquentes) ; connecté, « / » mène à son espace. L’application installée démarre sur `/choose-workspace`. Rien n’y est promis que le produit ne fasse ; aucun chiffre de temps gagné avant mesure.
+- **Offres** (`server/offers.ts`) : hypothèses de docs/13, corrigées champ par champ par `COACHOS_OFFERS` (JSON) sans toucher au code. Interrupteur unique `COACHOS_BILLING=1` : éteint (production), phase pilote gratuite et **aucun prix publié**, le prix final restant au fondateur ; allumé, prix HT et essai (`COACHOS_TRIAL_DAYS`, 30 jours par défaut).
+- **Pages légales** : `/conditions` et `/mentions-legales`, brouillons à faire relire par un professionnel ; droit belge supposé ; éditeur lu dans `COACHOS_LEGAL_PUBLISHER`, sinon phrase sobre. Liens au pied de chaque page hors espace ; l’inscription renvoie aux conditions.
+- **Non retenu** : l’indexation par les moteurs de recherche (le nom n’est pas arrêté) ; la page reste `noindex`.
+- **Vérifié** : 6 tests des offres, 3 parcours (1440 et 390 px, visiteur puis connecté), navigateur clair et sombre. **Non vérifié** au navigateur : la variante interrupteur allumé (couverte par les tests des offres).
