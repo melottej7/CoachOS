@@ -9,5 +9,6 @@ backups/
 .next-e2e/
 .next-build/
 .next-demo/
+.next-vente/
 test-results/
 playwright-report/

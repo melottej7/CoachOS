@@ -2510,3 +2510,12 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Pages légales** : `/conditions` et `/mentions-legales`, brouillons à faire relire par un professionnel ; droit belge supposé ; éditeur lu dans `COACHOS_LEGAL_PUBLISHER`, sinon phrase sobre. Liens au pied de chaque page hors espace ; l’inscription renvoie aux conditions.
 - **Non retenu** : l’indexation par les moteurs de recherche (le nom n’est pas arrêté) ; la page reste `noindex`.
 - **Vérifié** : 6 tests des offres, 3 parcours (1440 et 390 px, visiteur puis connecté), navigateur clair et sombre. **Non vérifié** au navigateur : la variante interrupteur allumé (couverte par les tests des offres).
+
+## D-175 · Essai gratuit et limite d’élèves actifs par offre · 2026-11-25
+
+- **Pourquoi** : suite de « De quoi vendre » (D-120) ; docs/13 limite chaque offre par élèves actifs et prévoit un essai gratuit borné.
+- **Migration additive** `20261125000000` : `workspaces.plan` et `workspaces.trial_ends_at`, facultatifs. Les deux vides = phase pilote, sans limite : les espaces existants le restent jusqu’à décision du fondateur à l’ouverture des abonnements.
+- **Essai** : posé à la création d’un espace seulement si `COACHOS_BILLING=1` (30 jours, `COACHOS_TRIAL_DAYS`), avec les limites de l’offre Pro (100 élèves). Essai terminé : affiché, sans blocage tant que le paiement n’existe pas (tranche suivante).
+- **Limite** : contrôlée par le serveur au seul moment où un élève devient actif (acceptation d’invitation), sous verrou de l’espace, et déjà avant la création du compte élève. Elle ne touche jamais les élèves actifs ; le lien reste valable. Interrupteur éteint : aucune limite.
+- **Coach** : Paramètres › Abonnement (propriétaire) : phase pilote, essai et jours restants, élèves actifs face à la limite, bandeaux à la limite et après l’essai.
+- **Vérifié** : 9 tests des offres, 5 tests de l’offre d’espace (essai, limite, pilote, droits coach A, coach B, élève affecté, élève tiers), suite complète, construction ; au navigateur, pilote (Supabase local) et essai (démo interrupteur allumé, `coachos-vente`) à 1440 et 375 px, et la page Offres avec prix. **Non vérifié au navigateur** : le refus vu par l’élève à la limite (couvert par les tests).

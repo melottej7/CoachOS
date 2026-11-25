@@ -69,11 +69,14 @@ id uuid primary key default gen_random_uuid(),
 name text not null check (length(name) between 1 and 120),
 time_zone text not null,
 status text not null default 'active' check (status in ('active','read_only','closed')),
-created_at timestamptz not null default now()
+created_at timestamptz not null default now(),
+-- D-175 (20261125000000) : offre payée et fin d'essai ; les deux null = phase pilote, sans limite d'élèves.
+plan text check (plan is null or plan in ('starter','pro','elite')),
+trial_ends_at timestamptz
 ```
 
 Index secondaires. Aucun hors index PK/UNIQUE.
-RLS SELECT. Politique `workspace` définie dans le SQL. Aucune mutation exposée.
+RLS SELECT. Politique `workspace` définie dans le SQL. Aucune mutation exposée. La limite d’élèves actifs de l’offre est contrôlée par le serveur à l’acceptation d’invitation, sous verrou de la ligne de l’espace (D-175).
 Trigger. Aucun. Les contrôles dépendant de plusieurs lignes sont transactionnels.
 
 ### `memberships`

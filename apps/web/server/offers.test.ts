@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_OFFERS, billingEnabled, formatPrice, offerFor, offers, trialDays } from './offers';
+import { DEFAULT_OFFERS, athleteLimit, billingEnabled, formatPrice, offerFor, offers, standing, trialDays, trialEndForNewWorkspace } from './offers';
 
 describe('offres (D-174)', () => {
   it('reprend les hypothèses de docs/13 sans réglage', () => {
@@ -40,5 +40,33 @@ describe('offres (D-174)', () => {
     expect(offerFor(20, offers({})).id).toBe('starter');
     expect(offerFor(21, offers({})).id).toBe('pro');
     expect(offerFor(5000, offers({})).id).toBe('elite');
+  });
+});
+
+describe('offre d’un espace (D-175)', () => {
+  const now = new Date('2026-11-25T10:00:00Z');
+  const on = { COACHOS_BILLING: '1' };
+
+  it('reste en phase pilote, sans limite, tant que l’interrupteur est éteint', () => {
+    const s = standing({ plan: 'starter', trialEndsAt: new Date('2026-11-01') }, now, {});
+    expect(s.kind).toBe('pilot');
+    expect(athleteLimit(s)).toBeNull();
+    expect(trialEndForNewWorkspace(now, {})).toBeNull();
+  });
+
+  it('pose l’essai à la création et en compte les jours', () => {
+    const end = trialEndForNewWorkspace(now, on)!;
+    expect(end.toISOString()).toBe('2026-12-25T10:00:00.000Z');
+    const s = standing({ plan: null, trialEndsAt: end }, now, on);
+    expect(s).toMatchObject({ kind: 'trial', daysLeft: 30, offer: { id: 'pro' } });
+    expect(athleteLimit(s)).toBe(100);
+  });
+
+  it('distingue l’essai terminé, l’offre payée et l’ancien espace pilote', () => {
+    expect(standing({ plan: null, trialEndsAt: new Date('2026-11-25T09:00:00Z') }, now, on).kind).toBe('trial_over');
+    const paid = standing({ plan: 'starter', trialEndsAt: null }, now, { ...on, COACHOS_OFFERS: '[{"id":"starter","athletes":15}]' });
+    expect(paid.kind).toBe('plan');
+    expect(athleteLimit(paid)).toBe(15);
+    expect(athleteLimit(standing({ plan: null, trialEndsAt: null }, now, on))).toBeNull();
   });
 });

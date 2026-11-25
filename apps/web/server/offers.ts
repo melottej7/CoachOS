@@ -79,3 +79,42 @@ export function offerFor(activeAthletes: number, list: Offer[] = offers()): Offe
   const sorted = [...list].sort((a, b) => a.athletes - b.athletes);
   return sorted.find((o) => o.athletes >= activeAthletes) ?? sorted[sorted.length - 1]!;
 }
+
+/** D-175 · Pendant l’essai, l’espace a les limites de cette offre (assez large pour reprendre un vrai portefeuille). */
+export const TRIAL_OFFER: OfferId = 'pro';
+
+export interface WorkspaceOffer {
+  plan: OfferId | null;
+  trialEndsAt: Date | null;
+}
+
+/** Où en est un espace : phase pilote (sans limite), essai, essai terminé ou offre payée. */
+export type Standing =
+  | { kind: 'pilot' }
+  | { kind: 'trial'; offer: Offer; endsAt: Date; daysLeft: number }
+  | { kind: 'trial_over'; offer: Offer; endedAt: Date }
+  | { kind: 'plan'; offer: Offer };
+
+const DAY = 86_400_000;
+
+export function standing(ws: WorkspaceOffer, now: Date = new Date(), env: Env = process.env): Standing {
+  if (!billingEnabled(env)) return { kind: 'pilot' };
+  const list = offers(env);
+  const find = (id: OfferId) => list.find((o) => o.id === id)!;
+  if (ws.plan) return { kind: 'plan', offer: find(ws.plan) };
+  if (!ws.trialEndsAt) return { kind: 'pilot' };
+  const offer = find(TRIAL_OFFER);
+  const left = ws.trialEndsAt.getTime() - now.getTime();
+  if (left <= 0) return { kind: 'trial_over', offer, endedAt: ws.trialEndsAt };
+  return { kind: 'trial', offer, endsAt: ws.trialEndsAt, daysLeft: Math.ceil(left / DAY) };
+}
+
+/** Élèves actifs au plus ; null : sans limite (phase pilote). */
+export function athleteLimit(s: Standing): number | null {
+  return s.kind === 'pilot' ? null : s.offer.athletes;
+}
+
+/** Fin d’essai d’un espace créé maintenant ; null quand l’interrupteur est éteint (phase pilote). */
+export function trialEndForNewWorkspace(now: Date = new Date(), env: Env = process.env): Date | null {
+  return billingEnabled(env) ? new Date(now.getTime() + trialDays(env) * DAY) : null;
+}
