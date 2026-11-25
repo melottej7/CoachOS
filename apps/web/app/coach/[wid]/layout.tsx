@@ -63,7 +63,7 @@ export default async function CoachLayout({ children, params }: { children: Reac
           )} />
       )}
       top={(
-        <AppHeader home={`${base}/planning`} brand={<>{mark}<BrandName>{ctx.workspace.name}</BrandName></>}>
+        <AppHeader home={`${base}/planning`} roots={items.map(({ href, also }) => ({ href, also }))} brand={<>{mark}<BrandName>{ctx.workspace.name}</BrandName></>}>
           <PaletteButton variant="header" />
           <AccountMenu name={actor.displayName} role={role} entries={entries} signOut="/auth/signout" tour="account-menu"
             trigger={<Avatar name={actor.displayName} size={34} />} />

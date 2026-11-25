@@ -44,9 +44,17 @@ test('créer la fiche et le lien, le copier, l’élève l’ouvre et rejoint ; 
   await phone.mouse.click(avatar!.x + avatar!.width / 2, avatar!.y + avatar!.height / 2);
   await phone.waitForURL(/\/athletes\/[0-9a-f-]{36}/);
   await expect(phone.getByRole('heading', { name: 'Invitation' })).toBeVisible();
-  await phone.goBack();
+  // La petite flèche de l’en-tête ramène à la liste filtrée d’où l’on vient ; une page principale n’en a pas.
+  await phone.getByRole('button', { name: 'Revenir en arrière' }).click();
+  await phone.waitForURL(/\/athletes\?status=invited$/);
+  await expect(phone.getByRole('button', { name: 'Revenir en arrière' })).toHaveCount(0);
+  const dossier = await card.getByRole('link', { name, exact: true }).getAttribute('href');
   await card.getByRole('link', { name: 'Séances' }).click();
   await phone.waitForURL(/\/calendar\?athlete=/);
+  // Arrivé directement sur le dossier (lien d’une notification, page rechargée) : la flèche ramène à la liste des élèves.
+  await phone.goto(dossier!.split('?')[0]!);
+  await phone.getByRole('button', { name: 'Revenir en arrière' }).click();
+  await phone.waitForURL(new RegExp(`/coach/${WS_A}/athletes$`));
   expect(await coach.evaluate(() => navigator.clipboard.readText())).toBe(link);
 
   // Une autre identité (Camille, autre adresse) ne peut pas utiliser ce lien.

@@ -147,4 +147,9 @@ test('le coach programme un cardio en paliers ; l’élève le lit et le suit pa
   await camille.getByRole('button', { name: 'Finir sans cet exercice' }).click();
   await expect(camille.getByRole('heading', { name: /Séance terminée, bravo\s!/ })).toBeVisible();
   await expect(camille.getByText(/^Exercice passé : Squat goblet\. Dis-le à ton coach/)).toBeVisible();
+  // Le suivi a sa propre sortie (« Quitter ») : pas de flèche d’en-tête ici. Sur la fiche de la séance, la flèche ramène au programme.
+  await expect(camille.getByRole('button', { name: 'Revenir en arrière' })).toHaveCount(0);
+  await camille.goto(`/athlete/${WS_A}/workouts/${sid}`);
+  await camille.getByRole('button', { name: 'Revenir en arrière' }).click();
+  await camille.waitForURL(new RegExp(`/athlete/${WS_A}/schedule`));
 });

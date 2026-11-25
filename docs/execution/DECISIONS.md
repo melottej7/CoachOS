@@ -2525,3 +2525,13 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Retour du fondateur** : sur téléphone, toucher la carte d’un élève invité (« adri », « Relancer l’invitation ») ne faisait rien. Seul le prénom était un lien, une cible trop petite.
 - **Correctif** (`roster.module.css`) : le lien du prénom couvre toute la carte. Le bouton « Séances » et le lien « Relancer » restent au-dessus et gardent leur action. Retour visuel au survol et au toucher, contour au clavier.
 - **Vérifié** : reproduit puis corrigé sur un iPhone simulé (avatar, texte « à faire », prénom ouvrent le dossier ; « Séances » ouvre le calendrier). Le parcours d’invitation le vérifie désormais à 390 px.
+
+## D-177 · Une flèche pour revenir en arrière · 2026-11-25
+
+- **Demande du fondateur** : une fois CoachOS installée sur le téléphone, il n’y a plus de bouton « précédent » du navigateur.
+- **Flèche d’en-tête** (`design/back-link.tsx`) sur toute page intérieure, côté coach (en-tête du téléphone) et côté élève. Rien sur les pages principales de la barre du bas.
+  - Arrivé par l’application : retour à la page précédente, filtres compris.
+  - Arrivé directement (notification, page rechargée) : la page d’où l’on vient (`from`), sinon l’onglet auquel la page appartient.
+- **Suivi de séance** : pas de flèche, « Quitter » y joue ce rôle. Quitter cet écran de n’importe quelle façon (barre du bas, notification) met désormais la séance en pause, comme « Quitter ».
+- Les liens « ‹ Élèves », « ‹ Semaine de… » dans les pages restent : ce sont les seuls retours sur ordinateur.
+- **Vérifié** : parcours d’invitation (coach, 390 px : dossier ↔ liste filtrée, arrivée directe) et cardio (élève : pas de flèche pendant le suivi, fiche de séance → programme).
