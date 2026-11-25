@@ -4,7 +4,7 @@ Dernière mise à jour : 2026-11-25 (D-161 à D-177). Reprendre ici : ce fichier
 
 ## Où en est CoachOS
 
-**En ligne** : https://coach-os-xi-kohl.vercel.app (Vercel, fonctions à Dublin ; base Supabase « CoachOS » en Irlande, 45 migrations appliquées). Compte coach du fondateur créé en ligne. `GET /api/health` répond `{"ok":true,"db":"ok","services":{"email":"resend","push":true,"ai":"simulation","contact":false}}`.
+**En ligne** : https://coach-os-xi-kohl.vercel.app (Vercel, fonctions à Dublin ; base Supabase « CoachOS » en Irlande, 47 migrations appliquées). Compte coach du fondateur créé en ligne. `GET /api/health` répond `{"ok":true,"db":"ok","services":{"email":"resend","push":true,"ai":"simulation","contact":false}}`.
 
 **Vérifié en ligne (23 novembre)** : base joignable ; page de connexion, inscription et confidentialité ; en-têtes de sécurité ; routes de données personnelles et de rappels déployées et protégées (401 sans session) ; premier e-mail réel d’invitation envoyé par Resend et reçu par le fondateur (adresse de test `onboarding@resend.dev`, qui n’envoie qu’à lui) ; rappels push prêts (clés en place).
 
