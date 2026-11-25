@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState } from 'react';
 import {
-  BASE_VIDEO_SOURCE_LABELS, BASE_VIDEOS, EXERCISE_CLIP_MAX_BYTES, EXERCISE_EQUIPMENT, EXERCISE_EQUIPMENT_LABELS, exerciseHasVideo, MUSCLE_LABELS, MUSCLE_SHORT, MUSCLES,
+  BASE_VIDEO_SOURCE_LABELS, BASE_VIDEOS, EXERCISE_CLIP_MAX_BYTES, EXERCISE_CLIP_STORAGE_MAX_BYTES, EXERCISE_CLIP_TYPES, EXERCISE_EQUIPMENT, EXERCISE_EQUIPMENT_LABELS, exerciseHasVideo, MUSCLE_LABELS, MUSCLE_SHORT, MUSCLES,
   type Exercise, type ExerciseEquipment, type Muscle,
 } from '@coachos/domain';
 import { mutate, newKey } from '@/components/api-client';
@@ -94,6 +94,7 @@ export function ExerciseLibrary({ wid, items }: { wid: string; items: Exercise[]
 function ExerciseForm({ wid, initial, exercise, onDone }: { wid: string; initial: Draft; exercise?: Exercise; onDone: (id?: string) => void }) {
   const [d, setD] = useState<Draft>(initial);
   const [state, setState] = useState<'idle' | 'saving' | 'uploading'>('idle');
+  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [key, setKey] = useState(newKey());
@@ -119,14 +120,33 @@ function ExerciseForm({ wid, initial, exercise, onDone }: { wid: string; initial
 
   async function upload(f: File) {
     if (!exercise) return;
-    if (f.size > EXERCISE_CLIP_MAX_BYTES) { setError('Vidéo trop lourde (25 Mio au plus). Filme 10 à 30 secondes, ou mets un lien YouTube.'); return; }
+    if (f.size > EXERCISE_CLIP_STORAGE_MAX_BYTES) { setError('Vidéo trop lourde (50 Mio au plus). Filme une minute au plus, ou mets un lien YouTube.'); return; }
+    // Certains téléphones ne donnent pas le type : on le déduit de l’extension ; le serveur reconnaît ensuite la vidéo par son contenu.
+    const type = (EXERCISE_CLIP_TYPES as readonly string[]).includes(f.type) ? f.type : /\.mov$/i.test(f.name) ? 'video/quicktime' : /\.webm$/i.test(f.name) ? 'video/webm' : 'video/mp4';
+    const base = `/api/v1/workspaces/${wid}/exercises/${exercise.id}/video`;
+    const fail = (r: { kind: 'network' } | { kind: 'error'; fields: { rule: string }[]; message: string }) => {
+      setError(r.kind === 'error' ? (r.fields[0]?.rule ?? r.message) : 'Connexion perdue. Réessaie.');
+      setState('idle'); setProgress(null);
+    };
     setState('uploading'); setError(null);
+    // D-173 : en ligne, la vidéo part directement du téléphone vers le stockage privé, puis CoachOS la vérifie et la rattache.
+    const start = await mutate<{ mode: 'server' } | { mode: 'direct'; clipId: string; uploadUrl: string }>('POST', `${base}/upload`, { contentType: type, size: f.size }, newKey());
+    if (!start.ok) { fail(start); return; }
+    if (start.data.mode === 'direct') {
+      setProgress(0);
+      const sent = await putFile(start.data.uploadUrl, f, type, setProgress);
+      if (!sent) { setError('Envoi interrompu. Vérifie ta connexion, puis réessaie.'); setState('idle'); setProgress(null); return; }
+      const done = await mutate('POST', `${base}/finish`, { clipId: start.data.clipId }, newKey());
+      if (!done.ok) { fail(done); return; }
+      setState('idle'); setProgress(null); setSaved('Vidéo enregistrée.'); onDone(exercise.id);
+      return;
+    }
+    // Sans stockage (démonstration) : envoi à CoachOS, 25 Mio au plus.
+    if (f.size > EXERCISE_CLIP_MAX_BYTES) { setError('Vidéo trop lourde (25 Mio au plus). Filme 10 à 30 secondes, ou mets un lien YouTube.'); setState('idle'); return; }
     try {
-      const res = await fetch(`/api/v1/workspaces/${wid}/exercises/${exercise.id}/video`, {
-        method: 'POST', body: f, credentials: 'same-origin', headers: { 'content-type': f.type || 'application/octet-stream' },
-      });
-      // D-113 · En ligne (Vercel), un envoi de plus de 4,5 Mo est refusé avant d’atteindre CoachOS.
-      if (res.status === 413) { setError('Vidéo trop lourde pour l’envoi en ligne (4 Mo au plus pour l’instant). Filme 10 à 15 secondes en qualité réduite, ou mets un lien YouTube.'); setState('idle'); return; }
+      const res = await fetch(base, { method: 'POST', body: f, credentials: 'same-origin', headers: { 'content-type': type } });
+      // D-113 · Sur Vercel, un envoi de plus de 4,5 Mo est refusé avant d’atteindre CoachOS.
+      if (res.status === 413) { setError('Vidéo trop lourde pour cet envoi (4 Mo au plus). Filme 10 à 15 secondes en qualité réduite, ou mets un lien YouTube.'); setState('idle'); return; }
       if (!res.ok) {
         const p = (await res.json().catch(() => null)) as { error?: { message?: string; fields?: { rule: string }[] } } | null;
         setError(p?.error?.fields?.[0]?.rule ?? p?.error?.message ?? 'Envoi impossible. Réessaie.');
@@ -173,7 +193,12 @@ function ExerciseForm({ wid, initial, exercise, onDone }: { wid: string; initial
             </Cluster>
             <input ref={file} type="file" accept="video/mp4,video/quicktime,video/webm" capture="environment" className="ds-visually-hidden" tabIndex={-1} aria-hidden="true"
               onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void upload(f); }} />
-            <Text size="sm" muted>MP4 ou MOV, 25 Mio au plus (environ 30 secondes). Visible seulement par toi et tes élèves.</Text>
+            {progress !== null ? (
+              <div className={s.upload} role="progressbar" aria-label="Envoi de la vidéo" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
+                <span style={{ inlineSize: `${Math.round(progress * 100)}%` }} />
+              </div>
+            ) : null}
+            <Text size="sm" muted>{progress !== null ? `Envoi de la vidéo : ${Math.round(progress * 100)} %. Garde cette page ouverte.` : 'MP4 ou MOV, 50 Mio au plus (environ une minute). Visible seulement par toi et tes élèves.'}</Text>
           </Stack>
         ) : <Text size="sm" muted>Enregistre d’abord l’exercice ; tu pourras ensuite y ajouter ta propre vidéo filmée.</Text>}
         <Stack gap={2} as="fieldset" style={{ border: 0, margin: 0, padding: 0 }}>
@@ -199,4 +224,19 @@ function ExerciseForm({ wid, initial, exercise, onDone }: { wid: string; initial
       </Stack>
     </form>
   );
+}
+
+/** D-173 · Envoi direct au stockage, avec l’avancement (fetch ne le donne pas). */
+function putFile(url: string, f: File, type: string, onProgress: (p: number) => void): Promise<boolean> {
+  return new Promise((resolve) => {
+    const x = new XMLHttpRequest();
+    x.open('PUT', url);
+    x.setRequestHeader('content-type', type);
+    x.setRequestHeader('x-upsert', 'false');
+    x.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+    x.onload = () => resolve(x.status >= 200 && x.status < 300);
+    x.onerror = () => resolve(false);
+    x.onabort = () => resolve(false);
+    x.send(f);
+  });
 }

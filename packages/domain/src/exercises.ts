@@ -26,6 +26,8 @@ export const EXERCISE_EQUIPMENT_LABELS: Record<ExerciseEquipment, string> = {
 
 /** Vidéo d’un exercice : 25 Mio au plus, 2 minutes au plus (contrôlé côté navigateur). */
 export const EXERCISE_CLIP_MAX_BYTES = 25 * 1024 * 1024;
+/** D-173 : envoyée directement au stockage de fichiers (en ligne), une vidéo peut aller jusqu’à 50 Mio (environ une minute). */
+export const EXERCISE_CLIP_STORAGE_MAX_BYTES = 50 * 1024 * 1024;
 export const EXERCISE_CLIP_MAX_SECONDS = 120;
 export const EXERCISE_CLIP_TYPES = ['video/mp4', 'video/quicktime', 'video/webm'] as const;
 

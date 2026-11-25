@@ -37,13 +37,17 @@ export async function readExercise(userId: string, wid: string, id: string): Pro
 }
 
 /** Vidéo filmée d’un exercice, si l’exercice est visible par cette personne. */
-export async function readExerciseClip(userId: string, wid: string, exerciseId: string): Promise<{ type: string; bytes: Buffer } | null> {
+/** Vidéo filmée d’un exercice, pour qui peut lire l’exercice : en base (octets) ou, depuis D-173, dans le stockage (adresse). */
+export type StoredClip = { type: string; bytes: Buffer; path?: undefined } | { type: string; path: string; bytes?: undefined };
+export async function readExerciseClip(userId: string, wid: string, exerciseId: string): Promise<StoredClip | null> {
   const ex = await readExercise(userId, wid, exerciseId);
   if (!ex?.clipId) return null;
   return commandAs(userId, async (tx) => {
-    const r = await tx.query<{ content_type: string; bytes: Buffer | Uint8Array }>('select content_type, bytes from public.exercise_clips where workspace_id = $1 and id = $2', [wid, ex.clipId]);
+    const r = await tx.query<{ content_type: string; bytes: Buffer | Uint8Array | null; object_path: string | null }>(
+      'select content_type, bytes, object_path from public.exercise_clips where workspace_id = $1 and id = $2', [wid, ex.clipId]);
     const x = r.rows[0];
-    return x ? { type: x.content_type, bytes: Buffer.from(x.bytes) } : null;
+    if (!x) return null;
+    return x.object_path ? { type: x.content_type, path: x.object_path } : x.bytes ? { type: x.content_type, bytes: Buffer.from(x.bytes) } : null;
   });
 }
 

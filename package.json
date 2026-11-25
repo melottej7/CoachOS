@@ -17,7 +17,7 @@
     "lint": "npm run lint -w @coachos/web",
     "test": "vitest run",
     "db:reset": "npm run db:reset -w @coachos/web",
-    "supabase:start": "PATH=\"$PATH:$HOME/.docker/bin\" supabase start -x studio,imgproxy,vector,logflare,edge-runtime,realtime,storage-api,postgres-meta,supavisor",
+    "supabase:start": "PATH=\"$PATH:$HOME/.docker/bin\" supabase start -x studio,imgproxy,vector,logflare,edge-runtime,realtime,postgres-meta,supavisor",
     "supabase:stop": "PATH=\"$PATH:$HOME/.docker/bin\" supabase stop",
     "supabase:status": "PATH=\"$PATH:$HOME/.docker/bin\" supabase status",
     "supabase:env": "npm run supabase:env -w @coachos/web",

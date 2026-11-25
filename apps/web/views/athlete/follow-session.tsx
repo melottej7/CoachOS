@@ -34,7 +34,7 @@ function useSessionClock(sid: string) {
   return {
     started: c.startedAt !== null, paused: c.pausedAt !== null, ended: c.endedAt !== null, elapsed: elapsedOf(c, now),
     /** D-172 : depuis quand la séance est en pause, et le total des pauses (non comptées dans la durée). */
-    pausedFor, pauses: c.pausedMs + pausedFor,
+    pausedFor, pauses: c.pausedMs + pausedFor, pausedAt: c.endedAt === null ? c.pausedAt : null,
     start: () => { if (cur.current.startedAt === null) save({ ...NO_CLOCK, startedAt: Date.now() }); },
     pause: () => { const v = cur.current; if (v.startedAt !== null && v.pausedAt === null && v.endedAt === null) save({ ...v, pausedAt: Date.now() }); },
     resume: () => { const v = cur.current; if (v.pausedAt !== null) save({ ...v, pausedAt: null, pausedMs: v.pausedMs + Date.now() - v.pausedAt }); },
@@ -315,7 +315,7 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
           onGo={ready} onSkip={skipPart} onPrev={i > 0 ? () => go(i - 1) : null} />
       ) : (
         <StepScreen key={i} wid={wid} sid={sid} f={seq[i]!} prev={seq[i - 1] ?? null} next={seq[i + 1] ?? null} exercises={exercises} logged={log[i]} lastDone={lastDone}
-          paused={clock.paused} pausedFor={clock.pausedFor} started={clock.started} elapsed={clock.elapsed} cues={cues} onBegin={clock.start} entry={entry}
+          paused={clock.paused} pausedAt={clock.pausedAt} pausedFor={clock.pausedFor} started={clock.started} elapsed={clock.elapsed} cues={cues} onBegin={clock.start} entry={entry}
           onPause={clock.pause} onResume={clock.resume} onLog={(v) => note(i, v)} onNext={advance} onPrev={i > 0 ? () => go(i - 1) : null} />
       )}
     </Stack>
@@ -351,11 +351,11 @@ function Outline({ dialog, seq, current, onPick }: { dialog: RefObject<HTMLDialo
 
 type Entry = 'manual' | 'flow' | 'ready';
 
-function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext, onPrev, onBegin, onPause, onResume, entry, lastDone, paused, pausedFor, started, elapsed, cues }: {
+function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext, onPrev, onBegin, onPause, onResume, entry, lastDone, paused, pausedAt, pausedFor, started, elapsed, cues }: {
   wid: string; sid: string; f: FollowStep; prev: FollowStep | null; next: FollowStep | null; exercises: Record<string, Exercise>; lastDone: Record<string, LastDone>;
   logged?: { reps: number | null; kg: number | null }; onLog: (v: { reps: number | null; kg: number | null }) => void;
   onNext: () => void; onPrev: (() => void) | null; onBegin: () => void; onPause: () => void; onResume: () => void; entry: Entry;
-  paused: boolean; pausedFor: number; started: boolean; elapsed: number; cues: Cues;
+  paused: boolean; pausedAt: number | null; pausedFor: number; started: boolean; elapsed: number; cues: Cues;
 }) {
   const st = f.step;
   const ex = st.exercise?.id ? exercises[st.exercise.id] : undefined;
@@ -415,7 +415,7 @@ function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext,
         {last ? <Text size="sm">La dernière fois : <strong>{last.text}</strong></Text> : null}
       </Stack>
       {timed ? (
-        <Countdown sid={sid} index={f.index} seconds={timed} start={start} lead={!rest} paused={paused} cues={cues}
+        <Countdown sid={sid} index={f.index} seconds={timed} start={start} lead={!rest} paused={paused} pausedAt={pausedAt} cues={cues}
           endSound={endSound} endText={endText} onStart={onStart} onEnd={onNext} />
       ) : since !== null ? (
         <p className={s.since} aria-label={`Depuis ${formatElapsed(elapsed - since)} sur cette étape`}><Icon name="clock" size={16} />{formatElapsed(elapsed - since)}</p>
@@ -556,8 +556,8 @@ type CountStart = 'auto' | 'lead' | 'idle';
  * rappels vocaux, pause de la séance respectée (D-166) ; mise en place de 5 s avant un effort lancé au doigt (D-167)
  * et à chaque reprise après une pause (D-172) ; à la fin, la séance passe toujours à la suite (D-172).
  */
-function Countdown({ sid, index, seconds, start, lead, paused, cues, endSound, endText, onStart, onEnd }: {
-  sid: string; index: number; seconds: number; start: CountStart; lead: boolean; paused: boolean; cues: Cues;
+function Countdown({ sid, index, seconds, start, lead, paused, pausedAt, cues, endSound, endText, onStart, onEnd }: {
+  sid: string; index: number; seconds: number; start: CountStart; lead: boolean; paused: boolean; pausedAt: number | null; cues: Cues;
   endSound: SoundName | null; endText: string; onStart: () => void; onEnd: () => void;
 }) {
   const [run, setRun] = useState<Run>(() => {
@@ -572,11 +572,13 @@ function Countdown({ sid, index, seconds, start, lead, paused, cues, endSound, e
   const [now, setNow] = useState(() => Date.now());
   const change = (f: (r: Run) => Run) => { setNow(Date.now()); setRun(f); };
   useEffect(() => { writeRun(sid, index, run); }, [sid, index, run]);
-  // Pause de la séance : on fige le temps d’effort restant ; à la reprise, 5 s pour se remettre en place (pas pour un repos).
+  // Pause de la séance : on fige le temps d’effort restant à l’instant de la pause (même si l’écran se met à jour plus tard,
+  // ou si la page est rouverte après l’absence) ; à la reprise, 5 s pour se remettre en place (pas pour un repos).
   useEffect(() => {
     change((r) => {
       const t = Date.now();
-      if (paused && r.endAt !== null) return { ...r, endAt: null, goAt: null, frozen: Math.max(0, r.endAt - Math.max(t, r.goAt ?? t)) };
+      const at = Math.min(t, pausedAt ?? t);
+      if (paused && r.endAt !== null) return { ...r, endAt: null, goAt: null, frozen: Math.max(0, r.endAt - Math.max(at, r.goAt ?? at)) };
       if (!paused && r.frozen !== null) {
         const goAt = lead ? t + LEAD * 1000 : null;
         return { ...r, frozen: null, goAt, endAt: (goAt ?? t) + r.frozen };
@@ -588,8 +590,8 @@ function Countdown({ sid, index, seconds, start, lead, paused, cues, endSound, e
   }, [paused]);
 
   // Les rappels lisent toujours les dernières valeurs, sans relancer la minuterie à chaque affichage.
-  const latest = useRef({ cues, endSound, onEnd, seconds });
-  latest.current = { cues, endSound, onEnd, seconds };
+  const latest = useRef({ cues, endSound, onEnd, seconds, paused });
+  latest.current = { cues, endSound, onEnd, seconds, paused };
   const lastKey = useRef<string | null>(null);
   const ended = useRef(false);
   useEffect(() => {
@@ -598,6 +600,8 @@ function Countdown({ sid, index, seconds, start, lead, paused, cues, endSound, e
     const goAt = run.goAt;
     const span = (latest.current.seconds + run.extra) * 1000;
     const tick = () => {
+      // En pause depuis le dernier affichage : plus rien ne bouge, même avant que la minuterie soit arrêtée.
+      if (latest.current.paused) return;
       const n = Date.now();
       setNow(n);
       const leadLeft = goAt !== null && n < goAt ? Math.ceil((goAt - n) / 1000) : 0;
