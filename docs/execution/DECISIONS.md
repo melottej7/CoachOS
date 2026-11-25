@@ -2502,6 +2502,12 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Correctif D-172** : la pause fige le chrono à l’instant du toucher, même si l’écran se met à jour plus tard.
 - **Vérifié** : contre Supabase local, une vidéo de 14,3 Mo envoyée, lue (302 puis 206), refusée à un autre espace (404), sans session (401) et sans signature (400), puis retirée du stockage. **Non couvert** : la sauvegarde de la base n’inclut pas les fichiers du stockage.
 
+## D-174 · Toute la carte d’un élève ouvre son dossier · 2026-11-25
+
+- **Retour du fondateur** : sur téléphone, toucher la carte d’un élève invité (« adri », « Relancer l’invitation ») ne faisait rien. Seul le prénom était un lien, une cible trop petite.
+- **Correctif** (`roster.module.css`) : le lien du prénom couvre toute la carte. Le bouton « Séances » et le lien « Relancer » restent au-dessus et gardent leur action. Retour visuel au survol et au toucher, contour au clavier.
+- **Vérifié** : reproduit puis corrigé sur un iPhone simulé (avatar, texte « à faire », prénom ouvrent le dossier ; « Séances » ouvre le calendrier). Le parcours d’invitation le vérifie désormais à 390 px.
+
 ## D-174 · Page publique, offres et pages légales · 2026-11-25
 
 - **Pourquoi** : premier pas de « De quoi vendre » (D-120) ; un coach inconnu arrivait sur la page de connexion sans savoir ce qu’est CoachOS.

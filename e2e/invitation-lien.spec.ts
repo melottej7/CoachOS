@@ -32,6 +32,21 @@ test('créer la fiche et le lien, le copier, l’élève l’ouvre et rejoint ; 
   expect(link).toMatch(/\/invite#token=[A-Za-z0-9_-]{40,}$/);
   await coach.getByRole('button', { name: 'Copier le lien' }).click();
   await expect(coach.getByRole('button', { name: /Lien copié/ })).toBeVisible();
+
+  // Retour du fondateur : sur téléphone, toucher n’importe où sur la carte de l’élève invité ouvre son dossier (pas seulement le prénom),
+  // et le bouton « Séances » garde son action.
+  const phone = await as(browser, 'Marine Roy', { width: 390, height: 844 });
+  await phone.goto(`/coach/${WS_A}/athletes?status=invited`);
+  const card = phone.locator('li').filter({ has: phone.getByRole('link', { name, exact: true }) });
+  await expect(card.getByRole('link', { name: 'Séances' })).toBeVisible();
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  const avatar = await card.locator('span').first().boundingBox();
+  await phone.mouse.click(avatar!.x + avatar!.width / 2, avatar!.y + avatar!.height / 2);
+  await phone.waitForURL(/\/athletes\/[0-9a-f-]{36}/);
+  await expect(phone.getByRole('heading', { name: 'Invitation' })).toBeVisible();
+  await phone.goBack();
+  await card.getByRole('link', { name: 'Séances' }).click();
+  await phone.waitForURL(/\/calendar\?athlete=/);
   expect(await coach.evaluate(() => navigator.clipboard.readText())).toBe(link);
 
   // Une autre identité (Camille, autre adresse) ne peut pas utiliser ce lien.
