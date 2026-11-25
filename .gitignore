@@ -10,5 +10,6 @@ backups/
 .next-build/
 .next-demo/
 .next-vente/
+.next-fluidite/
 test-results/
 playwright-report/
