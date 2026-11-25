@@ -58,7 +58,7 @@ export default async function SignUp({ searchParams }: { searchParams: Promise<{
             </Stack>
           </form>
         </Card>
-        <Text size="sm" muted>En créant ton compte, tu acceptes que CoachOS traite tes données comme décrit dans la <Link href="/confidentialite">politique de confidentialité</Link>.</Text>
+        <Text size="sm" muted>En créant ton compte, tu acceptes les <Link href="/conditions">conditions d’utilisation</Link> et le traitement de tes données décrit dans la <Link href="/confidentialite">politique de confidentialité</Link>.</Text>
       </Stack>
     </PublicShell>
   );

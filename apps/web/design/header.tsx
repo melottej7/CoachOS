@@ -1,13 +1,20 @@
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
+import { BackLink, type BackRoot } from './back-link';
 import { Icon } from './icons';
 import s from './nav.module.css';
 
-/** En-tête compact d’un espace : marque à gauche (lien d’accueil), actions à droite. */
-export function AppHeader({ brand, home, children }: { brand: ReactNode; home: string; children?: ReactNode }) {
+/**
+ * En-tête compact d’un espace : marque à gauche (lien d’accueil), actions à droite.
+ * Avec `roots` (les onglets principaux), une flèche de retour s’affiche sur toute page intérieure.
+ */
+export function AppHeader({ brand, home, roots, except, children }: { brand: ReactNode; home: string; roots?: BackRoot[]; except?: string[]; children?: ReactNode }) {
   return (
     <header className={s.header}>
-      <Link href={home} className={s.brand}>{brand}</Link>
+      <div className={s.headerStart}>
+        {roots ? <Suspense fallback={null}><BackLink roots={roots} home={home} except={except} /></Suspense> : null}
+        <Link href={home} className={s.brand}>{brand}</Link>
+      </div>
       <div className={s.headerActions}>{children}</div>
     </header>
   );

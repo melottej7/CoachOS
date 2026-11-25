@@ -7,7 +7,7 @@ import { unreadNotificationCount } from '@/server/commands/notifications';
 import { logoUrl } from '@/components/coach-card';
 import { TourHost } from '@/components/tour-host';
 import { AppHeader, AthleteColumn, AthleteShell, Avatar, BellLink, BrandName, ProfileLink } from '@/design';
-import { TabBar } from '@/design/nav';
+import { TabBar, type TabItem } from '@/design/nav';
 
 /**
  * Espace élève, direction « Chrono » (D-128, D-129) : en-tête compact aux couleurs du coach, quatre onglets
@@ -26,19 +26,20 @@ export default async function AthleteLayout({ children, params }: { children: Re
   ]);
   const unread = inbox.reduce((n, e) => n + e.unread, 0);
   const logo = ws ? logoUrl(ws) : null;
+  const tabs: TabItem[] = [
+    { href: `${base}/today`, label: 'Aujourd’hui', icon: 'home', tour: 'tab-today' },
+    { href: `${base}/schedule`, label: 'Programme', icon: 'calendar', also: [`${base}/workouts`], tour: 'tab-schedule' },
+    { href: `${base}/progress`, label: 'Progression', icon: 'chart', tour: 'tab-progress' },
+    { href: `${base}/messages`, label: 'Échanges', icon: 'chat', count: unread, tour: 'tab-messages' },
+  ];
   return (
     <AthleteShell accent={ws?.profile?.accent ?? 'emerald'}>
-      <AppHeader home={`${base}/today`} brand={<><Avatar name={ctx.workspace.name} coach src={logo} size={32} /><BrandName>{ctx.workspace.name}</BrandName></>}>
+      <AppHeader home={`${base}/today`} roots={tabs.map(({ href, also }) => ({ href, also }))} except={['/suivre']} brand={<><Avatar name={ctx.workspace.name} coach src={logo} size={32} /><BrandName>{ctx.workspace.name}</BrandName></>}>
         <BellLink href={`${base}/notifications`} unread={notifs} />
         <ProfileLink href={`${base}/setup`} label={`Mon profil, ${ctx.athlete.displayName}`} tour="tab-profile"><Avatar name={ctx.athlete.displayName} size={34} /></ProfileLink>
       </AppHeader>
       <AthleteColumn>
-        <TabBar label="Espace élève" items={[
-          { href: `${base}/today`, label: 'Aujourd’hui', icon: 'home', tour: 'tab-today' },
-          { href: `${base}/schedule`, label: 'Programme', icon: 'calendar', also: [`${base}/workouts`], tour: 'tab-schedule' },
-          { href: `${base}/progress`, label: 'Progression', icon: 'chart', tour: 'tab-progress' },
-          { href: `${base}/messages`, label: 'Échanges', icon: 'chat', count: unread, tour: 'tab-messages' },
-        ]} />
+        <TabBar label="Espace élève" items={tabs} />
         <main id="contenu">{children}</main>
       </AthleteColumn>
       <TourHost space="athlete" wid={wid} />

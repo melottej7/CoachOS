@@ -14,6 +14,8 @@ import { emailHmac, linkInvitationToken, newInvitationToken, sha256 } from '../c
 import { emailNotEnabled, invitationEmail, isEmailNotEnabled, sendEmail } from '../email/send';
 import { AppError, conflict, invalid, notVisible } from '../errors';
 import { audit, idempotent, type StoredResponse } from './idempotency';
+import { trialEndForNewWorkspace } from '../offers';
+import { assertRoomForAthlete } from './workspace-offer';
 
 interface Meta {
   actorId: string;
@@ -33,7 +35,8 @@ export async function createWorkspace(meta: Meta, body: unknown): Promise<Stored
     const user = await tx.query<{ ok: boolean }>('select exists(select 1 from public.users where id = $1) as ok', [meta.actorId]);
     if (!user.rows[0]?.ok) throw new AppError('AUTH_REQUIRED_OR_INVALID_SIGNATURE', 'Session expirée. Reconnecte-toi pour continuer.');
     return idempotent(tx, { actorId: meta.actorId, action: 'workspace.create', key: meta.idempotencyKey, body }, async () => {
-      const ws = await tx.query<{ id: string }>('insert into public.workspaces(name, time_zone) values ($1, $2) returning id', [name, timeZone]);
+      // D-175 : interrupteur commercial allumé, l’espace commence par un essai gratuit ; éteint, phase pilote (null).
+      const ws = await tx.query<{ id: string }>('insert into public.workspaces(name, time_zone, trial_ends_at) values ($1, $2, $3) returning id', [name, timeZone, trialEndForNewWorkspace()]);
       const id = ws.rows[0]!.id;
       await tx.query(`insert into public.memberships(workspace_id, user_id, role) values ($1, $2, 'owner')`, [id, meta.actorId]);
       await audit(tx, id, meta.actorId, 'workspace.create', id, meta.requestId);
@@ -273,6 +276,7 @@ export async function acceptInvitation(meta: Meta, body: unknown): Promise<Store
         [inv.workspace_id, meta.actorId],
       );
       if (already.rows[0]?.ok) throw conflict('Ton compte est déjà relié à un dossier de cet espace.');
+      await assertRoomForAthlete(tx, inv.workspace_id);
 
       await tx.query(`update public.athletes set user_id = $3, state = 'active' where workspace_id = $1 and id = $2`, [
         inv.workspace_id, inv.athlete_id, meta.actorId,
@@ -314,8 +318,8 @@ export async function latestInvitation(userId: string, wid: string, aid: string)
  */
 export async function checkInvitationForEmail(token: string, email: string): Promise<void> {
   await systemTx(async (tx) => {
-    const r = await tx.query<{ email_hmac: Buffer | Uint8Array; expired: boolean; used_at: Date | null; revoked_at: Date | null; state: string }>(
-      `select i.email_hmac, i.expires_at <= now() as expired, i.used_at, i.revoked_at, a.state
+    const r = await tx.query<{ workspace_id: string; email_hmac: Buffer | Uint8Array; expired: boolean; used_at: Date | null; revoked_at: Date | null; state: string }>(
+      `select i.workspace_id, i.email_hmac, i.expires_at <= now() as expired, i.used_at, i.revoked_at, a.state
        from public.invitations i join public.athletes a on a.workspace_id = i.workspace_id and a.id = i.athlete_id
        where i.secret_hash = $1`,
       [sha256(token)],
@@ -331,6 +335,8 @@ export async function checkInvitationForEmail(token: string, email: string): Pro
         { path: 'email', rule: 'Adresse différente de celle invitée' },
       ]);
     }
+    // D-175 : prévenir avant de créer un compte qui ne pourrait pas rejoindre l’espace.
+    await assertRoomForAthlete(tx, inv.workspace_id);
   });
 }
 

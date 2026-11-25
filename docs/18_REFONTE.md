@@ -75,7 +75,7 @@ Profil, bilan, réglages, données et présentation du coach passent dans le men
 
 | Surface | État | Remarque |
 |---|---|---|
-| Page publique (présentation, offres, questions fréquentes) | **Manquant** | La racine redirige vers la connexion |
+| Page publique (présentation, offres, questions fréquentes) | **Fait (D-174)** | « / » présente CoachOS au visiteur, `/offres`, `/conditions`, `/mentions-legales` |
 | Inscription et premiers pas (liste de 5 étapes jusqu’au premier retour traité) | **Partiel** | Inscription et assistant d’espace existent ; pas de liste de premiers pas mesurée |
 | Offres, essai gratuit, abonnement | **Manquant** | Mode test seulement (D-120) |
 | Aide intégrée (articles courts, recherche, visite guidée) | **Partiel** | Visite guidée et guide existent ; pas de centre d’aide |

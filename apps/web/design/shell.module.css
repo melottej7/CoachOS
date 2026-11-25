@@ -13,6 +13,14 @@
 .narrow { max-width: 520px; margin: 0 auto; padding: var(--ds-6) var(--ds-4) var(--ds-12); }
 .wide { max-width: 860px; margin: 0 auto; padding: var(--ds-6) var(--ds-4) var(--ds-12); }
 @media (min-width: 768px) { .narrow, .wide { padding-top: var(--ds-10); } }
+.page { max-width: 1120px; margin: 0 auto; padding: var(--ds-6) var(--ds-4) var(--ds-12); }
+@media (min-width: 768px) { .page { padding: var(--ds-10) var(--ds-6) var(--ds-12); } }
+.public { display: flex; flex-direction: column; }
+.public > main { flex: 1 0 auto; width: 100%; }
+.publicFooter { border-top: 1px solid var(--ds-rule); padding: var(--ds-4) var(--ds-4) calc(var(--ds-4) + env(safe-area-inset-bottom)); }
+.publicFooter nav { max-width: 1120px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: var(--ds-1) var(--ds-4); font-size: var(--ds-text-sm); }
+.publicFooter a { color: var(--ds-ink-2); text-decoration: none; min-height: 32px; display: inline-flex; align-items: center; }
+.publicFooter a:hover { color: var(--ds-ink); text-decoration: underline; }
 .publicAside { margin-left: auto; display: flex; align-items: center; gap: var(--ds-2); }
 .scope { background: transparent; color: inherit; }
 

@@ -1,0 +1,41 @@
+/* D-174 · Page publique, offres et pages légales : quelques mises en page propres à la présentation, sur les jetons Chrono. */
+.hero { display: grid; gap: var(--ds-8); align-items: center; padding-bottom: var(--ds-6); }
+@media (min-width: 960px) { .hero { grid-template-columns: 1.1fr 0.9fr; gap: var(--ds-10); padding-bottom: var(--ds-10); } }
+.title { margin: 0; font-family: var(--ds-font-display); font-weight: 700; font-size: clamp(36px, 8vw, var(--ds-text-display)); line-height: 1.02; letter-spacing: -0.01em; color: var(--ds-ink); }
+.lead { margin: 0; font-size: var(--ds-text-lg); line-height: 1.55; color: var(--ds-ink-2); max-width: 56ch; }
+
+/* Aperçu de la séance du jour, dessiné avec les pièces du produit (aucune image à charger). */
+.phone { margin: 0; justify-self: center; width: min(100%, 340px); border: 1px solid var(--ds-rule); border-radius: 28px; background: var(--ds-surface); padding: var(--ds-5) var(--ds-4); box-shadow: 0 24px 48px -28px rgb(0 0 0 / 0.35); }
+.phoneBar { display: flex; justify-content: space-between; font-size: var(--ds-text-xs); color: var(--ds-ink-2); margin-bottom: var(--ds-4); }
+.blocks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-2); }
+.block { display: grid; grid-template-columns: 6px 1fr auto; gap: var(--ds-3); align-items: center; padding: var(--ds-2) var(--ds-3); border-radius: var(--ds-radius); background: var(--ds-surface-2); font-size: var(--ds-text-sm); }
+.block::before { content: ''; align-self: stretch; border-radius: 3px; background: var(--z, var(--ds-coach)); }
+.block span:last-child { font-variant-numeric: tabular-nums; color: var(--ds-ink-2); }
+
+.section { padding: var(--ds-8) 0; border-top: 1px solid var(--ds-rule); }
+@media (min-width: 768px) { .section { padding: var(--ds-12) 0; } }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--ds-4); counter-reset: step; }
+@media (min-width: 768px) { .steps { grid-template-columns: repeat(3, 1fr); } }
+.step { counter-increment: step; display: flex; flex-direction: column; gap: var(--ds-2); }
+.step::before { content: counter(step); display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--ds-coach-soft); color: var(--ds-coach-text); font-weight: 700; font-variant-numeric: tabular-nums; }
+.gains { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--ds-3) var(--ds-6); }
+@media (min-width: 768px) { .gains { grid-template-columns: repeat(2, 1fr); } }
+.gain { display: grid; grid-template-columns: 24px 1fr; gap: var(--ds-3); align-items: start; line-height: 1.5; }
+.gain > svg { color: var(--ds-coach); margin-top: 2px; }
+
+.duo { display: grid; gap: var(--ds-8); align-items: start; }
+@media (min-width: 768px) { .duo { grid-template-columns: repeat(2, 1fr); } }
+
+/* Offres : trois cartes égales, la recommandée soulignée. */
+.offers { display: grid; gap: var(--ds-4); }
+@media (min-width: 860px) { .offers { grid-template-columns: repeat(3, 1fr); } }
+.offer { display: flex; flex-direction: column; gap: var(--ds-3); height: 100%; }
+.offerFeatured { border-color: var(--ds-coach); box-shadow: inset 0 0 0 1px var(--ds-coach); }
+.price { display: flex; align-items: baseline; gap: var(--ds-1); font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-3xl); line-height: 1; font-variant-numeric: tabular-nums; }
+.price small { font-family: var(--ds-font); font-weight: 400; font-size: var(--ds-text-sm); color: var(--ds-ink-2); }
+
+.faq { display: flex; flex-direction: column; gap: var(--ds-2); }
+.faq details { border: 1px solid var(--ds-rule); border-radius: var(--ds-radius-lg); background: var(--ds-surface); padding: 0 var(--ds-4); }
+.faq summary { cursor: pointer; min-height: 48px; padding: var(--ds-3) 0; display: flex; align-items: center; font-weight: 600; }
+.faq details p { margin: 0 0 var(--ds-4); line-height: 1.6; color: var(--ds-ink-2); max-width: 70ch; }
+.faq summary:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; border-radius: var(--ds-radius-sm); }

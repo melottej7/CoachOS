@@ -13,16 +13,19 @@ import { CoachDetails, CoachIdentity } from '@/views/coach-profile';
 import { SpaceForm } from '@/views/coach/settings/space-form';
 import { AutoRulesForm, RelanceTemplates } from '@/views/coach/settings/follow-ups';
 import { PrivacyPanel } from '@/views/privacy-panel';
+import { readWorkspaceOffer } from '@/server/commands/workspace-offer';
+import { OfferPanel } from '@/views/coach/settings/offer-panel';
 
 export const metadata = { title: 'Paramètres' };
 
-type Tab = 'espace' | 'suivis' | 'relances' | 'apparence' | 'ia' | 'donnees';
+type Tab = 'espace' | 'suivis' | 'relances' | 'apparence' | 'ia' | 'abonnement' | 'donnees';
 const TABS: { k: Tab; label: string; owner?: boolean }[] = [
   { k: 'espace', label: 'Présentation' },
   { k: 'suivis', label: 'Suivis' },
   { k: 'relances', label: 'Relances' },
   { k: 'apparence', label: 'Apparence' },
   { k: 'ia', label: 'IA', owner: true },
+  { k: 'abonnement', label: 'Abonnement', owner: true },
   { k: 'donnees', label: 'Mes données' },
 ];
 
@@ -39,7 +42,7 @@ function Intro({ title, children }: { title: string; children?: React.ReactNode 
 /**
  * X32, refonte Chrono (D-155) : Paramètres de l’espace, en onglets. Présentation (nom de l’espace compris, D-022), suivis
  * automatiques (D-045), modèles de relance (D-104), apparence de cet appareil (D-128), IA du mois (D-081, propriétaire),
- * mes données (D-115). Juste après la création de l’espace (first=1) : l’assistant en quatre étapes, seul à l’écran.
+ * abonnement (D-175, propriétaire), mes données (D-115). Juste après la création de l’espace (first=1) : l’assistant en quatre étapes, seul à l’écran.
  */
 export default async function Settings({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<{ first?: string; notice?: string; onglet?: string }> }) {
   const { wid } = await params;
@@ -73,11 +76,12 @@ export default async function Settings({ params, searchParams }: { params: Promi
   const density = jar.get('coachos_density')?.value;
   const simple = jar.get('coachos_mode')?.value === 'simple';
   // Lectures de l’onglet ouvert seulement.
-  const [rules, mine, requests, ai] = await Promise.all([
+  const [rules, mine, requests, ai, offer] = await Promise.all([
     tab === 'suivis' ? autoRuleSettings(actor.userId, wid) : null,
     tab === 'relances' ? readRelanceTemplates(actor.userId, wid) : null,
     tab === 'donnees' ? listMyPrivacyRequests(actor.userId, wid) : null,
     tab === 'ia' && owner ? aiMonth(actor.userId, wid) : null,
+    tab === 'abonnement' && owner ? readWorkspaceOffer(actor.userId, wid) : null,
   ]);
   const pct = ai ? (ai.budgetMicros ? Math.min(100, Math.round((ai.spentMicros / ai.budgetMicros) * 100)) : 100) : 0;
 
@@ -147,6 +151,13 @@ export default async function Settings({ params, searchParams }: { params: Promi
                 <Text size="sm" muted>Arrivé au budget, l’IA s’arrête jusqu’au mois suivant ; tout reste faisable à la main. Le budget se règle sur le serveur (COACHOS_AI_MONTHLY_BUDGET_USD). Les coûts viennent des jetons facturés par Anthropic à chaque appel.</Text>
               </Stack>
             </Card>
+          </Stack>
+        ) : null}
+
+        {tab === 'abonnement' && offer ? (
+          <Stack gap={4}>
+            <Intro title="Abonnement" />
+            <OfferPanel view={offer} timeZone={ctx.workspace.timeZone} />
           </Stack>
         ) : null}
 

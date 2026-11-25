@@ -211,6 +211,15 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
   });
 
   const clock = useSessionClock(sid);
+  // Quitter cet écran de quelque façon que ce soit (flèche, barre du bas, notification) met la séance en pause, comme « Quitter ».
+  // Le délai écarte le faux départ du mode strict de React en développement (monté, démonté, remonté aussitôt).
+  const alive = useRef(false);
+  const pauseRef = useRef(clock.pause);
+  pauseRef.current = clock.pause;
+  useEffect(() => {
+    alive.current = true;
+    return () => { alive.current = false; setTimeout(() => { if (!alive.current) pauseRef.current(); }, 0); };
+  }, []);
   const [prefs, setPrefs] = usePrefs();
   const prefsRef = useRef(prefs);
   prefsRef.current = prefs;

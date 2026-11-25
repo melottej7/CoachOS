@@ -8,6 +8,7 @@ export { Banner, EmptyState, Skeleton, Toast } from './feedback';
 export { Stats, Meter, KpiGrid, Facts, type StatItem, type KpiItem, type Fact } from './data';
 export { Field, Input, Textarea, Select, ChoiceGroup, ChipChoice, ChipChecks, ScaleChoice, AnswerList, PasswordInput, Checkbox, type ChoiceOption, type ChipOption, type AnswerOption } from './form';
 export { AppHeader, BrandName, BellLink } from './header';
+export type { BackRoot } from './back-link';
 export { AthleteShell, AthleteColumn, ProfileLink, PublicShell, AccentScope, CoachShell } from './shell';
 export { CoachRail, RailBrand, BottomNav, SectionTabs, AccountMenu, type NavItem, type SectionTab, type MenuEntry } from './coach-nav';
 export { SessionStats, SessionStrip, SessionRows } from './session';

@@ -2501,3 +2501,37 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Migration additive** `20261124100000` (colonnes `object_path` et `size_bytes`, octets facultatifs, compartiment créé). Le code lit la nouvelle colonne : la migration doit être appliquée en ligne avant la fusion. Supabase local démarre désormais avec le stockage.
 - **Correctif D-172** : la pause fige le chrono à l’instant du toucher, même si l’écran se met à jour plus tard.
 - **Vérifié** : contre Supabase local, une vidéo de 14,3 Mo envoyée, lue (302 puis 206), refusée à un autre espace (404), sans session (401) et sans signature (400), puis retirée du stockage. **Non couvert** : la sauvegarde de la base n’inclut pas les fichiers du stockage.
+
+## D-174 · Page publique, offres et pages légales · 2026-11-25
+
+- **Pourquoi** : premier pas de « De quoi vendre » (D-120) ; un coach inconnu arrivait sur la page de connexion sans savoir ce qu’est CoachOS.
+- **Page publique** : « / » présente CoachOS au visiteur (boucle planifier, faire, revoir ; temps rendu ; élèves ; confiance ; offres ; questions fréquentes) ; connecté, « / » mène à son espace. L’application installée démarre sur `/choose-workspace`. Rien n’y est promis que le produit ne fasse ; aucun chiffre de temps gagné avant mesure.
+- **Offres** (`server/offers.ts`) : hypothèses de docs/13, corrigées champ par champ par `COACHOS_OFFERS` (JSON) sans toucher au code. Interrupteur unique `COACHOS_BILLING=1` : éteint (production), phase pilote gratuite et **aucun prix publié**, le prix final restant au fondateur ; allumé, prix HT et essai (`COACHOS_TRIAL_DAYS`, 30 jours par défaut).
+- **Pages légales** : `/conditions` et `/mentions-legales`, brouillons à faire relire par un professionnel ; droit belge supposé ; éditeur lu dans `COACHOS_LEGAL_PUBLISHER`, sinon phrase sobre. Liens au pied de chaque page hors espace ; l’inscription renvoie aux conditions.
+- **Non retenu** : l’indexation par les moteurs de recherche (le nom n’est pas arrêté) ; la page reste `noindex`.
+- **Vérifié** : 6 tests des offres, 3 parcours (1440 et 390 px, visiteur puis connecté), navigateur clair et sombre. **Non vérifié** au navigateur : la variante interrupteur allumé (couverte par les tests des offres).
+
+## D-175 · Essai gratuit et limite d’élèves actifs par offre · 2026-11-25
+
+- **Pourquoi** : suite de « De quoi vendre » (D-120) ; docs/13 limite chaque offre par élèves actifs et prévoit un essai gratuit borné.
+- **Migration additive** `20261125000000` : `workspaces.plan` et `workspaces.trial_ends_at`, facultatifs. Les deux vides = phase pilote, sans limite : les espaces existants le restent jusqu’à décision du fondateur à l’ouverture des abonnements.
+- **Essai** : posé à la création d’un espace seulement si `COACHOS_BILLING=1` (30 jours, `COACHOS_TRIAL_DAYS`), avec les limites de l’offre Pro (100 élèves). Essai terminé : affiché, sans blocage tant que le paiement n’existe pas (tranche suivante).
+- **Limite** : contrôlée par le serveur au seul moment où un élève devient actif (acceptation d’invitation), sous verrou de l’espace, et déjà avant la création du compte élève. Elle ne touche jamais les élèves actifs ; le lien reste valable. Interrupteur éteint : aucune limite.
+- **Coach** : Paramètres › Abonnement (propriétaire) : phase pilote, essai et jours restants, élèves actifs face à la limite, bandeaux à la limite et après l’essai.
+- **Vérifié** : 9 tests des offres, 5 tests de l’offre d’espace (essai, limite, pilote, droits coach A, coach B, élève affecté, élève tiers), suite complète, construction ; au navigateur, pilote (Supabase local) et essai (démo interrupteur allumé, `coachos-vente`) à 1440 et 375 px, et la page Offres avec prix. **Non vérifié au navigateur** : le refus vu par l’élève à la limite (couvert par les tests).
+
+## D-176 · Toute la carte d’un élève ouvre son dossier · 2026-11-25
+
+- **Retour du fondateur** : sur téléphone, toucher la carte d’un élève invité (« adri », « Relancer l’invitation ») ne faisait rien. Seul le prénom était un lien, une cible trop petite.
+- **Correctif** (`roster.module.css`) : le lien du prénom couvre toute la carte. Le bouton « Séances » et le lien « Relancer » restent au-dessus et gardent leur action. Retour visuel au survol et au toucher, contour au clavier.
+- **Vérifié** : reproduit puis corrigé sur un iPhone simulé (avatar, texte « à faire », prénom ouvrent le dossier ; « Séances » ouvre le calendrier). Le parcours d’invitation le vérifie désormais à 390 px.
+
+## D-177 · Une flèche pour revenir en arrière · 2026-11-25
+
+- **Demande du fondateur** : une fois CoachOS installée sur le téléphone, il n’y a plus de bouton « précédent » du navigateur.
+- **Flèche d’en-tête** (`design/back-link.tsx`) sur toute page intérieure, côté coach (en-tête du téléphone) et côté élève. Rien sur les pages principales de la barre du bas.
+  - Arrivé par l’application : retour à la page précédente, filtres compris.
+  - Arrivé directement (notification, page rechargée) : la page d’où l’on vient (`from`), sinon l’onglet auquel la page appartient.
+- **Suivi de séance** : pas de flèche, « Quitter » y joue ce rôle. Quitter cet écran de n’importe quelle façon (barre du bas, notification) met désormais la séance en pause, comme « Quitter ».
+- Les liens « ‹ Élèves », « ‹ Semaine de… » dans les pages restent : ce sont les seuls retours sur ordinateur.
+- **Vérifié** : parcours d’invitation (coach, 390 px : dossier ↔ liste filtrée, arrivée directe) et cardio (élève : pas de flèche pendant le suivi, fiche de séance → programme).
