@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-25 (D-161 à D-175). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
+Dernière mise à jour : 2026-11-25 (D-161 à D-176). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
 
 ## Où en est CoachOS
 
@@ -26,7 +26,7 @@ Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en dire
 2. **Le coach inconnu.** Fait (D-169, branche `refonte`, pas encore sur `main`) : trois coachs fictifs joués de l’inscription au premier retour traité ; « Ajouter plusieurs élèves » (liste collée de Google Docs ou d’un tableur, groupes compris, liens à copier), « Premiers pas » sur l’Accueil, brief du jour complété, mode simple ; six accrocs corrigés. Reste : un vrai coach chronométré sans aide ; invitations groupées par e-mail (après le domaine). Retouches du fondateur (D-170) : déplacer un palier cardio, note d’exercice lisible. Installation sur le téléphone guidée pas à pas pour l’élève (D-171).
 3. **De quoi vendre.** Fait (D-174, branche `refonte`, pas encore sur `main`) : page publique sur « / », page Offres (prix réglables par `COACHOS_OFFERS`, aucun prix publié tant que l’interrupteur `COACHOS_BILLING` est éteint), conditions d’utilisation et mentions légales en brouillon, liens au pied des pages hors espace. Puis essai gratuit de 30 jours et limite d’élèves actifs par offre, contrôlée à l’acceptation d’invitation, rubrique Paramètres › Abonnement (D-175, migration `20261125000000` à appliquer en ligne **avant** la fusion). Reste : abonnement en mode test derrière l’interrupteur, aide intégrée, mesure du temps gagné sans identité d’élève.
 
-**Prochaine tranche** : « De quoi vendre », suite : abonnement Stripe en mode test derrière l’interrupteur (choix de l’offre, essai terminé en lecture et export, impayé avec 14 jours de grâce). D-174 et D-175 attendent leur Pull Request ; la migration de D-175 d’abord (point 0 ter).
+**Prochaine tranche** : « De quoi vendre », suite : abonnement Stripe en mode test derrière l’interrupteur (choix de l’offre, essai terminé en lecture et export, impayé avec 14 jours de grâce). D-174 à D-176 attendent leur Pull Request (D-176 : toute la carte d’un élève ouvre son dossier, retour du fondateur) ; la migration de D-175 d’abord (point 0 ter).
 
 ## Pour le fondateur
 
