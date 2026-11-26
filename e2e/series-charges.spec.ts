@@ -37,7 +37,8 @@ test('charge et répétitions série par série : le coach les règle, l’élè
   await card.getByLabel('Nombre de répétitions').fill('12');
   await card.getByLabel('Intensité').selectOption('load');
   await card.getByLabel('Charge en kg').fill('10');
-  await card.getByRole('button', { name: /Varier la charge ou les répétitions/ }).click();
+  expect(await overflow(coach)).toBe(0);
+  await card.getByRole('button', { name: 'Varier d’une série à l’autre' }).click();
   const sets = card.getByRole('group', { name: 'Séries, une par une' });
   await expect(sets.getByLabel(/^Répétitions de la série/)).toHaveCount(3);
   await sets.getByRole('button', { name: '+2,5 kg par série' }).click();
