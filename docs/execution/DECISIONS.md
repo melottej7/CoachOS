@@ -2596,3 +2596,13 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
   - totaux, retour de l’élève prérempli série par série.
 - **Élève** : chaque série montre et annonce sa charge. Pendant la récupération, « Prépare 12 kg (au lieu de 10 kg) », à l’écran et à la voix.
 - **Vérifié** : 4 tests du domaine ; parcours complet sur téléphone (coach règle, enregistre, rouvre ; élève lit, suit, case « Fait » préremplie).
+
+## D-187 · Socle commun de l’IA (IA-0) · 2026-11-26
+
+- **Contexte** : chantier « IA du coach » ([MARCHE_IA.md](MARCHE_IA.md)), tranche IA-0. « Ajuster avec l’IA » (D-071) garde son comportement.
+- **Module `apps/web/server/ai/`** : client unique ; modèle par `COACHOS_AI_MODEL` (défaut `claude-opus-5-5`, Sonnet 5.5 au tarif connu) ; effort écrit par usage ; repli serveur `fallbacks: "default"`. `askStructured` (un appel) et `runWithTools` (Tool Runner, `betaZodTool` strict, `thread: false`) partagent l’interrupteur, le budget (réserve, puis coût réel de tous les tours, même en panne) et la validation zod. Refus, sortie tronquée ou outils sans fin donnent « l’IA n’a pas pu traiter ».
+- **Cache** : outils en ordre fixe, consigne fixe, puis méthode du coach, chacun avec `cache_control` ; préfixe identique d’un appel à l’autre (testé).
+- **Outils en lecture** : `listerExercices`, `lireGroupe`, `lireEleve`, `lireChargesRecentes`, sous RLS dans la transaction du coach, bornés à l’espace. Élèves désignés par une référence d’appel (« E1 ») : ni nom ni identifiant. Ni commentaire, ni Strava, ni santé.
+- **Interrupteur par espace** (propriétaire, Paramètres › IA), sans migration (`workspace_flags`, drapeau `ai_off`). Paramètres › IA montre aussi le modèle. Notice de confidentialité v2 : Anthropic sous-traitant (à faire relire par un professionnel).
+- **À savoir pour IA-1** : `ai_suggestions` exige un élève et un module de la liste existante ; une dictée sans élève demandera une migration additive.
+- **Vérifié** : 7 tests du socle (préfixe, injection, autre espace, budget, panne, simulation, interrupteur), contrat OpenAPI, parcours Paramètres › IA à 1440 et 390 px. **Non vérifié** : appel réel à Claude (pas de clé).

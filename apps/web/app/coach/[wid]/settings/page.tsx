@@ -6,6 +6,9 @@ import { readWorkspacePublic } from '@/server/commands/workspace-profile';
 import { coachContext } from '@/server/repo/context';
 import { autoRuleSettings } from '@/server/repo/portfolio';
 import { aiMonth, aiSource } from '@/server/commands/ai';
+import { aiModel } from '@/server/ai/client';
+import { aiEnabled } from '@/server/ai/settings';
+import { AiSwitch } from '@/views/coach/settings/ai-switch';
 import { readRelanceTemplates } from '@/server/commands/relance-templates';
 import { listMyPrivacyRequests } from '@/server/commands/privacy';
 import { Badge, Banner, Card, Cluster, DensityChoiceGroup, Eyebrow, Heading, Meter, ModeChoiceGroup, SectionTabs, Stack, Text, ThemeChoiceGroup } from '@/design';
@@ -76,12 +79,13 @@ export default async function Settings({ params, searchParams }: { params: Promi
   const density = jar.get('coachos_density')?.value;
   const simple = jar.get('coachos_mode')?.value === 'simple';
   // Lectures de l’onglet ouvert seulement.
-  const [rules, mine, requests, ai, offer] = await Promise.all([
+  const [rules, mine, requests, ai, offer, aiOn] = await Promise.all([
     tab === 'suivis' ? autoRuleSettings(actor.userId, wid) : null,
     tab === 'relances' ? readRelanceTemplates(actor.userId, wid) : null,
     tab === 'donnees' ? listMyPrivacyRequests(actor.userId, wid) : null,
     tab === 'ia' && owner ? aiMonth(actor.userId, wid) : null,
     tab === 'abonnement' && owner ? readWorkspaceOffer(actor.userId, wid) : null,
+    tab === 'ia' && owner ? aiEnabled(actor.userId, wid) : null,
   ]);
   const pct = ai ? (ai.budgetMicros ? Math.min(100, Math.round((ai.spentMicros / ai.budgetMicros) * 100)) : 100) : 0;
 
@@ -142,13 +146,22 @@ export default async function Settings({ params, searchParams }: { params: Promi
             <Intro title="IA ce mois-ci" />
             <Cluster gap={2}>
               <Text strong>Ce mois-ci</Text>
-              <Badge tone={aiSource() === 'claude' ? 'coach' : 'neutral'}>{aiSource() === 'claude' ? 'Claude actif' : 'IA simulée, aucun coût'}</Badge>
+              {!aiOn ? <Badge tone="neutral">IA éteinte</Badge> : <Badge tone={aiSource() === 'claude' ? 'coach' : 'neutral'}>{aiSource() === 'claude' ? 'Claude actif' : 'IA simulée, aucun coût'}</Badge>}
             </Cluster>
             <Card pad={5}>
               <Stack gap={3}>
                 <Text><strong>{ai.calls}</strong> proposition{ai.calls > 1 ? 's' : ''} « Ajuster avec l’IA »{ai.claudeCalls !== ai.calls ? ` (dont ${ai.claudeCalls} par Claude)` : ''} · coût réel <strong>{formatUsd(ai.spentMicros)}</strong> sur un budget de {formatUsd(ai.budgetMicros)}.</Text>
                 <div role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Part du budget IA utilisée"><Meter value={pct} tone={pct >= 90 ? 'signal' : 'coach'} /></div>
                 <Text size="sm" muted>Arrivé au budget, l’IA s’arrête jusqu’au mois suivant ; tout reste faisable à la main. Le budget se règle sur le serveur (COACHOS_AI_MONTHLY_BUDGET_USD). Les coûts viennent des jetons facturés par Anthropic à chaque appel.</Text>
+              </Stack>
+            </Card>
+            <Card pad={5}>
+              <Stack gap={4}>
+                <AiSwitch wid={wid} initial={aiOn !== false} />
+                <Stack gap={1}>
+                  <Text size="sm"><strong>Modèle</strong> · {aiSource() === 'claude' ? <code>{aiModel()}</code> : 'aucun (IA simulée : réponses toutes faites, rien ne sort de CoachOS)'}</Text>
+                  <Text size="sm" muted>Fournisseur : Anthropic (Claude). Seuls des faits d’entraînement partent, sans nom ni prénom ; jamais de données Strava, de santé, de notes privées ni de messages. Rien n’est publié ni envoyé sans ton geste. Le modèle se règle sur le serveur (COACHOS_AI_MODEL).</Text>
+                </Stack>
               </Stack>
             </Card>
           </Stack>

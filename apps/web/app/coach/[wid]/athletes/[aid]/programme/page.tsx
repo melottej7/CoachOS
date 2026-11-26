@@ -5,6 +5,7 @@ import { requireActor } from '@/server/auth/session';
 import { isUuid } from '@/server/repo/context';
 import { buildProgram, existingInPeriod, nextMonday, programContext, readGoalPlans } from '@/server/commands/programs';
 import { aiSource } from '@/server/commands/ai';
+import { aiEnabled } from '@/server/ai/settings';
 import { Badge, Banner, Button, Card, Cluster, Disclosure, Eyebrow, Field, Heading, Input, LinkButton, Stack, Text, type Tone } from '@/design';
 import { AiTweaks, TweaksBanner } from '@/views/coach/program/ai-tweaks';
 import { ProgramChart } from '@/views/coach/program/program-chart';
@@ -102,7 +103,7 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
           {ctx.methodLines.length ? (
             <Banner tone="info" title="Ta méthode s’applique" action={<LinkButton href={`/coach/${wid}/methode`} size="sm">Ma méthode</LinkButton>}>{ctx.methodLines.join(' · ')}.</Banner>
           ) : null}
-          {program ? <AiTweaks wid={wid} aid={aid} goalId={ctx.goal.id} days={days} tweaks={tweaks} href={here} first={first} source={aiSource()} /> : null}
+          {program && await aiEnabled(actor.userId, wid) ? <AiTweaks wid={wid} aid={aid} goalId={ctx.goal.id} days={days} tweaks={tweaks} href={here} first={first} source={aiSource()} /> : null}
         </Stack>
       </Disclosure>
     </Card>

@@ -4,6 +4,7 @@ import { requireActor } from '@/server/auth/session';
 import { isUuid } from '@/server/repo/context';
 import { buildRegeneration, regenContext, seenOf } from '@/server/commands/programs';
 import { aiSource } from '@/server/commands/ai';
+import { aiEnabled } from '@/server/ai/settings';
 import { Badge, Banner, Button, Card, Cluster, Eyebrow, Field, Grid, Heading, LinkButton, Select, Stack, Text, type Tone } from '@/design';
 import { AiTweaks, TweaksBanner } from '@/views/coach/program/ai-tweaks';
 import { ProgramRegenerate } from '@/views/coach/program/program-regenerate';
@@ -88,7 +89,7 @@ export default async function RegeneratePage({ params, searchParams }: {
       </Card>
 
       {built ? <TweaksBanner lines={tweaks ? describeTweaks(tweaks, DAY_LABELS) : []} href={here} suggestionId={suggestionId} /> : null}
-      {built ? <AiTweaks wid={wid} aid={aid} goalId={ctx.goal.id} days={days} tweaks={tweaks} href={here} first={first} source={aiSource()} /> : null}
+      {built && await aiEnabled(actor.userId, wid) ? <AiTweaks wid={wid} aid={aid} goalId={ctx.goal.id} days={days} tweaks={tweaks} href={here} first={first} source={aiSource()} /> : null}
 
       {!built ? <Banner tone="warning">Choisis au moins 2 jours d’entraînement.</Banner> : (
         <>

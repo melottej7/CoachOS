@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aiCostMicros, aiMonthlyBudgetMicros, aiReserveMicros, budgetPeriod, formatUsd } from './index';
+import { aiCostMicros, aiMonthlyBudgetMicros, aiReserveMicros, aiToolsReserveMicros, budgetPeriod, formatUsd, methodPromptText } from './index';
 
 describe('coût de l’IA (D-081)', () => {
   it('prix par jeton, modèle inconnu estimé, réserve, budget, affichage', () => {
@@ -10,5 +10,18 @@ describe('coût de l’IA (D-081)', () => {
     expect([aiMonthlyBudgetMicros(undefined), aiMonthlyBudgetMicros('2.5'), aiMonthlyBudgetMicros('x'), aiMonthlyBudgetMicros('0')]).toEqual([10_000_000, 2_500_000, 10_000_000, 0]);
     expect([formatUsd(0), formatUsd(5000), formatUsd(1_234_567)]).toEqual(['0,00 $', 'moins de 0,01 $', '1,23 $']);
     expect(budgetPeriod(new Date('2026-11-19T23:30:00Z'))).toBe('2026-11-01');
+  });
+
+  it('IA-0 : Sonnet 5.5 au tarif connu, réserve au prix d’Opus au moins, réserve des tours d’outils croissante', () => {
+    expect(aiCostMicros('claude-sonnet-5-5', { input_tokens: 1000, output_tokens: 100 })).toEqual({ micros: 3000, exact: true });
+    expect(aiReserveMicros(4000, 3000, 'claude-sonnet-5-5')).toBe(aiReserveMicros(4000, 3000));
+    expect(aiToolsReserveMicros(2000, 1, 3000, 12_000)).toBe(aiReserveMicros(2000, 3000));
+    expect(aiToolsReserveMicros(2000, 4, 3000, 12_000)).toBeGreaterThan(4 * aiReserveMicros(2000, 3000));
+  });
+
+  it('IA-0 : méthode du coach balisée, rien si elle est vide', () => {
+    expect(methodPromptText(null)).toBeNull();
+    expect(methodPromptText({ schemaVersion: 1, philosophy: null, style: null, rules: [], dismissed: [] })).toBeNull();
+    expect(methodPromptText({ schemaVersion: 1, philosophy: 'Régularité', style: 'direct', rules: [], dismissed: [] })).toBe('<methode_du_coach>\nPhilosophie : Régularité\nStyle : Direct\n</methode_du_coach>');
   });
 });

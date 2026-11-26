@@ -29,6 +29,7 @@ import { buildRegeneration, createProgram, regenContext, regenerateProgram, seen
 import { addPerformance, deletePerformance } from './commands/performances';
 import { createExercise, finishExerciseClipUpload, startExerciseClipUpload } from './commands/exercises';
 import { setVideoStore } from './storage/video-store';
+import { setWorkspaceAi } from './ai/settings';
 import { applyWeekProposal, weekProposals } from './commands/week-proposals';
 
 // Test de contrat : chaque réponse réelle des commandes est validée contre contracts/openapi.json
@@ -223,6 +224,8 @@ describe('réponses conformes au contrat OpenAPI', () => {
     check('/workspaces/{wid}/auto-tasks/{ref}', 'put', snooze.status, snooze.body);
     const rules = await saveAutoRuleSettings(m(), { rules: [{ rule: 'feedback_review', enabled: true, delayDays: 3 }, { rule: 'vma_missing', enabled: false, delayDays: null }] });
     check('/workspaces/{wid}/auto-task-rules', 'put', rules.status, rules.body);
+    const aiSet = await setWorkspaceAi(m(), { enabled: true });
+    check('/workspaces/{wid}/ai-settings', 'put', aiSet.status, aiSet.body);
     const appt = await createAppointment(m(), { athleteId: ATHLETES.noah, title: 'Appel', kind: 'call', startsLocal: '2026-12-02T12:00', timeZone: TIME_ZONE, durationMin: 20 });
     check('/workspaces/{wid}/appointments', 'post', appt.status, appt.body);
     const apptUp = await updateAppointment({ ...m(), appointmentId: id(appt) }, { expectedRevision: 1, status: 'canceled' });

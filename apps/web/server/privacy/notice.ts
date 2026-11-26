@@ -4,7 +4,7 @@
  * Les tables privacy_notices et privacy_notice_views du contrat restent réservées à un texte propre à chaque espace.
  */
 
-export const PRIVACY_VERSION = '1 · 23 novembre 2026';
+export const PRIVACY_VERSION = '2 · 26 novembre 2026'; // v2 (IA-0) : Anthropic sous-traitant de l’assistant IA, à faire relire par un professionnel
 
 export interface NoticeSection {
   id: string;
@@ -63,7 +63,7 @@ export const PRIVACY_SECTIONS: NoticeSection[] = [
       'Supabase (Irlande, Union européenne) : base de données et comptes.',
       'Vercel (serveurs à Dublin, Union européenne ; réseau mondial pour la diffusion des pages) : hébergement de l’application.',
       'Resend : envoi des e-mails (invitation, mot de passe oublié, notifications sans le contenu des messages).',
-      'Anthropic (États-Unis) : uniquement si ton coach active l’assistant de programme. Il ne reçoit ni ton nom, ni ton adresse, ni tes messages : seulement le sport, la distance visée, ton niveau, le nombre de semaines et de jours d’entraînement.',
+      'Anthropic (États-Unis), sous-traitant pour l’assistant IA (Claude) : uniquement si l’IA est allumée dans l’espace de ton coach et qu’il lui demande un brouillon. Il reçoit des faits d’entraînement utiles à cette demande (sport, distance visée, niveau, repères comme la VMA ou la FTP, jours disponibles, date de l’objectif, séries et charges réalisées en musculation), où tu es désigné par une référence anonyme. Il ne reçoit ni ton nom, ni ton adresse, ni tes messages, ni tes commentaires, ni tes notes, ni aucune donnée Strava ou de santé. Ton coach relit chaque proposition : rien n’est publié ni envoyé sans lui.',
     ],
   },
   {
@@ -105,7 +105,7 @@ export function privacySummary(): string {
   const lines = [
     'CoachOS garde uniquement ce qui sert à ton suivi sportif : compte, profil et bilan, séances et retours, fichiers de montre importés, échanges avec ton coach, journal technique sans contenu.',
     'Aucune donnée de santé n’est demandée ni enregistrée. Aucune publicité, aucune revente, aucun traceur.',
-    'Tes données sont vues par ton coach, les coachs qu’il affecte et toi. Prestataires : Supabase et Vercel (Union européenne), Resend (e-mails), Anthropic seulement si le coach active l’assistant, sans ton nom.',
+    'Tes données sont vues par ton coach, les coachs qu’il affecte et toi. Prestataires : Supabase et Vercel (Union européenne), Resend (e-mails), Anthropic (assistant IA) seulement si l’IA est allumée dans l’espace, sans ton nom ni tes messages.',
     'Tu peux télécharger tes données, corriger ton profil et demander l’effacement depuis Profil › Mes données. Texte complet : /confidentialite.',
   ];
   const body = lines.join('\n');
