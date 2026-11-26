@@ -110,20 +110,26 @@ export async function addMachineExercises(meta: Meta, body: unknown): Promise<St
   return commandAs(meta.actorId, async (tx) => {
     await requireCoach(tx, wid);
     return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'exercise.machines', key: meta.idempotencyKey, body: { keys } }, async () => {
-      const rows = (await tx.query<{ n: string; k: string | null }>('select lower(name) as n, starter_key as k from public.exercises where workspace_id = $1 and not archived', [wid])).rows;
-      const names = new Set(rows.map((r) => r.n)), have = new Set(rows.map((r) => r.k));
+      const rows = (await tx.query<{ id: string; name: string; k: string | null }>('select id, name, starter_key as k from public.exercises where workspace_id = $1 and not archived', [wid])).rows;
+      const byKey = new Map(rows.filter((r) => r.k).map((r) => [r.k!, r]));
+      const byName = new Map(rows.map((r) => [r.name.toLowerCase(), r]));
       let added = 0;
+      // D-181 : l’identifiant de chaque exercice demandé (ajouté ou déjà là), pour le relier aussitôt à une séance.
+      const items: { key: string; id: string; name: string }[] = [];
       for (const e of picked as MachineExercise[]) {
-        if (names.has(e.name.toLowerCase()) || have.has(e.key)) continue;
-        await tx.query(
-          `insert into public.exercises(workspace_id, owner_id, name, instructions, muscle, equipment, starter, starter_key) values ($1, auth.uid(), $2, $3, $4, $5, false, $6)`,
+        const found = byKey.get(e.key) ?? byName.get(e.name.toLowerCase());
+        if (found) { items.push({ key: e.key, id: found.id, name: found.name }); continue; }
+        const r = await tx.query<{ id: string }>(
+          `insert into public.exercises(workspace_id, owner_id, name, instructions, muscle, equipment, starter, starter_key) values ($1, auth.uid(), $2, $3, $4, $5, false, $6) returning id`,
           [wid, e.name, machineInstructions(e), e.muscle, ['machine'], e.key],
         );
-        names.add(e.name.toLowerCase());
+        const row = { id: r.rows[0]!.id, name: e.name, k: e.key };
+        byKey.set(e.key, row); byName.set(e.name.toLowerCase(), row);
+        items.push({ key: e.key, id: row.id, name: e.name });
         added++;
       }
       await audit(tx, wid, meta.actorId, 'exercise.machines', wid, meta.requestId);
-      return { status: 200, body: { added, skipped: picked.length - added } };
+      return { status: 200, body: { added, skipped: picked.length - added, items } };
     });
   });
 }

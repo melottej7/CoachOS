@@ -13,11 +13,14 @@ import { mutate, newKey } from '@/components/api-client';
 import { Button, Checkbox, Cluster, Field, Icon, IconButton, Input, MenuItem, Popover, Select, SessionStrip, Stack, Text } from '@/design';
 import { cx } from '@/design/cx';
 import { QuickNotation } from './quick-notation';
+import { MachinePicker, readGym, type Gym, type PickedExercise } from './machine-picker';
 import s from './builder.module.css';
 
 /** D-096 : exercices de la bibliothèque du coach, proposés dans les blocs de musculation. */
 export interface ExerciseOption { id: string; name: string; equipment?: ExerciseEquipment[] }
 const ExercisesCtx = createContext<ExerciseOption[]>([]);
+/** D-181 : ouvrir le choix d’une machine pour une étape (absent hors d’un espace : bibliothèque de démonstration…). */
+const PickOneCtx = createContext<((onPick: (x: PickedExercise) => void) => void) | null>(null);
 /** D-111 : matériel de l’élève de la séance (absent pour la bibliothèque et les groupes). */
 export interface AthleteGearInfo { first: string; gear: AthleteGear }
 const GearCtx = createContext<AthleteGearInfo | null>(null);
@@ -99,6 +102,15 @@ const newStrengthRepeat = (): ERepeat => ({
   type: 'repeat', times: 3, _k: key(),
   steps: [newStrengthStep('work'), { ...newStep('rest'), measure: { kind: 'time', seconds: 90 } }],
 });
+/** D-181 : un exercice choisi parmi les machines devient 3 séries de 10, repos 1 min 30. */
+const withExercise = (x: PickedExercise): ERepeat => {
+  const r = newStrengthRepeat();
+  return { ...r, steps: r.steps.map((st, k) => (k === 0 && st.type === 'step' ? { ...st, exercise: { id: x.id, name: x.name } } : st)) };
+};
+/** Noms (en minuscules) des exercices déjà dans la séance. */
+function exerciseNames(blocks: Block[]): string[] {
+  return blocks.flatMap((b) => (b.type === 'repeat' ? exerciseNames(b.steps) : b.exercise ? [b.exercise.name.toLowerCase()] : []));
+}
 /** D-165 : circuit, deux exercices enchaînés puis une récupération, en 3 tours. */
 const newCircuit = (): ERepeat => ({
   type: 'repeat', times: 3, _k: key(),
@@ -571,6 +583,7 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools, series }:
   const est = stepEstimate(plain, sport, refs);
   const strength = stepSport === 'strength' || sport === 'strength';
   const allExercises = useContext(ExercisesCtx);
+  const pickOne = useContext(PickOneCtx);
   const athlete = useContext(GearCtx);
   // D-111 : pour un élève qui a dit où il s’entraîne, les exercices faisables d’abord.
   const fit = (x: ExerciseOption) => exerciseFits(x.equipment ?? [], athlete?.gear ?? null);
@@ -620,6 +633,9 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools, series }:
               }} />
             <datalist id={`${id}-exl`}>{exercises.map((x) => <option key={x.id} value={x.name} label={fit(x) === false ? 'matériel absent' : undefined} />)}</datalist>
             {step.exercise && !step.exercise.id && exercises.length ? <span className={s.hint}>Pas dans ta bibliothèque : l’élève verra le nom, sans vidéo.</span> : null}
+            {pickOne && !step.cardio ? (
+              <span><Button size="sm" variant="ghost" icon="list" onClick={() => pickOne((x) => onChange({ ...step, exercise: { id: x.id, name: x.name } }))}>Choisir une machine</Button></span>
+            ) : null}
             {lastDone ? <span className={s.hint}>Dernière fois : <strong>{lastDone.text}</strong> ({formatShortDate(lastDone.date)})</span> : null}
             {chosen && chosenFits === false && athlete ? (
               <span className={cx(s.hint, s.warn)} role="note"><Icon name="alert" size={14} /> D’après son bilan, {athlete.first} n’a pas le matériel ({missingEquipment(chosen.equipment ?? [])}) : choisis une variante, ou parlez-en ensemble.</span>
@@ -780,7 +796,9 @@ function BlockList({ blocks, sport, depth, prefix, parent, refs, dnd, onChange }
 type Indicator = { top: number; left: number; width: number };
 
 /** Constructeur complet, contrôlé par le formulaire de séance. */
-export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vmaHref, library, exercises = [], strengthOn = true, gear, lastDone }: {
+export function WorkoutBuilder({ wid, sport, value, onChange, refs, athleteFirst, vmaHref, library, exercises: listed = [], strengthOn = true, gear, lastDone }: {
+  /** D-181 : espace du coach, pour ajouter des exercices de machine à sa bibliothèque depuis la séance. */
+  wid?: string;
   sport: Sport; value: EBlock[]; onChange: (b: EBlock[]) => void; refs?: References; athleteFirst?: string; vmaHref?: string;
   /** D-074 : blocs réutilisables du coach (insérer, garder). Absent : seulement les modèles rapides. */
   library?: { wid: string; blocks: SavedBlock[] };
@@ -794,6 +812,14 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
   lastDone?: Record<string, LastDone>;
 }) {
   const presets = presetsFor(sport);
+  // D-181 : exercices de machine entrés dans la bibliothèque pendant cette séance, proposés aussitôt dans les autres étapes.
+  const [added, setAdded] = useState<ExerciseOption[]>([]);
+  const exercises = [...listed, ...added.filter((a) => !listed.some((x) => x.id === a.id))];
+  const remember = (items: PickedExercise[]) => setAdded((list) => [...list, ...items.filter((x) => !list.some((y) => y.id === x.id))]);
+  const [picker, setPicker] = useState<null | { mode: 'many' } | { mode: 'one'; onPick: (x: PickedExercise) => void }>(null);
+  const [gym, setGym] = useState<Gym>('all');
+  useEffect(() => { setGym(readGym()); }, []);
+  const pickOne = wid ? (onPick: (x: PickedExercise) => void) => setPicker({ mode: 'one', onPick }) : null;
   const [mine, setMine] = useState<SavedBlock[]>(library?.blocks ?? []);
   const usable = mine.filter((b) => !b.sport || b.sport === sport);
   const blocks = fromEditor(value);
@@ -928,6 +954,7 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
   const view = value.length ? sessionView(blocks, sport, refs) : null;
   return (
     <ExercisesCtx.Provider value={exercises}>
+    <PickOneCtx.Provider value={pickOne}>
     <GearCtx.Provider value={gear ?? null}>
     <LastCtx.Provider value={lastDone ?? {}}>
     <section className={cx(s.builder, drag?.active && s.sorting)} aria-labelledby="builder-title" data-tour="builder" ref={root}>
@@ -946,6 +973,7 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
         {strength ? (
           <>
             <Button icon="plus" onClick={() => onChange([...value, newStrengthRepeat()])}>Exercice</Button>
+            {wid ? <Button icon="list" title="Choisir des exercices sur machine, Basic-Fit ou toutes les machines" onClick={() => setPicker({ mode: 'many' })}>{gym === 'all' ? 'Machines' : 'Machines Basic-Fit'}</Button> : null}
             <Button icon="repeat" title="Plusieurs exercices enchaînés, en tours" onClick={() => onChange([...value, newCircuit()])}>Circuit</Button>
             <Button icon="plus" title="Tapis, elliptique, vélo, rameur… en paliers (niveau, vitesse, pente)" onClick={() => onChange([...value, newCardioStep(value.length ? 'work' : 'warmup')])}>Cardio</Button>
           </>
@@ -1001,9 +1029,20 @@ export function WorkoutBuilder({ sport, value, onChange, refs, athleteFirst, vma
       <p className="ds-visually-hidden" aria-live="assertive">{announce}</p>
       {drag?.active ? <div className={s.ghost} style={{ left: drag.x + 12, top: drag.y + 12 }} aria-hidden="true">{drag.label}</div> : null}
       {drag?.active && drop ? <div className={s.drop} style={{ top: drop.top, left: drop.left, width: drop.width }} aria-hidden="true" /> : null}
+      {picker && wid ? (
+        <MachinePicker wid={wid} mode={picker.mode} gym={gym} onGym={setGym} onClose={() => setPicker(null)}
+          inSession={new Set(exerciseNames(blocks))}
+          onPick={(items) => {
+            remember(items);
+            if (picker.mode === 'one') { if (items[0]) picker.onPick(items[0]); }
+            else onChange([...value, ...items.map(withExercise)]);
+            setPicker(null);
+          }} />
+      ) : null}
     </section>
     </LastCtx.Provider>
     </GearCtx.Provider>
+    </PickOneCtx.Provider>
     </ExercisesCtx.Provider>
   );
 }

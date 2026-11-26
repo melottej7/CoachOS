@@ -34,6 +34,7 @@ export * from './foulee-library';
 export * from './exercises';
 export * from './follow-voice';
 export * from './strength-log';
+export * from './follow-changes';
 export * from './relances';
 export * from './program-blocks';
 export * from './ai-coach';

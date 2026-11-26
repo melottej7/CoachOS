@@ -54,7 +54,7 @@ export function LibraryForm({ wid, initial, savedBlocks, exercises, modules }: {
             </Select>
           </Field>
         </Grid>
-        <WorkoutBuilder strengthOn={modules?.strength ?? true} sport={sport} value={blocks} onChange={setBlocks}
+        <WorkoutBuilder wid={wid} strengthOn={modules?.strength ?? true} sport={sport} value={blocks} onChange={setBlocks}
           library={savedBlocks ? { wid, blocks: savedBlocks } : undefined} exercises={exercises} />
         <Field id="lib-instructions" label="Consignes" hint="Facultatif · reprises dans chaque séance créée à partir de celle-ci">
           <Textarea id="lib-instructions" maxLength={5000} value={instructions} onChange={(e) => setInstructions(e.target.value)} hasHint />

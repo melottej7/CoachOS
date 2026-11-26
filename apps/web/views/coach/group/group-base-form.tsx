@@ -53,7 +53,7 @@ export function GroupBaseForm({ wid, gid, revision, base, rows, exercises, modul
               <Select id="gb-sport" value={sport} onChange={(e) => setSport(e.target.value as Sport)}>{sportsFor(modules ?? { endurance: true, strength: true }, sport).map((x) => <option key={x} value={x}>{SPORT_LABELS[x]}</option>)}</Select>
             </Field>
           </Grid>
-          <WorkoutBuilder strengthOn={modules?.strength ?? true} sport={sport} value={blocks} onChange={setBlocks} exercises={exercises} />
+          <WorkoutBuilder wid={wid} strengthOn={modules?.strength ?? true} sport={sport} value={blocks} onChange={setBlocks} exercises={exercises} />
           <Field id="gb-instructions" label="Consignes" hint="Facultatif">
             <Textarea id="gb-instructions" maxLength={5000} value={instructions} onChange={(e) => setInstructions(e.target.value)} hasHint />
           </Field>

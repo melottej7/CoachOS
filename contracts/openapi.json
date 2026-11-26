@@ -26662,7 +26662,8 @@
                   "additionalProperties": false,
                   "required": [
                     "added",
-                    "skipped"
+                    "skipped",
+                    "items"
                   ],
                   "properties": {
                     "added": {
@@ -26672,6 +26673,31 @@
                     "skipped": {
                       "type": "integer",
                       "minimum": 0
+                    },
+                    "items": {
+                      "type": "array",
+                      "description": "D-181 · Identifiant de chaque exercice demandé, ajouté ou déjà présent.",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "key",
+                          "id",
+                          "name"
+                        ],
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
                     }
                   }
                 }

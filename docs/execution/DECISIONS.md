@@ -2561,3 +2561,18 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Geste** : depuis le haut de la page, tirer d’environ 130 px ; une roue suit le doigt, puis tourne pendant l’actualisation. Un geste plus court ne fait rien.
 - **Rien ne se perd** : les données sont relues au serveur sans recharger la page (`router.refresh`) ; un texte en cours de saisie reste en place. Le geste ne part pas d’un champ, d’une fenêtre ou d’une liste déjà défilée (conversation).
 - **Preuves** : 2 tests (distance, seuil), 455 tests, typecheck, construction, 18 parcours de bout en bout dont `e2e/actualiser.spec.ts` (390 px, vrais événements tactiles : geste court sans effet, geste long qui relit les données sans recharger). **Non prouvé** : sur un vrai iPhone, l’app installée.
+
+## D-181 · Séance au Basic-Fit : choisir les machines depuis la séance · 2026-11-26
+
+- **Demande du fondateur** : « choisir séance au Basic » et sélectionner ses exercices, sans recopier leur nom.
+- **Éditeur de séance (musculation)** : bouton « Machines » ; choix de la salle « Basic-Fit (Belgique) » ou « Toutes les machines », retenu sur l’appareil (le bouton devient « Machines Basic-Fit ») ; recherche ; exercices rangés par type et par machine, nom anglais écrit sur la machine. On touche les exercices dans l’ordre de la séance (numéros 1, 2, 3), puis « Ajouter » : 3 séries de 10, repos 1 min 30, à ajuster. Dans une étape, « Choisir une machine » remplace l’exercice.
+- **Relié d’office** : un exercice absent de la bibliothèque y entre en même temps (`addMachineExercises`, qui renvoie maintenant l’identifiant de chaque exercice ; contrat OpenAPI à jour), donc l’élève voit fiche et animation. « Déjà dans la séance » signalé. Écriture libre inchangée.
+- **Basic-Fit reste une étiquette** (D-179) : machines sûres ou très probables ; « selon le club » seulement dans « Toutes les machines ».
+
+## D-182 · Machine prise : un autre ordre, un remplacement, un exercice en plus · 2026-11-26
+
+- **Demande du fondateur** : à la salle, les machines ne se libèrent pas dans l’ordre ; l’élève doit pouvoir choisir par quoi commencer, ou faire autre chose.
+- **« Machine prise ? Changer »** sur l’écran entre deux exercices : commencer par un autre exercice restant (celui laissé revient ensuite) ; remplacer un exercice (alternative conseillée de la machine en un toucher, ou nom libre ; mêmes séries et repos ; « Annuler ») ; ajouter un exercice hors programme (séries, répétitions, charge). En fin de séance : « Ajouter un exercice fait en plus ».
+- **Ordre** : après chaque exercice, le suivant non fait dans l’ordre du programme, puis ceux laissés en arrière ; « Exercice 3 sur 3 » et la barre d’avancement comptent ce qui est fait, dans n’importe quel ordre.
+- **Le coach le voit** : le retour reprend tout. Séries d’un exercice remplacé reportées sur le remplaçant, exercice passé à 0 (avant, il apparaissait comme fait), ajouts en fin de journal ; commentaire proposé « Changements à la salle — remplacé : … ; pas fait : … ; en plus : … ». Tout est gardé sur le téléphone (rechargement, « Quitter ») et oublié une fois le retour envoyé. Sans migration.
+- **Preuves (D-181, D-182)** : 4 tests d’ordre et de journal, test serveur des identifiants renvoyés, 499 tests, typecheck, construction, parcours `e2e/salle.spec.ts` (coach 1440 px : trois machines Basic-Fit en trois touchers, reliées ; élève 390 px : autre ordre, remplacement, ajout, retour à l’exercice laissé, commentaire du retour). **Non prouvé** : sur un vrai téléphone à la salle.

@@ -51,7 +51,7 @@ export function GroupSessionForm({ wid, teamId, teamName, members, date, initial
         <Field id="gs-title" label="Titre" error={fieldError(error, 'workout.title')}>
           <Input id="gs-title" maxLength={120} required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex. Piste : 10 × 400 m" invalid={!!fieldError(error, 'workout.title')} />
         </Field>
-        <WorkoutBuilder strengthOn={modules?.strength ?? true} sport={sport} value={blocks} onChange={setBlocks} exercises={exercises} />
+        <WorkoutBuilder wid={wid} strengthOn={modules?.strength ?? true} sport={sport} value={blocks} onChange={setBlocks} exercises={exercises} />
         <Field id="gs-instructions" label="Consignes" hint="Facultatif · identiques pour tous, modifiables ensuite par élève">
           <Textarea id="gs-instructions" maxLength={5000} value={instructions} onChange={(e) => setInstructions(e.target.value)} hasHint />
         </Field>

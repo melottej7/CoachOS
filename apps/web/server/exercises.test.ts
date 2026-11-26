@@ -59,9 +59,15 @@ describe('exercices de musculation (D-096)', () => {
   it('D-179 : exercices de machine ajoutés avec réglages et consignes, sans doublon, par le seul coach de l’espace', async () => {
     await createExercise(meta(USERS.marine), { name: 'tirage vertical' });
     const r = (await addMachineExercises(meta(USERS.marine), { keys: ['presse-a-cuisses', 'tirage-vertical', 'developpe-machine', 'presse-a-cuisses'] })).body;
-    expect(r).toEqual({ added: 2, skipped: 1 });
-    expect((await addMachineExercises(meta(USERS.marine), { keys: ['presse-a-cuisses'] })).body).toEqual({ added: 0, skipped: 1 });
+    expect(r).toMatchObject({ added: 2, skipped: 1 });
+    const again = (await addMachineExercises(meta(USERS.marine), { keys: ['presse-a-cuisses'] })).body as { added: number; skipped: number; items: { key: string; id: string; name: string }[] };
+    expect(again).toMatchObject({ added: 0, skipped: 1 });
     const press = (await listExercises(USERS.camille, WORKSPACE_A)).find((e) => e.starterKey === 'presse-a-cuisses')!;
+    // D-181 : chaque exercice demandé revient avec son identifiant (déjà là ou ajouté), y compris celui du même nom écrit à la main.
+    expect(again.items).toEqual([{ key: 'presse-a-cuisses', id: press.id, name: 'Presse à cuisses' }]);
+    const items = (r as { items: { key: string; id: string; name: string }[] }).items;
+    expect(items.map((x) => x.key)).toEqual(['presse-a-cuisses', 'tirage-vertical', 'developpe-machine']);
+    expect(items[1]!.name).toBe('tirage vertical');
     expect(press).toMatchObject({ name: 'Presse à cuisses', muscle: 'legs', equipment: ['machine'], starter: false, useBaseVideo: true });
     expect(press.instructions).toContain('Réglages : Dossier');
     expect(await codeOf(addMachineExercises(meta(USERS.marine), { keys: ['inconnu'] }))).toBe('INVALID_FIELDS');

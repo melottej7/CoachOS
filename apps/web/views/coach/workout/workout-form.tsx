@@ -99,7 +99,7 @@ export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, ca
             </Select>
           </Field>
         </Grid>
-        <WorkoutBuilder strengthOn={modules?.strength ?? true} sport={values.sport} value={blocks} onChange={setBlocks} refs={refs} athleteFirst={athleteName.split(' ')[0] ?? athleteName} vmaHref={`/coach/${wid}/athletes/${aid}#refs-title`}
+        <WorkoutBuilder wid={wid} strengthOn={modules?.strength ?? true} sport={values.sport} value={blocks} onChange={setBlocks} refs={refs} athleteFirst={athleteName.split(' ')[0] ?? athleteName} vmaHref={`/coach/${wid}/athletes/${aid}#refs-title`}
           library={savedBlocks ? { wid, blocks: savedBlocks } : undefined} exercises={exercises} gear={gear} lastDone={lastDone} />
         {blocks.length ? null : (
           <Field id="duration" label="Durée en minutes" hint="Facultatif" error={err('data.durationSeconds')}>
