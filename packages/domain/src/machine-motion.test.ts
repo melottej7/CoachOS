@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  athleteMotion, BODY, jointAngle, LOOP_SECONDS, MACHINE_EXERCISES, MACHINE_MOTIONS, machineExercise, motionStatus, motionSvg, poseAt, progressAt, type Pose,
+  athleteMotion, BODY, jointAngle, LOOP_SECONDS, MACHINE_EXERCISES, MACHINE_MOTIONS, machineExercise, MOTION_REVIEWS, motionStatus, motionSvg, poseAt, progressAt, type Pose,
 } from './index';
 
 // D-178 : un seul gabarit d’animation ; chaque exercice décrit son départ et son arrivée. Le geste est vérifié ici.
@@ -87,8 +87,11 @@ describe('animations dessinées des machines', () => {
   });
 
   it('aucune animation n’est montrée à un élève avant validation', () => {
-    expect(motionStatus('tirage-vertical')).toBe('to_review');
-    expect(athleteMotion('tirage-vertical')).toBeNull();
+    expect(motionStatus('tirage-vertical', {})).toBe('to_review');
+    expect(athleteMotion('tirage-vertical', {})).toBeNull();
+    // Validées par le fondateur le 26 novembre : les 68 exercices de la bibliothèque, pas davantage.
+    expect(MACHINE_EXERCISES.every((e) => motionStatus(e.key) === 'validated')).toBe(true);
+    expect(Object.keys(MOTION_REVIEWS)).toHaveLength(68);
     expect(athleteMotion('tirage-vertical', { 'tirage-vertical': { validatedBy: 'fondateur', validatedOn: '2026-11-26' } })).not.toBeNull();
     expect(motionStatus('inconnu')).toBeNull();
   });

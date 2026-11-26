@@ -378,7 +378,24 @@ export const MACHINE_MOTIONS: Readonly<Record<string, MotionSpec>> = {
  * Relecture des animations par le fondateur : aucune n’est montrée à un élève sans y figurer (D-178, comme les vidéos
  * de base de D-099). On n’y ajoute une clé que sur sa validation explicite, avec la date.
  */
-export const MOTION_REVIEWS: Readonly<Record<string, { validatedBy: string; validatedOn: string }>> = {};
+/** Validées par le fondateur le 26 novembre 2026 (« Oui, tout validé ») : liste figée, une animation ajoutée ensuite reste à relire. */
+const VALIDATED_2026_11_26 = [
+  'presse-a-cuisses', 'tirage-vertical', 'developpe-machine', 'presse-pieds-hauts', 'presse-une-jambe', 'mollets-presse', 'leg-extension',
+  'leg-extension-une-jambe', 'leg-curl-assis', 'leg-curl-allonge-ex', 'abduction-machine', 'adduction-machine', 'fessier-machine',
+  'mollets-machine-ex', 'developpe-machine-un-bras', 'developpe-incline-machine', 'butterfly', 'oiseau-machine',
+  'developpe-epaules-machine', 'elevations-laterales-machine-ex', 'tirage-vertical-serre', 'tirage-vertical-supination', 'rowing-assis',
+  'rowing-assis-large', 'curl-machine', 'triceps-machine-ex', 'crunch-machine', 'extension-lombaires-machine', 'extension-lombaires-banc',
+  'traction-assistee', 'dips-assistes', 'hack-squat-ex', 'ecarte-poulies-haut-bas', 'ecarte-poulies-bas-haut', 'extension-triceps-corde',
+  'extension-triceps-nuque', 'curl-poulie-basse', 'elevation-laterale-poulie', 'face-pull', 'tirage-bras-tendus', 'rowing-poulie-un-bras',
+  'bucheron', 'pallof', 'kickback-fessier-poulie', 'abduction-poulie', 'crunch-poulie', 'pull-through', 'oiseau-poulies', 'squat-smith',
+  'fente-smith', 'developpe-couche-smith', 'developpe-incline-smith', 'developpe-militaire-smith', 'rowing-smith', 'hip-thrust-smith',
+  'souleve-roumain-smith', 'mollets-smith', 'rowing-inverse-smith', 'pompes-inclinees-smith', 'marche-inclinee', 'course-tapis',
+  'velo-droit-ex', 'velo-allonge-ex', 'rameur-ex', 'velo-elliptique-ex', 'escalier-ex', 'velo-air-ex', 'skierg-ex',
+] as const;
+
+export const MOTION_REVIEWS: Readonly<Record<string, { validatedBy: string; validatedOn: string }>> = Object.fromEntries(
+  VALIDATED_2026_11_26.map((k) => [k, { validatedBy: 'fondateur', validatedOn: '2026-11-26' }]),
+);
 
 export type MotionStatus = 'to_review' | 'validated';
 export const MOTION_STATUS_LABELS: Record<MotionStatus, string> = { to_review: 'À relire', validated: 'Validée' };
