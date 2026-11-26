@@ -16,6 +16,9 @@ Chaque changement est un commit séparé, qu’on peut garder ou retirer seul :
 | `7c3966c` | Coach : nom d’espace proposé à la création |
 | `7e75b96` | Coach : sur téléphone, l’onglet ouvert reste visible |
 | `e78f1e2` | Coach : installer CoachOS sur son téléphone depuis « Mon compte » |
+| `2e8a040` | Coach : retirer un élève en un toucher, avec « Annuler » et « Rétablir » (ta demande) |
+| `835a44a` | Le nom d’un élève ouvre toujours sa fiche (ta demande) |
+| `def4ec2` | Tests : parcours retirer / rétablir et nom vers fiche |
 
 ## 1. Élève : la séance du jour d’abord
 
@@ -65,6 +68,34 @@ Chaque changement est un commit séparé, qu’on peut garder ou retirer seul :
 - **Installer l’app, côté coach.** Le guide pas à pas (D-171) n’existait que pour l’élève. Le coach le trouve maintenant dans « Mon compte », avec les étapes de son appareil.
 
 ![Onglets des Paramètres](bilan-produit/apres-onglets-parametres.png)
+
+## 6. Tes deux demandes du 26 novembre
+
+**Retirer un élève facilement.**
+
+| Le bouton, en bas de la fiche | Juste après |
+|---|---|
+| ![Bouton](bilan-produit/apres-retirer-bouton.png) | ![Annuler](bilan-produit/apres-retirer-annuler.png) |
+
+- **Avant** : aucun moyen de retirer un élève. Seul existait l’effacement définitif, caché dans l’onglet « Données », avec le prénom à retaper.
+- **Après** : « Retirer [prénom] de ma liste » en bas de la fiche. Cela fait 1 toucher, sans fenêtre de confirmation.
+  - L’élève disparaît de tes listes, de la file des retours et des groupes. Il ne compte plus dans l’offre et n’accède plus à ton espace.
+  - **Rien n’est effacé** : « Annuler » apparaît aussitôt, et « Élèves retirés » en bas de la liste permet de le rétablir plus tard.
+  - L’effacement définitif reste dans « Données ».
+- **Droits** : seul le propriétaire de l’espace peut retirer ou rétablir. Les tests le confirment, ainsi que le refus pour un coach d’un autre espace, l’élève lui-même, un autre élève de l’espace et un élève d’un autre espace. Il n’y a aucune migration.
+
+**Toucher un nom ouvre la fiche.**
+
+![Conversation](bilan-produit/apres-conversation-fiche.png)
+
+- **Avant** : dans une conversation, « Hanae » n’était pas cliquable : il fallait trouver le bouton « Fiche ».
+- **Après** : l’avatar et le nom ouvrent la fiche de l’élève. Le même lien est ajouté là où le nom apparaissait sans lien :
+  - un retour ;
+  - la semaine du calendrier (« Semaine de Camille ») ;
+  - une séance (détail, création, retouche) ;
+  - l’entretien de bilan et le programme.
+
+  Côté élève, le nom du coach en haut de la conversation ouvre sa présentation ; pour un groupe, il ouvre la liste de ses élèves.
 
 ## Parcours complétés le 26 novembre
 
