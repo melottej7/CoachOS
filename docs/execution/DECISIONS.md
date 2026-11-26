@@ -2606,3 +2606,12 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Interrupteur par espace** (propriétaire, Paramètres › IA), sans migration (`workspace_flags`, drapeau `ai_off`). Paramètres › IA montre aussi le modèle. Notice de confidentialité v2 : Anthropic sous-traitant (à faire relire par un professionnel).
 - **À savoir pour IA-1** : `ai_suggestions` exige un élève et un module de la liste existante ; une dictée sans élève demandera une migration additive.
 - **Vérifié** : 7 tests du socle (préfixe, injection, autre espace, budget, panne, simulation, interrupteur), contrat OpenAPI, parcours Paramètres › IA à 1440 et 390 px. **Non vérifié** : appel réel à Claude (pas de clé).
+
+## D-189 · Dicter ou écrire une séance avec l’IA (IA-1) · 2026-11-27
+
+- **Geste** : « Dicter ou écrire avec l’IA » dans l’éditeur de séance (séance d’élève, bibliothèque, séances de groupe), si l’IA est allumée pour l’espace. Le coach écrit ou dicte : micro du clavier, ou bouton « Dicter » quand le navigateur reconnaît la voix. Aucun audio n’est envoyé à l’IA.
+- **Chaîne** : `runWithTools` (effort low, 3 tours). Le modèle reçoit le texte balisé, le sport et les repères de l’élève sans nom, avec l’outil `listerExercices`. Il rend des lignes en notation (pourcentages de VMA convertis en zones). Le serveur relit chaque ligne avec `parseNotation` : une ligne illisible est signalée et laissée de côté, rien n’est inventé. Le serveur indique aussi où vit chaque exercice (bibliothèque, machine à ajouter, inconnu).
+- **Coach** : il corrige le texte, voit l’aperçu, puis « Insérer dans la séance ». La séance reste un brouillon ; rien n’est publié.
+- **Journal** : `ai_suggestions`, module `dictation`. **Migration additive** `20261127010000_ai_dictation.sql` : élève facultatif, module ajouté. Testée sur PGlite, **pas encore appliquée** à Supabase local, partagé avec les autres branches.
+- **Simulation** : lecteur de règles pour les phrases courantes (échauffement, séries, charges, repos, secondes, % VMA, « tranquille »).
+- **Vérifié** : 8 tests (exemples, injection, texte vide ou trop long, autre espace, budget, panne, refus, sortie hors schéma), contrat OpenAPI, parcours à 390 et 1440 px. **Non vérifié** : appel réel à Claude (pas de clé).

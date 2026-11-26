@@ -177,11 +177,12 @@ export async function runWithTools<T>(o: CommonOptions<T> & {
 }
 
 /** Modules du journal ai_suggestions (contrainte de la table). */
-export type AiModule = 'summary' | 'fatigue' | 'anomaly' | 'adaptation' | 'feedback' | 'alert';
+export type AiModule = 'summary' | 'fatigue' | 'anomaly' | 'adaptation' | 'feedback' | 'alert' | 'dictation';
 
 /** Journal ai_suggestions : module, version de consigne, empreinte, sortie et usage. Renvoie l’identifiant. */
 export async function recordSuggestion(tx: Tx, s: {
-  workspaceId: string; athleteId: string; module: AiModule; model: string; promptVersion: string; hash: string; output: Record<string, unknown>;
+  /** Élève visé ; null seulement pour une dictée sans élève (migration 20261127010000, D-189). */
+  workspaceId: string; athleteId: string | null; module: AiModule; model: string; promptVersion: string; hash: string; output: Record<string, unknown>;
 }): Promise<string> {
   const r = await tx.query<{ id: string }>(
     `insert into public.ai_suggestions(workspace_id, athlete_id, coach_id, module, state, model_id, prompt_version, evidence_hash, evidence_refs, output)

@@ -7,6 +7,7 @@ import { readTemplate } from '@/server/repo/library';
 import { listExercises } from '@/server/repo/exercises';
 import { Cluster, EmptyState, Eyebrow, Heading, LinkButton, Stack, Text } from '@/design';
 import { GroupSessionForm } from '@/views/coach/group/group-session-form';
+import { aiEnabled } from '@/server/ai/settings';
 
 export const metadata = { title: 'Séance pour un groupe' };
 
@@ -33,7 +34,7 @@ export default async function NewGroupSession({ params, searchParams }: { params
         <Text muted>{tpl ? `À partir de « ${tpl.workout.title} ». ` : ''}Un brouillon par élève : tu pourras adapter chaque séance avant de publier.</Text>
       </Stack>
       {team.members.length ? (
-        <GroupSessionForm modules={ctx.modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name }))} wid={wid} teamId={tid} teamName={team.name}
+        <GroupSessionForm ai={await aiEnabled(actor.userId, wid)} modules={ctx.modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name }))} wid={wid} teamId={tid} teamName={team.name}
           members={team.members.map((m) => ({ id: m.id, name: m.name, state: m.state }))} date={day} initial={tpl?.workout} />
       ) : <EmptyState icon="users" title="Aucun élève suivi dans ce groupe" action={<LinkButton href={`/coach/${wid}/athletes?team=${tid}`} variant="primary">Ajouter des élèves</LinkButton>} />}
     </Stack>

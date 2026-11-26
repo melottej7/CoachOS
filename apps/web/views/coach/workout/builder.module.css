@@ -109,3 +109,5 @@ input.control { min-width: 0; }
 .setsRow .num { inline-size: 88px; }
 .setsHead { font-size: var(--ds-text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ds-ink-2); }
 .setsK { justify-self: center; font-family: var(--ds-font-display); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ds-ink-2); }
+/* IA-1 (D-189) : le texte en langage courant garde la police du texte, pas celle du code. */
+.aiInput { font-family: inherit; }

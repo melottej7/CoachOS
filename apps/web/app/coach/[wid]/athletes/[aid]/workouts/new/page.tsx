@@ -11,6 +11,7 @@ import { strengthHistory } from '@/server/repo/stats';
 import { Cluster, Eyebrow, Heading, LinkButton, Stack, Text } from '@/design';
 import { WorkoutForm } from '@/views/coach/workout/workout-form';
 import { AthleteLink } from '@/views/coach/athlete-link';
+import { aiEnabled } from '@/server/ai/settings';
 
 export const metadata = { title: 'Nouvelle séance' };
 
@@ -48,7 +49,7 @@ export default async function NewWorkout({ params, searchParams }: { params: Pro
         <Heading level={1} size={1}>Nouvelle séance</Heading>
         {w ? <Text muted>À partir de « {w.title} » (bibliothèque). Ajuste-la pour {first} : la séance de la bibliothèque ne change pas.</Text> : null}
       </Stack>
-      <WorkoutForm modules={modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name, equipment: x.equipment }))} gear={gear} lastDone={lastDoneByExercise(loadProgress(history))}
+      <WorkoutForm ai={await aiEnabled(actor.userId, wid)} modules={modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name, equipment: x.equipment }))} gear={gear} lastDone={lastDoneByExercise(loadProgress(history))}
         savedBlocks={savedBlocks} refs={refs} wid={wid} aid={aid} athleteName={athlete.displayName} timeZone={athlete.timeZone} cancelHref={back}
         initial={w
           ? { title: w.title, localDate, sport: w.sport, minutes: w.durationSeconds ? String(Math.round(w.durationSeconds / 60)) : '', instructions: w.instructions ?? '', intervals: w.intervals }

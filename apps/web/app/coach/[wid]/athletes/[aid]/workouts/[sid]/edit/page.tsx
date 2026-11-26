@@ -11,6 +11,7 @@ import { strengthHistory } from '@/server/repo/stats';
 import { Cluster, Eyebrow, Heading, LinkButton, Stack } from '@/design';
 import { WorkoutForm } from '@/views/coach/workout/workout-form';
 import { AthleteLink } from '@/views/coach/athlete-link';
+import { aiEnabled } from '@/server/ai/settings';
 
 export const metadata = { title: 'Modifier la séance' };
 
@@ -40,7 +41,7 @@ export default async function EditWorkout({ params, searchParams }: { params: Pr
         <Eyebrow tone="coach"><AthleteLink wid={wid} id={aid}>{w.athlete.displayName}</AthleteLink> · version {r.number}</Eyebrow>
         <Heading level={1} size={1}>Modifier la séance</Heading>
       </Stack>
-      <WorkoutForm modules={ctx?.modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name, equipment: x.equipment }))} gear={gear} lastDone={lastDoneByExercise(loadProgress(history))}
+      <WorkoutForm ai={await aiEnabled(actor.userId, wid)} modules={ctx?.modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name, equipment: x.equipment }))} gear={gear} lastDone={lastDoneByExercise(loadProgress(history))}
         savedBlocks={savedBlocks} refs={refs} wid={wid} aid={aid} athleteName={w.athlete.displayName} timeZone={r.timeZone} cancelHref={returnTo ?? detail} returnTo={returnTo}
         edit={{ sid, expectedRevision: r.number, published: w.published !== null }}
         initial={{ title: r.title, localDate: r.localDate, sport: r.sport, minutes: r.durationSeconds ? String(Math.round(r.durationSeconds / 60)) : '', instructions: r.instructions, intervals: r.intervals }} />
