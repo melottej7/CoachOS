@@ -67,10 +67,10 @@ describe('animations dessinées des machines', () => {
     expect(progressAt(press, (0.5 + 2.0 + 0.1) / 4)).toBe(1);
   });
 
-  it('un SVG animé de moins de 20 Ko, et son image d’aperçu sans animation', () => {
+  it('un SVG animé de moins de 150 Ko (cible : 1 Mo), et son image d’aperçu sans animation', () => {
     for (const m of Object.values(MACHINE_MOTIONS)) {
       const svg = motionSvg(m, { title: 'Essai <b>' });
-      expect(svg.length).toBeLessThan(20_000);
+      expect(svg.length).toBeLessThan(150_000);
       expect(svg).toContain('repeatCount="indefinite"');
       expect(svg).not.toContain('<b>');
       expect(motionSvg(m, { still: true })).not.toContain('<animate');

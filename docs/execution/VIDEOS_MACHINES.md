@@ -25,7 +25,7 @@ Conséquence : avant de filmer, demander une autorisation écrite (gérant du cl
 
 | | 1. Animation dessinée | 2. Vidéo du fondateur | 3. Bibliothèque achetée | 4. Vidéo IA |
 |---|---|---|---|---|
-| Fait ici | Oui, les trois pilotes (8 à 11 Ko chacune) | Non (plans et maquette prêts) | Non (aucune image reprise sans licence) | Non |
+| Fait ici | Oui, les trois pilotes (environ 60 Ko chacune : silhouette en volume, 24 images par seconde, plaques qui montent) | Non (plans et maquette prêts) | Non (aucune image reprise sans licence) | Non |
 | Justesse du geste | Vérifiée par des tests à chaque image (angles des genoux et des coudes, mains sur la poignée, membres de longueur fixe), puis relue par toi | La meilleure : un vrai geste | Bonne, faite par des professionnels | **Non prouvable ici** ; défauts connus : membres qui changent de longueur, machine qui se déforme, poignées traversées |
 | Ressemblance avec les machines Basic-Fit | Schéma générique, sans marque ; reconnaissable par la forme | Exacte pour ton club | Machines génériques | Variable d’un clip à l’autre |
 | Style CoachOS (clair, sombre) | Oui, couleurs du thème | Photo réelle | Style du vendeur | Style imposé |

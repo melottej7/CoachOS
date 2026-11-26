@@ -36,7 +36,7 @@ export interface MotionSpec {
 }
 
 /** Longueurs des segments, en unités du dessin (cadre 240 × 180). */
-export const BODY = { torso: 52, neck: 15, head: 9, thigh: 44, shin: 42, foot: 15, upperArm: 30, forearm: 28 } as const;
+export const BODY = { torso: 52, neck: 17, head: 9, thigh: 44, shin: 42, foot: 15, upperArm: 30, forearm: 28 } as const;
 /** Tempo : effort 1,2 s, retour freiné 2 s, deux courts temps d’arrêt ; boucle de 4 s. */
 export const TEMPO = { effort: 1.2, back: 2.0, holdB: 0.3, holdA: 0.5 } as const;
 export const LOOP_SECONDS = TEMPO.effort + TEMPO.back + TEMPO.holdA + TEMPO.holdB;
@@ -45,7 +45,7 @@ const rad = (d: number) => (d * Math.PI) / 180;
 const add = (a: Pt, b: Pt): Pt => [a[0] + b[0], a[1] + b[1]];
 const dist = (a: Pt, b: Pt) => Math.hypot(b[0] - a[0], b[1] - a[1]);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-const ease = (t: number) => t * t * (3 - 2 * t);
+const ease = (t: number) => (1 - Math.cos(Math.PI * t)) / 2;
 
 /** Point du trajet à l’avancement t (0 = départ, 1 = arrivée). */
 export function pathAt(p: Path, t: number): Pt {
@@ -106,8 +106,18 @@ export function progressAt(s: Pick<MotionSpec, 'effort'>, u: number): number {
   return 1 - ease(Math.min(1, (t - TEMPO.holdA - go - TEMPO.holdB) / back));
 }
 
-const FRAMES = 40;
+const FRAMES = 96;
+/** Hauteur dont montent les plaques choisies, en haut de l’effort. */
+const STACK_LIFT = 16;
 const f1 = (n: number) => String(Math.round(n * 10) / 10);
+
+/** Gélule de a vers b, de rayon ra à la racine et rb au bout : un segment de membre galbé. Même suite de commandes à chaque image (animable). */
+export function capsulePath(a: Pt, b: Pt, ra: number, rb: number): string {
+  const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+  const nx = -(b[1] - a[1]) / L, ny = (b[0] - a[0]) / L;
+  const p = (c: Pt, r: number, k: 1 | -1) => `${f1(c[0] + k * nx * r)} ${f1(c[1] + k * ny * r)}`;
+  return `M${p(a, ra, 1)}L${p(b, rb, 1)}A${rb} ${rb} 0 0 0 ${p(b, rb, -1)}L${p(a, ra, -1)}A${ra} ${ra} 0 0 0 ${p(a, ra, 1)}Z`;
+}
 
 const COLORS = {
   body: 'var(--ds-ink, #0E1116)',
@@ -124,7 +134,10 @@ export interface MotionRender { still?: boolean; title?: string; width?: number 
 /** SVG animé (SMIL, sans script) d’un exercice ; lisible au téléphone, quelques kilo-octets. */
 export function motionSvg(s: MotionSpec, o: MotionRender = {}): string {
   const us = Array.from({ length: FRAMES + 1 }, (_, i) => i / FRAMES);
-  const poses = o.still ? [poseAt(s, 0)] : us.map((u) => poseAt(s, progressAt(s, u)));
+  const ts = o.still ? [0] : us.map((u) => progressAt(s, u));
+  const poses = ts.map((t) => poseAt(s, t));
+  // Les plaques montent pendant l’effort (vers l’arrivée, ou vers le départ pour la presse).
+  const lifts = ts.map((t) => STACK_LIFT * (s.effort === 'toB' ? t : 1 - t));
   const keyTimes = us.map((u) => f1(u * 1000) === '1000' ? '1' : String(Math.round(u * 1000) / 1000)).join(';');
   const anim = (attr: string, vals: number[]) => (o.still || vals.every((v) => Math.abs(v - vals[0]!) < 0.05) ? ''
     : `<animate attributeName="${attr}" dur="${LOOP_SECONDS}s" repeatCount="indefinite" calcMode="linear" keyTimes="${keyTimes}" values="${vals.map(f1).join(';')}"/>`);
@@ -147,6 +160,17 @@ export function motionSvg(s: MotionSpec, o: MotionRender = {}): string {
     } else if (m.k === 'line') {
       const tone = m.tone ?? 'frame';
       parts.push(line((_, i) => at(m.on, m.a, i), (_, i) => at(m.on, m.b, i), COLORS[tone === 'cable' ? 'cable' : tone], m.w ?? 4));
+    } else if (m.k === 'rect' && m.tone === 'stack') {
+      // Pile de poids : un cadre, des plaques ; les plaques choisies montent avec l’effort.
+      const [x, y] = m.at, [w, h] = m.size;
+      const plate = (py: number) => `<rect x="${x + 2}" y="${f1(py)}" width="${w - 4}" height="7" rx="1.5" fill="${COLORS.frame}"/>`;
+      const plates = Array.from({ length: Math.floor((h - 8) / 9) }, (_, k) => y + h - 9 - k * 9);
+      const moving = plates.slice(0, 4);
+      parts.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${COLORS.stack}"/>`);
+      parts.push(plates.slice(4).map(plate).join(''));
+      parts.push(`<g transform="translate(0 ${f1(-lifts[0]!)})">${moving.map(plate).join('')}<line x1="${x + w / 2}" y1="${f1(moving.at(-1)! - 1)}" x2="${x + w / 2}" y2="${y - 4}" stroke="${COLORS.cable}" stroke-width="1.4"/>`
+        + (!o.still && lifts.some((v) => Math.abs(v - lifts[0]!) > 0.05) ? `<animateTransform attributeName="transform" type="translate" dur="${LOOP_SECONDS}s" repeatCount="indefinite" calcMode="linear" keyTimes="${keyTimes}" values="${lifts.map((v) => `0 ${f1(-v)}`).join(';')}"/>` : '')
+        + '</g>');
     } else if (m.k === 'rect') {
       const fill = m.tone === 'stack' ? COLORS.stack : m.tone === 'pad' ? COLORS.pad : COLORS.frame;
       const p0 = at(m.on, m.at, 0);
@@ -162,15 +186,25 @@ export function motionSvg(s: MotionSpec, o: MotionRender = {}): string {
   // Le bâti derrière le corps ; ce que l’on tient ou pousse devant.
   for (const m of s.machine) if (!('on' in m && m.on) && m.k !== 'cable') drawShape(m);
   for (const m of s.machine) if (m.k === 'cable') drawShape(m);
+  // Silhouette en volume : chaque segment est une gélule galbée (plus large à la racine) ; jambe et bras du côté
+  // opposé en transparence, légèrement décalés, pour la profondeur.
   const B = COLORS.body;
-  parts.push(line((p) => p.hip, (p) => p.knee, B, 9));
-  parts.push(line((p) => p.knee, (p) => p.ankle, B, 8));
-  parts.push(line((p) => p.ankle, (p) => p.toe, B, 6));
-  parts.push(line((p) => p.hip, (p) => p.shoulder, B, 11));
+  const capsule = (_name: string, a: (p: Pose) => Pt, b: (p: Pose) => Pt, ra: number, rb: number) => {
+    const ds = poses.map((p) => capsulePath(a(p), b(p), ra, rb));
+    return `<path d="${ds[0]}" fill="${B}">${o.still || ds.every((d) => d === ds[0]) ? '' : `<animate attributeName="d" dur="${LOOP_SECONDS}s" repeatCount="indefinite" calcMode="linear" keyTimes="${keyTimes}" values="${ds.join(';')}"/>`}</path>`;
+  };
+  const leg = capsule('thigh', (p) => p.hip, (p) => p.knee, 7.5, 5.2) + capsule('shin', (p) => p.knee, (p) => p.ankle, 5.2, 3.6)
+    + capsule('foot', (p) => p.ankle, (p) => p.toe, 3.6, 2.6);
+  const arm = capsule('upper', (p) => p.shoulder, (p) => p.elbow, 5, 3.8) + capsule('fore', (p) => p.elbow, (p) => p.hand, 3.6, 2.8)
+    + `<circle cx="${f1(first.hand[0])}" cy="${f1(first.hand[1])}" r="3.6" fill="${B}">${anim('cx', series((p) => p.hand[0]))}${anim('cy', series((p) => p.hand[1]))}</circle>`;
+  parts.push(`<g opacity="0.32" transform="translate(4 -2.5)">${leg.replace(/ id="[^"]+"/g, '')}</g>`);
+  parts.push(`<g opacity="0.32" transform="translate(4 -2.5)">${arm.replace(/ id="[^"]+"/g, '')}</g>`);
+  parts.push(leg);
+  parts.push(capsule('torso', (p) => p.hip, (p) => p.shoulder, 9, 10));
+  parts.push(capsule('neck', (p) => p.shoulder, (p) => p.head, 3.6, 3.6));
   parts.push(`<circle cx="${f1(first.head[0])}" cy="${f1(first.head[1])}" r="${BODY.head}" fill="${B}">`
     + anim('cx', series((p) => p.head[0])) + anim('cy', series((p) => p.head[1])) + '</circle>');
-  parts.push(line((p) => p.shoulder, (p) => p.elbow, B, 7));
-  parts.push(line((p) => p.elbow, (p) => p.hand, B, 6));
+  parts.push(arm);
   for (const m of s.machine) if ('on' in m && m.on) drawShape(m);
 
   const title = o.title ? `<title>${o.title.replace(/[<&>"]/g, '')}</title>` : '';
@@ -197,7 +231,6 @@ const LEG_PRESS: MotionSpec = {
     { k: 'line', a: [70, 134], b: [37, 97], w: 8, tone: 'pad' },
     { k: 'line', a: [-5, 0], b: [5, 0], w: 5, on: 'hand', tone: 'pad' },
     { k: 'rect', at: [196, 46], size: [22, 112], tone: 'stack' },
-    { k: 'line', a: [207, 40], b: [207, 166], w: 3 },
     // Plateforme et chariot, portés par les chevilles.
     { k: 'line', a: [4, -26], b: [4, 12], w: 7, on: 'ankle', tone: 'move' },
     { k: 'line', a: [7, -6], b: [44, -6], w: 3, on: 'ankle', tone: 'move' },
@@ -221,6 +254,7 @@ const LAT_PULLDOWN: MotionSpec = {
     { k: 'circle', at: [104, 9], r: 5 },
     { k: 'line', a: [131, 108], b: [164, 104], w: 5 },
     { k: 'circle', at: [131, 109], r: 6, tone: 'pad' },
+    { k: 'line', a: [187, 8], b: [187, 42], w: 1.4, tone: 'cable' },
     { k: 'rect', at: [176, 46], size: [22, 112], tone: 'stack' },
     { k: 'cable', from: [104, 9], to: 'hand' },
     // La barre, vue de bout, dans les mains.
@@ -245,7 +279,6 @@ const CHEST_PRESS: MotionSpec = {
     { k: 'line', a: [48, 4], b: [48, 166], w: 6 },
     { k: 'circle', at: [110, 4], r: 5 },
     { k: 'rect', at: [178, 46], size: [22, 112], tone: 'stack' },
-    { k: 'line', a: [189, 40], b: [189, 166], w: 3 },
     // Le bras de la machine : du pivot à la poignée.
     { k: 'cable', from: [110, 4], to: 'hand', w: 5, tone: 'frame' },
     { k: 'line', a: [0, -8], b: [0, 8], w: 7, on: 'hand', tone: 'move' },
