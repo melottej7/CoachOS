@@ -218,6 +218,39 @@ export async function markFeedbackReviewed(meta: Meta, body: unknown): Promise<S
 }
 
 /**
+ * reopenFeedbackReview (bilan produit) · « Annuler » juste après un traitement : le retour revient dans la file, tel quel.
+ * Mêmes droits que le traitement (coach affecté à l’élève). Sans effet sur un retour déjà ouvert.
+ */
+export async function reopenFeedbackReview(meta: Meta): Promise<StoredResponse> {
+  const { workspaceId: wid, athleteId: aid, workoutId: sid } = meta;
+  return commandAs(meta.actorId, async (tx: Tx) => {
+    const ok = await tx.query<{ ok: boolean }>('select private.assigned($1, $2) as ok', [wid, aid]);
+    if (!ok.rows[0]?.ok) throw notVisible();
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'feedback.reopen', key: meta.idempotencyKey, body: {} }, async () => {
+      const r = await tx.query<{ id: string; reviewed_at: Date | null }>(
+        `select f.id, f.reviewed_at
+         from public.workout_results res
+         join public.feedbacks f on f.workspace_id = res.workspace_id and f.athlete_id = res.athlete_id and f.result_id = res.id
+         where res.workspace_id = $1 and res.athlete_id = $2 and res.workout_id = $3
+         for update of f`,
+        [wid, aid, sid],
+      );
+      const fb = r.rows[0];
+      if (!fb) throw notVisible();
+      if (!fb.reviewed_at) return { status: 200, body: { reopened: false } };
+      await tx.query('update public.feedbacks set reviewed_at = null where workspace_id = $1 and athlete_id = $2 and id = $3', [wid, aid, fb.id]);
+      await tx.query(
+        `update public.review_items set state = 'open', due_at = null
+         where workspace_id = $1 and athlete_id = $2 and kind = 'feedback' and source_ref = $3`,
+        [wid, aid, fb.id],
+      );
+      await audit(tx, wid, meta.actorId, 'feedback.reopened', fb.id, meta.requestId);
+      return { status: 200, body: { reopened: true } };
+    });
+  });
+}
+
+/**
  * updateReview · C : reporter un retour à une date future (il revient seul dans la file) ou le remettre tout de suite
  * (D-082, § 24 du PRD). Clore passe par markFeedbackReviewed, qui vérifie la version lue.
  */

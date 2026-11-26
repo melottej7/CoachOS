@@ -6,6 +6,7 @@ import { commandAs, type Tx } from '../db/client';
 import { AppError, conflict, invalid, notVisible } from '../errors';
 import { audit, idempotent, type StoredResponse } from './idempotency';
 import { requireOwner } from './invitations';
+import { assertRoomForAthlete } from './workspace-offer';
 
 // Lot G (D-032) : groupes, appartenances, niveau par sport confirmé, objectifs, notes privées.
 
@@ -209,6 +210,47 @@ export async function deleteNote(meta: Meta & { athleteId: string; noteId: strin
       if (!r.rows.length) throw notVisible();
       await audit(tx, wid, meta.actorId, 'note.delete', meta.noteId, meta.requestId);
       return { status: 200, body: { id: meta.noteId } };
+    });
+  });
+}
+
+/**
+ * Bilan produit · retirer un élève de l’espace, en un geste et réversible (« Annuler » juste après, « Rétablir » ensuite).
+ * Le dossier passe à l’état archivé : il disparaît des listes, de la file, des groupes et des séances de groupe, ne compte
+ * plus dans l’offre, et l’élève n’accède plus à l’espace ; rien n’est effacé (l’effacement définitif reste dans Données).
+ * Réservé au propriétaire, comme l’effacement.
+ */
+export async function archiveAthlete(meta: Meta & { athleteId: string }): Promise<StoredResponse> {
+  const { workspaceId: wid, athleteId: aid } = meta;
+  return commandAs(meta.actorId, async (tx) => {
+    await requireOwner(tx, wid);
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'athlete.archive', key: meta.idempotencyKey, body: { aid } }, async () => {
+      const r = await tx.query<{ state: string }>('select state from public.athletes where workspace_id = $1 and id = $2 for update', [wid, aid]);
+      if (!r.rows[0]) throw notVisible();
+      if (r.rows[0].state !== 'archived') {
+        await tx.query(`update public.athletes set state = 'archived' where workspace_id = $1 and id = $2`, [wid, aid]);
+        await audit(tx, wid, meta.actorId, 'athlete.archive', aid, meta.requestId);
+      }
+      return { status: 200, body: { id: aid, state: 'archived' } };
+    });
+  });
+}
+
+/** Rétablir un élève retiré : il retrouve son état (actif s’il avait rejoint l’espace, sinon invité), dans la limite de l’offre. */
+export async function restoreAthlete(meta: Meta & { athleteId: string }): Promise<StoredResponse> {
+  const { workspaceId: wid, athleteId: aid } = meta;
+  return commandAs(meta.actorId, async (tx) => {
+    await requireOwner(tx, wid);
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'athlete.restore', key: meta.idempotencyKey, body: { aid } }, async () => {
+      const r = await tx.query<{ state: string; joined: boolean }>('select state, user_id is not null as joined from public.athletes where workspace_id = $1 and id = $2 for update', [wid, aid]);
+      const row = r.rows[0];
+      if (!row) throw notVisible();
+      if (row.state !== 'archived') return { status: 200, body: { id: aid, state: row.state } };
+      if (row.joined) await assertRoomForAthlete(tx, wid);
+      const state = row.joined ? 'active' : 'invited';
+      await tx.query('update public.athletes set state = $3 where workspace_id = $1 and id = $2', [wid, aid, state]);
+      await audit(tx, wid, meta.actorId, 'athlete.restore', aid, meta.requestId);
+      return { status: 200, body: { id: aid, state } };
     });
   });
 }

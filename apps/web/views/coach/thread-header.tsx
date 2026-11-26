@@ -13,6 +13,7 @@ export function CoachThreadHeader({ wid, back, athlete, subtitle, timeZone, toda
   return (
     <Stack gap={4}>
       <ChatHeader back={back} backLabel="Toutes les discussions" name={athlete.name} people subtitle={subtitle}
+        href={`/coach/${wid}/athletes/${athlete.id}`} hrefLabel={`Ouvrir la fiche de ${athlete.name}`}
         actions={<>
           <Button size="sm" icon="calendar" aria-expanded={open} title="Planifier un rendez-vous" onClick={() => setOpen((v) => !v)}><span className="ds-hide-narrow">Planifier</span></Button>
           <LinkButton size="sm" icon="user" title={`Fiche de ${athlete.name}`} href={`/coach/${wid}/athletes/${athlete.id}`}><span className="ds-hide-narrow">Fiche</span></LinkButton>

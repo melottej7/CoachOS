@@ -10,6 +10,7 @@ import { athleteGear, readAthleteProfile } from '@/server/commands/athlete-profi
 import { strengthHistory } from '@/server/repo/stats';
 import { Cluster, Eyebrow, Heading, LinkButton, Stack, Text } from '@/design';
 import { WorkoutForm } from '@/views/coach/workout/workout-form';
+import { AthleteLink } from '@/views/coach/athlete-link';
 
 export const metadata = { title: 'Nouvelle séance' };
 
@@ -43,7 +44,7 @@ export default async function NewWorkout({ params, searchParams }: { params: Pro
     <Stack gap={6} className="ds-narrow-wide">
       <Cluster><LinkButton href={back} variant="ghost" size="sm" icon="chevronLeft">Semaine de {first}</LinkButton></Cluster>
       <Stack gap={1}>
-        <Eyebrow tone="coach">{athlete.displayName}</Eyebrow>
+        <Eyebrow tone="coach"><AthleteLink wid={wid} id={aid}>{athlete.displayName}</AthleteLink></Eyebrow>
         <Heading level={1} size={1}>Nouvelle séance</Heading>
         {w ? <Text muted>À partir de « {w.title} » (bibliothèque). Ajuste-la pour {first} : la séance de la bibliothèque ne change pas.</Text> : null}
       </Stack>

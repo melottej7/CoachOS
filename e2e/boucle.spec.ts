@@ -67,7 +67,8 @@ test('créer, publier, lire sur téléphone, envoyer un retour, traiter ; droits
   await row.click();
   await expect(coach.getByText('Bonnes sensations, test de bout en bout.')).toBeVisible();
   await coach.getByRole('button', { name: 'Marquer comme traité' }).click();
-  await expect(coach.getByText(/Traité le/)).toBeVisible();
+  // Bilan produit : s’il reste un retour dans la file, le traitement enchaîne sur lui.
+  await expect(coach.getByText(/Traité le|Retour précédent traité/).first()).toBeVisible();
 
   // 6. Droits : le coach d’un autre espace et les élèves tiers ne voient rien.
   const hugo = await as(browser, 'Hugo Petit', DESKTOP);

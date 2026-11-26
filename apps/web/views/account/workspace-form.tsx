@@ -10,7 +10,9 @@ import { ErrorSummary } from '@/views/error-summary';
 export function WorkspaceForm({ zones, defaultZone, currentName }: { zones: string[]; defaultZone: string; currentName: string }) {
   const router = useRouter();
   const [coachName, setCoachName] = useState(currentName);
-  const [name, setName] = useState('');
+  // Bilan produit : nom d’espace proposé d’après le nom du coach, tant qu’il ne l’a pas changé (un champ de moins à taper).
+  const [typed, setName] = useState<string | null>(null);
+  const name = typed ?? (coachName.trim() ? `Coaching ${coachName.trim()}` : '');
   const [timeZone, setTimeZone] = useState(defaultZone);
   const [simple, setSimple] = useState(true);
   const me = useIntent<{ displayName: string }>();

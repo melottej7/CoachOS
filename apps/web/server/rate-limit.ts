@@ -16,6 +16,8 @@ export const LIMITS = {
   'forgot.ip': { max: 10, windowS: 60 * 60 },
   'forgot.email': { max: 3, windowS: 60 * 60 }, // personne ne reçoit plus de trois liens par heure
   'reset.ip': { max: 10, windowS: 15 * 60 },
+  'code.ip': { max: 20, windowS: 15 * 60 }, // codes à 6 chiffres saisis (mot de passe oublié) depuis une même connexion
+  'code.email': { max: 5, windowS: 15 * 60 }, // codes faux pour une même adresse : pas de devinette
   'invite.ip': { max: 10, windowS: 60 * 60 }, // comptes élèves créés depuis une invitation
   'preview.ip': { max: 60, windowS: 10 * 60 }, // présentation de l’espace qui invite
 } as const satisfies Record<string, { max: number; windowS: number }>;

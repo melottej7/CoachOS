@@ -252,6 +252,8 @@ export interface ReviewRow {
   snoozedUntil: string | null;
   /** D-088 : réponse à « à 100 % en ce moment ? ». */
   readiness: Readiness | null;
+  /** Version du retour lue, exigée pour le marquer traité (bilan produit : traitement groupé). */
+  revision: number | null;
 }
 
 /** Cas ouverts, triés par rang, échéance puis id (PRD §24). Seuls les retours sans revue (C09-01). */
@@ -259,10 +261,10 @@ export async function openReviews(userId: string, wid: string, athleteId?: strin
   return readAs(userId, async (tx) => {
     const r = await tx.query<{
       id: string; athlete_id: string; display_name: string; workout_id: string | null; title: string | null; local_date: string | null;
-      state: ResultState | null; rpe: number | null; has_comment: boolean; created_at: Date; team_ids: string[] | null; snoozed_until: Date | null; readiness: Readiness | null;
+      state: ResultState | null; rpe: number | null; has_comment: boolean; created_at: Date; team_ids: string[] | null; snoozed_until: Date | null; readiness: Readiness | null; revision: number | null;
     }>(
       `select ri.id, ri.athlete_id, a.display_name, res.workout_id, rev.title, to_char(rev.local_date, 'YYYY-MM-DD') as local_date,
-              res.state, f.rpe, (f.comment is not null) as has_comment, ri.created_at, f.readiness,
+              res.state, f.rpe, (f.comment is not null) as has_comment, ri.created_at, f.readiness, f.revision,
               (select array_agg(ta.team_id) from public.team_athletes ta where ta.workspace_id = ri.workspace_id and ta.athlete_id = ri.athlete_id) as team_ids,
               case when ri.state = 'snoozed' and ri.due_at > now() then ri.due_at end as snoozed_until
        from public.review_items ri
@@ -271,7 +273,7 @@ export async function openReviews(userId: string, wid: string, athleteId?: strin
        left join public.workout_results res on res.workspace_id = f.workspace_id and res.athlete_id = f.athlete_id and res.id = f.result_id
        left join public.workout_revisions rev on rev.workspace_id = res.workspace_id and rev.athlete_id = res.athlete_id
             and rev.workout_id = res.workout_id and rev.number = res.workout_revision
-       where ri.workspace_id = $1 and ri.kind = 'feedback' and f.reviewed_at is null
+       where ri.workspace_id = $1 and ri.kind = 'feedback' and f.reviewed_at is null and a.state <> 'archived'
          and ($2::uuid is null or ri.athlete_id = $2::uuid)
          -- D-082 : un cas reporté revient seul dans la file à sa date.
          and (case when $3 = 'snoozed' then ri.state = 'snoozed' and ri.due_at > now()
@@ -293,6 +295,7 @@ export async function openReviews(userId: string, wid: string, athleteId?: strin
       teamIds: x.team_ids ?? [],
       snoozedUntil: x.snoozed_until ? x.snoozed_until.toISOString() : null,
       readiness: x.readiness,
+      revision: x.revision,
     }));
   });
 }
@@ -350,5 +353,18 @@ export async function firstSteps(userId: string, wid: string): Promise<FirstStep
       [wid],
     );
     return r.rows[0] ?? { published: false, reviewed: false };
+  });
+}
+
+/** Bilan produit · élèves retirés de l’espace (archivés), pour les rétablir ; réservé au propriétaire. */
+export async function archivedAthletes(userId: string, wid: string): Promise<{ id: string; name: string }[]> {
+  return readAs(userId, async (tx) => {
+    const r = await tx.query<{ id: string; display_name: string }>(
+      `select a.id, a.display_name from public.athletes a
+       where a.workspace_id = $1 and a.state = 'archived' and private.current_owner($1)
+       order by a.display_name, a.id`,
+      [wid],
+    );
+    return r.rows.map((x) => ({ id: x.id, name: x.display_name }));
   });
 }

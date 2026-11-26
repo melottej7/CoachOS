@@ -10,6 +10,7 @@ import { athleteGear } from '@/server/commands/athlete-profile';
 import { strengthHistory } from '@/server/repo/stats';
 import { Cluster, Eyebrow, Heading, LinkButton, Stack } from '@/design';
 import { WorkoutForm } from '@/views/coach/workout/workout-form';
+import { AthleteLink } from '@/views/coach/athlete-link';
 
 export const metadata = { title: 'Modifier la séance' };
 
@@ -36,7 +37,7 @@ export default async function EditWorkout({ params, searchParams }: { params: Pr
     <Stack gap={6} className="ds-narrow-wide">
       <Cluster><LinkButton href={returnTo ?? detail} variant="ghost" size="sm" icon="chevronLeft">{returnTo ? 'Séance de groupe' : 'Retour à la séance'}</LinkButton></Cluster>
       <Stack gap={1}>
-        <Eyebrow tone="coach">{w.athlete.displayName} · version {r.number}</Eyebrow>
+        <Eyebrow tone="coach"><AthleteLink wid={wid} id={aid}>{w.athlete.displayName}</AthleteLink> · version {r.number}</Eyebrow>
         <Heading level={1} size={1}>Modifier la séance</Heading>
       </Stack>
       <WorkoutForm modules={ctx?.modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name, equipment: x.equipment }))} gear={gear} lastDone={lastDoneByExercise(loadProgress(history))}

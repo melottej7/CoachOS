@@ -8,6 +8,7 @@ import { Badge, Banner, Button, Card, Cluster, Eyebrow, Field, Grid, Heading, Li
 import { AiTweaks, TweaksBanner } from '@/views/coach/program/ai-tweaks';
 import { ProgramRegenerate } from '@/views/coach/program/program-regenerate';
 import s from '@/views/coach/program/program.module.css';
+import { AthleteLink } from '@/views/coach/athlete-link';
 
 export const metadata = { title: 'Régénérer le programme' };
 
@@ -52,7 +53,7 @@ export default async function RegeneratePage({ params, searchParams }: {
       <Stack gap={3}>
         <Cluster><LinkButton href={back} variant="ghost" size="sm" icon="chevronLeft">Programme de {ctx.athlete.name}</LinkButton></Cluster>
         <Stack gap={1}>
-          <Eyebrow tone="coach">Régénérer · {ctx.athlete.name}</Eyebrow>
+          <Eyebrow tone="coach">Régénérer · <AthleteLink wid={wid} id={aid}>{ctx.athlete.name}</AthleteLink></Eyebrow>
           <Heading level={1} size={1}>{ctx.goal.title}</Heading>
         </Stack>
         <Text muted>
