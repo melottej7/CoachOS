@@ -6,33 +6,55 @@
  * muet, en boucle de 4 s, aux couleurs du thème (clair ou sombre), lisible hors ligne puisqu’il est dans la page.
  */
 
+import { MORE_MOTIONS } from './machine-motion-specs';
+
 export type Pt = readonly [number, number];
 /** Trajet d’un point de contact (mains sur la poignée, pieds sur la plateforme) : en ligne droite ou en arc autour d’un pivot. */
-export type Path = { from: Pt; to: Pt; pivot?: Pt };
-type Anchor = 'hand' | 'ankle' | 'knee' | 'shoulder' | 'hip';
+export type Path = {
+  from: Pt; to: Pt; pivot?: Pt;
+  /** Tour complet (pédalier, foulée) : ellipse de centre c, rayons rx et ry, départ à `start` degrés ; from/to ignorés. */
+  orbit?: { c: Pt; rx: number; ry: number; start: number };
+};
+type Anchor = 'hand' | 'ankle' | 'knee' | 'shoulder' | 'hip' | 'toe' | 'elbow' | 'chest';
+type Part = 'hip' | 'torso' | 'feet' | 'hands';
 
 /** Partie de machine : fixe, ou portée par un point du corps (elle bouge avec lui). */
 export type Shape =
-  | { k: 'line'; a: Pt; b: Pt; w?: number; on?: Anchor; tone?: 'frame' | 'pad' | 'cable' | 'move' }
+  | { k: 'line'; a: Pt; b: Pt; w?: number; on?: Anchor; tone?: 'frame' | 'pad' | 'cable' | 'move'; /** Vue de face : aussi du côté gauche. */ both?: boolean }
   | { k: 'rect'; at: Pt; size: Pt; on?: Anchor; tone?: 'frame' | 'pad' | 'stack' }
-  | { k: 'circle'; at: Pt; r: number; on?: Anchor; tone?: 'frame' | 'pad' }
+  | { k: 'circle'; at: Pt; r: number; on?: Anchor; tone?: 'frame' | 'pad' | 'move' }
   /** Câble tendu entre un point fixe et un point du corps (la barre, la poignée). */
-  | { k: 'cable'; from: Pt; to: Anchor; offset?: Pt; w?: number; tone?: 'cable' | 'frame' };
+  | { k: 'cable'; from: Pt; to: Anchor; offset?: Pt; w?: number; tone?: 'cable' | 'frame'; both?: boolean };
 
 export interface MotionSpec {
   key: string;
-  /** Bassin (fixe sur le siège). */
-  hip: Pt;
+  /** Bassin : fixe sur un siège, ou mobile (squat, rameur). En vue de face, le milieu du bassin. */
+  hip: Pt | Path;
   /** Inclinaison du buste en degrés depuis la verticale, négative vers l’arrière : au départ, à l’arrivée. */
   torso: readonly [number, number];
   /** Pieds : chevilles le long d’un trajet (ou fixes), angle du pied depuis l’horizontale (degrés, positif vers le haut). */
-  feet: { path: Path; foot: number };
-  hands: { path: Path };
+  feet: { path: Path; /** Angle du pied, fixe ou du départ à l’arrivée (mollets). */ foot: number | readonly [number, number] };
+  /** Mains ; `relative` : trajet compté depuis le milieu des épaules (elles suivent le buste : rameur, crunch). */
+  hands: { path: Path; relative?: boolean };
   /** Sens dans lequel plient genoux et coudes (1 ou −1, selon le côté du segment bassin-cheville ou épaule-main). */
   bend: { knee: 1 | -1; elbow: 1 | -1 };
   /** L’effort (phase concentrique) va du départ vers l’arrivée (« toB ») ou revient (« toA »). */
   effort: 'toB' | 'toA';
   machine: Shape[];
+  /** Chaque partie bouge dans sa fenêtre de l’aller (0 à 1) : au rameur, jambes, puis buste, puis bras. */
+  phases?: Partial<Record<Part, readonly [number, number]>>;
+  /** Mouvement continu (pédaler, marcher) : l’avancement suit le temps, sans arrêt ; membres opposés décalés de `far`. */
+  cycle?: { far: number; /** Cycles par boucle de 4 s (foulées, tours de pédalier). */ per: number };
+  /** Un seul côté travaille : l’autre jambe ou l’autre bras n’est pas dessiné (de face : il reste immobile). */
+  single?: 'leg' | 'arm';
+  /** Jambe d’appui (fente, fessiers) : pied fixe au sol, le genou suit le bassin. */
+  stance?: { ankle: Pt; foot: number; bend: 1 | -1 };
+  /** Cadre élargi pour les exercices debout (1,25 : un quart plus grand). */
+  zoom?: number;
+  /** Vue de face (écarter, élévations latérales) : membres des deux côtés, en miroir autour du bassin. */
+  front?: boolean;
+  /** Longueurs propres à l’exercice (cuisse vue de face, raccourcie). */
+  limbs?: Partial<Record<'thigh' | 'shin' | 'upperArm' | 'forearm' | 'torso', number>>;
 }
 
 /** Longueurs des segments, en unités du dessin (cadre 240 × 180). */
@@ -49,11 +71,19 @@ const ease = (t: number) => (1 - Math.cos(Math.PI * t)) / 2;
 
 /** Point du trajet à l’avancement t (0 = départ, 1 = arrivée). */
 export function pathAt(p: Path, t: number): Pt {
+  if (p.orbit) {
+    const a = rad(p.orbit.start + 360 * t);
+    return [p.orbit.c[0] + p.orbit.rx * Math.cos(a), p.orbit.c[1] + p.orbit.ry * Math.sin(a)];
+  }
   if (!p.pivot) return [lerp(p.from[0], p.to[0], t), lerp(p.from[1], p.to[1], t)];
   const [cx, cy] = p.pivot;
   const r0 = dist(p.pivot, p.from), r1 = dist(p.pivot, p.to);
   const a0 = Math.atan2(p.from[1] - cy, p.from[0] - cx), a1 = Math.atan2(p.to[1] - cy, p.to[0] - cx);
-  const a = lerp(a0, a1, t), r = lerp(r0, r1, t);
+  // Le petit arc, jamais le tour par l’autre côté.
+  let da = a1 - a0;
+  if (da > Math.PI) da -= 2 * Math.PI;
+  if (da < -Math.PI) da += 2 * Math.PI;
+  const a = a0 + da * t, r = lerp(r0, r1, t);
   return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
 }
 
@@ -66,23 +96,48 @@ export function ik(root: Pt, target: Pt, a: number, b: number, bend: 1 | -1): Pt
   return [root[0] + a * Math.cos(ang), root[1] + a * Math.sin(ang)];
 }
 
-export interface Pose { hip: Pt; shoulder: Pt; head: Pt; knee: Pt; ankle: Pt; toe: Pt; elbow: Pt; hand: Pt; /** La cible des mains est atteinte (sinon le geste est impossible). */ reach: number }
+export interface Pose {
+  /** Hanche et épaule du côté dessiné (de face : côté droit de l’image) ; pelvis et chest : milieux du bassin et des épaules. */
+  hip: Pt; shoulder: Pt; pelvis: Pt; chest: Pt; head: Pt; knee: Pt; ankle: Pt; toe: Pt; elbow: Pt; hand: Pt;
+  /** La cible des mains est atteinte (sinon le geste est impossible). */ reach: number;
+}
+
+const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+/** Avancement d’une partie du corps dans sa fenêtre (rameur : jambes, puis buste, puis bras). */
+function partAt(s: MotionSpec, part: Part, t: number): number {
+  const w = s.phases?.[part];
+  return w ? ease(clamp01((t - w[0]) / (w[1] - w[0]))) : t;
+}
+const isPath = (h: Pt | Path): h is Path => !Array.isArray(h);
+/** Demi-largeurs du bassin et des épaules en vue de face. */
+const HALF = { hip: 7, shoulder: 13 } as const;
 
 /** Position du corps à l’avancement t entre le départ et l’arrivée. */
 export function poseAt(s: MotionSpec, t: number): Pose {
-  const lean = rad(lerp(s.torso[0], s.torso[1], t));
+  const L = { ...BODY, ...s.limbs };
+  const pelvis = isPath(s.hip) ? pathAt(s.hip, partAt(s, 'hip', t)) : s.hip;
+  const lean = rad(lerp(s.torso[0], s.torso[1], partAt(s, 'torso', t)));
   const dir: Pt = [Math.sin(lean), -Math.cos(lean)];
-  const shoulder: Pt = [s.hip[0] + BODY.torso * dir[0], s.hip[1] + BODY.torso * dir[1]];
-  const head: Pt = [shoulder[0] + (BODY.neck) * dir[0], shoulder[1] + (BODY.neck) * dir[1]];
-  const ankle = pathAt(s.feet.path, t);
-  const knee = ik(s.hip, ankle, BODY.thigh, BODY.shin, s.bend.knee);
-  const fa = rad(s.feet.foot);
-  const toe: Pt = [ankle[0] + BODY.foot * Math.cos(fa), ankle[1] - BODY.foot * Math.sin(fa)];
-  const target = pathAt(s.hands.path, t);
-  const elbow = ik(shoulder, target, BODY.upperArm, BODY.forearm, s.bend.elbow);
-  const fd = dist(elbow, target);
-  const hand: Pt = [elbow[0] + ((target[0] - elbow[0]) / fd) * BODY.forearm, elbow[1] + ((target[1] - elbow[1]) / fd) * BODY.forearm];
-  return { hip: s.hip, shoulder, head, knee, ankle, toe, elbow, hand, reach: dist(hand, target) };
+  const chest: Pt = [pelvis[0] + L.torso * dir[0], pelvis[1] + L.torso * dir[1]];
+  const head: Pt = [chest[0] + L.neck * dir[0], chest[1] + L.neck * dir[1]];
+  const hip: Pt = s.front ? [pelvis[0] + HALF.hip, pelvis[1]] : pelvis;
+  const shoulder: Pt = s.front ? [chest[0] + HALF.shoulder, chest[1]] : chest;
+  const ankle = pathAt(s.feet.path, partAt(s, 'feet', t));
+  const knee = ik(hip, ankle, L.thigh, L.shin, s.bend.knee);
+  const fa = rad(typeof s.feet.foot === 'number' ? s.feet.foot : lerp(s.feet.foot[0], s.feet.foot[1], partAt(s, 'feet', t)));
+  const toe: Pt = [ankle[0] + L.foot * Math.cos(fa), ankle[1] - L.foot * Math.sin(fa)];
+  const rel = pathAt(s.hands.path, partAt(s, 'hands', t));
+  const target: Pt = s.hands.relative ? [chest[0] + rel[0], chest[1] + rel[1]] : rel;
+  const elbow = ik(shoulder, target, L.upperArm, L.forearm, s.bend.elbow);
+  const fd = dist(elbow, target) || 1;
+  const hand: Pt = [elbow[0] + ((target[0] - elbow[0]) / fd) * L.forearm, elbow[1] + ((target[1] - elbow[1]) / fd) * L.forearm];
+  return { hip, shoulder, pelvis, chest, head, knee, ankle, toe, elbow, hand, reach: dist(hand, target) };
+}
+
+/** Image miroir d’une position autour du milieu du bassin (vue de face, côté gauche). */
+export function mirrorPose(p: Pose): Pose {
+  const m = (q: Pt): Pt => [2 * p.pelvis[0] - q[0], q[1]];
+  return { ...p, hip: m(p.hip), shoulder: m(p.shoulder), knee: m(p.knee), ankle: m(p.ankle), toe: m(p.toe), elbow: m(p.elbow), hand: m(p.hand) };
 }
 
 /** Angle intérieur à une articulation, en degrés (180 = membre tendu). */
@@ -96,7 +151,8 @@ export function jointAngle(a: Pt, mid: Pt, b: Pt): number {
  * Avancement (0 = départ, 1 = arrivée) au temps u de la boucle (0 à 1) : arrêt au départ, aller, arrêt, retour.
  * L’aller dure le temps de l’effort si l’effort va vers l’arrivée, sinon le temps du retour freiné.
  */
-export function progressAt(s: Pick<MotionSpec, 'effort'>, u: number): number {
+export function progressAt(s: Pick<MotionSpec, 'effort' | 'cycle'>, u: number): number {
+  if (s.cycle) return (u * s.cycle.per) % 1;
   const go = s.effort === 'toB' ? TEMPO.effort : TEMPO.back;
   const back = s.effort === 'toB' ? TEMPO.back : TEMPO.effort;
   const t = u * LOOP_SECONDS;
@@ -129,12 +185,12 @@ const COLORS = {
 } as const;
 
 /** Options de rendu : `still` dessine l’image d’aperçu (position de départ, sans animation). */
-export interface MotionRender { still?: boolean; title?: string; width?: number }
+export interface MotionRender { still?: boolean; /** Image fixe à cet avancement (0 = départ, 1 = arrivée). */ at?: number; title?: string; width?: number }
 
 /** SVG animé (SMIL, sans script) d’un exercice ; lisible au téléphone, quelques kilo-octets. */
 export function motionSvg(s: MotionSpec, o: MotionRender = {}): string {
   const us = Array.from({ length: FRAMES + 1 }, (_, i) => i / FRAMES);
-  const ts = o.still ? [0] : us.map((u) => progressAt(s, u));
+  const ts = o.at !== undefined ? [o.at] : o.still ? [0] : us.map((u) => progressAt(s, u));
   const poses = ts.map((t) => poseAt(s, t));
   // Les plaques montent pendant l’effort (vers l’arrivée, ou vers le départ pour la presse).
   const lifts = ts.map((t) => STACK_LIFT * (s.effort === 'toB' ? t : 1 - t));
@@ -152,14 +208,18 @@ export function motionSvg(s: MotionSpec, o: MotionRender = {}): string {
 
   const parts: string[] = [];
   // Sol.
-  parts.push(`<line x1="8" y1="166" x2="232" y2="166" stroke="${COLORS.frame}" stroke-width="2" stroke-linecap="round"/>`);
+  const z = s.zoom ?? 1, vw = 240 * z, vh = 180 * z, vx = -(vw - 240) / 2, vy = 180 - vh;
+  parts.push(`<line x1="${f1(vx + 8)}" y1="166" x2="${f1(vx + vw - 8)}" y2="166" stroke="${COLORS.frame}" stroke-width="2" stroke-linecap="round"/>`);
   const drawShape = (m: Shape) => {
+    const mx = (q: Pt, i: number): Pt => [2 * poses[i]!.pelvis[0] - q[0], q[1]];
     if (m.k === 'cable') {
       const off = m.offset ?? [0, 0];
       parts.push(line(() => m.from, (p) => add(p[m.to], off), COLORS[m.tone ?? 'cable'], m.w ?? 1.2, m.tone === 'frame' ? 'round' : 'butt'));
+      if (m.both && s.front) parts.push(line((_, i) => mx(m.from, i), (p, i) => mx(add(p[m.to], off), i), COLORS[m.tone ?? 'cable'], m.w ?? 1.2, m.tone === 'frame' ? 'round' : 'butt'));
     } else if (m.k === 'line') {
       const tone = m.tone ?? 'frame';
       parts.push(line((_, i) => at(m.on, m.a, i), (_, i) => at(m.on, m.b, i), COLORS[tone === 'cable' ? 'cable' : tone], m.w ?? 4));
+      if (m.both && s.front) parts.push(line((_, i) => mx(at(m.on, m.a, i), i), (_, i) => mx(at(m.on, m.b, i), i), COLORS[tone === 'cable' ? 'cable' : tone], m.w ?? 4));
     } else if (m.k === 'rect' && m.tone === 'stack') {
       // Pile de poids : un cadre, des plaques ; les plaques choisies montent avec l’effort.
       const [x, y] = m.at, [w, h] = m.size;
@@ -189,27 +249,48 @@ export function motionSvg(s: MotionSpec, o: MotionRender = {}): string {
   // Silhouette en volume : chaque segment est une gélule galbée (plus large à la racine) ; jambe et bras du côté
   // opposé en transparence, légèrement décalés, pour la profondeur.
   const B = COLORS.body;
-  const capsule = (_name: string, a: (p: Pose) => Pt, b: (p: Pose) => Pt, ra: number, rb: number) => {
-    const ds = poses.map((p) => capsulePath(a(p), b(p), ra, rb));
-    return `<path d="${ds[0]}" fill="${B}">${o.still || ds.every((d) => d === ds[0]) ? '' : `<animate attributeName="d" dur="${LOOP_SECONDS}s" repeatCount="indefinite" calcMode="linear" keyTimes="${keyTimes}" values="${ds.join(';')}"/>`}</path>`;
+  const animD = (ds: string[]) => (o.still || ds.every((d) => d === ds[0]) ? ''
+    : `<animate attributeName="d" dur="${LOOP_SECONDS}s" repeatCount="indefinite" calcMode="linear" keyTimes="${keyTimes}" values="${ds.join(';')}"/>`);
+  const capsule = (ps: Pose[], a: (p: Pose) => Pt, b: (p: Pose) => Pt, ra: number, rb: number) => {
+    const ds = ps.map((p) => capsulePath(a(p), b(p), ra, rb));
+    return `<path d="${ds[0]}" fill="${B}">${animD(ds)}</path>`;
   };
-  const leg = capsule('thigh', (p) => p.hip, (p) => p.knee, 7.5, 5.2) + capsule('shin', (p) => p.knee, (p) => p.ankle, 5.2, 3.6)
-    + capsule('foot', (p) => p.ankle, (p) => p.toe, 3.6, 2.6);
-  const arm = capsule('upper', (p) => p.shoulder, (p) => p.elbow, 5, 3.8) + capsule('fore', (p) => p.elbow, (p) => p.hand, 3.6, 2.8)
-    + `<circle cx="${f1(first.hand[0])}" cy="${f1(first.hand[1])}" r="3.6" fill="${B}">${anim('cx', series((p) => p.hand[0]))}${anim('cy', series((p) => p.hand[1]))}</circle>`;
-  parts.push(`<g opacity="0.32" transform="translate(4 -2.5)">${leg.replace(/ id="[^"]+"/g, '')}</g>`);
-  parts.push(`<g opacity="0.32" transform="translate(4 -2.5)">${arm.replace(/ id="[^"]+"/g, '')}</g>`);
-  parts.push(leg);
-  parts.push(capsule('torso', (p) => p.hip, (p) => p.shoulder, 9, 10));
-  parts.push(capsule('neck', (p) => p.shoulder, (p) => p.head, 3.6, 3.6));
+  const dot = (ps: Pose[], at: (p: Pose) => Pt, r: number) => {
+    const ds = ps.map((p) => capsulePath(at(p), [at(p)[0] + 0.01, at(p)[1]], r, r));
+    return `<path d="${ds[0]}" fill="${B}">${animD(ds)}</path>`;
+  };
+  const leg = (ps: Pose[]) => capsule(ps, (p) => p.hip, (p) => p.knee, 7.5, 5.2) + capsule(ps, (p) => p.knee, (p) => p.ankle, 5.2, 3.6)
+    + capsule(ps, (p) => p.ankle, (p) => p.toe, 3.6, 2.6);
+  const arm = (ps: Pose[]) => capsule(ps, (p) => p.shoulder, (p) => p.elbow, 5, 3.8) + capsule(ps, (p) => p.elbow, (p) => p.hand, 3.6, 2.8) + dot(ps, (p) => p.hand, 3.6);
+  // Jambe d’appui : pied fixe, le genou suit le bassin.
+  const planted = (ps: Pose[]): Pose[] => (s.stance ? ps.map((p) => {
+    const st = s.stance!;
+    const fa = rad(st.foot);
+    return { ...p, ankle: st.ankle, knee: ik(p.hip, st.ankle, BODY.thigh, BODY.shin, st.bend), toe: [st.ankle[0] + BODY.foot * Math.cos(fa), st.ankle[1] - BODY.foot * Math.sin(fa)] as Pt };
+  }) : ps);
+  if (s.front) {
+    // De face : les deux côtés, en miroir, à pleine couleur ; le côté qui ne travaille pas reste immobile.
+    const left = poses.map(mirrorPose);
+    parts.push(leg(poses), leg(s.single === 'leg' ? [left[0]!] : left));
+    parts.push(capsule(poses, (p) => p.pelvis, (p) => p.chest, 12, 15));
+  } else {
+    // De profil : le côté opposé en transparence, décalé ; en mouvement continu, en opposition de phase.
+    const far = s.cycle && !o.still ? ts.map((t) => poseAt(s, (t + s.cycle!.far) % 1)) : s.cycle ? [poseAt(s, s.cycle.far)] : poses;
+    const farLeg = s.stance ? leg(planted(poses)) : s.single === 'leg' ? '' : leg(far);
+    parts.push(`<g opacity="0.32" transform="translate(4 -2.5)">${farLeg}${s.single === 'arm' ? '' : arm(far)}</g>`);
+    parts.push(leg(poses));
+    parts.push(capsule(poses, (p) => p.pelvis, (p) => p.chest, 9, 10));
+  }
+  parts.push(capsule(poses, (p) => p.chest, (p) => p.head, 3.6, 3.6));
   parts.push(`<circle cx="${f1(first.head[0])}" cy="${f1(first.head[1])}" r="${BODY.head}" fill="${B}">`
     + anim('cx', series((p) => p.head[0])) + anim('cy', series((p) => p.head[1])) + '</circle>');
-  parts.push(arm);
+  parts.push(arm(poses));
+  if (s.front) parts.push(arm(s.single === 'arm' ? [mirrorPose(poses[0]!)] : poses.map(mirrorPose)));
   for (const m of s.machine) if ('on' in m && m.on) drawShape(m);
 
   const title = o.title ? `<title>${o.title.replace(/[<&>"]/g, '')}</title>` : '';
   const w = o.width ? ` width="${o.width}"` : '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180"${w} role="img"${o.title ? ` aria-label="${o.title.replace(/[<&>"]/g, '')}"` : ''}>${title}${parts.join('')}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${f1(vx)} ${f1(vy)} ${f1(vw)} ${f1(vh)}"${w} role="img"${o.title ? ` aria-label="${o.title.replace(/[<&>"]/g, '')}"` : ''}>${title}${parts.join('')}</svg>`;
 }
 
 // ---------- Les trois pilotes ----------
@@ -290,6 +371,7 @@ export const MACHINE_MOTIONS: Readonly<Record<string, MotionSpec>> = {
   [LEG_PRESS.key]: LEG_PRESS,
   [LAT_PULLDOWN.key]: LAT_PULLDOWN,
   [CHEST_PRESS.key]: CHEST_PRESS,
+  ...Object.fromEntries(MORE_MOTIONS.map((m) => [m.key, m])),
 };
 
 /**

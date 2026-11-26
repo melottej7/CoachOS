@@ -41,8 +41,8 @@ Vidéos IA : protocole pour qu’une vidéo soit admise, mesuré image par image
 **L’animation dessinée pour toute la liste, puis tes vidéos là où elles apportent le plus**, si Basic-Fit l’autorise par écrit.
 
 - Pourquoi : faite et vérifiée aujourd’hui, aucune licence, aucune autorisation de club, juste par construction (le gabarit place genoux et coudes, les tests vérifient les angles), au style de l’app en clair et en sombre, dans la page donc sans réseau, quelques kilo-octets.
-- Limite : 12 exercices se lisent mal de profil (abducteurs, adducteurs, élévations latérales, écartés, oiseaux, bûcheron, Pallof) : il faut une vue de face au gabarit, environ une demi-journée. Le cardio (9 exercices, mouvement cyclique) demande un trajet circulaire des pieds : environ une demi-journée aussi ; en attendant, réglages et consignes écrites suffisent.
-- **Temps pour couvrir toute la liste** : 59 exercices de musculation, environ 15 à 20 minutes chacun de mon côté (une machine dessinée sert à tous ses exercices), soit trois à quatre sessions de travail ; plus la vue de face et le cardio, une session. De ton côté : environ une minute de relecture par animation, une heure en tout.
+- Fait le 26 novembre, à la demande du fondateur : les 68 exercices ont leur animation (vue de face pour les abducteurs, élévations, écartés et oiseaux ; pédalage et foulée en cycle continu pour le cardio ; rameur en trois temps, jambes puis buste puis bras). Relecture : `npx tsx scripts/machines-gallery.ts animations.html`.
+- **Temps réel** : une session de travail pour le gabarit et les 65 animations restantes. De ton côté : environ une minute de relecture par animation, une heure en tout.
 - **Coût** : 0 € de licence. À comparer : environ 1 500 $ à vie pour 60 dessins WorkoutLabs, sans animation garantie ni style CoachOS ; ou deux séances de tournage de deux heures (après autorisation écrite) et l’installation de l’outil de découpe sur le Mac.
 
 ## Si tu filmes : plans et règles de tournage

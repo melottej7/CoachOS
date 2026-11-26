@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  athleteMotion, BODY, jointAngle, LOOP_SECONDS, MACHINE_MOTIONS, machineExercise, motionStatus, motionSvg, poseAt, progressAt, type Pose,
+  athleteMotion, BODY, jointAngle, LOOP_SECONDS, MACHINE_EXERCISES, MACHINE_MOTIONS, machineExercise, motionStatus, motionSvg, poseAt, progressAt, type Pose,
 } from './index';
 
 // D-178 : un seul gabarit d’animation ; chaque exercice décrit son départ et son arrivée. Le geste est vérifié ici.
@@ -14,16 +14,25 @@ describe('animations dessinées des machines', () => {
     for (const k of Object.keys(MACHINE_MOTIONS)) expect(machineExercise(k), k).not.toBeNull();
   });
 
-  it('les membres gardent leur longueur et les mains restent sur la poignée, à chaque image', () => {
+  it('chaque exercice de la bibliothèque des machines a son animation', () => {
+    expect(MACHINE_EXERCISES.filter((e) => !MACHINE_MOTIONS[e.key]).map((e) => e.key)).toEqual([]);
+  });
+
+  it('les membres gardent leur longueur, mains et pieds restent sur la poignée ou la plateforme, à chaque image', () => {
+    const bad: string[] = [];
+    const worst: Record<string, number> = {};
     for (const k of Object.keys(MACHINE_MOTIONS)) {
+      const L = { ...BODY, ...MACHINE_MOTIONS[k]!.limbs };
       for (const p of frames(k)) {
-        expect(d(p.hip, p.knee)).toBeCloseTo(BODY.thigh, 3);
-        expect(d(p.knee, p.ankle)).toBeCloseTo(BODY.shin, 3);
-        expect(d(p.shoulder, p.elbow)).toBeCloseTo(BODY.upperArm, 3);
-        expect(d(p.elbow, p.hand)).toBeCloseTo(BODY.forearm, 3);
-        expect(p.reach, k).toBeLessThan(0.5);
+        expect(d(p.hip, p.knee)).toBeCloseTo(L.thigh, 3);
+        expect(d(p.shoulder, p.elbow)).toBeCloseTo(L.upperArm, 3);
+        expect(d(p.elbow, p.hand)).toBeCloseTo(L.forearm, 3);
+        if (Math.abs(d(p.knee, p.ankle) - L.shin) > 0.5) bad.push(`${k} : pied hors d’atteinte`);
+        worst[k] = Math.max(worst[k] ?? 0, p.reach, Math.abs(d(p.knee, p.ankle) - L.shin));
+        if (p.reach > 0.5) bad.push(`${k} : main hors d’atteinte`);
       }
     }
+    expect([...new Set(bad)].map((b) => `${b} (${worst[b.split(' : ')[0]!]!.toFixed(1)})`)).toEqual([]);
   });
 
   it('presse à cuisses : genoux jamais verrouillés en haut, 90° en bas, dos immobile', () => {
@@ -81,6 +90,6 @@ describe('animations dessinées des machines', () => {
     expect(motionStatus('tirage-vertical')).toBe('to_review');
     expect(athleteMotion('tirage-vertical')).toBeNull();
     expect(athleteMotion('tirage-vertical', { 'tirage-vertical': { validatedBy: 'fondateur', validatedOn: '2026-11-26' } })).not.toBeNull();
-    expect(motionStatus('squat-smith')).toBeNull();
+    expect(motionStatus('inconnu')).toBeNull();
   });
 });
