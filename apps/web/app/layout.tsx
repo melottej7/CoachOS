@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   width: 'device-width', initialScale: 1,
-  themeColor: [{ media: '(prefers-color-scheme: light)', color: '#0a6452' }, { media: '(prefers-color-scheme: dark)', color: '#0f1d24' }],
+  themeColor: [{ media: '(prefers-color-scheme: light)', color: '#F4F5F7' }, { media: '(prefers-color-scheme: dark)', color: '#0B0D10' }],
 };
 
 /** Thème et densité choisis par la personne (cookies), appliqués au rendu serveur : aucun éclair au chargement. */

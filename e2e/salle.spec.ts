@@ -28,6 +28,13 @@ test('salle : séance Basic-Fit choisie machine par machine, puis suivie dans un
   await coach.getByRole('button', { name: /^Machines/ }).click();
   const sheet = coach.getByRole('dialog', { name: 'Ajouter des machines' });
   await sheet.getByRole('radio', { name: 'Basic-Fit (Belgique)' }).click();
+  // D-185 : recherche par le nom écrit sur la machine, sans accents et dans n’importe quel ordre.
+  const search = sheet.getByRole('searchbox', { name: 'Chercher une machine ou un muscle' });
+  await search.fill('row seated');
+  await expect(sheet.getByRole('button', { name: /Rowing assis/ }).first()).toBeVisible();
+  await search.fill('developpe assis');
+  await expect(sheet.getByRole('button', { name: /Développé assis à la machine/ }).first()).toBeVisible();
+  await search.fill('');
   for (const name of ['Presse à cuisses', 'Tirage vertical', 'Développé assis à la machine']) {
     await sheet.getByRole('button', { name: new RegExp(`^\\S*\\s*${name}`) }).first().click();
   }
