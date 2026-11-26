@@ -48,6 +48,8 @@ export interface RosterEntry {
   state: 'invited' | 'active';
   teams: TeamRef[];
   sport: Sport | null;
+  /** D-178 · Sport le plus fréquent de ses séances, tant que le bilan (profil) ne dit rien. */
+  sessionSport: Sport | null;
   declaredLevel: Level | null;
   levels: { sport: Sport; level: Level }[];
   vmaKmh: number | null;
@@ -131,6 +133,12 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
        where ta.workspace_id = $1 and ta.athlete_id = any($2::uuid[]) and t.archived_at is null order by t.sort_order, t.name`);
   const profiles = await q<{ athlete_id: string; sport_code: Sport; level: Level; updated_at: Date; status: 'submitted' | 'confirmed' }>(`select athlete_id, sport_code, level, updated_at, status from public.athlete_profiles where workspace_id = $1 and athlete_id = any($2::uuid[])`);
   const levels = await q<{ athlete_id: string; sport_code: Sport; level: Level }>(`select athlete_id, sport_code, level from public.athlete_sport_levels where workspace_id = $1 and athlete_id = any($2::uuid[]) order by sport_code`);
+  const sessionSports = await q<{ athlete_id: string; sport_code: Sport; n: number }>(
+      `select r.athlete_id, r.sport_code, count(*)::int as n
+       from public.workouts w join public.workout_revisions r
+         on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id and r.number = w.working_revision
+       where w.workspace_id = $1 and w.athlete_id = any($2::uuid[]) and not r.canceled
+       group by r.athlete_id, r.sport_code order by r.athlete_id, n desc, r.sport_code`);
   const refs = await q<{ athlete_id: string; vma_kmh: string | null }>(`select athlete_id, vma_kmh from public.athlete_references where workspace_id = $1 and athlete_id = any($2::uuid[])`);
   const reviews = await q<{ id: string; athlete_id: string; created_at: Date; title: string | null }>(
       `select ri.id, ri.athlete_id, ri.created_at, rev.title
@@ -246,7 +254,7 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
     return {
       id: a.id, name: a.display_name, timeZone: a.time_zone, state: a.state,
       teams: (teamsBy.get(a.id) ?? []).map((t) => ({ id: t.id, name: t.name })),
-      sport: profile?.sport_code ?? null, declaredLevel: profile?.level ?? null, levels: confirmed, vmaKmh,
+      sport: profile?.sport_code ?? null, sessionSport: sessionSports.find((x) => x.athlete_id === a.id)?.sport_code ?? null, declaredLevel: profile?.level ?? null, levels: confirmed, vmaKmh,
       openReviews: (reviewsBy.get(a.id) ?? []).length,
       regularity: (() => {
         const x = regBy.get(a.id);

@@ -71,7 +71,7 @@ export default async function Roster({ params, searchParams }: { params: Promise
   const q = (sp.q ?? '').trim().toLocaleLowerCase('fr');
   const list = roster.filter((a) =>
     (!q || a.name.toLocaleLowerCase('fr').includes(q)) &&
-    (!sp.sport || a.sport === sp.sport) &&
+    (!sp.sport || (a.sport ?? a.sessionSport) === sp.sport) &&
     (!sp.team || a.teams.some((t) => t.id === sp.team)) &&
     (!sp.level || levelOf(a).level === sp.level) &&
     (!sp.goal || (sp.goal === 'none' ? !a.nextGoal : sp.goal === 'soon'
@@ -212,7 +212,7 @@ export default async function Roster({ params, searchParams }: { params: Promise
                           : readinessAlert(a.readiness?.value) ? <Badge tone="warning">{READINESS_COACH[a.readiness!.value]}</Badge> : null}
                       </Cluster>
                       <span className={s.meta}>
-                        {a.sport ? SPORT_LABELS[a.sport] : 'Sport non renseigné'}
+                        {a.sport ? SPORT_LABELS[a.sport] : a.sessionSport ? `${SPORT_LABELS[a.sessionSport]} (d’après ses séances)` : 'Sport non renseigné'}
                         {lv.level ? ` · ${LEVEL_LABELS[lv.level].label}${lv.confirmed ? '' : ' (déclaré, à confirmer)'}` : ''}
                         {a.teams.length ? ` · ${a.teams.map((t) => t.name).join(', ')}` : ''}
                         {' · '}{a.nextWorkout ? `prochaine séance ${formatWeekday(a.nextWorkout).toLowerCase()} ${formatShortDate(a.nextWorkout)}` : 'aucune séance publiée à venir'}

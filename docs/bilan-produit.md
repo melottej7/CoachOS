@@ -128,10 +128,10 @@ Ces parcours ont été faits sur téléphone avec des comptes fictifs. L’inscr
 |---|---|---|
 | « Décaler la suite » d’un élève (blessure, course avancée) : toutes les séances à venir de N jours, avec « Annuler » | Aujourd’hui on déplace séance par séance, et chaque séance publiée doit être republiée | Moyen |
 | Sur l’Accueil coach, ne plus lister chaque « Examiner le retour » en tâche : la Réception les montre déjà | Doublon : le même retour apparaît à deux endroits | Petit (retrait d’un type de suivi automatique : à ta décision) |
-| « Pas faite » part en un toucher, sans « Annuler » | Un mauvais toucher envoie l’info au coach ; on peut corriger par « Compléter », mais ce n’est pas évident | Petit |
+| « Pas faite » part en un toucher, sans « Annuler » **(fait, D-178)** | Un mauvais toucher envoie l’info au coach ; on peut corriger par « Compléter », mais ce n’est pas évident | Petit |
 | En mode simple, garder « Ma méthode » visible (ou l’annoncer dans les Premiers pas) | Un coach qui arrive pour sa méthode ne la trouve pas | Petit (touche à une décision D-169 : à ta décision) |
-| Liste des élèves : « Sport non renseigné » alors que l’élève a des séances de course | Afficher le sport de ses séances tant que le bilan n’est pas rempli | Petit |
-| Un coach sans espace qui se connecte passe par « Mes espaces » avant « Créer mon espace » | Un toucher de plus, une fois | Petit |
+| Liste des élèves : « Sport non renseigné » alors que l’élève a des séances de course **(fait, D-178)** | Afficher le sport de ses séances tant que le bilan n’est pas rempli | Petit |
+| Un coach sans espace qui se connecte passe par « Mes espaces » avant « Créer mon espace » **(fait, D-178)** | Un toucher de plus, une fois | Petit |
 
 ## Verdict
 

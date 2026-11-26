@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   // la session puis mène à la création de l’espace. Sans cette adresse de retour, le code de session serait perdu.
   const origin = new URL(req.headers.get('origin')!).origin;
   const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next === '/' ? '/coach/new' : next)}`;
-  const { data, error } = await (await supabaseServer()).auth.signUp({ email, password, options: { data: { display_name: displayName }, emailRedirectTo } });
+  const { data, error } = await (await supabaseServer()).auth.signUp({ email, password, options: { data: { display_name: displayName, ...(next === '/' ? { signed_up_as: 'coach' } : {}) }, emailRedirectTo } });
   if (error) {
     logAuth(error.code ?? 'signup_failed', error.status);
     if (error.status === 429) return redirectTo(req, '/signup', { error: 'rate', next });
