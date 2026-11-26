@@ -273,7 +273,7 @@ export async function openReviews(userId: string, wid: string, athleteId?: strin
        left join public.workout_results res on res.workspace_id = f.workspace_id and res.athlete_id = f.athlete_id and res.id = f.result_id
        left join public.workout_revisions rev on rev.workspace_id = res.workspace_id and rev.athlete_id = res.athlete_id
             and rev.workout_id = res.workout_id and rev.number = res.workout_revision
-       where ri.workspace_id = $1 and ri.kind = 'feedback' and f.reviewed_at is null
+       where ri.workspace_id = $1 and ri.kind = 'feedback' and f.reviewed_at is null and a.state <> 'archived'
          and ($2::uuid is null or ri.athlete_id = $2::uuid)
          -- D-082 : un cas reporté revient seul dans la file à sa date.
          and (case when $3 = 'snoozed' then ri.state = 'snoozed' and ri.due_at > now()
@@ -353,5 +353,18 @@ export async function firstSteps(userId: string, wid: string): Promise<FirstStep
       [wid],
     );
     return r.rows[0] ?? { published: false, reviewed: false };
+  });
+}
+
+/** Bilan produit · élèves retirés de l’espace (archivés), pour les rétablir ; réservé au propriétaire. */
+export async function archivedAthletes(userId: string, wid: string): Promise<{ id: string; name: string }[]> {
+  return readAs(userId, async (tx) => {
+    const r = await tx.query<{ id: string; display_name: string }>(
+      `select a.id, a.display_name from public.athletes a
+       where a.workspace_id = $1 and a.state = 'archived' and private.current_owner($1)
+       order by a.display_name, a.id`,
+      [wid],
+    );
+    return r.rows.map((x) => ({ id: x.id, name: x.display_name }));
   });
 }

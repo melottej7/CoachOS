@@ -5,6 +5,8 @@ import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { portfolio, type RosterEntry } from '@/server/repo/portfolio';
 import { relances } from '@/server/repo/relances';
+import { archivedAthletes } from '@/server/repo/coach';
+import { RestoreAthlete } from '@/views/coach/athlete/archive-athlete';
 import {
   Avatar, Badge, Banner, Button, Cluster, Disclosure, EmptyState, Eyebrow, Heading, Icon, Input, LinkButton, Meter, SegmentedLinks, Select, Stack, Text, type Tone,
 } from '@/design';
@@ -15,7 +17,7 @@ import s from '@/views/coach/roster/roster.module.css';
 
 export const metadata = { title: 'Élèves' };
 
-type Search = { notice?: string; by?: string; q?: string; sport?: string; status?: string; team?: string; level?: string; goal?: string };
+type Search = { notice?: string; retire?: string; by?: string; q?: string; sport?: string; status?: string; team?: string; level?: string; goal?: string };
 const BY = [
   { k: 'urgency', label: 'Urgence' },
   { k: 'team', label: 'Groupe' },
@@ -53,7 +55,9 @@ export default async function Roster({ params, searchParams }: { params: Promise
   const ctx = await coachContext(actor.userId, wid);
   if (!ctx) notFound();
   const owner = ctx.role === 'owner';
-  const [{ roster, teams, today }, rl] = await Promise.all([portfolio(actor.userId, wid, ctx.workspace.timeZone), relances(actor.userId, wid)]);
+  const [{ roster, teams, today }, rl, retired] = await Promise.all([portfolio(actor.userId, wid, ctx.workspace.timeZone), relances(actor.userId, wid), owner ? archivedAthletes(actor.userId, wid) : []]);
+  // Bilan produit : élève retiré à l’instant (?retire=…), pour « Annuler ».
+  const justRetired = sp.retire ? retired.find((r) => r.id === sp.retire) : undefined;
   // D-104 : statut d’adhésion et relance de chaque élève suivi (D-103).
   const adherence = new Map(rl.map((r) => [r.athleteId, r]));
   const base = `/coach/${wid}`;
@@ -100,6 +104,11 @@ export default async function Roster({ params, searchParams }: { params: Promise
 
   return (
     <Stack gap={8}>
+      {justRetired ? (
+        <Banner tone="success" title={`${justRetired.name} retiré·e de ta liste`} action={<RestoreAthlete wid={wid} aid={justRetired.id} label="Annuler" />}>
+          Ses séances et retours sont gardés. Tu peux le rétablir plus tard, en bas de cette page.
+        </Banner>
+      ) : null}
       {sp.notice === 'erased' ? <Banner tone="success" title="Dossier effacé" /> : sp.notice === 'erased-account' ? <Banner tone="success" title="Dossier effacé">Et compte supprimé : il n’était lié à aucun autre espace.</Banner> : null}
       <Cluster between gap={3} align="end">
         <Stack gap={1}>
@@ -228,6 +237,13 @@ export default async function Roster({ params, searchParams }: { params: Promise
           </EmptyState>
         )}
         <Text size="sm" muted>Urgence calculée à partir des suivis ouverts : retours à traiter, semaine sans séance publiée, invitation en attente, profil ou niveau à confirmer, tâches en retard.</Text>
+        {retired.length ? (
+          <Disclosure summary={`Élèves retirés (${retired.length})`}>
+            <ul className={s.retired} aria-label="Élèves retirés">
+              {retired.map((r) => <li key={r.id}><span>{r.name}</span><RestoreAthlete wid={wid} aid={r.id} label="Rétablir" variant="ghost" /></li>)}
+            </ul>
+          </Disclosure>
+        ) : null}
       </Stack>
     </Stack>
   );
