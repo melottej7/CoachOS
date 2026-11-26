@@ -91,13 +91,19 @@ const GUIDES: Record<Guide, { label: string; steps: ReactNode[] }> = {
     ],
   },
 };
+/** Bilan produit : sur ordinateur, le coach lit des étapes qui parlent de son travail, pas de « ta séance du jour ». */
+const COACH_DESKTOP: ReactNode[] = [
+  <>CoachOS se garde aussi sur ton téléphone : séances, retours et messages te suivent où que tu sois.</>,
+  <>Sur ton téléphone, ouvre l’adresse ci-dessous (envoie-la-toi par message ou par e-mail avec le bouton « Copier l’adresse »).</>,
+  <>Connecte-toi avec ton adresse e-mail et ton mot de passe, puis ouvre « Mon compte » : ce guide t’y attend, avec les étapes pour ton téléphone.</>,
+];
 const ORDER: Guide[] = ['ios-safari', 'ios-other', 'android', 'android-samsung', 'in-app', 'desktop'];
 
 /**
  * D-171 : installer CoachOS sur l’écran d’accueil, pas à pas, avec les étapes de l’appareil reconnu.
  * « today » : carte d’Aujourd’hui (C’est fait / Plus tard) ; « profile » : toujours disponible dans le Profil.
  */
-export function InstallGuide({ variant }: { variant: 'today' | 'profile' }) {
+export function InstallGuide({ variant, audience = 'athlete' }: { variant: 'today' | 'profile'; audience?: 'athlete' | 'coach' }) {
   const [env, setEnv] = useState<InstallEnv | null>(null);
   const [guide, setGuide] = useState<Guide>('desktop');
   const [hidden, setHidden] = useState(true);
@@ -149,7 +155,7 @@ export function InstallGuide({ variant }: { variant: 'today' | 'profile' }) {
     try { await navigator.clipboard.writeText(url); setCopied(true); window.setTimeout(() => setCopied(false), 2500); } catch { /* copie refusée : l’adresse reste affichée */ }
   }
   const close = (key: string, value: string) => { store.set(key, value); setHidden(true); };
-  const g = GUIDES[guide];
+  const g = audience === 'coach' && guide === 'desktop' ? { ...GUIDES.desktop, steps: COACH_DESKTOP } : GUIDES[guide];
   const oneTap = canPrompt && (guide === 'android' || guide === 'android-samsung' || guide === 'desktop');
   const showUrl = guide === 'desktop' || guide === 'in-app' || guide === 'ios-other';
 
