@@ -2554,3 +2554,10 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Hors ligne** : en ouvrant Aujourd’hui, les séances des sept jours sont gardées d’avance par le service worker.
 - Filmer chez Basic-Fit pour CoachOS demande une **autorisation écrite** (règlement intérieur : activité commerciale).
 - **Vérifié** : tests (485), typecheck, construction, parcours coach 1440 px et élève 390 px, hors ligne. **Non vérifié** : vraies machines Basic-Fit et leurs numéros.
+
+## D-180 · Tirer vers le bas pour actualiser, dans l’app installée · 2026-11-26
+
+- **Demande du fondateur** : sur téléphone, recharger la page en tirant vers le bas. L’app ouverte depuis l’écran d’accueil (iPhone surtout) n’a pas ce geste ; Safari et Chrome l’ont déjà, donc rien n’est ajouté dans le navigateur.
+- **Geste** : depuis le haut de la page, tirer d’environ 130 px ; une roue suit le doigt, puis tourne pendant l’actualisation. Un geste plus court ne fait rien.
+- **Rien ne se perd** : les données sont relues au serveur sans recharger la page (`router.refresh`) ; un texte en cours de saisie reste en place. Le geste ne part pas d’un champ, d’une fenêtre ou d’une liste déjà défilée (conversation).
+- **Preuves** : 2 tests (distance, seuil), 455 tests, typecheck, construction, 18 parcours de bout en bout dont `e2e/actualiser.spec.ts` (390 px, vrais événements tactiles : geste court sans effet, geste long qui relit les données sans recharger). **Non prouvé** : sur un vrai iPhone, l’app installée.

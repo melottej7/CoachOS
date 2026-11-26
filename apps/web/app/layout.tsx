@@ -5,6 +5,7 @@ import './globals.css';
 import '@/design/tokens.css';
 import { DevStyleRefresh } from '@/components/dev-style-refresh';
 import { OfflineSupport } from '@/components/offline';
+import { PullToRefresh } from '@/components/pull-to-refresh';
 
 // D-121 · Police déclarée depuis le début mais jamais chargée : rendu homogène sur tous les appareils.
 const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
@@ -39,6 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {children}
         {process.env.NODE_ENV === 'development' ? <DevStyleRefresh /> : null}
         <OfflineSupport />
+        <PullToRefresh />
       </body>
     </html>
   );
