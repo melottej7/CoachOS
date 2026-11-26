@@ -34,6 +34,24 @@ describe('séance de musculation', () => {
     expect(describeTotals(t)).toBe('environ 7 min');
   });
 
+  it("D-178 : « 4×10 presse 60kg R2' » sans parenthèses, récupération entre les séries notée R1'30 ou R2'", () => {
+    for (const [text, want] of [
+      ["4×10 presse à cuisses 60kg R2'", "4×(10 Presse à cuisses 60kg + R2')"],
+      ["3×12 tirage vertical 40kg R1'30", "3×(12 Tirage vertical 40kg + R1'30)"],
+      ["4×8 développé machine 30kg repos 90s", "4×(8 Développé machine 30kg + repos 1'30)"],
+      ["4×(10 développé machine 30kg + R2')", "4×(10 Développé machine 30kg + R2')"],
+    ] as const) {
+      const r = parseNotation(text, 'strength');
+      expect(r.errors, text).toEqual([]);
+      expect(toNotation(r.blocks, 'strength')).toBe(want);
+    }
+    const [press] = parseNotation("4×10 presse à cuisses 60kg R2'", 'strength').blocks;
+    expect(describeBlock(press!, 'strength')).toBe('4 × (Presse à cuisses · 10 répétitions · 60 kg / récup 2 min)');
+    // La course garde sa lecture : « R200m » reste une récupération sans libellé ajouté.
+    const [run] = parseNotation("8×(400m Z5 + R200m)", 'running').blocks;
+    expect(describeBlock(run!, 'running')).not.toContain('récup');
+  });
+
   it('les mots ne deviennent un exercice qu’en musculation : l’endurance garde ses règles', () => {
     expect(parseNotation('10 squats', 'running').errors.length).toBeGreaterThan(0);
     expect(parseNotation('10 lignes droites', 'running', { lenient: true }).blocks.some((b) => b.type === 'step' && b.exercise)).toBe(false);

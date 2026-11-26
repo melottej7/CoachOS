@@ -8,7 +8,7 @@ import {
 } from '@coachos/domain';
 import { Button, Cluster, Disclosure, Eyebrow, Heading, Icon, IconButton, LinkButton, Stack, Text, ZoneChip, type ZoneLevel } from '@/design';
 import { cx } from '@/design/cx';
-import { ExerciseMedia } from './exercise-howto';
+import { ExerciseMedia, MachineSteps } from './exercise-howto';
 import {
   elapsedOf, followClockKey, followGateKey, followLogKey, followPosKey, followSkipKey, keep, NO_CLOCK, readClock, readFollowLog, readGate, readPos, readRun, readSkipped, writeRun,
   type ClockState, type FollowLog, type Gate, type Run,
@@ -434,7 +434,7 @@ function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext,
         <Stack gap={2}>
           {media}
           {ex?.instructions ? (
-            <Disclosure summary="Consignes" open={!media}><Text prose size="sm" muted>{ex.instructions}</Text></Disclosure>
+            <Disclosure summary="Consignes" open={!media}><MachineSteps exercise={ex} /></Disclosure>
           ) : null}
         </Stack>
       ) : null}
@@ -519,7 +519,7 @@ function GateScreen({ wid, f, part, k, n, seq, after, exercises, lastDone, start
       {media || ex?.instructions ? (
         <Stack gap={2}>
           {media}
-          {ex?.instructions ? <Disclosure summary="Consignes"><Text prose size="sm" muted>{ex.instructions}</Text></Disclosure> : null}
+          {ex?.instructions ? <Disclosure summary="Consignes"><MachineSteps exercise={ex} /></Disclosure> : null}
         </Stack>
       ) : null}
       <Stack gap={3} className={s.actions}>

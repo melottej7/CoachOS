@@ -2519,6 +2519,7 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Limite** : contrôlée par le serveur au seul moment où un élève devient actif (acceptation d’invitation), sous verrou de l’espace, et déjà avant la création du compte élève. Elle ne touche jamais les élèves actifs ; le lien reste valable. Interrupteur éteint : aucune limite.
 - **Coach** : Paramètres › Abonnement (propriétaire) : phase pilote, essai et jours restants, élèves actifs face à la limite, bandeaux à la limite et après l’essai.
 - **Vérifié** : 9 tests des offres, 5 tests de l’offre d’espace (essai, limite, pilote, droits coach A, coach B, élève affecté, élève tiers), suite complète, construction ; au navigateur, pilote (Supabase local) et essai (démo interrupteur allumé, `coachos-vente`) à 1440 et 375 px, et la page Offres avec prix. **Non vérifié au navigateur** : le refus vu par l’élève à la limite (couvert par les tests).
+- **Incident de mise en ligne** : le code de D-173 et D-175 est arrivé sur `main` avant leurs migrations (annoncées faites, en réalité en attente). Les deux migrations ont été appliquées en ligne après la fusion, le 25 novembre ; entre-temps, la création d’un espace et les vidéos pouvaient échouer. Règle désormais : pas de fusion sans la sortie de `npx supabase db push --remote` lue par l’agent (« Finished supabase db push » ou « Remote database is up to date. »).
 
 ## D-176 · Toute la carte d’un élève ouvre son dossier · 2026-11-25
 
@@ -2535,3 +2536,13 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Suivi de séance** : pas de flèche, « Quitter » y joue ce rôle. Quitter cet écran de n’importe quelle façon (barre du bas, notification) met désormais la séance en pause, comme « Quitter ».
 - Les liens « ‹ Élèves », « ‹ Semaine de… » dans les pages restent : ce sont les seuls retours sur ordinateur.
 - **Vérifié** : parcours d’invitation (coach, 390 px : dossier ↔ liste filtrée, arrivée directe) et cardio (élève : pas de flèche pendant le suivi, fiche de séance → programme).
+
+## D-178 · Exercices sur machine : bibliothèque, animations dessinées, fiche dans la séance · 2026-11-26
+
+- **Bibliothèque des machines** rangée par type (guidées, poulies, Smith, disques, cardio) : 31 machines, 68 exercices, chacun avec muscles, niveau, réglages, trois consignes, erreur fréquente, alternative sur une autre machine. « Basic-Fit » n’est qu’une étiquette avec son degré de certitude ; vue Basic-Fit (demande du fondateur) : nom anglais de la machine et numéro du club, à relever.
+- **Animations dessinées** retenues après comparaison (vidéo du fondateur, bibliothèque achetée, IA) : un gabarit, chaque exercice décrit par départ et arrivée, genoux et coudes placés seuls, angles vérifiés par les tests ; SVG d’environ 60 Ko dans la page (silhouette en volume, 24 images par seconde, plaques qui montent pendant l’effort), donc hors ligne. Trois pilotes, puis les 68 exercices le même jour (vue de face, cycles du cardio, rameur en trois temps), longueurs des membres et contacts vérifiés à chaque image. Détail : [VIDEOS_MACHINES.md](VIDEOS_MACHINES.md).
+- **Aucune animation montrée à un élève avant validation du fondateur** (`MOTION_REVIEWS`, comme D-099) ; le coach la voit « À relire ». Le fondateur a validé les 68 le 26 novembre ; liste figée (`VALIDATED_2026_11_26`), une animation ajoutée ensuite reste à relire.
+- **Séance** : le coach ajoute les exercices cochés à sa bibliothèque (commande `addMachineExercises`, sans migration) ; « 4×10 presse 60kg R2' » s’écrit sans parenthèses ; l’élève touche l’exercice et lit réglages, consignes, erreur, alternative, aussi en mode « Suivre ». La course ne change pas.
+- **Hors ligne** : en ouvrant Aujourd’hui, les séances des sept jours sont gardées d’avance par le service worker.
+- Filmer chez Basic-Fit pour CoachOS demande une **autorisation écrite** (règlement intérieur : activité commerciale).
+- **Vérifié** : tests (485), typecheck, construction, parcours coach 1440 px et élève 390 px, hors ligne. **Non vérifié** : vraies machines Basic-Fit et leurs numéros.

@@ -46,3 +46,5 @@ export * from './privacy';
 export * from './push';
 export * from './session-view';
 export * from './roster-import';
+export * from './gym-machines';
+export * from './machine-motion';
