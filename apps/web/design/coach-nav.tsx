@@ -65,8 +65,16 @@ export interface SectionTab { href: string; label: string; count?: number; count
 
 /** Sous-onglets d’une section (Boîte de réception : Retours, Messages, Notifications…). */
 export function SectionTabs({ label, items }: { label: string; items: SectionTab[] }) {
+  // Bilan produit : sur téléphone, l’onglet ouvert peut dépasser à droite ; on le ramène au centre de la rangée.
+  const nav = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = nav.current?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (nav.current && el && nav.current.scrollWidth > nav.current.clientWidth) {
+      nav.current.scrollLeft = Math.max(0, el.offsetLeft - (nav.current.clientWidth - el.offsetWidth) / 2);
+    }
+  });
   return (
-    <nav aria-label={label} className={s.sectionTabs}>
+    <nav aria-label={label} className={s.sectionTabs} ref={nav}>
       {items.map((t) => (
         <Link key={t.href} href={t.href} className={s.sectionTab} aria-current={t.current ? 'page' : undefined} data-tour={t.tour}>
           {t.label}
