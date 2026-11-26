@@ -13,6 +13,9 @@ Chaque changement est un commit séparé, qu’on peut garder ou retirer seul :
 | `d140f0c` | Coach : traiter d’un geste les retours sans signal, avec « Annuler » |
 | `4690b32` | Coach : « Marquer comme traité » enchaîne sur le retour suivant |
 | `33495a2` | Tests : ordre du parcours de fluidité (aucun effet sur l’app) |
+| `7c3966c` | Coach : nom d’espace proposé à la création |
+| `7e75b96` | Coach : sur téléphone, l’onglet ouvert reste visible |
+| `e78f1e2` | Coach : installer CoachOS sur son téléphone depuis « Mon compte » |
 
 ## 1. Élève : la séance du jour d’abord
 
@@ -55,6 +58,27 @@ Chaque changement est un commit séparé, qu’on peut garder ou retirer seul :
 - **Après** : le retour suivant s’ouvre directement (même filtre), avec « Retour précédent traité · voici le suivant ». Depuis le calendrier, rien ne change.
 - **Ce que ça change** : un toucher de moins par retour lu, et on traite la file d’une traite.
 
+## 5. Coach : trois retouches du premier jour (26 novembre)
+
+- **Nom d’espace proposé.** À la création de l’espace, le champ propose « Coaching Prénom Nom », repris du nom saisi à l’inscription. Avant, le champ était vide. Cela fait un champ de moins à taper, et la proposition reste modifiable.
+- **Onglet ouvert visible.** Dans les Paramètres sur téléphone (390 px), les onglets « Abonnement » et « Mes données » étaient hors de l’écran : on ne voyait pas où l’on était. L’onglet ouvert est maintenant ramené au centre de sa rangée (relevé : « Mes données » entre 259 et 374 px).
+- **Installer l’app, côté coach.** Le guide pas à pas (D-171) n’existait que pour l’élève. Le coach le trouve maintenant dans « Mon compte », avec les étapes de son appareil.
+
+![Onglets des Paramètres](bilan-produit/apres-onglets-parametres.png)
+
+## Parcours complétés le 26 novembre
+
+Ces parcours ont été faits sur téléphone avec des comptes fictifs. L’inscription s’est faite sur Supabase local ; le reste, sur la démonstration.
+
+- **Inscription d’un coach inconnu** : page « Créer un compte », puis espace, puis assistant de présentation en 4 étapes facultatives, puis Accueil avec « Premiers pas » et visite guidée. C’est fluide. Seul accroc : le nom d’espace à taper, désormais proposé.
+- **Ajouter un élève** : nom, fuseau déjà rempli (Bruxelles) et adresse facultative ; « Ajouter plusieurs élèves » est proposé en tête pour une liste collée.
+- **Méthode** : Bibliothèque › Ma méthode, avec les règles du générateur et ce que CoachOS « apprend » des retouches. **En mode simple (le défaut d’un nouvel espace), la méthode est masquée** : un coach qui veut « y mettre sa méthode » doit d’abord savoir qu’il faut tout afficher (voir les propositions).
+- **Questionnaire de l’élève** : 12 questions, une par écran, sans question de santé, reprise là où l’on s’est arrêté. C’est fluide.
+- **Programme** : il passe par un objectif de l’élève, puis la génération, puis la retouche. Je n’y ai pas touché (ta méthode).
+- **Quinzaine d’élèves** : la liste se trie par urgence et se filtre par groupe, niveau, statut ou sport, avec une régularité sur 4 semaines. L’import de liste existe.
+- **Imprévus** : une séance ratée remonte comme un retour à lire, hors du traitement groupé. Une séance se déplace ou se copie avec « Annuler ». Pour une course avancée, on change l’objectif puis on régénère. **Il manque un geste pour décaler toute la suite** (propositions).
+- **Progression de l’élève** : régularité, volume, effort, série et charge, avec un écran vide utile sans objectif.
+
 ## Vérifications
 
 - Typecheck OK.
@@ -65,11 +89,7 @@ Chaque changement est un commit séparé, qu’on peut garder ou retirer seul :
 - **Hors ligne** : la séance du jour reste lisible sans réseau (service worker, D-080, tests existants). Le navigateur intégré de l’app de bureau ne laisse pas passer ce service worker vers un serveur local : c’est une limite de cet outil, pas de CoachOS.
 - **Bug trouvé, sans rapport avec CoachOS** : le serveur local du port 3000 renvoyait des erreurs 500 sur les nouvelles routes, à cause de son cache abîmé par une construction. Un serveur neuf répond correctement.
 
-**Ce que je n’ai pas parcouru dans cette session** (à faire dans la suivante, avec la même méthode) :
-- côté coach : inscription et installation, saisie de la méthode, génération et retouche d’un programme, gestion d’une quinzaine d’élèves, imprévus ;
-- côté élève : questionnaire du bilan, progression.
-
-Ce bilan ne couvre donc que les gestes quotidiens : séance, retour, file des retours, et l’accès à l’app sur iPhone.
+**Ce qui reste non vérifié** : l’installation réelle sur un iPhone, que les outils simulent sans la faire, et la génération d’un programme suivie de sa retouche de bout en bout dans cette session (parcours couverts par les tests existants).
 
 ## Propositions non faites
 
@@ -78,8 +98,9 @@ Ce bilan ne couvre donc que les gestes quotidiens : séance, retour, file des re
 | « Décaler la suite » d’un élève (blessure, course avancée) : toutes les séances à venir de N jours, avec « Annuler » | Aujourd’hui on déplace séance par séance, et chaque séance publiée doit être republiée | Moyen |
 | Sur l’Accueil coach, ne plus lister chaque « Examiner le retour » en tâche : la Réception les montre déjà | Doublon : le même retour apparaît à deux endroits | Petit (retrait d’un type de suivi automatique : à ta décision) |
 | « Pas faite » part en un toucher, sans « Annuler » | Un mauvais toucher envoie l’info au coach ; on peut corriger par « Compléter », mais ce n’est pas évident | Petit |
-| Onglets des Paramètres sur téléphone : l’onglet ouvert peut être hors de l’écran | On ne voit pas où l’on est | Petit |
-| Parcourir les flux restants (programme, méthode, quinzaine d’élèves, questionnaire) | Pas couvert par ce bilan | Moyen |
+| En mode simple, garder « Ma méthode » visible (ou l’annoncer dans les Premiers pas) | Un coach qui arrive pour sa méthode ne la trouve pas | Petit (touche à une décision D-169 : à ta décision) |
+| Liste des élèves : « Sport non renseigné » alors que l’élève a des séances de course | Afficher le sport de ses séances tant que le bilan n’est pas rempli | Petit |
+| Un coach sans espace qui se connecte passe par « Mes espaces » avant « Créer mon espace » | Un toucher de plus, une fois | Petit |
 
 ## Verdict
 
