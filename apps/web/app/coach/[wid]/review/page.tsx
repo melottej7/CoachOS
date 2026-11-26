@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { formatShortDate, matchesReviewFilter, parseReviewFilter, READINESS_COACH, readinessAlert, RESULT_STATE_LABELS, reviewFilterQuery, utcToLocal, WEEKDAY_SHORT } from '@coachos/domain';
+import { formatShortDate, isRoutineReview, matchesReviewFilter, parseReviewFilter, READINESS_COACH, readinessAlert, RESULT_STATE_LABELS, reviewFilterQuery, utcToLocal, WEEKDAY_SHORT } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { openReviews } from '@/server/repo/coach';
 import { portfolio } from '@/server/repo/portfolio';
 import { Avatar, Badge, Banner, Button, Cluster, Disclosure, EmptyState, Heading, Icon, LinkButton, Select, Stack, Text } from '@/design';
 import { RequeueReview, ReviewKeys } from '@/views/coach/review-actions';
+import { RoutineBatch } from '@/views/coach/review/routine-batch';
 import s from '@/views/coach/review/review.module.css';
 
 export const metadata = { title: 'Retours' };
@@ -60,6 +61,9 @@ export default async function ReviewQueue({ params, searchParams }: { params: Pr
           </form>
         </Disclosure>
       ) : null}
+
+      {/* Bilan produit : les retours sans signal se traitent d’un geste, avec « Annuler ». */}
+      <RoutineBatch wid={wid} items={items.filter(isRoutineReview).flatMap((r) => (r.workoutId && r.revision ? [{ athleteId: r.athleteId, workoutId: r.workoutId, revision: r.revision }] : []))} />
 
       {items.length ? (
         <Stack gap={2}>

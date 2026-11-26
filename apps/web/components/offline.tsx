@@ -15,7 +15,7 @@ export function OfflineSupport() {
 }
 
 /**
- * D-178 · Garde les séances de la semaine lisibles sans réseau, consignes et animations comprises : quand l’élève
+ * D-179 · Garde les séances de la semaine lisibles sans réseau, consignes et animations comprises : quand l’élève
  * ouvre Aujourd’hui ou son Programme en ligne, le service worker enregistre aussi ces pages, sans attendre qu’il les ouvre.
  */
 export function KeepOffline({ urls }: { urls: string[] }) {

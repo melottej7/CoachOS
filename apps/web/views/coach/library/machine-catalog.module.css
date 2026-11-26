@@ -1,4 +1,4 @@
-/* D-178 · Bibliothèque des machines de salle. */
+/* D-179 · Bibliothèque des machines de salle. */
 .wrap { padding-top: var(--ds-4); border-top: 1px solid var(--ds-rule); }
 .filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--ds-3); align-items: center; }
 @media (max-width: 559px) { .filters { grid-template-columns: minmax(0, 1fr); } }

@@ -99,7 +99,7 @@ export async function addStarterExercises(meta: Meta): Promise<StoredResponse> {
 const machineSchema = z.object({ keys: z.array(z.string().max(80)).min(1, { message: 'Choisis au moins un exercice' }).max(80) }).strict();
 
 /**
- * addMachineExercises · C (D-178) : exercices de la bibliothèque des machines ajoutés à celle du coach, avec leurs
+ * addMachineExercises · C (D-179) : exercices de la bibliothèque des machines ajoutés à celle du coach, avec leurs
  * réglages et consignes, sans doublon de nom. La clé du catalogue est gardée : l’animation suit, une fois validée.
  */
 export async function addMachineExercises(meta: Meta, body: unknown): Promise<StoredResponse> {

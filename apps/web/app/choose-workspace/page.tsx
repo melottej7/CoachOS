@@ -13,6 +13,9 @@ export default async function ChooseWorkspace() {
   const actor = await requireActor();
   const spaces = await listWorkspaces(actor.userId);
   if (spaces.length === 1) redirect(home(spaces[0]!));
+  // D-178 · Coach inscrit qui n’a pas encore créé son espace : droit à la création. Un élève retiré de son espace
+  // (compte né d’une invitation) garde l’accueil qui lui explique quoi faire.
+  if (spaces.length === 0 && actor.signedUpAsCoach) redirect('/coach/new');
   return (
     <PublicShell home="/choose-workspace" aside={<LinkButton href="/profile" variant="ghost" size="sm" icon="user">Mon compte</LinkButton>}>
       <Stack gap={6}>

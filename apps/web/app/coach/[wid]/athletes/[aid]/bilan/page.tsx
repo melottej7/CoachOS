@@ -5,6 +5,7 @@ import { listAssignedAthletes } from '@/server/repo/coach';
 import { isUuid } from '@/server/repo/context';
 import { Cluster, Eyebrow, Heading, LinkButton, Stack, Text } from '@/design';
 import { BilanFlow } from '@/views/bilan-flow';
+import { AthleteLink } from '@/views/coach/athlete-link';
 
 export const metadata = { title: 'Bilan en entretien' };
 
@@ -26,7 +27,7 @@ export default async function CoachBilan({ params }: { params: Promise<{ wid: st
     <Stack gap={5} className="ds-narrow">
       <Cluster><LinkButton href={`${back}?onglet=bilan`} variant="ghost" size="sm" icon="chevronLeft">Fiche de {first}</LinkButton></Cluster>
       <Stack gap={1}>
-        <Eyebrow tone="coach">{athlete.displayName} · entretien</Eyebrow>
+        <Eyebrow tone="coach"><AthleteLink wid={wid} id={aid}>{athlete.displayName}</AthleteLink> · entretien</Eyebrow>
         <Heading level={1} size={1}>Bilan avec {first}</Heading>
         <Text muted>
           {profile ? `Tu pars du bilan envoyé par ${first}.` : draft ? `Tu pars des réponses déjà données par ${first}.` : `${first} n’a encore rien rempli : pose les questions pendant l’appel.`}

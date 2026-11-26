@@ -27,7 +27,7 @@ export default async function AthleteCoachThread({ params, searchParams }: { par
   const hasGroups = inbox.length > 1;
   return (
     <>
-      <ChatHeader back={hasGroups ? `/athlete/${wid}/messages` : `/athlete/${wid}/today`} backLabel={hasGroups ? 'Toutes les discussions' : 'Aujourd’hui'} name={ctx.workspace.name} subtitle="Ton coach · réponses ici" />
+      <ChatHeader back={hasGroups ? `/athlete/${wid}/messages` : `/athlete/${wid}/today`} backLabel={hasGroups ? 'Toutes les discussions' : 'Aujourd’hui'} name={ctx.workspace.name} subtitle="Ton coach · réponses ici" href={`/athlete/${wid}/coach`} hrefLabel="Voir la présentation de ton coach" />
       <Thread wid={wid} target={{ kind: 'direct', athleteId: ctx.athlete.id, conversationId: t.conversationId }} messages={toUi(t.messages, ctx.athlete.timeZone, { workoutHref: (sid) => `/athlete/${wid}/workouts/${sid}`, feedbacks: t.feedbacks })} showNames={false} otherName={ctx.workspace.name} about={about}
         emptyText="Pose une question à ton coach, ou envoie-lui un vocal. Il te répondra ici." />
     </>

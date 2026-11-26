@@ -1,0 +1,24 @@
+// Captures sur téléphone (données fictives, port 3200) : retirer un élève puis « Annuler » ; en-tête de conversation cliquable.
+import { chromium } from '@playwright/test';
+const BASE = 'http://localhost:3200';
+const WS = '10000000-0000-4000-8000-00000000000a';
+const b = await chromium.launch();
+const p = await (await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, serviceWorkers: 'block', colorScheme: 'light' })).newPage();
+await p.goto(`${BASE}/demo`);
+await p.getByRole('button', { name: /Marine Roy/ }).click();
+await p.waitForURL((u) => !u.pathname.startsWith('/demo'));
+await p.goto(`${BASE}/coach/${WS}/athletes/new`);
+await p.getByLabel('Nom de l’élève').fill('Adri Essai');
+await p.getByRole('button', { name: 'Créer la fiche' }).click();
+await p.waitForURL(/\/athletes\/[0-9a-f-]{36}/);
+const btn = p.getByRole('button', { name: 'Retirer Adri de ma liste' });
+await btn.scrollIntoViewIfNeeded();
+await p.screenshot({ path: 'docs/bilan-produit/apres-retirer-bouton.png' });
+await btn.click();
+await p.getByText('Adri Essai retiré·e de ta liste').waitFor();
+await p.screenshot({ path: 'docs/bilan-produit/apres-retirer-annuler.png' });
+await p.goto(`${BASE}/coach/${WS}/messages/20000000-0000-4000-8000-000000000001`);
+await p.getByRole('link', { name: 'Ouvrir la fiche de Camille Laurent' }).hover();
+await p.screenshot({ path: 'docs/bilan-produit/apres-conversation-fiche.png', clip: { x: 0, y: 0, width: 390, height: 260 } });
+await b.close();
+console.log('captures écrites');

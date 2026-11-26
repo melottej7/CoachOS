@@ -31,3 +31,7 @@
 .issues { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 2px; font-size: var(--ds-text-sm); }
 .linkish { all: unset; cursor: pointer; color: var(--ds-link, var(--ds-coach)); text-decoration: underline; font-weight: 600; }
 .linkish:focus-visible { outline: 2px solid var(--ds-focus, var(--ds-coach)); outline-offset: 2px; }
+
+/* Bilan produit : élèves retirés, à rétablir. */
+.retired { list-style: none; margin: var(--ds-3) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-2); }
+.retired li { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-3); }

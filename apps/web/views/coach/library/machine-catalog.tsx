@@ -13,7 +13,7 @@ import { MachineSteps } from '@/views/athlete/exercise-howto';
 import s from './machine-catalog.module.css';
 
 /**
- * D-178 · Bibliothèque des machines de salle, rangée par type de machine : le coach coche les exercices utiles à ses
+ * D-179 · Bibliothèque des machines de salle, rangée par type de machine : le coach coche les exercices utiles à ses
  * élèves et les ajoute à sa bibliothèque, réglages et consignes compris. « Basic-Fit » n’est qu’une étiquette.
  */
 export function MachineCatalog({ wid, have }: { wid: string; have: string[] }) {

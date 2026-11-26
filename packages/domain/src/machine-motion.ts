@@ -1,5 +1,5 @@
 /**
- * D-178 · Animations dessinées des exercices sur machine : une silhouette et sa machine en schéma, de profil, qui
+ * D-179 · Animations dessinées des exercices sur machine : une silhouette et sa machine en schéma, de profil, qui
  * bougent en boucle. Un seul gabarit pour tous les exercices : chacun se décrit par la position fixe du bassin, l’angle
  * du buste, et le trajet des mains et des pieds entre le départ et l’arrivée ; les genoux et les coudes se placent
  * seuls (cinématique inverse), les membres gardent leur longueur. Sortie : un SVG animé de quelques kilo-octets,
@@ -375,7 +375,7 @@ export const MACHINE_MOTIONS: Readonly<Record<string, MotionSpec>> = {
 };
 
 /**
- * Relecture des animations par le fondateur : aucune n’est montrée à un élève sans y figurer (D-178, comme les vidéos
+ * Relecture des animations par le fondateur : aucune n’est montrée à un élève sans y figurer (D-179, comme les vidéos
  * de base de D-099). On n’y ajoute une clé que sur sa validation explicite, avec la date.
  */
 /** Validées par le fondateur le 26 novembre 2026 (« Oui, tout validé ») : liste figée, une animation ajoutée ensuite reste à relire. */

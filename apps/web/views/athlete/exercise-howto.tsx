@@ -6,7 +6,7 @@ import { MachineMotion } from '@/views/shared/machine-motion';
 import s from './exercise-howto.module.css';
 
 /**
- * D-096, D-099 (refonte D-129), D-178 · « Voir comment faire » d’un exercice : la vidéo du coach d’abord, sinon celle de
+ * D-096, D-099 (refonte D-129), D-179 · « Voir comment faire » d’un exercice : la vidéo du coach d’abord, sinon celle de
  * CoachOS s’il l’accepte, sinon l’animation dessinée de la machine une fois validée par le fondateur ; toujours avec
  * qui on regarde. Dessous : réglages, consignes, erreur fréquente et alternative, ou le texte du coach.
  */

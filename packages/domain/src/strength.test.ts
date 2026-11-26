@@ -34,7 +34,7 @@ describe('séance de musculation', () => {
     expect(describeTotals(t)).toBe('environ 7 min');
   });
 
-  it("D-178 : « 4×10 presse 60kg R2' » sans parenthèses, récupération entre les séries notée R1'30 ou R2'", () => {
+  it("D-179 : « 4×10 presse 60kg R2' » sans parenthèses, récupération entre les séries notée R1'30 ou R2'", () => {
     for (const [text, want] of [
       ["4×10 presse à cuisses 60kg R2'", "4×(10 Presse à cuisses 60kg + R2')"],
       ["3×12 tirage vertical 40kg R1'30", "3×(12 Tirage vertical 40kg + R1'30)"],

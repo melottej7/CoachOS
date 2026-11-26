@@ -19,6 +19,8 @@ export interface Actor {
   userId: string;
   displayName: string;
   source: 'supabase' | 'demo';
+  /** D-178 · Compte ouvert par l’inscription coach (et non par une invitation) : sert seulement à choisir la page d’arrivée. */
+  signedUpAsCoach?: boolean;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -44,7 +46,7 @@ export async function getActor(): Promise<Actor | null> {
         const db = await getDb();
         await db.query('insert into public.users(id, display_name) values ($1, $2) on conflict (id) do nothing', [user.id, name]);
       }
-      return { userId: user.id, displayName: name, source: 'supabase' };
+      return { userId: user.id, displayName: name, source: 'supabase', signedUpAsCoach: user.user_metadata?.signed_up_as === 'coach' };
     }
   }
   if (!demoAuthEnabled()) return null;

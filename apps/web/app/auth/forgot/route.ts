@@ -4,6 +4,7 @@ import { forgotSchema } from '@coachos/domain';
 import { logAuth, redirectTo, sameOrigin } from '@/server/auth/forms';
 import { clientIp, overLimit, waitMinutes } from '@/server/rate-limit';
 import { supabaseConfigured, supabaseServer } from '@/server/supabase/server';
+import { RECOVERY_EMAIL_COOKIE } from '@/server/auth/recovery';
 
 /** Mot de passe oublié (C02-06) : même réponse pour une adresse connue ou inconnue. */
 export async function POST(req: NextRequest) {
@@ -25,7 +26,11 @@ export async function POST(req: NextRequest) {
     logAuth(error.code ?? 'recovery_failed', error.status);
     if (error.status === 429) return redirectTo(req, '/forgot-password', { error: 'rate' });
   }
-  return redirectTo(req, '/forgot-password', { sent: '1' });
+  // Fluidité (bilan produit) : l’adresse est gardée une heure dans un cookie du seul appareil qui a fait la demande, pour
+  // que la saisie du code (recopié de l’e-mail) ne la redemande pas ; jamais dans l’adresse de la page.
+  const res = redirectTo(req, '/forgot-password', { sent: '1' });
+  res.cookies.set(RECOVERY_EMAIL_COOKIE, parsed.data.email, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 3600 });
+  return res;
 }
 
 function limited(req: NextRequest, seconds: number) {

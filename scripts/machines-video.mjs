@@ -1,4 +1,4 @@
-// D-178 · Enregistre une page d’animations en vidéo (WebM), pour la regarder sur un téléphone.
+// D-179 · Enregistre une page d’animations en vidéo (WebM), pour la regarder sur un téléphone.
 // Usage : node scripts/machines-video.mjs <page.html> <dossier-sortie> [secondes]
 import { chromium } from '@playwright/test';
 import { pathToFileURL } from 'node:url';

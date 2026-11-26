@@ -10,6 +10,7 @@ import {
 import { ExerciseHowTo } from '@/views/athlete/exercise-howto';
 import { PublishButton, SaveToLibrary } from '@/views/coach/workout/workout-actions';
 import s from '@/views/coach/review/review.module.css';
+import { AthleteLink } from '@/views/coach/athlete-link';
 
 export const metadata = { title: 'Séance' };
 
@@ -65,7 +66,7 @@ export default async function CoachWorkout({ params, searchParams }: { params: P
       {n ? <Banner tone="success" title={n.title}>{n.text}</Banner> : null}
       <Stack gap={3}>
         <Stack gap={1}>
-          <Eyebrow tone="coach">{w.athlete.displayName} · {formatLongDate(w.working.localDate)}</Eyebrow>
+          <Eyebrow tone="coach"><AthleteLink wid={wid} id={aid}>{w.athlete.displayName}</AthleteLink> · {formatLongDate(w.working.localDate)}</Eyebrow>
           <Heading level={1} size={1}>{w.working.title}</Heading>
         </Stack>
         <Cluster gap={2}>

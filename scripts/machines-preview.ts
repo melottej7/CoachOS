@@ -1,5 +1,5 @@
 /**
- * D-178 · Comparaison des façons de montrer un exercice sur machine, sur les trois pilotes, côte à côte.
+ * D-179 · Comparaison des façons de montrer un exercice sur machine, sur les trois pilotes, côte à côte.
  * Usage : npx tsx scripts/machines-preview.ts docs/execution/videos-machines.html
  */
 import { writeFileSync } from 'node:fs';

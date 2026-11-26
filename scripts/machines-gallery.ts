@@ -1,5 +1,5 @@
 /**
- * D-178 · Page de relecture de toutes les animations, rangées par type de machine, avec leur statut.
+ * D-179 · Page de relecture de toutes les animations, rangées par type de machine, avec leur statut.
  * Usage : npx tsx scripts/machines-gallery.ts <fichier.html>
  */
 import { writeFileSync } from 'node:fs';

@@ -10,6 +10,7 @@ import { AiTweaks, TweaksBanner } from '@/views/coach/program/ai-tweaks';
 import { ProgramChart } from '@/views/coach/program/program-chart';
 import { ProgramCreate } from '@/views/coach/program/program-create';
 import s from '@/views/coach/program/program.module.css';
+import { AthleteLink } from '@/views/coach/athlete-link';
 
 export const metadata = { title: 'Programme' };
 
@@ -112,7 +113,7 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
       <Stack gap={3}>
         {backLink}
         <Stack gap={1}>
-          <Eyebrow tone="coach">Programme · {ctx.athlete.name}</Eyebrow>
+          <Eyebrow tone="coach">Programme · <AthleteLink wid={wid} id={aid}>{ctx.athlete.name}</AthleteLink></Eyebrow>
           <Heading level={1} size={1}>{ctx.goal.title}</Heading>
         </Stack>
         <ul className={s.facts} aria-label="Objectif">

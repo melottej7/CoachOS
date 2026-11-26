@@ -1,4 +1,4 @@
-// D-178 · Photos d’une page d’animations à des instants donnés de la boucle (relecture image par image).
+// D-179 · Photos d’une page d’animations à des instants donnés de la boucle (relecture image par image).
 // Usage : node scripts/machines-frames.mjs <page.html> <sortie-prefixe> [secondes...]
 import { chromium } from '@playwright/test';
 import { pathToFileURL } from 'node:url';

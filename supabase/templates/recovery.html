@@ -5,8 +5,11 @@
       <tr><td style="padding:24px">
         <p style="margin:0 0 16px;font-size:20px;font-weight:800">CoachOS</p>
         <p style="margin:0 0 16px;font-size:16px;line-height:24px">Bonjour,</p>
-        <p style="margin:0 0 20px;font-size:16px;line-height:24px">Tu as demandé à réinitialiser ton mot de passe. Ce lien est valable une heure et ne fonctionne qu’une seule fois.</p>
-        <p style="margin:0 0 24px"><a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#0a6452;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:8px">Choisir un nouveau mot de passe</a></p>
+        <p style="margin:0 0 12px;font-size:16px;line-height:24px">Tu as demandé à réinitialiser ton mot de passe. Recopie ce code dans CoachOS (valable une heure, une seule fois) :</p>
+        <p style="margin:0 0 20px;font-size:30px;line-height:36px;font-weight:800;letter-spacing:6px;font-family:ui-monospace,Menlo,monospace">{{ .Token }}</p>
+        <p style="margin:0 0 12px;font-size:16px;line-height:24px">Ou touche ce bouton :</p>
+        <p style="margin:0 0 16px"><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display:inline-block;background:#0a6452;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:8px">Choisir un nouveau mot de passe</a></p>
+        <p style="margin:0 0 20px;font-size:14px;line-height:20px;color:#50646a">Sur iPhone, si CoachOS est installée sur ton écran d’accueil, préfère le code : le bouton s’ouvre dans Safari.</p>
         <p style="margin:0;font-size:13px;line-height:18px;color:#50646a">Si tu n’as rien demandé, ignore cet e-mail : ton mot de passe actuel reste valable.</p>
       </td></tr>
     </table>

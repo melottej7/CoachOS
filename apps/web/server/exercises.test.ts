@@ -56,7 +56,7 @@ describe('exercices de musculation (D-096)', () => {
     expect(await codeOf(addStarterExercises(meta(USERS.camille)))).toBe('RESOURCE_NOT_VISIBLE');
   });
 
-  it('D-178 : exercices de machine ajoutés avec réglages et consignes, sans doublon, par le seul coach de l’espace', async () => {
+  it('D-179 : exercices de machine ajoutés avec réglages et consignes, sans doublon, par le seul coach de l’espace', async () => {
     await createExercise(meta(USERS.marine), { name: 'tirage vertical' });
     const r = (await addMachineExercises(meta(USERS.marine), { keys: ['presse-a-cuisses', 'tirage-vertical', 'developpe-machine', 'presse-a-cuisses'] })).body;
     expect(r).toEqual({ added: 2, skipped: 1 });

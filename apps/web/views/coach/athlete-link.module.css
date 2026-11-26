@@ -1,0 +1,4 @@
+/* Le nom garde l’allure du texte qui l’entoure (sur-titre, titre) ; souligné au survol et au clavier. */
+.link { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 3px; }
+.link:hover { text-decoration-color: currentColor; }
+.link:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; border-radius: 2px; }

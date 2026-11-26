@@ -25,6 +25,7 @@ const strength = (w: AthleteWorkout) => w.sport === 'strength' || JSON.stringify
 /**
  * X40 · Aujourd’hui (refonte Chrono, D-129) : la séance du jour dans ses allures d’un coup d’œil, la suivre,
  * le retour en 15 secondes, puis la suite de la semaine. Toutes les lectures partent en même temps.
+ * Fluidité (bilan produit) : la séance et son retour d’abord, sur le premier écran ; le bilan et l’installation ensuite.
  */
 export default async function Today({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<{ notice?: string }> }) {
   const { wid } = await params;
@@ -62,13 +63,6 @@ export default async function Today({ params, searchParams }: { params: Promise<
       <KeepOffline urls={[...todays, ...week].filter((w) => !w.canceled).flatMap((w) => [`${base}/workouts/${w.id}`, ...(w.sport === 'strength' ? [`${base}/workouts/${w.id}/suivre`] : [])])} />
       <VisuallyHidden><h1>Aujourd’hui</h1></VisuallyHidden>
       {notice === 'joined' ? <Banner tone="success" title={`Bienvenue dans ${ctx.workspace.name}`}>Tes séances publiées apparaissent ici et dans Programme.</Banner> : null}
-      {!profile ? (
-        <Banner tone="coach" title="Ton bilan" action={<LinkButton href={`${base}/setup`} size="sm" variant="coach">{progress ? 'Continuer' : 'Commencer'}</LinkButton>}>
-          {progress ? `${progress.answered} réponse${progress.answered > 1 ? 's' : ''} sur ${progress.total}.` : '2 minutes'} pour que ton coach prépare un programme qui te ressemble.
-        </Banner>
-      ) : null}
-      <InstallGuide variant="today" />
-
       {todays.length ? todays.map((w, k) => {
         const view = sessionView(w.intervals, w.sport, refs, w.durationSeconds);
         const fb = feedback(w, 'd’aujourd’hui');
@@ -79,6 +73,7 @@ export default async function Today({ params, searchParams }: { params: Promise<
               <Cluster gap={3} align="baseline"><Heading level={2} size={1} id={`t-${w.id}`}>{w.title}</Heading>{w.canceled ? <Badge tone="warning">Annulée</Badge> : null}</Cluster>
             </Stack>
             <SessionStats view={view} />
+            {fb && !w.feedbackState ? <Card pad={4}>{fb}</Card> : null}
             <SessionStrip view={view} />
             <SessionRows view={view} />
             {w.instructions ? <Card pad={4}><Stack gap={1}><Eyebrow>Consignes de ton coach</Eyebrow><Text prose>{w.instructions}</Text></Stack></Card> : null}
@@ -88,7 +83,7 @@ export default async function Today({ params, searchParams }: { params: Promise<
                 : null}
               <LinkButton href={`${base}/workouts/${w.id}`} variant={strength(w) ? 'secondary' : 'coach'} size="lg" data-tour={k === 0 ? 'today-open' : undefined}>Voir la séance</LinkButton>
             </Cluster>
-            {fb ? <Card pad={4}>{fb}</Card> : null}
+            {fb && w.feedbackState ? <Card pad={4}>{fb}</Card> : null}
           </Stack>
         );
       }) : (
@@ -110,6 +105,13 @@ export default async function Today({ params, searchParams }: { params: Promise<
           </Stack>
         </Card>
       ))}
+
+      {!profile ? (
+        <Banner tone="coach" title="Ton bilan" action={<LinkButton href={`${base}/setup`} size="sm" variant="coach">{progress ? 'Continuer' : 'Commencer'}</LinkButton>}>
+          {progress ? `${progress.answered} réponse${progress.answered > 1 ? 's' : ''} sur ${progress.total}.` : '2 minutes'} pour que ton coach prépare un programme qui te ressemble.
+        </Banner>
+      ) : null}
+      <InstallGuide variant="today" />
 
       {upcoming.length ? (
         <Stack as="section" gap={3} aria-labelledby="suite">

@@ -2537,7 +2537,15 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - Les liens « ‹ Élèves », « ‹ Semaine de… » dans les pages restent : ce sont les seuls retours sur ordinateur.
 - **Vérifié** : parcours d’invitation (coach, 390 px : dossier ↔ liste filtrée, arrivée directe) et cardio (élève : pas de flèche pendant le suivi, fiche de séance → programme).
 
-## D-178 · Exercices sur machine : bibliothèque, animations dessinées, fiche dans la séance · 2026-11-26
+## D-178 · Trois petites retouches du bilan produit · 2026-11-26
+
+- **« Pas faite »** ne part plus au premier toucher : 5 s de compte à rebours avec « Annuler » et « Envoyer maintenant ». Si l’élève quitte la page avant la fin, rien n’est envoyé et la question reste posée (aucun envoi à son insu).
+- **Liste des élèves** : sans bilan, le sport affiché est le plus fréquent de ses séances, marqué « (d’après ses séances) » ; le filtre par sport l’utilise aussi. Le niveau reste celui du bilan ou du coach.
+- **Coach sans espace** : l’inscription coach marque le compte (`signed_up_as: coach` dans les métadonnées Supabase) ; à la connexion, ce compte va droit à « Créer mon espace ». Un compte né d’une invitation (élève retiré de son espace) garde l’accueil explicatif. Le marqueur ne sert qu’à choisir la page d’arrivée, jamais un droit. Les coachs inscrits avant ne l’ont pas : comportement inchangé pour eux.
+- **Preuves** : 476 tests, typecheck, construction, 17 parcours de bout en bout (« Pas faite » puis « Annuler » : rien ne part après 6 s ; sport d’après les séances dans la liste). Au navigateur, données fictives : compte à rebours à 375 px, liste à 1440 px. Inscription d’un coach fictif sur le Supabase local : `/choose-workspace` renvoie vers `/coach/new`.
+- **Non prouvé** : le cas d’un élève retiré qui se reconnecte (logique lue, pas jouée).
+
+## D-179 · Exercices sur machine : bibliothèque, animations dessinées, fiche dans la séance · 2026-11-26
 
 - **Bibliothèque des machines** rangée par type (guidées, poulies, Smith, disques, cardio) : 31 machines, 68 exercices, chacun avec muscles, niveau, réglages, trois consignes, erreur fréquente, alternative sur une autre machine. « Basic-Fit » n’est qu’une étiquette avec son degré de certitude ; vue Basic-Fit (demande du fondateur) : nom anglais de la machine et numéro du club, à relever.
 - **Animations dessinées** retenues après comparaison (vidéo du fondateur, bibliothèque achetée, IA) : un gabarit, chaque exercice décrit par départ et arrivée, genoux et coudes placés seuls, angles vérifiés par les tests ; SVG d’environ 60 Ko dans la page (silhouette en volume, 24 images par seconde, plaques qui montent pendant l’effort), donc hors ligne. Trois pilotes, puis les 68 exercices le même jour (vue de face, cycles du cardio, rameur en trois temps), longueurs des membres et contacts vérifiés à chaque image. Détail : [VIDEOS_MACHINES.md](VIDEOS_MACHINES.md).

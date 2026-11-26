@@ -1,5 +1,5 @@
 /**
- * D-178 · Liste à cocher des machines, à vérifier dans un club, tirée de la bibliothèque (une seule source).
+ * D-179 · Liste à cocher des machines, à vérifier dans un club, tirée de la bibliothèque (une seule source).
  * Usage : npx tsx scripts/machines-checklist.ts > docs/execution/MACHINES_A_COCHER.md
  */
 import { AVAILABILITY_LABELS, GYM_CHAINS, MACHINE_LEVEL_LABELS, machineLibrary, alternativeName } from '../packages/domain/src/index';

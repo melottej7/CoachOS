@@ -28,6 +28,7 @@ import { HomeActions } from '@/views/coach/home/home-actions';
 import { TaskItem } from '@/views/coach/home/task-item';
 import { taskView } from '@/views/coach/home/task-view';
 import { ResendInvitation, RevokeInvitation } from '@/views/coach/roster/invitation';
+import { ArchiveAthlete } from '@/views/coach/athlete/archive-athlete';
 import { AppointmentReport, EraseAthlete, GoalForm, LevelConfirm, NoteForm, TeamMembership, WeekReviewCard } from '@/views/coach/athlete/fiche-panels';
 import { FeasibilityPanel, FEASIBILITY_TONE } from '@/views/coach/athlete/feasibility-panel';
 import { HistoryTable } from '@/views/coach/athlete/history-table';
@@ -279,6 +280,9 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
           </Section>
 
           <Section id="groups" title="Groupes"><TeamMembership wid={wid} aid={aid} teams={a.teams} all={file.allTeams} /></Section>
+
+          {/* Bilan produit : retirer l’élève en un geste, réversible (l’effacement définitif reste dans Données). */}
+          {owner ? <ArchiveAthlete wid={wid} aid={aid} first={first} /> : null}
         </Stack>
       ) : null}
 

@@ -3,7 +3,7 @@ import {
   athleteMotion, BODY, jointAngle, LOOP_SECONDS, MACHINE_EXERCISES, MACHINE_MOTIONS, machineExercise, MOTION_REVIEWS, motionStatus, motionSvg, poseAt, progressAt, type Pose,
 } from './index';
 
-// D-178 : un seul gabarit d’animation ; chaque exercice décrit son départ et son arrivée. Le geste est vérifié ici.
+// D-179 : un seul gabarit d’animation ; chaque exercice décrit son départ et son arrivée. Le geste est vérifié ici.
 const frames = (key: string): Pose[] => Array.from({ length: 41 }, (_, i) => poseAt(MACHINE_MOTIONS[key]!, i / 40));
 const knee = (p: Pose) => jointAngle(p.hip, p.knee, p.ankle);
 const elbow = (p: Pose) => jointAngle(p.shoulder, p.elbow, p.hand);

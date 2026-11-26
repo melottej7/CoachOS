@@ -5,7 +5,7 @@ import { motionSvg, type MotionSpec } from '@coachos/domain';
 import s from './machine-motion.module.css';
 
 /**
- * D-178 · Animation dessinée d’un exercice sur machine : boucle muette de 4 s, dans la page (donc lisible hors ligne).
+ * D-179 · Animation dessinée d’un exercice sur machine : boucle muette de 4 s, dans la page (donc lisible hors ligne).
  * Un toucher met en pause ou relance ; si l’appareil demande moins d’animations, elle démarre en pause.
  */
 export function MachineMotion({ spec, title, caption }: { spec: MotionSpec; title: string; caption: string }) {

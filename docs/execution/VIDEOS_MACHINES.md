@@ -1,4 +1,4 @@
-# Montrer les exercices sur machine (D-178)
+# Montrer les exercices sur machine (D-179)
 
 But : dans sa séance, l’élève touche un exercice et voit tout de suite comment régler la machine et faire le mouvement. Boucle muette de 3 à 6 s, lisible au téléphone, moins de 1 Mo, avec image d’aperçu, disponible sans réseau.
 

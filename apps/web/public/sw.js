@@ -35,7 +35,7 @@ async function keepPage(key, res) {
 
 self.addEventListener('message', (event) => {
   if (event.data === 'clear') event.waitUntil(clearAll());
-  // D-178 : séances de la semaine gardées d’avance (consignes et animations sont dans la page), 16 au plus.
+  // D-179 : séances de la semaine gardées d’avance (consignes et animations sont dans la page), 16 au plus.
   if (event.data && event.data.type === 'coachos-keep' && Array.isArray(event.data.urls)) {
     event.waitUntil((async () => {
       for (const raw of event.data.urls.slice(0, 16)) {

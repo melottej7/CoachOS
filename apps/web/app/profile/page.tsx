@@ -4,6 +4,7 @@ import { requireActor } from '@/server/auth/session';
 import { readMe } from '@/server/commands/profile';
 import { Banner, Button, Card, Cluster, Heading, LinkButton, PublicShell, Stack, Text, ThemeChoiceGroup } from '@/design';
 import { AccountForm } from '@/views/account/account-form';
+import { InstallGuide } from '@/views/athlete/install-guide';
 
 export const metadata = { title: 'Mon compte' };
 
@@ -29,6 +30,8 @@ export default async function Profile({ searchParams }: { searchParams: Promise<
           <Text size="sm" muted>Réglage de cet appareil seulement.</Text>
           <ThemeChoiceGroup initial={theme === 'light' || theme === 'dark' ? theme : 'system'} hideLegend />
         </Stack>
+        {/* Bilan produit : le coach aussi peut installer CoachOS sur son téléphone, guidé selon son appareil. */}
+        <InstallGuide variant="profile" audience="coach" />
         <Stack as="section" gap={2} aria-labelledby="mes-donnees">
           <Heading level={2} size={4} id="mes-donnees">Mes données</Heading>
           <Text size="sm" muted>Télécharger tes données ou demander leur effacement se fait dans chaque espace : onglet Profil pour un élève, Paramètres › Mes données pour un coach. <Link href="/confidentialite">Politique de confidentialité</Link>.</Text>

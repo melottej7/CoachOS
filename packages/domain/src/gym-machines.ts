@@ -2,7 +2,7 @@ import { starterKey, STARTER_EXERCISES, type Muscle } from './exercises';
 import type { Machine } from './structure';
 
 /**
- * D-178 · Bibliothèque des machines de salle : chaque machine, tous les exercices qu’elle permet, et pour chacun
+ * D-179 · Bibliothèque des machines de salle : chaque machine, tous les exercices qu’elle permet, et pour chacun
  * les muscles, le niveau, les réglages, trois consignes, l’erreur la plus fréquente et une alternative si la machine
  * est prise. Rangée par type de machine, pas par enseigne : « Disponible chez Basic-Fit » n’est qu’une étiquette
  * (d’autres coachs ont des élèves dans d’autres salles). Consignes générales, sans avis médical.

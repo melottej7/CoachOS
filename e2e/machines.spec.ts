@@ -2,7 +2,7 @@ import { expect, test, type Browser, type Page } from '@playwright/test';
 import { motionStatus } from '../packages/domain/src/index';
 
 /**
- * D-178 · Exercices sur machine dans un vrai navigateur. Le coach (1440 px) ajoute la presse, le tirage vertical et le
+ * D-179 · Exercices sur machine dans un vrai navigateur. Le coach (1440 px) ajoute la presse, le tirage vertical et le
  * développé machine depuis la bibliothèque des machines, écrit « 4×10 presse à cuisses 60kg R2' » et publie ; l’élève
  * (390 px) touche l’exercice dans sa séance et voit réglages, consignes, erreur et alternative sans quitter la séance ;
  * l’animation n’apparaît qu’une fois validée ; la séance de la semaine reste lisible sans réseau. Photos si SHOTS est défini.

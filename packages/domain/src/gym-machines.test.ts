@@ -3,7 +3,7 @@ import {
   alternativeName, CHAIN_NUMBERS, chainLabel, GYM_MACHINES, machineExercise, machineInstructions, machineLibrary, MACHINE_EXERCISES, MACHINES, STARTER_EXERCISES, starterKey,
 } from './index';
 
-// D-178 : bibliothèque des machines de salle, rangée par type de machine.
+// D-179 : bibliothèque des machines de salle, rangée par type de machine.
 describe('bibliothèque des machines', () => {
   it('des clés uniques, valides en base, distinctes des exercices de départ', () => {
     const keys = MACHINE_EXERCISES.map((e) => e.key);

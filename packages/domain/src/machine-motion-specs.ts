@@ -1,7 +1,7 @@
 import type { MotionSpec, Path, Pt, Shape } from './machine-motion';
 
 /**
- * D-178 · Animations dessinées de toute la bibliothèque des machines (hors les trois pilotes, dans machine-motion.ts).
+ * D-179 · Animations dessinées de toute la bibliothèque des machines (hors les trois pilotes, dans machine-motion.ts).
  * Chaque exercice : bassin, buste, trajet des pieds et des mains, au départ et à l’arrivée ; la machine en schéma.
  * Toutes commencent « À relire » : le fondateur les valide une à une (MOTION_REVIEWS).
  */
