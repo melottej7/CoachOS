@@ -44,9 +44,9 @@ function Intro({ title, children }: { title: string; children?: React.ReactNode 
  * automatiques (D-045), modèles de relance (D-104), apparence de cet appareil (D-128), IA du mois (D-081, propriétaire),
  * abonnement (D-175, propriétaire), mes données (D-115). Juste après la création de l’espace (first=1) : l’assistant en quatre étapes, seul à l’écran.
  */
-export default async function Settings({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<{ first?: string; notice?: string; onglet?: string }> }) {
+export default async function Settings({ params, searchParams }: { params: Promise<{ wid: string }>; searchParams: Promise<{ first?: string; notice?: string; onglet?: string; abonnement?: string }> }) {
   const { wid } = await params;
-  const { first, notice, onglet } = await searchParams;
+  const { first, notice, onglet, abonnement } = await searchParams;
   const actor = await requireActor();
   const ctx = await coachContext(actor.userId, wid);
   if (!ctx) notFound();
@@ -157,7 +157,7 @@ export default async function Settings({ params, searchParams }: { params: Promi
         {tab === 'abonnement' && offer ? (
           <Stack gap={4}>
             <Intro title="Abonnement" />
-            <OfferPanel view={offer} timeZone={ctx.workspace.timeZone} />
+            <OfferPanel view={offer} timeZone={ctx.workspace.timeZone} wid={wid} notice={abonnement} />
           </Stack>
         ) : null}
 

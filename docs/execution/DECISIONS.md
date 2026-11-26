@@ -2612,3 +2612,15 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Repli automatique** : ajouter un bloc (Exercice, Machines, Circuit, Cardio, modèle, bloc gardé) replie ceux déjà écrits ; le nouveau reste ouvert. « Tout réduire » et « Tout déplier » au-dessus de la liste. Une copie s’ouvre, prête à modifier. L’état replié n’est pas enregistré.
 - **Correctif D-184** : « Varier d’une série à l’autre » (libellé raccourci) débordait de 11 px sur téléphone.
 - **Vérifié** : parcours à 390 px (repli à l’ajout, résumé, réouverture, tout réduire et déplier, copie d’une carte réduite).
+
+## D-188 · Abonnement Stripe en mode test, derrière l’interrupteur · 2026-11-27
+
+- **Pourquoi** : « De quoi vendre », suite (D-120, docs/13). Tout est éteint en production tant que `COACHOS_BILLING` n’est pas à 1 et que `STRIPE_SECRET_KEY` (clé de test) manque.
+- **Migration additive** `20261127000000` : `workspace_billing` (client, abonnement, statut Stripe, fin de période, début d’impayé), lisible par le seul serveur ; `billing_events`, pour traiter chaque événement Stripe une seule fois.
+- **Paiement** : le propriétaire choisit une offre (Paramètres › Abonnement) ; page de paiement et portail client hébergés par Stripe, prix venus des offres (`COACHOS_OFFERS`), sans produit à créer. Événements signés reçus sur `/api/billing/stripe` (`STRIPE_WEBHOOK_SECRET`) : payé, modifié, refusé, réglé, arrêté.
+- **Règles** (docs/13) :
+  - paiement refusé : 14 jours de grâce, tout marche, bandeau ;
+  - après la grâce, essai terminé, ou abonnement arrêté : lecture seule. Exporter, régler et gérer ses notifications restent possibles ; l’élève est prévenu et garde son historique.
+  - Arrêt pendant l’essai : retour aux jours d’essai.
+  - Pas de lecture seule sans clé Stripe. La phase pilote ne se voit rien proposer.
+- **Vérifié** : 6 tests (signatures, droits, événements uniques, grâce, impayé, arrêt, point d’arrivée) et le contrat. Au navigateur à 1440 et 390 px, avec un faux Stripe local qui signe comme Stripe : essai, paiement, portail, refus, arrêt, lecture seule, élève prévenu. **Non vérifié** : avec le vrai Stripe (clé de test à venir).

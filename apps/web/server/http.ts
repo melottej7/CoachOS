@@ -6,6 +6,7 @@ import { getActor } from './auth/session';
 import type { StoredResponse } from './commands/idempotency';
 import { AppError } from './errors';
 import { reportError } from './error-report';
+import { assertWritable } from './commands/workspace-offer';
 import { isUuid } from './repo/context';
 
 const MAX_BODY = 64 * 1024;
@@ -56,6 +57,8 @@ export async function handleMutation(
     const actor = await getActor();
     if (!actor) throw new AppError('AUTH_REQUIRED_OR_INVALID_SIGNATURE', 'Session expirée. Reconnecte-toi pour continuer.');
     if (Object.values(params).some((v) => !isUuid(v))) throw new AppError('RESOURCE_NOT_VISIBLE', 'Cette ressource n’est pas disponible.');
+    // D-188 : espace en lecture seule (essai ou abonnement terminé), seulement quand le paiement est ouvert.
+    if (params.wid) await assertWritable(actor.userId, params.wid, module);
     const key = req.headers.get('idempotency-key') ?? '';
     if (!isUuid(key)) throw new AppError('MALFORMED_REQUEST', 'En-tête Idempotency-Key manquant ou invalide.');
     const text = await req.text();
@@ -104,6 +107,7 @@ export async function handleBinaryMutation(
     const actor = await getActor();
     if (!actor) throw new AppError('AUTH_REQUIRED_OR_INVALID_SIGNATURE', 'Session expirée. Reconnecte-toi pour continuer.');
     if (Object.values(params).some((v) => !isUuid(v))) throw new AppError('RESOURCE_NOT_VISIBLE', 'Cette ressource n’est pas disponible.');
+    if (params.wid) await assertWritable(actor.userId, params.wid, module); // D-188
     const declared = Number(req.headers.get('content-length') ?? '0');
     if (declared > maxBytes) throw new AppError('INVALID_FIELDS', 'Certains champs sont à corriger.', [tooLarge]);
     const bytes = new Uint8Array(await req.arrayBuffer());

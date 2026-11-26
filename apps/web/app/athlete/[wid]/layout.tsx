@@ -4,6 +4,8 @@ import { readWorkspacePublic } from '@/server/commands/workspace-profile';
 import { athleteContext } from '@/server/repo/context';
 import { athleteInbox } from '@/server/repo/messages';
 import { unreadNotificationCount } from '@/server/commands/notifications';
+import { workspaceAlert } from '@/server/commands/workspace-offer';
+import { BillingAlert } from '@/views/billing-alert';
 import { logoUrl } from '@/components/coach-card';
 import { TourHost } from '@/components/tour-host';
 import { AppHeader, AthleteColumn, AthleteShell, Avatar, BellLink, BrandName, ProfileLink } from '@/design';
@@ -19,10 +21,11 @@ export default async function AthleteLayout({ children, params }: { children: Re
   const ctx = await athleteContext(actor.userId, wid);
   if (!ctx) notFound();
   const base = `/athlete/${wid}`;
-  const [ws, inbox, notifs] = await Promise.all([
+  const [ws, inbox, notifs, billing] = await Promise.all([
     readWorkspacePublic(actor.userId, wid),
     athleteInbox(actor.userId, wid, ctx.athlete.id),
     unreadNotificationCount(actor.userId, wid),
+    workspaceAlert(actor.userId, wid), // D-188
   ]);
   const unread = inbox.reduce((n, e) => n + e.unread, 0);
   const logo = ws ? logoUrl(ws) : null;
@@ -40,7 +43,10 @@ export default async function AthleteLayout({ children, params }: { children: Re
       </AppHeader>
       <AthleteColumn>
         <TabBar label="Espace élève" items={tabs} />
-        <main id="contenu">{children}</main>
+        <main id="contenu">
+          {billing ? <BillingAlert s={billing} role="athlete" wid={wid} timeZone={ctx.athlete.timeZone} /> : null}
+          {children}
+        </main>
       </AthleteColumn>
       <TourHost space="athlete" wid={wid} />
     </AthleteShell>
