@@ -2605,7 +2605,7 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Blocs** : « Monter / Descendre » retiré, on déplace par la poignée (souris, doigt, flèches au clavier). Le menu « … » ne reste que dans une répétition (« Sortir de la répétition »).
 - **Vérifié** : 504 tests, typecheck, construction, 22 parcours (salle étendu à la recherche). Vu à 1440 et 390 px dans Chromium. **Non vérifié** : Safari lui-même (cause déduite de la capture du fondateur).
 
-## D-185 · Réduire un exercice écrit pour se concentrer sur la suite · 2026-11-26
+## D-186 · Réduire un exercice écrit pour se concentrer sur la suite · 2026-11-26
 
 - **Retour du fondateur** : une fois un exercice écrit, pouvoir en réduire le détail.
 - **Éditeur de séance** : chaque carte a un chevron « Réduire ». Réduite, elle tient en deux lignes : le nom (« Squat goblet ») et le résumé (« 3 séries · 10 répétitions · repos 1 min 30 s »). Toucher le résumé la rouvre. Poignée, copie et suppression restent là, ce qui facilite le rangement.

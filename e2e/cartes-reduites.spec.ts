@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 
 /**
- * D-185 · Retour du fondateur : un exercice écrit doit pouvoir se réduire, pour se concentrer sur la suite. Sur téléphone :
+ * D-186 · Retour du fondateur : un exercice écrit doit pouvoir se réduire, pour se concentrer sur la suite. Sur téléphone :
  * ajouter un exercice replie ceux déjà écrits (une ligne, leur résumé) ; un toucher les rouvre ; « Tout réduire » et
  * « Tout déplier » ; une carte réduite garde sa poignée, sa copie et sa suppression.
  */

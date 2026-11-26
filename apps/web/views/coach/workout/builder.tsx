@@ -26,7 +26,7 @@ export interface AthleteGearInfo { first: string; gear: AthleteGear }
 const GearCtx = createContext<AthleteGearInfo | null>(null);
 /** D-112 : ce que l’élève a fait la dernière fois, par exercice. */
 const LastCtx = createContext<Record<string, LastDone>>({});
-/** D-185 · Cartes réduites à une ligne : l’exercice écrit se replie pour se concentrer sur la suite. */
+/** D-186 · Cartes réduites à une ligne : l’exercice écrit se replie pour se concentrer sur la suite. */
 const FoldCtx = createContext<{ folded: ReadonlySet<string>; toggle: (k: string) => void }>({ folded: new Set(), toggle: () => undefined });
 
 /** Bloc réutilisable de la bibliothèque du coach (D-074). */
@@ -844,7 +844,7 @@ function BlockList({ blocks, sport, depth, prefix, parent, refs, dnd, onChange }
         return (
           <li key={b._k} data-bk={b._k} data-kind={b.type} className={dnd.dragging === b._k ? s.dragging : undefined}>
             {folded ? (
-              // D-185 : une ligne, le résumé que lira l’élève ; toucher le résumé déplie la carte.
+              // D-186 : une ligne, le résumé que lira l’élève ; toucher le résumé déplie la carte.
               <div className={cx(s.step, s.folded)} role="group" aria-label={`Bloc ${index}`}>
                 <div className={s.head}>
                   {head}
@@ -922,7 +922,7 @@ export function WorkoutBuilder({ wid, sport, value, onChange, refs, athleteFirst
   const defaultSport = MULTISPORT.includes(sport) ? (MULTI_STEP_SPORTS[sport]?.[0] ?? null) : null;
   const root = useRef<HTMLElement>(null);
   const [drag, setDrag] = useState<{ key: string; label: string; x: number; y: number; active: boolean } | null>(null);
-  // D-185 : cartes réduites ; en ajouter une replie celles déjà écrites, pour se concentrer sur la nouvelle.
+  // D-186 : cartes réduites ; en ajouter une replie celles déjà écrites, pour se concentrer sur la nouvelle.
   const [folded, setFolded] = useState<ReadonlySet<string>>(() => new Set());
   const toggleFold = (k: string) => setFolded((f) => { const n = new Set(f); if (n.has(k)) n.delete(k); else n.add(k); return n; });
   const add = (...more: EBlock[]) => { setFolded(new Set(value.map((b) => b._k))); onChange([...value, ...more]); };

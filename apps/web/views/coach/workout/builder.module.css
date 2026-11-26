@@ -109,7 +109,7 @@ input.control { min-width: 0; }
 .setsRow .num { inline-size: 88px; }
 .setsHead { font-size: var(--ds-text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ds-ink-2); }
 .setsK { justify-self: center; font-family: var(--ds-font-display); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ds-ink-2); }
-/* D-185 · Carte réduite à une ligne, chevron pour réduire ou déplier. */
+/* D-186 · Carte réduite à une ligne, chevron pour réduire ou déplier. */
 .folded > .head { border-bottom: 0; }
 .foldSummary { display: flex; flex-direction: column; gap: 2px; inline-size: 100%; padding: 0 var(--ds-3) var(--ds-3) calc(var(--ds-3) + 32px); border: 0; background: none; color: var(--ds-ink); font: inherit; text-align: start; cursor: pointer; overflow-wrap: anywhere; }
 .foldSummary:hover .foldTitle { text-decoration: underline; }
