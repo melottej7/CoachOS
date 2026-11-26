@@ -2544,3 +2544,10 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Coach sans espace** : l’inscription coach marque le compte (`signed_up_as: coach` dans les métadonnées Supabase) ; à la connexion, ce compte va droit à « Créer mon espace ». Un compte né d’une invitation (élève retiré de son espace) garde l’accueil explicatif. Le marqueur ne sert qu’à choisir la page d’arrivée, jamais un droit. Les coachs inscrits avant ne l’ont pas : comportement inchangé pour eux.
 - **Preuves** : 476 tests, typecheck, construction, 17 parcours de bout en bout (« Pas faite » puis « Annuler » : rien ne part après 6 s ; sport d’après les séances dans la liste). Au navigateur, données fictives : compte à rebours à 375 px, liste à 1440 px. Inscription d’un coach fictif sur le Supabase local : `/choose-workspace` renvoie vers `/coach/new`.
 - **Non prouvé** : le cas d’un élève retiré qui se reconnecte (logique lue, pas jouée).
+
+## D-180 · Tirer vers le bas pour actualiser, dans l’app installée · 2026-11-26
+
+- **Demande du fondateur** : sur téléphone, recharger la page en tirant vers le bas. L’app ouverte depuis l’écran d’accueil (iPhone surtout) n’a pas ce geste ; Safari et Chrome l’ont déjà, donc rien n’est ajouté dans le navigateur.
+- **Geste** : depuis le haut de la page, tirer d’environ 130 px ; une roue suit le doigt, puis tourne pendant l’actualisation. Un geste plus court ne fait rien.
+- **Rien ne se perd** : les données sont relues au serveur sans recharger la page (`router.refresh`) ; un texte en cours de saisie reste en place. Le geste ne part pas d’un champ, d’une fenêtre ou d’une liste déjà défilée (conversation).
+- **Preuves** : 2 tests (distance, seuil), 455 tests, typecheck, construction, 18 parcours de bout en bout dont `e2e/actualiser.spec.ts` (390 px, vrais événements tactiles : geste court sans effet, geste long qui relit les données sans recharger). **Non prouvé** : sur un vrai iPhone, l’app installée.
