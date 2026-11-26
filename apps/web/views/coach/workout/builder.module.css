@@ -103,3 +103,9 @@ input.control { min-width: 0; }
 .stageBars > span { min-inline-size: 5px; border-radius: 3px 3px 0 0; background: var(--ds-coach); opacity: 0.85; }
 /* D-165 · exercice en séries */
 .seriesTag { display: inline-flex; align-items: center; min-height: 32px; padding: 0 var(--ds-3); border-radius: var(--ds-radius-full); background: var(--ds-coach-soft); color: var(--ds-coach-text); font-weight: 700; font-size: var(--ds-text-sm); font-variant-numeric: tabular-nums; }
+/* D-184 · Séries une par une : répétitions et charge propres à chaque série. */
+.sets { display: flex; flex-direction: column; gap: var(--ds-2); padding: var(--ds-3); border-radius: var(--ds-radius); background: var(--ds-surface-2); }
+.setsRow { display: grid; align-items: center; justify-items: start; gap: var(--ds-3); }
+.setsRow .num { inline-size: 88px; }
+.setsHead { font-size: var(--ds-text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ds-ink-2); }
+.setsK { justify-self: center; font-family: var(--ds-font-display); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ds-ink-2); }

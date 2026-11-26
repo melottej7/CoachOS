@@ -2425,6 +2425,50 @@
                 "type": "null"
               }
             ]
+          },
+          "perSet": {
+            "description": "D-184 : une entrée par série quand les séries d’une carte répétée diffèrent (répétitions si la carte est en répétitions, charge si elle est en kg) ; autant d’entrées que de séries.",
+            "anyOf": [
+              {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 50,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "reps": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 500
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "kg": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0.5,
+                          "maximum": 500,
+                          "multipleOf": 0.5
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       },

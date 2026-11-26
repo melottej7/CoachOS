@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { cardioName, describeIntensity, describeMeasure, describeStageSettings, PHASE_LABELS, type Block, type Step } from './structure';
+import { cardioName, describeIntensity, describeMeasure, describeStageSettings, PHASE_LABELS, stepForSet, type Block, type Step } from './structure';
 
 /**
  * D-096 · Bibliothèque d’exercices de musculation. Chaque exercice a un nom, des consignes, un groupe musculaire,
@@ -215,7 +215,7 @@ export function followSequence(blocks: Block[]): FollowStep[] {
             stage: { k: j + 1, n: c.stages.length, name: cardioName(b), settings: describeStageSettings(x, c.machine) },
           });
         });
-      } else out.push({ index: out.length, block, step: b, sets });
+      } else out.push({ index: out.length, block, step: b.perSet && sets.length ? stepForSet(b, sets[sets.length - 1]!.k - 1) : b, sets }); // D-184 : réglages de la série
     }
   };
   blocks.forEach((b, k) => {
@@ -287,7 +287,12 @@ export function followExercises(seq: FollowStep[]): FollowExercise[] {
     } else if (circuit) summary = `${rounds} · ${names.join(', ')}`;
     else {
       const rest = g.find(restLike);
-      summary = [rounds || null, measure(first), describeIntensity(first.step.intensity), rest && measure(rest) ? `repos ${measure(rest)}` : null].filter(Boolean).join(' · ');
+      // D-184 : séries différentes (« 12 × 10 kg, 10 × 12 kg, 8 × 14 kg »), d’après chaque passage.
+      const same = (x: FollowStep) => JSON.stringify([x.step.measure, x.step.intensity]) === JSON.stringify([first.step.measure, first.step.intensity]);
+      const each = work.length > 1 && !work.every(same)
+        ? work.map((x) => (x.step.intensity.kind === 'load' ? `${measure(x)?.replace(/ répétitions?$/, '') ?? ''} × ${describeIntensity(x.step.intensity)}` : measure(x))).join(', ')
+        : null;
+      summary = [rounds || null, each ?? measure(first), each ? null : describeIntensity(first.step.intensity), rest && measure(rest) ? `repos ${measure(rest)}` : null].filter(Boolean).join(' · ');
     }
     return { block: first.block, first: g[0]!.index, last: g[g.length - 1]!.index, name: circuit ? 'Circuit' : stepName(first), summary };
   });

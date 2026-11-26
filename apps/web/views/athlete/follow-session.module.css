@@ -74,3 +74,6 @@
 .stages { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; font-variant-numeric: tabular-nums; }
 .stages li { display: flex; gap: var(--ds-2); padding: 6px var(--ds-3); border-radius: var(--ds-radius); background: var(--ds-surface-2); font-weight: 600; }
 .stageK { flex: none; min-inline-size: 64px; color: var(--ds-ink-2); font-weight: 700; }
+/* D-184 · La charge change à la série suivante. */
+.loadChange { align-self: flex-start; margin-block-start: var(--ds-1); padding: 4px 12px; border-radius: 999px; background: var(--ds-coach); color: var(--ds-on-coach, #fff); font-weight: 700; font-variant-numeric: tabular-nums; }
+.loadChange span { font-weight: 500; opacity: 0.85; }

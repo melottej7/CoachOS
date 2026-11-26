@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-26 (D-161 à D-183). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
+Dernière mise à jour : 2026-11-26 (D-161 à D-184). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
 
 ## Où en est CoachOS
 
@@ -32,7 +32,7 @@ Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en dire
 
 **À la salle (D-180 à D-182, en ligne (Pull Request n° 16), sans migration)** : tirer vers le bas pour actualiser dans l’app installée (D-180) ; « Machines » dans l’éditeur de séance avec la salle Basic-Fit, exercices touchés dans l’ordre et reliés à la bibliothèque (D-181) ; « Machine prise ? Changer » pendant le suivi : autre ordre, remplacement, exercice en plus, repris dans le retour (D-182). 
 
-**Prochaine tranche** : « De quoi vendre », suite : abonnement Stripe en mode test derrière l’interrupteur (choix de l’offre, essai terminé en lecture et export, impayé avec 14 jours de grâce) ; il faut la clé de test (point 9). D-174 à D-177 sont en ligne (Pull Request n° 12) ; contrôlé le 25 novembre : « / », `/offres`, `/conditions`, `/mentions-legales` répondent 200, la page publique s’affiche sans prix (« pendant la phase pilote »), `/api/health` répond `"db":"ok"`. Les migrations D-173 et D-175 ne sont passées en ligne qu’après la fusion (« Remote database is up to date. » contrôlé dans le Terminal le 25 novembre) : avant toute fusion, faire coller au fondateur la sortie de `npx supabase db push --remote`. D-179 à D-183 sont en ligne (Pull Request n° 16, sans migration) ; contrôlé le 26 novembre : `/api/health` répond `"db":"ok"`, « / » et `/offres` répondent 200.
+**Prochaine tranche** : « De quoi vendre », suite : abonnement Stripe en mode test derrière l’interrupteur (choix de l’offre, essai terminé en lecture et export, impayé avec 14 jours de grâce) ; il faut la clé de test (point 9). D-174 à D-177 sont en ligne (Pull Request n° 12) ; contrôlé le 25 novembre : « / », `/offres`, `/conditions`, `/mentions-legales` répondent 200, la page publique s’affiche sans prix (« pendant la phase pilote »), `/api/health` répond `"db":"ok"`. Les migrations D-173 et D-175 ne sont passées en ligne qu’après la fusion (« Remote database is up to date. » contrôlé dans le Terminal le 25 novembre) : avant toute fusion, faire coller au fondateur la sortie de `npx supabase db push --remote`. D-179 à D-183 sont en ligne (Pull Request n° 16, sans migration) ; contrôlé le 26 novembre : `/api/health` répond `"db":"ok"`, « / » et `/offres` répondent 200. D-184 (charge et répétitions série par série, retour du fondateur) attend sa Pull Request, sur la branche `machines-videos`, sans migration.
 
 ## Pour le fondateur
 
