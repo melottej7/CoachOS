@@ -2576,3 +2576,10 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Ordre** : après chaque exercice, le suivant non fait dans l’ordre du programme, puis ceux laissés en arrière ; « Exercice 3 sur 3 » et la barre d’avancement comptent ce qui est fait, dans n’importe quel ordre.
 - **Le coach le voit** : le retour reprend tout. Séries d’un exercice remplacé reportées sur le remplaçant, exercice passé à 0 (avant, il apparaissait comme fait), ajouts en fin de journal ; commentaire proposé « Changements à la salle — remplacé : … ; pas fait : … ; en plus : … ». Tout est gardé sur le téléphone (rechargement, « Quitter ») et oublié une fois le retour envoyé. Sans migration.
 - **Preuves (D-181, D-182)** : 4 tests d’ordre et de journal, test serveur des identifiants renvoyés, 499 tests, typecheck, construction, parcours `e2e/salle.spec.ts` (coach 1440 px : trois machines Basic-Fit en trois touchers, reliées ; élève 390 px : autre ordre, remplacement, ajout, retour à l’exercice laissé, commentaire du retour). **Non prouvé** : sur un vrai téléphone à la salle.
+
+## D-183 · Une tâche du dossier élève ouvre l’onglet de sa section · 2026-11-26
+
+- **Retour du fondateur** : « Confirmer le bilan › Y aller » ne faisait rien. Depuis le dossier en onglets (D-151), le lien visait la section `#bilan`, qui n’existe que dans l’onglet Bilan. Même défaut pour « Confirmer le niveau » et « VMA à renseigner » (onglet Progression), et depuis l’Accueil, les notifications et l’éditeur de séance.
+- **Correctif** : `athleteFileHref(wid, aid, section)` (domaine) donne l’onglet de chaque section (`?onglet=bilan#bilan`). Tous ces liens l’utilisent. Dans le dossier, une tâche reste une ancre si sa section est dans l’onglet ouvert, sinon elle ouvre le bon onglet.
+- **Anciens liens** déjà envoyés (`…#bilan`) : le dossier ouvre de lui-même l’onglet de la section.
+- **Vérifié** : test du domaine ; parcours à 390 px (tâche du dossier → onglet Bilan, ancien lien → onglet Bilan).

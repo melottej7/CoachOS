@@ -1,5 +1,5 @@
 import {
-  addDays, AUTO_RULE_INFO, autoRuleReason, bilanCompletion, deriveBilan, excerpt, resolveRuleSettings, type BilanAnswers, rankTasks, todayIn, urgencyScore, usesVma, utcToLocal,
+  addDays, athleteFileHref, AUTO_RULE_INFO, autoRuleReason, bilanCompletion, deriveBilan, excerpt, resolveRuleSettings, type BilanAnswers, rankTasks, todayIn, urgencyScore, usesVma, utcToLocal,
   type AppointmentKind, type AppointmentStatus, type AutoRule, type AutoRuleSetting, type TaskRecurrence, type GoalState, type Level, type LocalDate, type Readiness, type Sport, type TaskKind, type TaskStatus,
 } from '@coachos/domain';
 import { readAs, type Tx } from '../db/client';
@@ -236,18 +236,18 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
     if (rd && (rd.readiness === 'not_quite' || rd.readiness === 'no') && !((coachSpoke.get(a.id)?.getTime() ?? 0) > rd.created_at.getTime())) {
       push('readiness_talk', rd.feedback_id, addDays(localDay(rd.created_at), delay('readiness_talk')), `${base}/messages/${a.id}`, rd.readiness === 'no' ? 'réponse « Non »' : 'réponse « Pas tout à fait »');
     }
-    if (a.state === 'invited') push('invite_pending', a.id, addDays(localDay(a.created_at), delay('invite_pending')), `${base}/athletes/${a.id}#inv-title`);
+    if (a.state === 'invited') push('invite_pending', a.id, addDays(localDay(a.created_at), delay('invite_pending')), athleteFileHref(wid, a.id, 'inv-title'));
     if (a.state === 'active') {
       if (!upcoming.some((d) => d <= horizonEnd)) push('no_upcoming', a.id, today, `${base}/calendar?athlete=${a.id}`);
       if (!profile) {
         const d = drafts.get(a.id);
-        push('profile_missing', a.id, null, `${base}/athletes/${a.id}#bilan`, d ? `bilan commencé, ${d.answered} réponse${d.answered > 1 ? 's' : ''} sur ${d.total}` : null);
+        push('profile_missing', a.id, null, athleteFileHref(wid, a.id, 'bilan'), d ? `bilan commencé, ${d.answered} réponse${d.answered > 1 ? 's' : ''} sur ${d.total}` : null);
       }
-      if (profile && !met.has(a.id)) push('onboarding_call', a.id, addDays(localDay(profile.updated_at), delay('onboarding_call')), `${base}/athletes/${a.id}#rdv`);
+      if (profile && !met.has(a.id)) push('onboarding_call', a.id, addDays(localDay(profile.updated_at), delay('onboarding_call')), athleteFileHref(wid, a.id, 'rdv'));
       // D-059 : un bilan envoyé se confirme en un geste (le niveau déclaré avec) ; « Confirmer le niveau » ne double pas cette tâche.
-      if (profile?.status === 'submitted') push('bilan_confirm', a.id, addDays(localDay(profile.updated_at), delay('bilan_confirm')), `${base}/athletes/${a.id}#bilan`);
-      else if (profile && !confirmed.some((l) => l.sport === profile.sport_code)) push('level_unconfirmed', a.id, null, `${base}/athletes/${a.id}#levels`);
-      if (profile && usesVma(profile.sport_code) && vmaKmh === null) push('vma_missing', a.id, null, `${base}/athletes/${a.id}#refs-title`);
+      if (profile?.status === 'submitted') push('bilan_confirm', a.id, addDays(localDay(profile.updated_at), delay('bilan_confirm')), athleteFileHref(wid, a.id, 'bilan'));
+      else if (profile && !confirmed.some((l) => l.sport === profile.sport_code)) push('level_unconfirmed', a.id, null, athleteFileHref(wid, a.id, 'levels'));
+      if (profile && usesVma(profile.sport_code) && vmaKmh === null) push('vma_missing', a.id, null, athleteFileHref(wid, a.id, 'refs-title'));
     }
     const own = tasks.filter((t) => t.athleteId === a.id);
     const todo = rankTasks([...auto, ...own], today);
