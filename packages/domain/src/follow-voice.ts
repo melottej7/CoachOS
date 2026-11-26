@@ -36,14 +36,25 @@ const isRest = (f: FollowStep) => f.step.phase === 'rest' || f.step.phase === 'r
 const nameOf = (f: FollowStep) => f.stage?.name ?? f.step.exercise?.name ?? (isRest(f) ? 'Récupération' : PHASE_LABELS[f.step.phase]);
 
 /** Annonce d’une étape au moment où elle commence. */
-export function announce(f: FollowStep, next: FollowStep | null): string {
+/** D-184 · Charge qui change à la série suivante (« 10 → 12 kg ») : null si elle ne change pas. */
+export function loadChange(prev: FollowStep | null | undefined, next: FollowStep | null | undefined): { from: number; to: number } | null {
+  const kg = (x: FollowStep | null | undefined) => (x && !isRest(x) && x.step.intensity.kind === 'load' ? x.step.intensity.min : null);
+  const a = kg(prev);
+  const b = kg(next);
+  return a !== null && b !== null && a !== b ? { from: a, to: b } : null;
+}
+
+export function announce(f: FollowStep, next: FollowStep | null, prev: FollowStep | null = null): string {
   const measure = f.step.measure.kind === 'open' ? null : describeMeasure(f.step.measure);
   if (f.stage) {
     return spoken([`Palier ${f.stage.k} sur ${f.stage.n}`, f.stage.settings || null, measure].filter(Boolean).join('. ') + '.');
   }
   if (isRest(f)) {
     const then = next ? `Ensuite : ${nameOf(next)}` : 'Dernière étape';
-    return spoken([`Récupération${measure ? `, ${measure}` : ''}`, then].join('. ') + '.');
+    // D-184 : la charge change à la série suivante, on le dit pendant la récupération.
+    const change = loadChange(prev, next);
+    const kg = change ? `Prépare ${String(change.to).replace('.', ',')} kg` : null;
+    return spoken([`Récupération${measure ? `, ${measure}` : ''}`, then, kg].filter(Boolean).join('. ') + '.');
   }
   const intensity = describeIntensity(f.step.intensity);
   // D-172 : la dernière série s’annonce comme telle.

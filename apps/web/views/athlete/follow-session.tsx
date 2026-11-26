@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type RefObject } from 'react';
 import {
   announce, announceExercise, describeIntensity, describeMeasure, exerciseKey, followExercises, followGate, followSequence, followStart, formatElapsed,
-  lastSetLabel, PHASE_LABELS, reminderAt, setLabel,
+  lastSetLabel, loadChange, PHASE_LABELS, reminderAt, setLabel,
   machineExercise, machineInstructions, nextOpenPart, swapKey, swappableNames, withSwaps,
   type Block, type Exercise, type FollowExercise, type FollowExtra, type FollowStep, type FollowSwap, type FollowSwaps, type LastDone, type Sport,
 } from '@coachos/domain';
@@ -450,7 +450,7 @@ function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext,
     : toEffort ? (next.step.exercise?.name === st.exercise?.name ? 'Série suivante' : 'Exercice suivant') : 'Terminé !';
   const last = !rest && st.exercise ? lastDone[exerciseKey(st.exercise.id, st.exercise.name)] : undefined;
   const media = !rest && ex ? ExerciseMedia({ wid, exercise: ex }) : null;
-  const phrase = announce(f, next);
+  const phrase = announce(f, next, prev);
 
   // D-166 : la voix annonce l’étape dès qu’elle s’affiche (une fois la séance lancée) ; sinon au départ du chrono.
   const announced = useRef(false);
@@ -489,7 +489,7 @@ function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext,
       ) : since !== null ? (
         <p className={s.since} aria-label={`Depuis ${formatElapsed(elapsed - since)} sur cette étape`}><Icon name="clock" size={16} />{formatElapsed(elapsed - since)}</p>
       ) : null}
-      {rest && next ? <UpNext f={next} /> : null}
+      {rest && next ? <UpNext f={next} change={loadChange(prev, next)} /> : null}
       {media || ex?.instructions ? (
         <Stack gap={2}>
           {media}
@@ -606,13 +606,15 @@ function GateScreen({ wid, f, part, k, n, seq, after, exercises, lastDone, start
   );
 }
 
-/** D-167 · Pendant le repos, ce qui vient, en assez grand pour se préparer de loin. */
-function UpNext({ f }: { f: FollowStep }) {
+/** D-167 · Pendant le repos, ce qui vient, en assez grand pour se préparer de loin ; D-184 : la charge à changer, en évidence. */
+function UpNext({ f, change }: { f: FollowStep; change?: { from: number; to: number } | null }) {
+  const kg = (n: number) => n.toLocaleString('fr-BE', { maximumFractionDigits: 1 });
   return (
     <div className={s.upNext}>
       <span className={s.upLabel}>À suivre</span>
       <span className={s.upName}>{nameOf(f)}</span>
       {detailOf(f) ? <span className={s.upDetail}>{detailOf(f)}</span> : null}
+      {change ? <span className={s.loadChange}>Prépare {kg(change.to)} kg <span>(au lieu de {kg(change.from)} kg)</span></span> : null}
     </div>
   );
 }

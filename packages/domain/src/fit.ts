@@ -1,4 +1,4 @@
-import { cardioName, describeStageSettings, usesCss, usesFtp, usesVma, zonePace, zonePower, zoneSwimPace, PHASE_LABELS, ZONE_NAMES, type Block, type References, type Step, type Zone } from './structure';
+import { cardioName, describeStageSettings, stepForSet, usesCss, usesFtp, usesVma, zonePace, zonePower, zoneSwimPace, PHASE_LABELS, ZONE_NAMES, type Block, type References, type Step, type Zone } from './structure';
 import type { Sport } from './sports';
 
 /**
@@ -217,7 +217,10 @@ export function fitSteps(blocks: Block[], sport: Sport, refs?: References): FitS
           }, out.length, sport, multi, refs));
         }
       } else if (b.type === 'step') out.push(stepToFit(b, out.length, sport, multi, refs));
-      else {
+      else if (b.steps.some((s) => s.type === 'step' && s.perSet)) {
+        // D-184 : séries différentes (charge, répétitions) : la montre ne sait pas répéter en changeant ; on les écrit une à une.
+        for (let k = 0; k < b.times; k++) walk(b.steps.map((s) => (s.type === 'step' ? stepForSet(s, k) : s)));
+      } else {
         const from = out.length;
         walk(b.steps);
         out.push({ index: out.length, name: `Répéter ${b.times} fois`, durationType: DURATION.repeat, durationValue: from, targetType: null, targetValue: b.times, low: null, high: null, intensity: null, notes: '' });

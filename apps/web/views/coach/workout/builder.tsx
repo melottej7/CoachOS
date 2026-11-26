@@ -6,7 +6,7 @@ import {
   personalTarget, sessionView, structureTotals, usesCss, usesFtp, usesVma, ZONE_NAMES, ZONES,
   type Block, type Intensity, type Measure, type Phase, type References, type Sport, type Step, type Zone, exerciseFits, missingEquipment, type AthleteGear, type ExerciseEquipment, exerciseKey, formatShortDate, type LastDone,
   CADENCE_UNIT, MACHINE_DEFAULT_SETTINGS, MACHINE_LABELS, MACHINE_SETTINGS, MACHINES, STAGE_SETTING_LABELS, stageProfile, stagesSeconds,
-  type Cardio, type Machine, type Stage, type StageSetting,
+  type Cardio, type Machine, type Stage, type StageSetting, fitSetsToTimes, type SetPlan,
 } from '@coachos/domain';
 import { canDrop, find, lift, moveBlock, shift, type DropTarget } from '@/components/block-tree';
 import { mutate, newKey } from '@/components/api-client';
@@ -219,7 +219,7 @@ function TimeInputs({ seconds, onChange, label, compact = false, allowZero = fal
 
 const MEASURE_LABEL: Record<Measure['kind'], string> = { reps: 'Répétitions', time: 'Durée', distance: 'Distance', open: 'Libre' };
 
-function MeasureEditor({ id, m, strength = false, onChange }: { id: string; m: Measure; strength?: boolean; onChange: (m: Measure) => void }) {
+function MeasureEditor({ id, m, strength = false, hideValue = false, onChange }: { id: string; m: Measure; strength?: boolean; hideValue?: boolean; onChange: (m: Measure) => void }) {
   const km = m.kind === 'distance' && m.meters >= 1000 && m.meters % 100 === 0;
   // D-096 : en musculation, répétitions d’abord ; la distance n’a pas de sens.
   const kinds = (strength ? ['reps', 'time', 'open'] : ['time', 'distance', 'open']) as Measure['kind'][];
@@ -234,7 +234,7 @@ function MeasureEditor({ id, m, strength = false, onChange }: { id: string; m: M
           </label>
         ))}
       </div>
-      {m.kind === 'reps' ? (
+      {m.kind === 'reps' && hideValue ? null : m.kind === 'reps' ? (
         <span className={s.inline}>
           <input aria-label="Nombre de répétitions" type="number" min={1} max={500} value={m.reps} className={cx(s.control, s.num)}
             onChange={(e) => onChange({ kind: 'reps', reps: Math.min(500, Math.max(1, Math.round(Number(e.target.value) || 1))) })} /> répétitions
@@ -264,7 +264,7 @@ const STRENGTH_INTENSITY_KINDS: { k: Intensity['kind']; label: string }[] = [
   { k: 'none', label: 'Poids du corps' }, { k: 'load', label: 'Charge (kg)' }, { k: 'rpe', label: 'Effort ressenti' },
 ];
 
-function IntensityEditor({ id, i, sport, onChange }: { id: string; i: Intensity; sport: Sport; onChange: (i: Intensity) => void }) {
+function IntensityEditor({ id, i, sport, hideValue = false, onChange }: { id: string; i: Intensity; sport: Sport; hideValue?: boolean; onChange: (i: Intensity) => void }) {
   const start = (k: Intensity['kind']): Intensity => {
     switch (k) {
       case 'zone': return { kind: 'zone', zone: 2 };
@@ -287,7 +287,7 @@ function IntensityEditor({ id, i, sport, onChange }: { id: string; i: Intensity;
         <select id={`${id}-ik`} className={s.control} value={i.kind} onChange={(e) => onChange(start(e.target.value as Intensity['kind']))}>
           {(sport === 'strength' ? STRENGTH_INTENSITY_KINDS : INTENSITY_KINDS).map((o) => <option key={o.k} value={o.k}>{o.label}</option>)}
         </select>
-        {i.kind === 'load' ? (
+        {i.kind === 'load' && !hideValue ? (
           <>
             <input aria-label="Charge en kg" type="number" className={cx(s.control, s.num)} min={0.5} max={500} step={0.5} value={i.min}
               onChange={(e) => onChange({ ...i, min: Math.max(0.5, Math.round((Number(e.target.value) || 0.5) * 2) / 2) })} /> kg
@@ -583,6 +583,10 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools, series }:
   const est = stepEstimate(plain, sport, refs);
   const strength = stepSport === 'strength' || sport === 'strength';
   const allExercises = useContext(ExercisesCtx);
+  // D-184 : séries différentes (charge, répétitions), dans une carte de plusieurs séries.
+  const canVary = Boolean(series && series.sets > 1 && strength && (step.measure.kind === 'reps' || step.intensity.kind === 'load'));
+  const perSet = canVary && step.perSet ? fitSetsToTimes(step, series!.sets).perSet ?? null : null;
+  const fitSets = (x: EStep): EStep => (series && series.sets > 1 && x.perSet ? { ...fitSetsToTimes(x, series.sets), _k: x._k } : x);
   const pickOne = useContext(PickOneCtx);
   const athlete = useContext(GearCtx);
   // D-111 : pour un élève qui a dit où il s’entraîne, les exercices faisables d’abord.
@@ -651,11 +655,16 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools, series }:
                 <label className={s.label} htmlFor={`${id}-sets`}>Séries</label>
                 <input id={`${id}-sets`} type="number" min={1} max={50} className={cx(s.control, s.numCompact)} value={series.sets}
                   onChange={(e) => series.onSets(Math.min(50, Math.max(1, Math.round(Number(e.target.value) || 1))))} />
-                <span className={s.muted}>×, chacune :</span>
+                <span className={s.muted}>{step.perSet ? '×' : '×, chacune :'}</span>
               </div>
             ) : null}
-            <MeasureEditor id={id} m={step.measure} strength={strength} onChange={(m) => onChange({ ...step, measure: m })} />
-            <IntensityEditor id={id} i={step.intensity} sport={strength ? 'strength' : (stepSport ?? 'running')} onChange={(i) => onChange({ ...step, intensity: i })} />
+            <MeasureEditor id={id} m={step.measure} strength={strength} hideValue={Boolean(perSet)} onChange={(m) => onChange(fitSets({ ...step, measure: m }))} />
+            <IntensityEditor id={id} i={step.intensity} sport={strength ? 'strength' : (stepSport ?? 'running')} hideValue={Boolean(perSet)} onChange={(i) => onChange(fitSets({ ...step, intensity: i }))} />
+            {perSet ? (
+              <SetsTable id={id} step={step} sets={perSet} onChange={onChange} />
+            ) : canVary ? (
+              <span><Button size="sm" variant="ghost" icon="list" onClick={() => onChange(varySets(step, series!.sets))}>Varier la charge ou les répétitions d’une série à l’autre</Button></span>
+            ) : null}
             {series && series.sets > 1 ? (
               <div className={s.field}>
                 <span className={s.label} id={`${id}-rest`}>Récupération entre les séries</span>
@@ -692,6 +701,69 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools, series }:
 
 // ---------- Exercice en séries (D-165) ----------
 
+/** D-184 · Première série = réglages de la carte ; les suivantes reprennent la même chose, à ajuster. */
+function varySets(step: EStep, sets: number): EStep {
+  const reps = step.measure.kind === 'reps' ? step.measure.reps : null;
+  const kg = step.intensity.kind === 'load' ? step.intensity.min : null;
+  return { ...step, perSet: Array.from({ length: sets }, () => ({ reps, kg })) };
+}
+function withoutSets(step: EStep): EStep {
+  const { perSet: _drop, ...rest } = step;
+  return rest as EStep;
+}
+
+/**
+ * D-184 · Les séries une par une (« 12 × 10 kg, 10 × 12 kg, 8 × 14 kg ») : répétitions et charge propres à chaque série.
+ * La première série reste celle de la carte (résumés, montre, ancien affichage).
+ */
+function SetsTable({ id, step, sets, onChange }: { id: string; step: EStep; sets: SetPlan[]; onChange: (s: EStep) => void }) {
+  const reps = step.measure.kind === 'reps';
+  const load = step.intensity.kind === 'load';
+  const set = (k: number, patch: Partial<SetPlan>) => {
+    const next = sets.map((x, i) => (i === k ? { ...x, ...patch } : x));
+    const first = next[0]!;
+    onChange({
+      ...step, perSet: next,
+      measure: reps && first.reps ? { kind: 'reps', reps: first.reps } : step.measure,
+      intensity: load && first.kg ? { kind: 'load', min: first.kg, max: null } : step.intensity,
+    });
+  };
+  const num = (v: string, max: number, stepBy = 1) => Math.min(max, Math.max(stepBy, Math.round((Number(v.replace(',', '.')) || stepBy) / stepBy) * stepBy));
+  // Raccourci de salle : la charge monte d’un même écart à chaque série (ex. +2,5 kg).
+  const ramp = (by: number) => onChange({ ...step, perSet: sets.map((x, i) => ({ ...x, kg: Math.min(500, Math.max(0.5, (sets[0]!.kg ?? 0.5) + by * i)) })) });
+  // Colonnes alignées sur les cases : série, répétitions (si en répétitions), charge (si en kg).
+  const cols = { gridTemplateColumns: ['36px', reps ? '88px' : null, load ? 'auto' : null].filter(Boolean).join(' ') };
+  return (
+    <div className={s.sets} role="group" aria-label="Séries, une par une">
+      <div className={s.setsRow} style={cols} aria-hidden="true">
+        <span className={s.setsHead}>Série</span>
+        {reps ? <span className={s.setsHead}>Rép.</span> : null}
+        {load ? <span className={s.setsHead}>Charge</span> : null}
+      </div>
+      {sets.map((x, k) => (
+        <div key={k} className={s.setsRow} style={cols}>
+          <span className={s.setsK}>{k + 1}</span>
+          {reps ? (
+            <input id={k ? undefined : `${id}-set-reps`} aria-label={`Répétitions de la série ${k + 1}`} type="number" inputMode="numeric" min={1} max={500}
+              className={cx(s.control, s.num)} value={x.reps ?? ''} onChange={(e) => set(k, { reps: num(e.target.value, 500) })} />
+          ) : null}
+          {load ? (
+            <span className={s.inline}>
+              <input aria-label={`Charge de la série ${k + 1} en kg`} type="number" inputMode="decimal" min={0.5} max={500} step={0.5}
+                className={cx(s.control, s.num)} value={x.kg ?? ''} onChange={(e) => set(k, { kg: num(e.target.value, 500, 0.5) })} /> kg
+            </span>
+          ) : null}
+        </div>
+      ))}
+      <Cluster gap={2}>
+        {load ? <Button size="sm" variant="ghost" onClick={() => ramp(2.5)}>+2,5 kg par série</Button> : null}
+        {load ? <Button size="sm" variant="ghost" onClick={() => ramp(5)}>+5 kg par série</Button> : null}
+        <Button size="sm" variant="ghost" icon="close" onClick={() => onChange(withoutSets(step))}>Mêmes réglages pour toutes</Button>
+      </Cluster>
+    </div>
+  );
+}
+
 /** Un exercice en séries : une seule étape d’effort, répétée, éventuellement suivie d’une récupération. */
 interface SeriesShape { sets: number; work: EStep; rest: EStep | null }
 const isRestStep = (x: EBlock | undefined): x is EStep =>
@@ -727,7 +799,7 @@ function SeriesCard({ block, shape, sport, index, refs, head, tools, onChange }:
       onChange={(w) => onChange(seriesBlock(block._k, shape, shape.sets, rest, w))}
       series={{
         sets: shape.sets, rest,
-        onSets: (n) => onChange(seriesBlock(block._k, shape, n, rest, shape.work)),
+        onSets: (n) => onChange(seriesBlock(block._k, shape, n, rest, n > 1 ? { ...fitSetsToTimes(shape.work, n), _k: shape.work._k } : withoutSets(shape.work))),
         onRest: (sec) => { setRemembered(sec || remembered); onChange(seriesBlock(block._k, shape, shape.sets, sec, shape.work)); },
         onCircuit: () => onChange({
           type: 'repeat', times: Math.max(2, shape.sets), _k: block._k,

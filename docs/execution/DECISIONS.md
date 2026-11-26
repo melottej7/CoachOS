@@ -2583,3 +2583,16 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Correctif** : `athleteFileHref(wid, aid, section)` (domaine) donne l’onglet de chaque section (`?onglet=bilan#bilan`). Tous ces liens l’utilisent. Dans le dossier, une tâche reste une ancre si sa section est dans l’onglet ouvert, sinon elle ouvre le bon onglet.
 - **Anciens liens** déjà envoyés (`…#bilan`) : le dossier ouvre de lui-même l’onglet de la section.
 - **Vérifié** : test du domaine ; parcours à 390 px (tâche du dossier → onglet Bilan, ancien lien → onglet Bilan).
+
+## D-184 · Charge et répétitions série par série · 2026-11-26
+
+- **Retour du fondateur** : entre les séries, on change souvent la charge. « Logique pratique, à appliquer partout. »
+- **Modèle** : `perSet` sur l’étape d’une carte répétée, une entrée par série (répétitions si la carte est en répétitions, charge si elle est en kg). Le nombre d’entrées suit le nombre de séries : complété par la dernière, ou coupé. Ajout facultatif, au contrat d’API compris, sans migration.
+- **Coach** : « Varier la charge ou les répétitions d’une série à l’autre » ouvre un tableau série par série, avec les raccourcis « +2,5 kg par série », « +5 kg par série » et « Mêmes réglages pour toutes ».
+- **Partout** :
+  - résumés : « 12 × 10 kg, 10 × 12 kg, 8 × 14 kg » ;
+  - écriture en texte : `3×12/10/8 Tirer latéral 10/12/14kg R1'30`, lue et écrite ;
+  - montre : séries écrites une à une ;
+  - totaux, retour de l’élève prérempli série par série.
+- **Élève** : chaque série montre et annonce sa charge. Pendant la récupération, « Prépare 12 kg (au lieu de 10 kg) », à l’écran et à la voix.
+- **Vérifié** : 4 tests du domaine ; parcours complet sur téléphone (coach règle, enregistre, rouvre ; élève lit, suit, case « Fait » préremplie).

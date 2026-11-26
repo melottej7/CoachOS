@@ -122,6 +122,18 @@ export type Cardio = z.output<typeof cardioSchema>;
 
 export const stagesSeconds = (c: Pick<Cardio, 'stages'>) => c.stages.reduce((n, x) => n + x.seconds, 0);
 
+/**
+ * D-184 · Une série d’une carte répétée, quand elles ne se ressemblent pas (« 12 × 10 kg, 10 × 12 kg, 8 × 14 kg ») :
+ * répétitions (si la carte est en répétitions) et charge (si elle est en kg). Vide = comme la carte.
+ */
+export const setPlanSchema = z
+  .object({
+    reps: int(1, 500).nullish().transform((v) => v ?? null),
+    kg: z.number().min(0.5).max(500).multipleOf(0.5).nullish().transform((v) => v ?? null),
+  })
+  .strict();
+export type SetPlan = z.output<typeof setPlanSchema>;
+
 export const stepSchema = z
   .object({
     type: z.literal('step'),
@@ -142,6 +154,8 @@ export const stepSchema = z
       .transform((v) => (v?.trim() ? v.trim() : null)),
     /** D-164 : cardio sur machine en paliers (« 5 min niveau 1, 7 min niveau 2… ») ; la durée de l’étape en est la somme. */
     cardio: cardioSchema.nullish(),
+    /** D-184 : une entrée par série quand les séries diffèrent ; seulement dans une carte répétée, autant d’entrées que de séries. */
+    perSet: z.array(setPlanSchema).min(2).max(50).nullish(),
   })
   .strict()
   .refine((x) => !x.cardio || (x.measure.kind === 'time' && x.measure.seconds === stagesSeconds(x.cardio)), {
@@ -156,13 +170,41 @@ export interface RepeatBlock {
 }
 export type Block = Step | RepeatBlock;
 
+/**
+ * D-184 · Les séries propres à chaque passage suivent le nombre de séries de la carte : complétées par la dernière,
+ * ou coupées ; retirées quand rien ne peut varier (ni répétitions, ni charge).
+ */
+export function fitSetsToTimes(s: Step, times: number): Step {
+  if (!s.perSet) return s;
+  const { perSet, ...base } = s;
+  if (base.measure.kind !== 'reps' && base.intensity.kind !== 'load') return base as Step;
+  return { ...base, perSet: Array.from({ length: times }, (_, k) => perSet[k] ?? perSet[perSet.length - 1]!) } as Step;
+}
+const fitRepeat = <R extends { times: number; steps: unknown[] }>(r: R): R =>
+  ({ ...r, steps: r.steps.map((x) => ((x as Step).type === 'step' ? fitSetsToTimes(x as Step, r.times) : x)) });
+
+/** D-184 · L’étape telle qu’elle se fait à la série k (0 = la première), avec ses répétitions et sa charge propres. */
+export function stepForSet(s: Step, k: number): Step {
+  if (!s.perSet) return s;
+  const { perSet, ...base } = s;
+  const p = perSet[Math.min(Math.max(0, k), perSet.length - 1)];
+  if (!p) return base as Step;
+  return {
+    ...base,
+    measure: base.measure.kind === 'reps' && p.reps ? { kind: 'reps', reps: p.reps } : base.measure,
+    intensity: base.intensity.kind === 'load' && p.kg ? { kind: 'load', min: p.kg, max: null } : base.intensity,
+  } as Step;
+}
+
 /** Répétition : 2 à 50 fois ; une répétition peut en contenir une autre (séries), pas davantage. */
 const repeatInner = z
   .object({ type: z.literal('repeat'), times: int(2, 50), steps: z.array(stepSchema).min(1).max(20) })
-  .strict();
+  .strict()
+  .transform(fitRepeat);
 const repeatOuter = z
   .object({ type: z.literal('repeat'), times: int(2, 50), steps: z.array(z.union([stepSchema, repeatInner])).min(1).max(20) })
-  .strict();
+  .strict()
+  .transform(fitRepeat);
 
 export const structureSchema = z
   .array(z.union([stepSchema, repeatOuter]))
@@ -307,7 +349,11 @@ export function structureTotals(blocks: Block[], opts: { sport?: Sport; refs?: R
   let estMeters = 0;
   const add = (b: Block, factor: number) => {
     if (b.type === 'repeat') {
-      for (const s of b.steps) add(s, factor * b.times);
+      for (const s of b.steps) {
+        // D-184 : des séries différentes se comptent une à une.
+        if (s.type === 'step' && s.perSet) for (let k = 0; k < b.times; k++) add(stepForSet(s, k), factor);
+        else add(s, factor * b.times);
+      }
       return;
     }
     const v = speedOf(b, opts.sport, opts.refs);
@@ -448,10 +494,23 @@ export function describeStep(s: Step, sessionSport?: Sport): string {
   return `${sport}${head} · ${parts.join(' · ')}${s.note ? ` (${s.note})` : ''}`;
 }
 
+/** D-184 · Séries différentes, lisibles d’un coup d’œil : « 12 × 10 kg, 10 × 12 kg, 8 × 14 kg » ; « 12, 10, 8 répétitions ». */
+export function describeSets(s: Step): string | null {
+  if (!s.perSet?.length) return null;
+  const sets = s.perSet.map((_, k) => stepForSet(s, k));
+  const reps = (x: Step) => (x.measure.kind === 'reps' ? x.measure.reps : 0);
+  const load = (x: Step) => (x.intensity.kind === 'load' ? kg(x.intensity.min) : '');
+  if (s.intensity.kind === 'load') {
+    return s.measure.kind === 'reps' ? sets.map((x) => `${reps(x)} × ${load(x)} kg`).join(', ') : `${describeMeasure(s.measure)} · ${sets.map(load).join(', ')} kg`;
+  }
+  return s.measure.kind === 'reps' ? `${sets.map(reps).join(', ')} répétitions` : null;
+}
+
 /** Une ligne par bloc, lisible par l’athlète : « 5 × (400 m · Z5 / 200 m · Z1) ». */
 export function describeBlock(b: Block, sessionSport?: Sport): string {
   if (b.type === 'step') return describeStep(b, sessionSport);
-  const inner = b.steps.map((s) => (s.type === 'step' && s.cardio ? describeStep(s, sessionSport) : s.type === 'step' ? `${s.exercise ? `${s.exercise.name} · ` : s.phase === 'rest' ? 'repos ' : s.phase === 'recovery' && sessionSport === 'strength' ? 'récup ' : ''}${describeMeasure(s.measure)}${describeIntensity(s.intensity) ? ` · ${describeIntensity(s.intensity)}` : ''}` : describeBlock(s, sessionSport)));
+  const varied = (s: Step, text: string) => `${s.exercise ? `${s.exercise.name} · ` : ''}${text}${s.intensity.kind !== 'load' && describeIntensity(s.intensity) ? ` · ${describeIntensity(s.intensity)}` : ''}`;
+  const inner = b.steps.map((s) => (s.type === 'step' && describeSets(s) ? varied(s, describeSets(s)!) : s.type === 'step' && s.cardio ? describeStep(s, sessionSport) : s.type === 'step' ? `${s.exercise ? `${s.exercise.name} · ` : s.phase === 'rest' ? 'repos ' : s.phase === 'recovery' && sessionSport === 'strength' ? 'récup ' : ''}${describeMeasure(s.measure)}${describeIntensity(s.intensity) ? ` · ${describeIntensity(s.intensity)}` : ''}` : describeBlock(s, sessionSport)));
   return `${b.times} × (${inner.join(' / ')})`;
 }
 

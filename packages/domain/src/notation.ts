@@ -115,7 +115,7 @@ function findMeasure(t: string): { prefix: string; measure: Measure; rest: strin
 const EASY_WORDS = /\b(?:footing|endurance|sortie longue|sl)\b/i;
 const FILLER = /(?<!allure\s)\b(?:de\s+|d')?(?:course|run|footing|endurance|sortie longue|ok)\b|^\s*(?:de|d'|du|à|en|:)\s+/gi;
 
-type ParsedStep = Step & { implicit: boolean; walk?: boolean; recup?: boolean };
+type ParsedStep = Step & { implicit: boolean; walk?: boolean; recup?: boolean; lists?: { reps: number[] | null; kg: number[] | null } };
 /** Lecture tolérante : texte sans durée ni distance (« lignes droites », « renfo »), rattaché à l’étape voisine. */
 type LooseText = { type: 'text'; text: string };
 
@@ -148,6 +148,17 @@ function parseStep(raw: string, errors: NotationError[], lenient = false, inRepe
   for (const [re, p] of PHASE_WORDS) { const m = t.match(re); if (m) { phase = p; t = t.slice(m[0].length).replace(/^\s*:?\s*/, ''); break; } }
   if (!phase && /^r\s*(?=\d)/i.test(t)) { phase = 'recovery'; t = t.replace(/^r\s*/i, ''); }
   if (lenient && !phase && /^r\b\s*/i.test(t)) { phase = 'recovery'; t = t.replace(/^r\b\s*/i, ''); }
+  // D-184 : séries différentes, « 12/10/8 Tirage 10/12/14kg » : la première se lit comme d’habitude, la liste suit la carte.
+  let lists: { reps: number[] | null; kg: number[] | null } | null = null;
+  if (strength) {
+    const rl = t.match(/^(\d{1,3}(?:\s*\/\s*\d{1,3})+)(?=\s)/);
+    const reps = rl ? rl[1]!.split('/').map((x) => Number(x.trim())) : null;
+    if (rl && reps) t = `${reps[0]}${t.slice(rl[0].length)}`;
+    const kl = t.match(/(\d{1,3}(?:[.,]\d)?(?:\s*\/\s*\d{1,3}(?:[.,]\d)?)+)\s*kg\b/i);
+    const kg = kl ? kl[1]!.split('/').map((x) => Math.round(Number(x.trim().replace(',', '.')) * 2) / 2) : null;
+    if (kl && kg) t = t.replace(kl[0], `${kg[0]}kg`);
+    if (reps || kg) lists = { reps, kg };
+  }
   let found = lenient ? findMeasure(t) : (() => { const r = parseMeasure(t); return r ? { prefix: '', ...r } : null; })();
   if (!found && strength) { const r = parseReps(t); if (r) found = { prefix: '', measure: r.measure, rest: r.rest }; }
   if (!found) {
@@ -188,7 +199,7 @@ function parseStep(raw: string, errors: NotationError[], lenient = false, inRepe
   if (left) errors.push({ item: raw, message: `« ${left} » non compris dans « ${raw} » (une note s’écrit entre « »)` });
   if (meas.measure.kind === 'time' && (meas.measure.seconds < 1 || meas.measure.seconds > 86400)) errors.push({ item: raw, message: `« ${raw} » : durée hors limites` });
   if (meas.measure.kind === 'distance' && (meas.measure.meters < 1 || meas.measure.meters > 1_000_000)) errors.push({ item: raw, message: `« ${raw} » : distance hors limites` });
-  return { type: 'step', phase: phase ?? 'work', implicit: phase === null, ...(walk ? { walk } : {}), ...(recup ? { recup } : {}), sport, measure: meas.measure, intensity, cadence: null, ...(exercise ? { exercise } : {}), note };
+  return { type: 'step', phase: phase ?? 'work', implicit: phase === null, ...(walk ? { walk } : {}), ...(recup ? { recup } : {}), ...(lists ? { lists } : {}), sport, measure: meas.measure, intensity, cadence: null, ...(exercise ? { exercise } : {}), note };
 }
 
 type Parsed = ParsedStep | { type: 'repeat'; times: number; steps: Parsed[] };
@@ -225,7 +236,17 @@ function parseSeq(text: string, depth: number, errors: NotationError[], lenient 
         if (rec) inner = `${rec[1]} + ${rec[2]}`;
       }
       const steps = parseSeq(inner, depth + 1, errors, lenient, strength);
-      if (steps.length) out.push({ type: 'repeat', times: Math.max(2, Math.min(50, times)), steps });
+      const n = Math.max(2, Math.min(50, times));
+      // D-184 : une liste par série (« 12/10/8 », « 10/12/14kg ») devient le réglage de chaque série de la carte.
+      for (const s of steps) {
+        if (s.type !== 'step' || !s.lists) continue;
+        const { reps, kg } = s.lists;
+        s.perSet = Array.from({ length: n }, (_, k) => ({
+          reps: s.measure.kind === 'reps' ? (reps?.[k] ?? reps?.[reps.length - 1] ?? s.measure.reps) : null,
+          kg: s.intensity.kind === 'load' ? (kg?.[k] ?? kg?.[kg.length - 1] ?? s.intensity.min) : null,
+        }));
+      }
+      if (steps.length) out.push({ type: 'repeat', times: n, steps });
       continue;
     }
     if (part.startsWith('(') && part.endsWith(')')) { out.push(...parseSeq(part.slice(1, -1), depth, errors, lenient, strength)); continue; }
@@ -252,7 +273,7 @@ const levelOf = (b: Parsed, sport: Sport): number =>
 function settle(items: Parsed[], sport: Sport, inRepeat: boolean): Block[] {
   return items.map((b, i) => {
     if (b.type === 'repeat') return { type: 'repeat', times: b.times, steps: settle(b.steps, sport, true) };
-    const { implicit, walk, recup, ...step } = b;
+    const { implicit, walk, recup, lists, ...step } = b;
     if (implicit && recup && inRepeat) return { ...step, phase: 'recovery' };
     // Lecture tolérante : la marche est un échauffement en tête, un retour au calme en fin, sinon une récupération.
     if (implicit && walk && (inRepeat || items.length > 1)) return { ...step, phase: inRepeat ? 'recovery' : i === 0 ? 'warmup' : i === items.length - 1 ? 'cooldown' : 'recovery' };
@@ -406,8 +427,12 @@ function fmtStep(s: Step, sport: Sport, inRepeat: boolean, explicit: boolean): s
   const intensity = fmtIntensity(s.intensity);
   // D-096 : « 10 Squat 40kg », « 30" Planche ».
   // D-164 : un cardio en paliers s’écrit par sa durée et son nom ; ses paliers ne passent pas par la notation rapide.
-  const measure = s.cardio ? `${fmtMeasure(s.measure)} ${cardioName(s)}` : s.exercise ? (s.measure.kind === 'reps' ? `${s.measure.reps} ${s.exercise.name}` : `${fmtMeasure(s.measure)} ${s.exercise.name}`) : fmtMeasure(s.measure);
-  return `${sp}${ph}${measure}${intensity ? ` ${intensity}` : ''}${s.note ? ` « ${s.note} »` : ''}`;
+  // D-184 : séries différentes, « 12/10/8 Tirage 10/12/14kg ».
+  const each = inRepeat && s.perSet ? s.perSet : null;
+  const reps = s.measure.kind === 'reps' ? (each ? each.map((p) => p.reps ?? (s.measure as { reps: number }).reps).join('/') : String(s.measure.reps)) : null;
+  const load = each && s.intensity.kind === 'load' ? `${each.map((p) => String(p.kg ?? (s.intensity as { min: number }).min).replace('.', ',')).join('/')}kg` : intensity;
+  const measure = s.cardio ? `${fmtMeasure(s.measure)} ${cardioName(s)}` : s.exercise ? (reps !== null ? `${reps} ${s.exercise.name}` : `${fmtMeasure(s.measure)} ${s.exercise.name}`) : fmtMeasure(s.measure);
+  return `${sp}${ph}${measure}${load ? ` ${load}` : ''}${s.note ? ` « ${s.note} »` : ''}`;
 }
 
 function fmtSeq(blocks: Block[], sport: Sport, inRepeat: boolean, explicit: Set<string>, path: string): string {

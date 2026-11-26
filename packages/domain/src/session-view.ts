@@ -1,7 +1,7 @@
 import type { Sport } from './sports';
 import { sessionProfile } from './session-profile';
 import {
-  cardioName, describeBlock, describeIntensity, describeMeasure, describeStage, describeStageSettings, formatClock, formatKm, PHASE_LABELS,
+  cardioName, describeBlock, describeIntensity, describeMeasure, describeSets, describeStage, describeStageSettings, formatClock, formatKm, PHASE_LABELS,
   personalTarget, roundEstimate, stageProfile, structureTotals, type Block, type References, type Step,
 } from './structure';
 
@@ -93,7 +93,8 @@ function strengthRow(b: Extract<Block, { type: 'repeat' }>): SessionRow {
   const work = steps.filter((x) => x.exercise || x.cardio);
   const rest = steps.find((x) => !x.exercise && !x.cardio && x.phase === 'rest');
   const names = [...new Set(work.map((x) => cardioName(x) || x.exercise!.name))];
-  const what = work.map((x) => (x.cardio ? describeStep1(x) : [describeMeasure(x.measure), x.intensity.kind === 'load' ? describeIntensity(x.intensity) : null].filter(Boolean).join(' · ')));
+  // D-184 : séries différentes, « 12 × 10 kg, 10 × 12 kg, 8 × 14 kg ».
+  const what = work.map((x) => (x.cardio ? describeStep1(x) : describeSets(x) ?? [describeMeasure(x.measure), x.intensity.kind === 'load' ? describeIntensity(x.intensity) : null].filter(Boolean).join(' · ')));
   return {
     zone: 0,
     title: names.join(' + '),
