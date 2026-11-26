@@ -32,6 +32,7 @@ import { setVideoStore } from './storage/video-store';
 import { setWorkspaceAi } from './ai/settings';
 import { dictateWorkout } from './commands/ai-dictation';
 import { proposeMethod } from './commands/ai-method';
+import { proposeProgramDraft, saveAiProgram } from './commands/ai-program';
 import { applyWeekProposal, weekProposals } from './commands/week-proposals';
 
 // Test de contrat : chaque réponse réelle des commandes est validée contre contracts/openapi.json
@@ -232,6 +233,11 @@ describe('réponses conformes au contrat OpenAPI', () => {
     check('/workspaces/{wid}/ai-dictation', 'post', dict.status, dict.body);
     const prop = await proposeMethod(m(), {});
     check('/workspaces/{wid}/method/proposal', 'post', prop.status, prop.body);
+    const aiProg = await proposeProgramDraft(m(), { text: 'Force, 2 séances par semaine', weeks: 1, startMonday: '2026-11-30', target: { kind: 'athlete', id: ATHLETES.noah } });
+    check('/workspaces/{wid}/ai-program', 'post', aiProg.status, aiProg.body);
+    const pb = aiProg.body as { suggestionId: string; program: { weeks: { sessions: { date: string; sport: string; title: string; notation: string }[] }[] } };
+    const progSaved = await saveAiProgram(m(), { suggestionId: pb.suggestionId, sessions: pb.program.weeks[0]!.sessions.map((x) => ({ date: x.date, sport: x.sport, title: x.title, notation: x.notation })) });
+    check('/workspaces/{wid}/ai-program/save', 'post', progSaved.status, progSaved.body);
     const appt = await createAppointment(m(), { athleteId: ATHLETES.noah, title: 'Appel', kind: 'call', startsLocal: '2026-12-02T12:00', timeZone: TIME_ZONE, durationMin: 20 });
     check('/workspaces/{wid}/appointments', 'post', appt.status, appt.body);
     const apptUp = await updateAppointment({ ...m(), appointmentId: id(appt) }, { expectedRevision: 1, status: 'canceled' });

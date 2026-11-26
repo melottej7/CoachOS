@@ -4,7 +4,7 @@ import { betaZodTool } from '@anthropic-ai/sdk/helpers/beta/zod';
 import { aiCostMicros, aiReserveMicros, aiToolsReserveMicros, methodPromptText, type AiEffort, type CoachMethod } from '@coachos/domain';
 import type { z } from 'zod';
 import { commandAs, type Tx } from '../db/client';
-import { aiModel, aiSource, anthropic, apiFailure, fallbackParams, unavailable, type AiSource } from './client';
+import { aiModel, aiSource, anthropic, anthropicLong, apiFailure, fallbackParams, unavailable, type AiSource } from './client';
 import { withBudget } from './budget';
 import { aiOff, aiOnIn } from './settings';
 import { invokeTool, openScope, READ_TOOLS, type AiReadTool, type AiScope, type ToolCallTrace } from './tools';
@@ -132,6 +132,8 @@ const TOOL_RESULT_CHARS = 12_000;
 export async function runWithTools<T>(o: CommonOptions<T> & {
   scope?: AiScope;
   maxIterations: number;
+  /** IA-3 : travail long (programme) : réponses en flux, délai de 2 minutes par tour. */
+  long?: boolean;
   simulate: (call: (name: string, input: unknown) => Promise<unknown>) => Promise<T>;
 }): Promise<AiResult<T>> {
   await checkSwitch(o.actorId, o.workspaceId, o.manual);
@@ -159,14 +161,20 @@ export async function runWithTools<T>(o: CommonOptions<T> & {
     let usage = NO_USAGE;
     let last: Anthropic.Beta.BetaMessage | null = null;
     try {
-      const runner = anthropic().beta.messages.toolRunner({
+      const params = {
         model, max_tokens: o.maxTokens, ...fallbackParams(model),
-        thread: false, max_iterations: o.maxIterations,
+        thread: false as const, max_iterations: o.maxIterations,
         system: prefix.system, tools,
-        messages: [{ role: 'user', content: o.user }],
-        output_config: { effort: o.effort, format: { type: 'json_schema', schema: o.jsonSchema } },
-      });
-      for await (const message of runner) { usage = addUsage(usage, message.model, message.usage); last = message; }
+        messages: [{ role: 'user' as const, content: o.user }],
+        output_config: { effort: o.effort, format: { type: 'json_schema' as const, schema: o.jsonSchema } },
+      };
+      // En flux pour les travaux longs : chaque tour est une réponse en flux dont on lit le message final.
+      const runner = o.long ? anthropicLong().beta.messages.toolRunner({ ...params, stream: true }) : anthropic().beta.messages.toolRunner(params);
+      for await (const turn of runner as AsyncIterable<Anthropic.Beta.BetaMessage | { finalMessage(): Promise<Anthropic.Beta.BetaMessage> }>) {
+        const message = 'finalMessage' in turn ? await turn.finalMessage() : turn;
+        usage = addUsage(usage, message.model, message.usage);
+        last = message;
+      }
     } catch (e) {
       const err = apiFailure(e, o.manual);
       throw err instanceof Error ? Object.assign(err, { usage }) : err;
@@ -177,7 +185,7 @@ export async function runWithTools<T>(o: CommonOptions<T> & {
 }
 
 /** Modules du journal ai_suggestions (contrainte de la table). */
-export type AiModule = 'summary' | 'fatigue' | 'anomaly' | 'adaptation' | 'feedback' | 'alert' | 'dictation' | 'method';
+export type AiModule = 'summary' | 'fatigue' | 'anomaly' | 'adaptation' | 'feedback' | 'alert' | 'dictation' | 'method' | 'program';
 
 /** Journal ai_suggestions : module, version de consigne, empreinte, sortie et usage. Renvoie l’identifiant. */
 export async function recordSuggestion(tx: Tx, s: {

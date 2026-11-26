@@ -4,6 +4,7 @@ import { addDays, formatShortDate, formatWeekday, isLocalDate, RESULT_STATE_LABE
 import { requireActor } from '@/server/auth/session';
 import { coachContext, isUuid } from '@/server/repo/context';
 import { teamWeek, type TeamWeekItem } from '@/server/repo/group-sessions';
+import { aiEnabled } from '@/server/ai/settings';
 import { Cluster, EmptyState, Eyebrow, Heading, Icon, IconLinkButton, LinkButton, Stack, Text } from '@/design';
 import { cx } from '@/design/cx';
 import s from '@/views/coach/calendar/calendar.module.css';
@@ -38,6 +39,7 @@ export default async function TeamWeek({ params, searchParams }: { params: Promi
   const w = await teamWeek(actor.userId, wid, tid, monday, days[6]!);
   if (!w) notFound();
   const base = `/coach/${wid}`;
+  const aiOn = await aiEnabled(actor.userId, wid);
   const here = `${base}/groups/${tid}/week`;
   const published = w.items.filter((i) => i.status === 'published' && !i.canceled).length;
   const drafts = w.items.filter((i) => i.status !== 'published').length;
@@ -51,7 +53,10 @@ export default async function TeamWeek({ params, searchParams }: { params: Promi
           <Heading level={1} size={1}>Semaine du {day(monday)}</Heading>
           <Text muted>{published} séance{published > 1 ? 's' : ''} publiée{published > 1 ? 's' : ''} · {drafts} brouillon{drafts > 1 ? 's' : ''} ou modification{drafts > 1 ? 's' : ''} à publier{without.length ? ` · sans séance : ${without.map((m) => m.name.split(' ')[0]).join(', ')}` : ''}</Text>
         </Stack>
-        <LinkButton href={`${base}/groups/${tid}/sessions/new?date=${days.find((d) => d >= today) ?? monday}`} variant="primary" icon="plus">Séance pour le groupe</LinkButton>
+        <Cluster gap={2}>
+          <LinkButton href={`${base}/groups/${tid}/sessions/new?date=${days.find((d) => d >= today) ?? monday}`} variant="primary" icon="plus">Séance pour le groupe</LinkButton>
+          {aiOn ? <LinkButton href={`${base}/groups/${tid}/programme-ia`} icon="bolt">Programme avec l’IA</LinkButton> : null}
+        </Cluster>
       </Cluster>
       <Cluster gap={2}>
         <IconLinkButton href={`${here}?semaine=${addDays(monday, -7)}`} icon="chevronLeft" label="Semaine précédente" />

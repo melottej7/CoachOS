@@ -23,10 +23,14 @@ export const fallbackParams = (model: string): { betas?: string[]; fallbacks?: '
   (AI_FALLBACK_MODELS as readonly string[]).includes(model) ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' } : {};
 
 let client: Anthropic | null = null;
+let longClient: Anthropic | null = null;
+let injected = false;
 /** Tests : remplacer le client (aucun appel réel, aucun coût). */
-export function setAnthropicClient(c: Anthropic | null): void { client = c; }
+export function setAnthropicClient(c: Anthropic | null): void { client = c; longClient = c; injected = Boolean(c); }
 /** Délai court (docs/08 : 20 s) et une seule nouvelle tentative : le coach attend devant l’écran. */
 export const anthropic = (): Anthropic => (client ??= new Anthropic({ timeout: 20_000, maxRetries: 1 }));
+/** IA-3 : travaux longs (programme de plusieurs semaines), en flux, 2 minutes au plus par tour. */
+export const anthropicLong = (): Anthropic => (injected ? client! : (longClient ??= new Anthropic({ timeout: 120_000, maxRetries: 1 })));
 
 /** « L’IA n’est pas disponible », avec la voie manuelle propre à l’usage (`manual`, sans point final). */
 export const unavailable = (why: string, manual: string) => new AppError('TEMPORARILY_UNAVAILABLE', `${why} ${manual} ou réessayer.`);

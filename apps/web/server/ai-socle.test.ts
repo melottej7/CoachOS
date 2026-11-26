@@ -115,8 +115,8 @@ describe('socle IA (IA-0)', () => {
     expect(a.system).toHaveLength(2);
     expect(a.system.every((x) => x.cache_control)).toBe(true);
     expect(a.system[1]!.text).toMatch(/^<methode_du_coach>/);
-    expect(a.toolDefs.map((t) => t.name)).toEqual(['listerExercices', 'lireGroupe', 'lireEleve', 'lireChargesRecentes', 'lireSeancesBibliotheque']);
-    expect(a.toolDefs.map((t) => t.cache)).toEqual([false, false, false, false, true]);
+    expect(a.toolDefs.map((t) => t.name)).toEqual(['listerExercices', 'lireGroupe', 'lireEleve', 'lireChargesRecentes', 'lireSeancesBibliotheque', 'lireSeancesPrevues']);
+    expect(a.toolDefs.map((t) => t.cache)).toEqual([false, false, false, false, false, true]);
     expect(JSON.stringify(a)).not.toMatch(new RegExp(today));
 
     claudeOn();

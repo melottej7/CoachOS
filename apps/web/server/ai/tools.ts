@@ -189,13 +189,36 @@ const lireSeancesBibliotheque: AiReadTool<{ limite: number }> = {
   }),
 };
 
+const lireSeancesPrevues: AiReadTool<{ eleve: string }> = {
+  name: 'lireSeancesPrevues',
+  description: 'Séances d’un élève (par sa référence courte) au calendrier, des 14 derniers jours aux 12 prochaines semaines : date, sport, titre, publiée ou brouillon, annulée. Pour ne pas doubler ce qui est déjà prévu.',
+  input: z.object({ eleve: refSchema }).strict(),
+  wire: z.object({ eleve: refWire }).strict(),
+  run: async (scope, { eleve }) => {
+    const aid = scope.refs.id(eleve);
+    if (!aid) return notFound;
+    return readAs(scope.actorId, async (tx) => {
+      const a = await tx.query('select 1 from public.athletes where workspace_id = $1 and id = $2 and state <> \'archived\'', [scope.workspaceId, aid]);
+      if (!a.rows.length) return notFound;
+      const r = await tx.query<{ local_date: string; sport_code: string; title: string; published: boolean; canceled: boolean }>(
+        `select to_char(r.local_date, 'YYYY-MM-DD') as local_date, r.sport_code, r.title, w.published_revision is not null as published, r.canceled
+           from public.workouts w
+           join public.workout_revisions r on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id and r.number = w.working_revision
+          where w.workspace_id = $1 and w.athlete_id = $2 and r.local_date between (current_date - 14) and (current_date + 84)
+          order by r.local_date, r.sort_order, w.id limit 80`, [scope.workspaceId, aid],
+      );
+      return { eleve: scope.refs.ref(aid), seances: r.rows.map((x) => ({ date: x.local_date, sport: x.sport_code, titre: x.title, publiee: x.published, annulee: x.canceled })) };
+    });
+  },
+};
+
 const isoDate = (d: string | Date) => (d instanceof Date ? d.toISOString() : new Date(d).toISOString()).slice(0, 10);
 
 /** Les outils en lecture, dans un ordre fixe (le préfixe mis en cache n’en dépend pas d’un appel à l’autre). */
-export const READ_TOOLS: readonly AiReadTool<never>[] = [listerExercices, lireGroupe, lireEleve, lireChargesRecentes, lireSeancesBibliotheque] as unknown as AiReadTool<never>[];
+export const READ_TOOLS: readonly AiReadTool<never>[] = [listerExercices, lireGroupe, lireEleve, lireChargesRecentes, lireSeancesBibliotheque, lireSeancesPrevues] as unknown as AiReadTool<never>[];
 
-export type ReadToolName = 'listerExercices' | 'lireGroupe' | 'lireEleve' | 'lireChargesRecentes' | 'lireSeancesBibliotheque';
-export const READ_TOOL_NAMES: readonly ReadToolName[] = ['listerExercices', 'lireGroupe', 'lireEleve', 'lireChargesRecentes', 'lireSeancesBibliotheque'];
+export type ReadToolName = 'listerExercices' | 'lireGroupe' | 'lireEleve' | 'lireChargesRecentes' | 'lireSeancesBibliotheque' | 'lireSeancesPrevues';
+export const READ_TOOL_NAMES: readonly ReadToolName[] = ['listerExercices', 'lireGroupe', 'lireEleve', 'lireChargesRecentes', 'lireSeancesBibliotheque', 'lireSeancesPrevues'];
 
 /** Trace de ce que l’IA a lu (affichée avec le brouillon, gardée dans ai_suggestions). */
 export interface ToolCallTrace { name: string; input: unknown; ok: boolean }
