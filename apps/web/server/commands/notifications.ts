@@ -1,4 +1,5 @@
 import {
+  athleteFileHref,
   EMAIL_KINDS, EMAIL_WINDOW_HOURS, notificationEmail, notificationSettingsSchema, notificationText, parseWith, PUSH_KINDS,
   type EmailPreference, type NotificationKind, type NotificationRole,
 } from '@coachos/domain';
@@ -196,7 +197,7 @@ export async function resolveNotification(userId: string, wid: string, nid: stri
         );
         return r.rows[0] ? `/coach/${wid}/review/${r.rows[0].id}` : `/coach/${wid}/athletes/${aid}`;
       }
-      case 'bilan_submitted': return assigned ? `/coach/${wid}/athletes/${aid}#bilan` : null;
+      case 'bilan_submitted': return assigned ? athleteFileHref(wid, aid, 'bilan') : null; // D-183 : l’onglet Bilan
     }
   });
   return { href };

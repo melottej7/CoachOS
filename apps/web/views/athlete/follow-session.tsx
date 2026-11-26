@@ -4,13 +4,16 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, typ
 import {
   announce, announceExercise, describeIntensity, describeMeasure, exerciseKey, followExercises, followGate, followSequence, followStart, formatElapsed,
   lastSetLabel, PHASE_LABELS, reminderAt, setLabel,
-  type Block, type Exercise, type FollowExercise, type FollowStep, type LastDone, type Sport,
+  machineExercise, machineInstructions, nextOpenPart, swapKey, swappableNames, withSwaps,
+  type Block, type Exercise, type FollowExercise, type FollowExtra, type FollowStep, type FollowSwap, type FollowSwaps, type LastDone, type Sport,
 } from '@coachos/domain';
 import { Button, Cluster, Disclosure, Eyebrow, Heading, Icon, IconButton, LinkButton, Stack, Text, ZoneChip, type ZoneLevel } from '@/design';
 import { cx } from '@/design/cx';
-import { ExerciseMedia } from './exercise-howto';
+import { ExerciseMedia, MachineSteps } from './exercise-howto';
+import { ChangeSheet } from './follow-change';
 import {
-  elapsedOf, followClockKey, followGateKey, followLogKey, followPosKey, followSkipKey, keep, NO_CLOCK, readClock, readFollowLog, readGate, readPos, readRun, readSkipped, writeRun,
+  elapsedOf, followClockKey, followDoneKey, followExtraKey, followGateKey, followLogKey, followPosKey, followSkipKey, followSwapKey, keep, NO_CLOCK, readClock, readDoneParts, readExtras,
+  readFollowLog, readGate, readPos, readRun, readSkipped, readSwaps, writeRun,
   type ClockState, type FollowLog, type Gate, type Run,
 } from './follow-store';
 import s from './follow-session.module.css';
@@ -175,8 +178,27 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
   /** D-112 : ce que l’élève a fait la dernière fois, par exercice. */
   lastDone?: Record<string, LastDone>;
 }) {
-  const seq = useMemo(() => followSequence(blocks), [blocks]);
+  const base = useMemo(() => followSequence(blocks), [blocks]);
+  const baseParts = useMemo(() => followExercises(base), [base]);
+  // D-182 : exercices remplacés à la salle (machine prise), affichés à la place de ceux du programme.
+  const [swaps, setSwaps] = useState<FollowSwaps>({});
+  const [extras, setExtras] = useState<FollowExtra[]>([]);
+  const [doneParts, setDoneParts] = useState<number[]>([]);
+  useEffect(() => { setSwaps(readSwaps(sid)); setExtras(readExtras(sid)); setDoneParts(readDoneParts(sid)); }, [sid]);
+  const seq = useMemo(() => withSwaps(base, baseParts, swaps).map((f) => {
+    // Un exercice de machine hors de la bibliothèque du coach garde sa fiche (réglages, animation) par sa clé.
+    const sw = f.step.exercise && !f.step.exercise.id ? Object.values(swaps).find((x) => x.name === f.step.exercise!.name && x.starterKey) : undefined;
+    return sw ? { ...f, step: { ...f.step, exercise: { id: `machine:${sw.starterKey}`, name: sw.name } } } : f;
+  }), [base, baseParts, swaps]);
   const parts = useMemo(() => followExercises(seq), [seq]);
+  const shownExercises = useMemo(() => {
+    const out: Record<string, Exercise> = { ...exercises };
+    for (const sw of Object.values(swaps)) {
+      const m = sw.starterKey && !sw.exerciseId ? machineExercise(sw.starterKey) : null;
+      if (m) out[`machine:${m.key}`] = { id: `machine:${m.key}`, name: m.name, revision: 0, clipId: null, starter: false, archived: false, starterKey: m.key, useBaseVideo: true, instructions: machineInstructions(m), muscle: m.muscle, equipment: ['machine'], videoUrl: null };
+    }
+    return out;
+  }, [exercises, swaps]);
   const partOf = (n: number) => parts.findIndex((p) => n >= p.first && n <= p.last);
   const [i, setI] = useState(0);
   // D-172 : l’écran entre deux exercices, gardé pour être retrouvé après un rechargement ; au tout début, la séance s’y ouvre.
@@ -184,13 +206,13 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
   const [restored, setRestored] = useState(false);
   useEffect(() => {
     const v = readPos(sid);
-    const at = v <= seq.length ? v : 0;
+    const at = v <= base.length ? v : 0;
     setI(at);
     const g = readGate(sid);
     const fresh = at === 0 && readClock(sid).startedAt === null;
-    setGate(g && g.at === at ? g : fresh && seq[0] && followGate(null, seq[0]) ? { at: 0, after: null } : null);
+    setGate(g && g.at === at ? g : fresh && base[0] && followGate(null, base[0]) ? { at: 0, after: null } : null);
     setRestored(true);
-  }, [sid, seq]);
+  }, [sid, base]);
   useEffect(() => { if (restored) keep(followPosKey(sid), String(i)); }, [i, restored, sid]);
   useEffect(() => { if (restored) keep(followGateKey(sid), gate); }, [gate, restored, sid]);
   const [skipped, setSkipped] = useState<number[]>([]);
@@ -247,18 +269,36 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
     setEntry(o.flow ? 'flow' : 'manual');
     setI(to);
   };
+  // D-182 : la partie suivante est la prochaine non faite ; après un exercice pris en avance, on revient à celle laissée.
+  const closedWith = (extra: number[]) => new Set([...doneParts, ...skipped, ...extra]);
+  const goToPart = (from: number, closed: Set<number>, after: string | null) => {
+    const nk = nextOpenPart(parts.length, closed, from);
+    if (nk === null) go(seq.length, { flow: true, after });
+    else if (nk === from + 1) go(parts[from]!.last + 1, { flow: true, after });
+    else go(parts[nk]!.first, { flow: true, gate: true, after });
+  };
   const advance = () => {
     clock.start();
     const k = partOf(i);
     const p = parts[k];
-    if (p && p.last === i) markSkipped(k, false);
-    go(i + 1, { flow: true, after: p && p.last === i ? p.name : null });
+    if (!p || p.last !== i) { go(i + 1, { flow: true, after: null }); return; }
+    markSkipped(k, false);
+    const next = [...new Set([...doneParts, k])];
+    setDoneParts(next);
+    keep(followDoneKey(sid), next);
+    goToPart(k, closedWith([k]), p.name);
   };
+  const startPart = (k: number) => { const p = parts[k]; if (p) go(p.first, { gate: true }); };
+  const swap = (k: number, from: string, to: FollowSwap) => setSwaps((m) => { const next = { ...m, [swapKey(k, from)]: to }; keep(followSwapKey(sid), next); return next; });
+  const unswap = (k: number, from: string) => setSwaps((m) => { const next = { ...m }; delete next[swapKey(k, from)]; keep(followSwapKey(sid), Object.keys(next).length ? next : null); return next; });
+  const addExtra = (x: FollowExtra) => setExtras((list) => { const next = [...list, x].slice(0, 20); keep(followExtraKey(sid), next); return next; });
+  const [sheet, setSheet] = useState<null | 'change' | 'extra'>(null);
   const ready = () => { clock.start(); clock.resume(); setGate(null); setEntry('ready'); };
   const skipPart = () => {
-    markSkipped(partOf(i), true);
-    const nextPart = parts[partOf(i) + 1];
-    go(nextPart ? nextPart.first : seq.length, { flow: true, gate: Boolean(nextPart) });
+    const k = partOf(i);
+    markSkipped(k, true);
+    const nk = nextOpenPart(parts.length, closedWith([k]), k);
+    go(nk === null ? seq.length : parts[nk]!.first, { flow: true, gate: nk !== null });
   };
   const { end: endClock, started } = clock;
   useEffect(() => {
@@ -274,6 +314,13 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
     keepAwake();
   };
   const outline = useRef<HTMLDialogElement>(null);
+  // D-182 : l’avancement compte les exercices faits, dans n’importe quel ordre, plus l’étape en cours.
+  const cur = parts[partOf(i)];
+  const progress = done ? seq.length : Math.min(seq.length,
+    [...new Set([...doneParts, ...skipped])].reduce((n, k) => n + (parts[k] && k !== partOf(i) ? parts[k]!.last - parts[k]!.first + 1 : 0), 0) + (cur ? i - cur.first : i));
+  const curK = partOf(i);
+  const openParts = parts.map((p, k) => ({ k, name: p.name, summary: p.summary })).filter((o) => o.k !== curK && !doneParts.includes(o.k) && !skipped.includes(o.k));
+  const swapList = Object.values(swaps);
   if (!seq.length) return <Text muted>Cette séance n’a pas de déroulé à suivre.</Text>;
 
   return (
@@ -286,8 +333,8 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
           <Icon name={clock.paused && !done ? 'pause' : 'clock'} size={16} />{formatElapsed(clock.elapsed)}
         </span>
       </Cluster>
-      <div className={s.bar} role="progressbar" aria-label="Avancement de la séance" aria-valuemin={0} aria-valuemax={seq.length} aria-valuenow={i}>
-        <span className={s.barFill} style={{ inlineSize: `${(i / seq.length) * 100}%` }} />
+      <div className={s.bar} role="progressbar" aria-label="Avancement de la séance" aria-valuemin={0} aria-valuemax={seq.length} aria-valuenow={progress}>
+        <span className={s.barFill} style={{ inlineSize: `${(progress / seq.length) * 100}%` }} />
       </div>
       <Cluster between align="center" nowrap>
         <Button size="sm" variant="ghost" icon="list" aria-haspopup="dialog" className={s.where}
@@ -302,6 +349,15 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
         </Cluster>
       </Cluster>
       <Outline dialog={outline} seq={seq} current={i} onPick={(n) => go(n)} />
+      {sheet ? (
+        <ChangeSheet extraOnly={sheet === 'extra' || done} current={cur?.name ?? ''} others={openParts} known={Object.values(exercises)}
+          swappable={cur && !done ? swappableNames(base, baseParts[curK]!).map((from) => {
+            const st = base.slice(cur.first, cur.last + 1).find((f) => f.step.exercise?.name === from)?.step.exercise;
+            return { from, starterKey: st?.id ? exercises[st.id]?.starterKey ?? null : null };
+          }) : []}
+          swaps={Object.fromEntries(Object.entries(swaps).filter(([key]) => key.startsWith(`${curK}|`)).map(([key, v]) => [key.slice(key.indexOf('|') + 1), v]))}
+          onOrder={startPart} onSwap={(from, to) => swap(curK, from, to)} onUndoSwap={(from) => unswap(curK, from)} onExtra={addExtra} onClose={() => setSheet(null)} />
+      ) : null}
       {!restored ? null : done ? (
         <section className={cx(s.card, s.end)} aria-live="polite">
           <span className={s.endMark} aria-hidden="true"><Icon name="check" size={40} /></span>
@@ -310,20 +366,24 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
           {clock.started ? <p className={s.total}><span>Durée</span>{formatElapsed(clock.elapsed)}</p> : null}
           {clock.started && clock.pauses >= 1000 ? <Text size="sm" muted>Pauses non comptées : {formatElapsed(clock.pauses)}</Text> : null}
           {skipped.length ? (
-            <Text size="sm">{skipped.length > 1 ? 'Exercices passés' : 'Exercice passé'} : <strong>{skipped.map((k) => parts[k]?.name).filter(Boolean).join(', ')}</strong>. Dis-le à ton coach dans ton retour.</Text>
+            <Text size="sm">{skipped.length > 1 ? 'Exercices passés' : 'Exercice passé'} : <strong>{skipped.map((k) => parts[k]?.name).filter(Boolean).join(', ')}</strong>.</Text>
           ) : null}
+          {swapList.length ? <Text size="sm">Remplacé : <strong>{swapList.map((x) => `${x.from} → ${x.name}`).join(', ')}</strong>.</Text> : null}
+          {extras.length ? <Text size="sm">En plus : <strong>{extras.map((x) => x.name).join(', ')}</strong>.</Text> : null}
+          {skipped.length || swapList.length || extras.length ? <Text size="sm" muted>Ton retour le reprend pour ton coach.</Text> : null}
           <Stack gap={2} className={s.actions}>
             {feedbackHref ? <LinkButton href={feedbackHref} variant="coach" size="lg" block>Donner mon retour</LinkButton> : <Text size="sm" muted>Tu pourras donner ton retour à partir du jour de la séance.</Text>}
             <Button variant="ghost" block icon="chevronLeft" onClick={() => { clock.reopen(); go(seq.length - 1); }}>Revenir à la dernière étape</Button>
-            <Button variant="ghost" block onClick={() => { clock.reset(); setSkipped([]); keep(followSkipKey(sid), null); go(0, { gate: true }); }}>Recommencer</Button>
+            <Button variant="ghost" block icon="plus" onClick={() => setSheet('extra')}>Ajouter un exercice fait en plus</Button>
+            <Button variant="ghost" block onClick={() => { clock.reset(); setSkipped([]); keep(followSkipKey(sid), null); setDoneParts([]); keep(followDoneKey(sid), null); go(0, { gate: true }); }}>Recommencer</Button>
           </Stack>
         </section>
       ) : gate && gate.at === i && parts[partOf(i)] ? (
-        <GateScreen key={`pret-${i}`} wid={wid} f={seq[i]!} part={parts[partOf(i)]!} k={partOf(i) + 1} n={parts.length} seq={seq} after={gate.after}
-          exercises={exercises} lastDone={lastDone} started={clock.started} pausedFor={clock.pausedFor} cues={cues} speak={entry === 'flow'}
-          onGo={ready} onSkip={skipPart} onPrev={i > 0 ? () => go(i - 1) : null} />
+        <GateScreen key={`pret-${i}`} wid={wid} f={seq[i]!} part={parts[partOf(i)]!} k={Math.min(parts.length, new Set([...doneParts, ...skipped].filter((x) => x !== curK)).size + 1)} n={parts.length} seq={seq} after={gate.after}
+          exercises={shownExercises} lastDone={lastDone} started={clock.started} pausedFor={clock.pausedFor} cues={cues} speak={entry === 'flow'}
+          onGo={ready} onSkip={skipPart} onPrev={i > 0 ? () => go(i - 1) : null} onChange={() => setSheet('change')} />
       ) : (
-        <StepScreen key={i} wid={wid} sid={sid} f={seq[i]!} prev={seq[i - 1] ?? null} next={seq[i + 1] ?? null} exercises={exercises} logged={log[i]} lastDone={lastDone}
+        <StepScreen key={i} wid={wid} sid={sid} f={seq[i]!} prev={seq[i - 1] ?? null} next={seq[i + 1] ?? null} exercises={shownExercises} logged={log[i]} lastDone={lastDone}
           paused={clock.paused} pausedAt={clock.pausedAt} pausedFor={clock.pausedFor} started={clock.started} elapsed={clock.elapsed} cues={cues} onBegin={clock.start} entry={entry}
           onPause={clock.pause} onResume={clock.resume} onLog={(v) => note(i, v)} onNext={advance} onPrev={i > 0 ? () => go(i - 1) : null} />
       )}
@@ -434,7 +494,7 @@ function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext,
         <Stack gap={2}>
           {media}
           {ex?.instructions ? (
-            <Disclosure summary="Consignes" open={!media}><Text prose size="sm" muted>{ex.instructions}</Text></Disclosure>
+            <Disclosure summary="Consignes" open={!media}><MachineSteps exercise={ex} /></Disclosure>
           ) : null}
         </Stack>
       ) : null}
@@ -476,10 +536,12 @@ function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext,
  * qui court. L’élève prend son temps (boire, aller aux toilettes, changer de machine) et lance quand il est prêt :
  * 5 s de mise en place, puis le chrono part. Le chronomètre de séance est en pause pendant ce temps.
  */
-function GateScreen({ wid, f, part, k, n, seq, after, exercises, lastDone, started, pausedFor, cues, speak, onGo, onSkip, onPrev }: {
+function GateScreen({ wid, f, part, k, n, seq, after, exercises, lastDone, started, pausedFor, cues, speak, onGo, onSkip, onPrev, onChange }: {
   wid: string; f: FollowStep; part: FollowExercise; k: number; n: number; seq: FollowStep[]; after: string | null;
   exercises: Record<string, Exercise>; lastDone: Record<string, LastDone>; started: boolean; pausedFor: number; cues: Cues;
   speak: boolean; onGo: () => void; onSkip: () => void; onPrev: (() => void) | null;
+  /** D-182 : machine prise : un autre exercice d’abord, un remplacement, un ajout. */
+  onChange: () => void;
 }) {
   const st = f.step;
   const ex = st.exercise?.id ? exercises[st.exercise.id] : undefined;
@@ -519,7 +581,7 @@ function GateScreen({ wid, f, part, k, n, seq, after, exercises, lastDone, start
       {media || ex?.instructions ? (
         <Stack gap={2}>
           {media}
-          {ex?.instructions ? <Disclosure summary="Consignes"><Text prose size="sm" muted>{ex.instructions}</Text></Disclosure> : null}
+          {ex?.instructions ? <Disclosure summary="Consignes"><MachineSteps exercise={ex} /></Disclosure> : null}
         </Stack>
       ) : null}
       <Stack gap={3} className={s.actions}>
@@ -531,7 +593,8 @@ function GateScreen({ wid, f, part, k, n, seq, after, exercises, lastDone, start
         ) : null}
         <Button variant="coach" size="lg" icon="play" block onClick={onGo}>C’est parti</Button>
         <Text size="sm" muted>{st.measure.kind === 'time' ? 'Appuie quand tu es prêt·e : 5 secondes pour te mettre en place, puis le chrono part.' : 'Appuie quand tu es prêt·e, puis avance à ton rythme.'}</Text>
-        {/* Machine prise, douleur, manque de temps : passer l’exercice reste possible (une séance d’un seul exercice, non). */}
+        <Button size="lg" variant="secondary" icon="repeat" block onClick={onChange}>Machine prise ? Changer</Button>
+        {/* Douleur, manque de temps : passer l’exercice reste possible (une séance d’un seul exercice, non). */}
         {onPrev || n > 1 ? (
           <Cluster gap={2} nowrap grow>
             {onPrev ? <Button size="lg" icon="chevronLeft" onClick={onPrev} aria-label="Étape précédente" className={s.square} /> : null}

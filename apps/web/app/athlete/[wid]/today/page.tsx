@@ -1,6 +1,7 @@
 import { InstallGuide } from '@/views/athlete/install-guide';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { KeepOffline } from '@/components/offline';
 import {
   addDays, bilanCompletion, canGiveFeedback, deriveBilan, effortGap, formatLongDate, formatShortDate, RESULT_STATE_LABELS, sessionIntent, sessionView, SPORT_LABELS, todayIn,
   type References,
@@ -59,6 +60,7 @@ export default async function Today({ params, searchParams }: { params: Promise<
 
   return (
     <Stack gap={6}>
+      <KeepOffline urls={[...todays, ...week].filter((w) => !w.canceled).flatMap((w) => [`${base}/workouts/${w.id}`, ...(w.sport === 'strength' ? [`${base}/workouts/${w.id}/suivre`] : [])])} />
       <VisuallyHidden><h1>Aujourd’hui</h1></VisuallyHidden>
       {notice === 'joined' ? <Banner tone="success" title={`Bienvenue dans ${ctx.workspace.name}`}>Tes séances publiées apparaissent ici et dans Programme.</Banner> : null}
       {todays.length ? todays.map((w, k) => {

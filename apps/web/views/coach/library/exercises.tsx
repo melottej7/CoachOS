@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState } from 'react';
 import {
-  BASE_VIDEO_SOURCE_LABELS, BASE_VIDEOS, EXERCISE_CLIP_MAX_BYTES, EXERCISE_CLIP_STORAGE_MAX_BYTES, EXERCISE_CLIP_TYPES, EXERCISE_EQUIPMENT, EXERCISE_EQUIPMENT_LABELS, exerciseHasVideo, MUSCLE_LABELS, MUSCLE_SHORT, MUSCLES,
+  BASE_VIDEO_SOURCE_LABELS, BASE_VIDEOS, MACHINE_MOTIONS, MOTION_STATUS_LABELS, motionStatus, EXERCISE_CLIP_MAX_BYTES, EXERCISE_CLIP_STORAGE_MAX_BYTES, EXERCISE_CLIP_TYPES, EXERCISE_EQUIPMENT, EXERCISE_EQUIPMENT_LABELS, exerciseHasVideo, MUSCLE_LABELS, MUSCLE_SHORT, MUSCLES,
   type Exercise, type ExerciseEquipment, type Muscle,
 } from '@coachos/domain';
 import { mutate, newKey } from '@/components/api-client';
@@ -77,7 +77,10 @@ export function ExerciseLibrary({ wid, items }: { wid: string; items: Exercise[]
                 <button type="button" className={s.exRow} aria-expanded={open === e.id} onClick={() => { setOpen(open === e.id ? null : e.id); setCreating(false); }}>
                   <span className={s.exName}>{e.name}</span>
                   <span className={s.exMeta}>{MUSCLE_SHORT[e.muscle]}{e.equipment.length ? ` · ${e.equipment.map((x) => EXERCISE_EQUIPMENT_LABELS[x]).join(', ')}` : ''}</span>
-                  {own ? <Badge tone="coach">Ta vidéo</Badge> : exerciseHasVideo(e) ? <Badge>Vidéo CoachOS</Badge> : null}
+                  {own ? <Badge tone="coach">Ta vidéo</Badge> : exerciseHasVideo(e) ? <Badge>Vidéo CoachOS</Badge>
+                    : e.starterKey && e.useBaseVideo && motionStatus(e.starterKey) ? (
+                      <Badge tone={motionStatus(e.starterKey) === 'validated' ? 'neutral' : 'warning'}>Animation {MOTION_STATUS_LABELS[motionStatus(e.starterKey)!].toLowerCase()}</Badge>
+                    ) : null}
                 </button>
                 {open === e.id ? <div className={s.exOpen}><ExerciseForm wid={wid} initial={toDraft(e)} exercise={e} onDone={() => router.refresh()} /></div> : null}
               </li>
@@ -102,6 +105,7 @@ function ExerciseForm({ wid, initial, exercise, onDone }: { wid: string; initial
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => { setD((x) => ({ ...x, [k]: v })); setSaved(null); };
   const body = { name: d.name, muscle: d.muscle, equipment: d.equipment, instructions: d.instructions || null, videoUrl: d.videoUrl || null, useBaseVideo: d.useBaseVideo };
   const base = exercise?.starterKey ? BASE_VIDEOS[exercise.starterKey] : undefined;
+  const motion = exercise?.starterKey ? MACHINE_MOTIONS[exercise.starterKey] : undefined;
   const own = Boolean(exercise?.clipId || d.videoUrl);
   const id = exercise?.id ?? 'new';
   const preview = { id: exercise?.id ?? 'apercu', name: d.name || 'Exercice', videoUrl: d.videoUrl || null, clipId: exercise?.clipId ?? null, starterKey: exercise?.starterKey ?? null, useBaseVideo: d.useBaseVideo };
@@ -207,9 +211,13 @@ function ExerciseForm({ wid, initial, exercise, onDone }: { wid: string; initial
             : base ? (
               <Checkbox id={`ex-base-${id}`} checked={d.useBaseVideo} onChange={(v) => set('useBaseVideo', v)}
                 label="Montrer la vidéo CoachOS tant que je n’ai pas mis la mienne" hint={BASE_VIDEO_SOURCE_LABELS[base.source]} />
+            ) : motion ? (
+              <Checkbox id={`ex-base-${id}`} checked={d.useBaseVideo} onChange={(v) => set('useBaseVideo', v)}
+                label="Montrer l’animation CoachOS tant que je n’ai pas mis ma vidéo"
+                hint={motionStatus(motion.key) === 'validated' ? 'Animation validée' : 'Animation à relire : tes élèves la verront une fois validée par CoachOS'} />
             ) : <Text size="sm" muted>{exercise?.starterKey ? 'Pas encore de vidéo CoachOS pour cet exercice : ajoute la tienne, ou elle arrivera bientôt.' : 'Ajoute ta vidéo (lien ou fichier) : c’est toi que tes élèves verront.'}</Text>}
         </Stack>
-        {own || (base && d.useBaseVideo) ? <div className={s.media}><ExerciseMedia wid={wid} exercise={preview} /></div> : null}
+        {own || ((base || motion) && d.useBaseVideo) ? <div className={s.media}><ExerciseMedia wid={wid} exercise={preview} coach /></div> : null}
         {error ? <Text size="sm" tone="danger" role="alert">{error}</Text> : null}
         {saved ? <Text size="sm" tone="success" role="status">{saved}</Text> : null}
         <Cluster gap={2}>

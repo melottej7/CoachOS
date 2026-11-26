@@ -1,3 +1,5 @@
+import type { FollowChanges, FollowExtra, FollowSwap, FollowSwaps } from '@coachos/domain';
+
 /**
  * D-096 · D-166 · D-167 · Ce que « Suivre la séance » garde sur ce téléphone pour reprendre plus tard :
  * l’étape, les séries notées, le chronomètre de séance, la minuterie de l’étape en cours et l’écran entre deux exercices.
@@ -85,4 +87,51 @@ export const followSkipKey = (sid: string) => `coachos:suivre:${sid}:passes`;
 export function readSkipped(sid: string): number[] {
   const v = json<unknown>(followSkipKey(sid));
   return Array.isArray(v) ? v.filter((x): x is number => Number.isInteger(x)) : [];
+}
+
+// ---------- Autre ordre, remplacements, ajouts (D-182) ----------
+
+/** Parties terminées (rang), pour reprendre dans le bon ordre quand l’élève a commencé par une autre machine. */
+export const followDoneKey = (sid: string) => `coachos:suivre:${sid}:faits`;
+export function readDoneParts(sid: string): number[] {
+  const v = json<unknown>(followDoneKey(sid));
+  return Array.isArray(v) ? v.filter((x): x is number => Number.isInteger(x)) : [];
+}
+export const followSwapKey = (sid: string) => `coachos:suivre:${sid}:remplacements`;
+export function readSwaps(sid: string): FollowSwaps {
+  const v = json<unknown>(followSwapKey(sid));
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return {};
+  const out: FollowSwaps = {};
+  for (const [k, x] of Object.entries(v as Record<string, unknown>)) {
+    const o = x as Partial<FollowSwap> | null;
+    if (o && typeof o.name === 'string' && o.name.trim() && typeof o.from === 'string') {
+      out[k] = { name: o.name.slice(0, 80), from: o.from, exerciseId: typeof o.exerciseId === 'string' ? o.exerciseId : null, starterKey: typeof o.starterKey === 'string' ? o.starterKey : null };
+    }
+  }
+  return out;
+}
+export const followExtraKey = (sid: string) => `coachos:suivre:${sid}:ajouts`;
+export function readExtras(sid: string): FollowExtra[] {
+  const v = json<unknown>(followExtraKey(sid));
+  if (!Array.isArray(v)) return [];
+  const num = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? x : null);
+  return v.flatMap((x) => {
+    const o = x as Partial<FollowExtra> | null;
+    if (!o || typeof o.name !== 'string' || !o.name.trim()) return [];
+    return [{ name: o.name.slice(0, 80), exerciseId: typeof o.exerciseId === 'string' ? o.exerciseId : null, starterKey: typeof o.starterKey === 'string' ? o.starterKey : null,
+      sets: Math.max(1, Math.min(30, Math.round(num(o.sets) ?? 1))), reps: num(o.reps), kg: num(o.kg) }];
+  }).slice(0, 20);
+}
+/** Ce qui a changé pendant la séance, pour le retour. */
+export function readFollowChanges(sid: string): FollowChanges {
+  return { skippedParts: readSkipped(sid), swaps: readSwaps(sid), extras: readExtras(sid) };
+}
+/** Retour envoyé : le téléphone oublie la séance suivie. */
+export function forgetFollow(sid: string) {
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && (k === followPosKey(sid) || k.startsWith(`${followPosKey(sid)}:`))) localStorage.removeItem(k);
+    }
+  } catch { /* stockage indisponible */ }
 }

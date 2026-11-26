@@ -219,6 +219,11 @@ function parseSeq(text: string, depth: number, errors: NotationError[], lenient 
         if (close > 0 && tail) { loose.push({ at: out.length + 1, text: tail }); inner = inner.slice(0, close + 1); }
       }
       if (inner.startsWith('(') && inner.endsWith(')') && splitTop(inner.slice(1, -1)) !== null) inner = inner.slice(1, -1);
+      // D-179 : en musculation, « 4×10 presse 60kg R2' » = 4 séries de 10 à 60 kg, 2' de récupération entre les séries.
+      else if (strength && splitTop(inner)?.length === 1) {
+        const rec = inner.match(/^(.*\S)\s+((?:r|repos|r[ée]cup(?:[ée]ration)?)\s*\d[\d'"′″:]*(?:\s*(?:min|s|sec))?)$/i);
+        if (rec) inner = `${rec[1]} + ${rec[2]}`;
+      }
       const steps = parseSeq(inner, depth + 1, errors, lenient, strength);
       if (steps.length) out.push({ type: 'repeat', times: Math.max(2, Math.min(50, times)), steps });
       continue;

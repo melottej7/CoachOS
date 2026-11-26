@@ -4,7 +4,7 @@ import { STARTER_EXERCISES } from '@coachos/domain';
 import { openDatabase, setDb } from './db/client';
 import { USERS, WORKSPACE_A, WORKSPACE_B } from './db/fixtures';
 import { AppError } from './errors';
-import { addStarterExercises, createExercise, finishExerciseClipUpload, removeExerciseClip, startExerciseClipUpload, updateExercise, uploadExerciseClip } from './commands/exercises';
+import { addMachineExercises, addStarterExercises, createExercise, finishExerciseClipUpload, removeExerciseClip, startExerciseClipUpload, updateExercise, uploadExerciseClip } from './commands/exercises';
 import { listExercises, readExercise, readExerciseClip } from './repo/exercises';
 import { setVideoStore, type VideoStore } from './storage/video-store';
 
@@ -54,6 +54,29 @@ describe('exercices de musculation (D-096)', () => {
     await updateExercise({ ...meta(USERS.marine), exerciseId: goblet.id }, { name: 'Goblet squat (mon nom)', muscle: 'legs', expectedRevision: goblet.revision, useBaseVideo: false });
     expect(await readExercise(USERS.camille, WORKSPACE_A, goblet.id)).toMatchObject({ name: 'Goblet squat (mon nom)', starterKey: 'squat-goblet', useBaseVideo: false });
     expect(await codeOf(addStarterExercises(meta(USERS.camille)))).toBe('RESOURCE_NOT_VISIBLE');
+  });
+
+  it('D-179 : exercices de machine ajoutés avec réglages et consignes, sans doublon, par le seul coach de l’espace', async () => {
+    await createExercise(meta(USERS.marine), { name: 'tirage vertical' });
+    const r = (await addMachineExercises(meta(USERS.marine), { keys: ['presse-a-cuisses', 'tirage-vertical', 'developpe-machine', 'presse-a-cuisses'] })).body;
+    expect(r).toMatchObject({ added: 2, skipped: 1 });
+    const again = (await addMachineExercises(meta(USERS.marine), { keys: ['presse-a-cuisses'] })).body as { added: number; skipped: number; items: { key: string; id: string; name: string }[] };
+    expect(again).toMatchObject({ added: 0, skipped: 1 });
+    const press = (await listExercises(USERS.camille, WORKSPACE_A)).find((e) => e.starterKey === 'presse-a-cuisses')!;
+    // D-181 : chaque exercice demandé revient avec son identifiant (déjà là ou ajouté), y compris celui du même nom écrit à la main.
+    expect(again.items).toEqual([{ key: 'presse-a-cuisses', id: press.id, name: 'Presse à cuisses' }]);
+    const items = (r as { items: { key: string; id: string; name: string }[] }).items;
+    expect(items.map((x) => x.key)).toEqual(['presse-a-cuisses', 'tirage-vertical', 'developpe-machine']);
+    expect(items[1]!.name).toBe('tirage vertical');
+    expect(press).toMatchObject({ name: 'Presse à cuisses', muscle: 'legs', equipment: ['machine'], starter: false, useBaseVideo: true });
+    expect(press.instructions).toContain('Réglages : Dossier');
+    expect(await codeOf(addMachineExercises(meta(USERS.marine), { keys: ['inconnu'] }))).toBe('INVALID_FIELDS');
+    expect(await codeOf(addMachineExercises(meta(USERS.marine), { keys: [] }))).toBe('INVALID_FIELDS');
+    // Élève affecté, élève tiers, coach d’un autre espace : refusés.
+    expect(await codeOf(addMachineExercises(meta(USERS.camille), { keys: ['rameur-ex'] }))).toBe('RESOURCE_NOT_VISIBLE');
+    expect(await codeOf(addMachineExercises(meta(USERS.lea), { keys: ['rameur-ex'] }))).toBe('RESOURCE_NOT_VISIBLE');
+    expect(await codeOf(addMachineExercises(meta(USERS.hugo), { keys: ['rameur-ex'] }))).toBe('RESOURCE_NOT_VISIBLE');
+    expect(await codeOf(addMachineExercises({ ...meta(USERS.marine), workspaceId: WORKSPACE_B }, { keys: ['rameur-ex'] }))).toBe('RESOURCE_NOT_VISIBLE');
   });
 
   it('vidéo filmée : reconnue par son contenu, lue par l’élève de l’espace, remplacée puis retirée', async () => {

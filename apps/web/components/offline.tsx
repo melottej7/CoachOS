@@ -13,3 +13,19 @@ export function OfflineSupport() {
   }, []);
   return null;
 }
+
+/**
+ * D-179 · Garde les séances de la semaine lisibles sans réseau, consignes et animations comprises : quand l’élève
+ * ouvre Aujourd’hui ou son Programme en ligne, le service worker enregistre aussi ces pages, sans attendre qu’il les ouvre.
+ */
+export function KeepOffline({ urls }: { urls: string[] }) {
+  const key = urls.join('|');
+  useEffect(() => {
+    if (!key || !('serviceWorker' in navigator) || !window.isSecureContext || !navigator.onLine) return;
+    const t = window.setTimeout(() => {
+      void navigator.serviceWorker.ready.then((r) => r.active?.postMessage({ type: 'coachos-keep', urls: key.split('|') }));
+    }, 1500);
+    return () => window.clearTimeout(t);
+  }, [key]);
+  return null;
+}

@@ -3,11 +3,11 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
-  activityTotals, applyFollowLog, asDone, strengthPlan, type StrengthEntry, CHANGES, formatDuration2, parseDuration, testDistanceOf, CHANGE_LABELS, describeBlock, DIFFICULTIES, DIFFICULTY_LABELS, FEELING_LABELS, READINESS, READINESS_LABELS, READINESS_QUESTION, type Readiness, RESULT_STATES, RESULT_STATE_LABELS, SPORTS, SPORT_LABELS,
+  activityTotals, adjustForChanges, applyFollowLog, asDone, describeFollowChanges, followExercises, followSequence, strengthPlan, type StrengthEntry, CHANGES, formatDuration2, parseDuration, testDistanceOf, CHANGE_LABELS, describeBlock, DIFFICULTIES, DIFFICULTY_LABELS, FEELING_LABELS, READINESS, READINESS_LABELS, READINESS_QUESTION, type Readiness, RESULT_STATES, RESULT_STATE_LABELS, SPORTS, SPORT_LABELS,
   type Block, type Change, type Difficulty, type FeedbackActivity, type ResultState, type Sport,
 } from '@coachos/domain';
 import { fieldError, useIntent } from '@/components/use-intent';
-import { followLogKey, readFollowElapsed, readFollowLog } from './follow-store';
+import { forgetFollow, readFollowChanges, readFollowElapsed, readFollowLog } from './follow-store';
 import {
   Banner, Button, ChipChecks, ChipChoice, ChoiceGroup, Disclosure, Divider, Field, Grid, Heading, Input, LinkButton, ScaleChoice, Select, Stack, Text, Textarea,
   type IconName,
@@ -72,8 +72,13 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
   useEffect(() => {
     if (existing?.strengthLog?.length || !plan.length) return;
     const noted = readFollowLog(sid);
-    if (Object.keys(noted).length) setStrength(applyFollowLog(plan, noted));
-  }, [existing?.strengthLog?.length, plan, sid]);
+    // D-182 : machines prises pendant « Suivre » (exercice remplacé, passé, ajouté) reportées dans le journal et le commentaire.
+    const changes = readFollowChanges(sid);
+    const base = Object.keys(noted).length ? applyFollowLog(plan, noted) : asDone(plan);
+    setStrength(adjustForChanges(intervals, plan, base, changes));
+    const said = describeFollowChanges(followExercises(followSequence(intervals)), changes);
+    if (said) setComment((c) => (c.trim() ? c : said));
+  }, [existing?.strengthLog?.length, plan, sid, intervals]);
   // D-166 : durée mesurée par le chronomètre de « Suivre la séance », proposée si l’élève n’a rien saisi.
   const [timed, setTimed] = useState(false);
   useEffect(() => {
@@ -136,7 +141,7 @@ export function FeedbackForm({ wid, aid, sid, publishedRevision, plannedMinutes,
     const sent = await run('PUT', `/api/v1/workspaces/${wid}/athletes/${aid}/workouts/${sid}/feedback`, body);
     if (sent) {
       // D-096 (M4) : ce qui a été noté pendant « Suivre » est maintenant chez le coach.
-      try { localStorage.removeItem(followLogKey(sid)); localStorage.removeItem(`coachos:suivre:${sid}`); } catch { /* stockage indisponible */ }
+      forgetFollow(sid);
       router.push(`/athlete/${wid}/workouts/${sid}?notice=sent`);
       router.refresh();
     }

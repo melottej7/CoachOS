@@ -2544,3 +2544,42 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Coach sans espace** : l’inscription coach marque le compte (`signed_up_as: coach` dans les métadonnées Supabase) ; à la connexion, ce compte va droit à « Créer mon espace ». Un compte né d’une invitation (élève retiré de son espace) garde l’accueil explicatif. Le marqueur ne sert qu’à choisir la page d’arrivée, jamais un droit. Les coachs inscrits avant ne l’ont pas : comportement inchangé pour eux.
 - **Preuves** : 476 tests, typecheck, construction, 17 parcours de bout en bout (« Pas faite » puis « Annuler » : rien ne part après 6 s ; sport d’après les séances dans la liste). Au navigateur, données fictives : compte à rebours à 375 px, liste à 1440 px. Inscription d’un coach fictif sur le Supabase local : `/choose-workspace` renvoie vers `/coach/new`.
 - **Non prouvé** : le cas d’un élève retiré qui se reconnecte (logique lue, pas jouée).
+
+## D-179 · Exercices sur machine : bibliothèque, animations dessinées, fiche dans la séance · 2026-11-26
+
+- **Bibliothèque des machines** rangée par type (guidées, poulies, Smith, disques, cardio) : 31 machines, 68 exercices, chacun avec muscles, niveau, réglages, trois consignes, erreur fréquente, alternative sur une autre machine. « Basic-Fit » n’est qu’une étiquette avec son degré de certitude ; vue Basic-Fit (demande du fondateur) : nom anglais de la machine et numéro du club, à relever.
+- **Animations dessinées** retenues après comparaison (vidéo du fondateur, bibliothèque achetée, IA) : un gabarit, chaque exercice décrit par départ et arrivée, genoux et coudes placés seuls, angles vérifiés par les tests ; SVG d’environ 60 Ko dans la page (silhouette en volume, 24 images par seconde, plaques qui montent pendant l’effort), donc hors ligne. Trois pilotes, puis les 68 exercices le même jour (vue de face, cycles du cardio, rameur en trois temps), longueurs des membres et contacts vérifiés à chaque image. Détail : [VIDEOS_MACHINES.md](VIDEOS_MACHINES.md).
+- **Aucune animation montrée à un élève avant validation du fondateur** (`MOTION_REVIEWS`, comme D-099) ; le coach la voit « À relire ». Le fondateur a validé les 68 le 26 novembre ; liste figée (`VALIDATED_2026_11_26`), une animation ajoutée ensuite reste à relire.
+- **Séance** : le coach ajoute les exercices cochés à sa bibliothèque (commande `addMachineExercises`, sans migration) ; « 4×10 presse 60kg R2' » s’écrit sans parenthèses ; l’élève touche l’exercice et lit réglages, consignes, erreur, alternative, aussi en mode « Suivre ». La course ne change pas.
+- **Hors ligne** : en ouvrant Aujourd’hui, les séances des sept jours sont gardées d’avance par le service worker.
+- Filmer chez Basic-Fit pour CoachOS demande une **autorisation écrite** (règlement intérieur : activité commerciale).
+- **Vérifié** : tests (485), typecheck, construction, parcours coach 1440 px et élève 390 px, hors ligne. **Non vérifié** : vraies machines Basic-Fit et leurs numéros.
+
+## D-180 · Tirer vers le bas pour actualiser, dans l’app installée · 2026-11-26
+
+- **Demande du fondateur** : sur téléphone, recharger la page en tirant vers le bas. L’app ouverte depuis l’écran d’accueil (iPhone surtout) n’a pas ce geste ; Safari et Chrome l’ont déjà, donc rien n’est ajouté dans le navigateur.
+- **Geste** : depuis le haut de la page, tirer d’environ 130 px ; une roue suit le doigt, puis tourne pendant l’actualisation. Un geste plus court ne fait rien.
+- **Rien ne se perd** : les données sont relues au serveur sans recharger la page (`router.refresh`) ; un texte en cours de saisie reste en place. Le geste ne part pas d’un champ, d’une fenêtre ou d’une liste déjà défilée (conversation).
+- **Preuves** : 2 tests (distance, seuil), 455 tests, typecheck, construction, 18 parcours de bout en bout dont `e2e/actualiser.spec.ts` (390 px, vrais événements tactiles : geste court sans effet, geste long qui relit les données sans recharger). **Non prouvé** : sur un vrai iPhone, l’app installée.
+
+## D-181 · Séance au Basic-Fit : choisir les machines depuis la séance · 2026-11-26
+
+- **Demande du fondateur** : « choisir séance au Basic » et sélectionner ses exercices, sans recopier leur nom.
+- **Éditeur de séance (musculation)** : bouton « Machines » ; choix de la salle « Basic-Fit (Belgique) » ou « Toutes les machines », retenu sur l’appareil (le bouton devient « Machines Basic-Fit ») ; recherche ; exercices rangés par type et par machine, nom anglais écrit sur la machine. On touche les exercices dans l’ordre de la séance (numéros 1, 2, 3), puis « Ajouter » : 3 séries de 10, repos 1 min 30, à ajuster. Dans une étape, « Choisir une machine » remplace l’exercice.
+- **Relié d’office** : un exercice absent de la bibliothèque y entre en même temps (`addMachineExercises`, qui renvoie maintenant l’identifiant de chaque exercice ; contrat OpenAPI à jour), donc l’élève voit fiche et animation. « Déjà dans la séance » signalé. Écriture libre inchangée.
+- **Basic-Fit reste une étiquette** (D-179) : machines sûres ou très probables ; « selon le club » seulement dans « Toutes les machines ».
+
+## D-182 · Machine prise : un autre ordre, un remplacement, un exercice en plus · 2026-11-26
+
+- **Demande du fondateur** : à la salle, les machines ne se libèrent pas dans l’ordre ; l’élève doit pouvoir choisir par quoi commencer, ou faire autre chose.
+- **« Machine prise ? Changer »** sur l’écran entre deux exercices : commencer par un autre exercice restant (celui laissé revient ensuite) ; remplacer un exercice (alternative conseillée de la machine en un toucher, ou nom libre ; mêmes séries et repos ; « Annuler ») ; ajouter un exercice hors programme (séries, répétitions, charge). En fin de séance : « Ajouter un exercice fait en plus ».
+- **Ordre** : après chaque exercice, le suivant non fait dans l’ordre du programme, puis ceux laissés en arrière ; « Exercice 3 sur 3 » et la barre d’avancement comptent ce qui est fait, dans n’importe quel ordre.
+- **Le coach le voit** : le retour reprend tout. Séries d’un exercice remplacé reportées sur le remplaçant, exercice passé à 0 (avant, il apparaissait comme fait), ajouts en fin de journal ; commentaire proposé « Changements à la salle — remplacé : … ; pas fait : … ; en plus : … ». Tout est gardé sur le téléphone (rechargement, « Quitter ») et oublié une fois le retour envoyé. Sans migration.
+- **Preuves (D-181, D-182)** : 4 tests d’ordre et de journal, test serveur des identifiants renvoyés, 499 tests, typecheck, construction, parcours `e2e/salle.spec.ts` (coach 1440 px : trois machines Basic-Fit en trois touchers, reliées ; élève 390 px : autre ordre, remplacement, ajout, retour à l’exercice laissé, commentaire du retour). **Non prouvé** : sur un vrai téléphone à la salle.
+
+## D-183 · Une tâche du dossier élève ouvre l’onglet de sa section · 2026-11-26
+
+- **Retour du fondateur** : « Confirmer le bilan › Y aller » ne faisait rien. Depuis le dossier en onglets (D-151), le lien visait la section `#bilan`, qui n’existe que dans l’onglet Bilan. Même défaut pour « Confirmer le niveau » et « VMA à renseigner » (onglet Progression), et depuis l’Accueil, les notifications et l’éditeur de séance.
+- **Correctif** : `athleteFileHref(wid, aid, section)` (domaine) donne l’onglet de chaque section (`?onglet=bilan#bilan`). Tous ces liens l’utilisent. Dans le dossier, une tâche reste une ancre si sa section est dans l’onglet ouvert, sinon elle ouvre le bon onglet.
+- **Anciens liens** déjà envoyés (`…#bilan`) : le dossier ouvre de lui-même l’onglet de la section.
+- **Vérifié** : test du domaine ; parcours à 390 px (tâche du dossier → onglet Bilan, ancien lien → onglet Bilan).

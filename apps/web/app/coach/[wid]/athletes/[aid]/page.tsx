@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import { SectionTabFromHash } from '@/views/coach/athlete-file-hash';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { requireActor } from '@/server/auth/session';
-import {
+import { athleteFileTab,
   APPOINTMENT_KIND_LABELS, APPOINTMENT_STATUS_LABELS, DAY_LABELS, EXPERIENCE_LABELS, formatLongDate, formatShortDate, formatWeekday, GOAL_STATE_LABELS,
   addDays, LEVEL_LABELS, RESULT_STATE_LABELS, SPORT_LABELS, todayIn, weekStart, urgencyLabel, utcToLocal, WEEKLY_HOURS_LABELS, WEEKLY_SESSIONS_LABELS,
   EQUIPMENT_LABELS, PREFERRED_TIME_LABELS, WEEKDAY_MINUTES_LABELS, STRENGTH_FOCUS_LABELS, TRAINING_PLACE_LABELS,
@@ -159,6 +160,15 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
     return `${base}/athletes/${aid}${q.size ? `?${q}` : ''}`;
   };
   const periodHref = (n: number) => `${keep({ periode: String(n), onglet: 'progression' })}#suivi`;
+  // D-183 : un lien de tâche vers ce dossier reste sur la page si sa section est dans l’onglet ouvert (simple ancre),
+  // sinon il ouvre l’onglet de la section (« Confirmer le bilan » → onglet Bilan).
+  const here = (link: string | null | undefined): string | null => {
+    if (!link?.startsWith(`${base}/athletes/${aid}`)) return link ?? null;
+    const section = link.includes('#') ? link.split('#')[1]! : '';
+    const target = section ? athleteFileTab(section) : 'apercu';
+    if (target === tab) return section ? `#${section}` : null;
+    return `${keep({ onglet: target === 'apercu' ? '' : target })}${section ? `#${section}` : ''}`;
+  };
   const n = notice ? NOTICES[notice] : null;
   const self = { id: a.id, name: a.name, timeZone: a.timeZone };
 
@@ -193,6 +203,7 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
       </Stack>
 
       {/* Onglets soulignés : ils défilent sur téléphone au lieu d’élargir la page. */}
+      <SectionTabFromHash current={tab} />
       <SectionTabs label={`Fiche de ${first}`} items={TABS.filter((t) => t.k !== 'donnees' || owner).map((t) => ({ href: keep({ onglet: t.k === 'apercu' ? '' : t.k }), label: t.label, current: tab === t.k }))} />
 
       {tab === 'apercu' ? (
@@ -221,7 +232,7 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
               <Stack as="ul" gap={2}>
                 {a.todo.map((t) => (
                   <TaskItem key={t.key} wid={wid} today={today} timeZone={a.timeZone}
-                    task={taskView({ ...t, athlete: t.athlete ?? self }, today, { athleteHref: null, link: t.link?.startsWith(`${base}/athletes/${aid}`) ? (t.link.includes('#') ? `#${t.link.split('#')[1]}` : null) : t.link })} />
+                    task={taskView({ ...t, athlete: t.athlete ?? self }, today, { athleteHref: null, link: here(t.link) })} />
                 ))}
               </Stack>
             ) : <Text muted>Rien à faire pour {first} pour l’instant.</Text>}

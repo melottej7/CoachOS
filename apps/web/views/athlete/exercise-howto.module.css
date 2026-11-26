@@ -1,0 +1,9 @@
+.steps { display: grid; grid-template-columns: max-content 1fr; gap: var(--ds-1) var(--ds-3); margin: 0; font-size: var(--ds-text-sm); line-height: 1.45; }
+.steps dt { font-weight: 600; color: var(--ds-ink); }
+.steps dd { margin: 0; color: var(--ds-ink-2); }
+.cues { margin: 0; padding-left: 1.3em; list-style: decimal; }
+.cues li + li { margin-top: 2px; }
+@media (max-width: 480px) {
+  .steps { grid-template-columns: 1fr; }
+  .steps dd { margin-bottom: var(--ds-2); }
+}

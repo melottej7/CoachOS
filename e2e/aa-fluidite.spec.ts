@@ -102,3 +102,18 @@ test('coach : le nom de l’élève ouvre sa fiche, depuis la conversation, un r
   await p.getByRole('link', { name: 'Camille Laurent', exact: true }).first().click();
   await expect(p).toHaveURL(fiche);
 });
+
+test('coach : une tâche du dossier ouvre l’onglet de sa section, même depuis un ancien lien (D-183)', async ({ browser }) => {
+  // Retour du fondateur : « Confirmer le bilan › Y aller » ne faisait rien, la section Bilan vivant dans un autre onglet.
+  const p = await as(browser, /Marine Roy/);
+  const fiche = `/coach/${WS_A}/athletes/20000000-0000-4000-8000-000000000001`;
+  await p.goto(fiche);
+  const task = p.getByRole('listitem').filter({ hasText: 'Relancer le questionnaire' });
+  await task.getByRole('link', { name: 'Ouvrir' }).click();
+  await expect(p).toHaveURL(/\?onglet=bilan#bilan$/);
+  await expect(p.getByRole('heading', { name: 'Bilan', exact: true })).toBeVisible();
+  // Ancien lien (notification, e-mail) : « …#bilan » ouvre l’onglet Bilan.
+  await p.goto(`${fiche}#bilan`);
+  await expect(p).toHaveURL(/\?onglet=bilan#bilan$/);
+  await expect(p.getByRole('heading', { name: 'Bilan', exact: true })).toBeVisible();
+});

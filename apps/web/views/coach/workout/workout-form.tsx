@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { SPORT_LABELS, type Block, type References, type Sport, sportsFor, type Modules, type LastDone, SPORT_TITLE_EXAMPLES } from '@coachos/domain';
+import { athleteFileHref, SPORT_LABELS, type Block, type References, type Sport, sportsFor, type Modules, type LastDone, SPORT_TITLE_EXAMPLES } from '@coachos/domain';
 import { fromEditor, toEditor, WorkoutBuilder, type AthleteGearInfo, type EBlock, type ExerciseOption, type SavedBlock } from './builder';
 import { fieldError, useIntent } from '@/components/use-intent';
 import { AnchorButton, Banner, Button, Cluster, Field, Grid, Input, Select, Stack, Text, Textarea } from '@/design';
@@ -99,7 +99,7 @@ export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, ca
             </Select>
           </Field>
         </Grid>
-        <WorkoutBuilder strengthOn={modules?.strength ?? true} sport={values.sport} value={blocks} onChange={setBlocks} refs={refs} athleteFirst={athleteName.split(' ')[0] ?? athleteName} vmaHref={`/coach/${wid}/athletes/${aid}#refs-title`}
+        <WorkoutBuilder wid={wid} strengthOn={modules?.strength ?? true} sport={values.sport} value={blocks} onChange={setBlocks} refs={refs} athleteFirst={athleteName.split(' ')[0] ?? athleteName} vmaHref={athleteFileHref(wid, aid, 'refs-title')}
           library={savedBlocks ? { wid, blocks: savedBlocks } : undefined} exercises={exercises} gear={gear} lastDone={lastDone} />
         {blocks.length ? null : (
           <Field id="duration" label="Durée en minutes" hint="Facultatif" error={err('data.durationSeconds')}>
