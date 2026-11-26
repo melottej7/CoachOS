@@ -27,6 +27,8 @@ export function inGym(chains: Partial<Record<GymChain, string>>, gym: Gym): bool
 
 export interface PickedExercise { id: string; name: string }
 
+const fold = (v: string) => v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
 export function MachinePicker({ wid, mode, gym, onGym, inSession, onPick, onClose }: {
   wid: string;
   /** « many » : ajouter plusieurs exercices à la séance, dans l’ordre des touchers ; « one » : choisir celui d’une étape. */
@@ -45,13 +47,17 @@ export function MachinePicker({ wid, mode, gym, onGym, inSession, onPick, onClos
   const [failed, setFailed] = useState(false);
   useEffect(() => { ref.current?.showModal(); }, []);
 
-  const k = q.trim().toLowerCase();
-  const match = (e: MachineExercise, en: string) => !k || e.name.toLowerCase().includes(k) || e.muscles.toLowerCase().includes(k) || en.toLowerCase().includes(k);
+  // Sans accents ni majuscules, chaque mot dans n’importe quel ordre : « developpe », « row seated ».
+  const words = fold(q).split(/\s+/).filter(Boolean);
+  const match = (e: MachineExercise, en: string, machine: string) => {
+    const hay = fold(`${e.name} ${e.muscles} ${en} ${machine}`);
+    return words.every((w) => hay.includes(w));
+  };
   const groups = lib.map((g) => ({
     ...g,
     machines: g.machines
       .filter(({ machine }) => inGym(machine.chains, gym))
-      .map((m) => ({ ...m, exercises: m.exercises.filter((e) => match(e, m.machine.en) || m.machine.name.toLowerCase().includes(k)) }))
+      .map((m) => ({ ...m, exercises: m.exercises.filter((e) => match(e, m.machine.en, m.machine.name)) }))
       .filter((m) => m.exercises.length),
   })).filter((g) => g.machines.length);
 

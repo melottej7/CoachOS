@@ -531,7 +531,6 @@ interface DnD {
   dragging: string | null;
   start: (key: string, e: ReactPointerEvent<HTMLElement>, label: string) => void;
   onHandleKey: (key: string, e: ReactKeyboardEvent<HTMLElement>) => void;
-  shift: (key: string, d: -1 | 1) => void;
   lift: (key: string) => void;
 }
 
@@ -550,21 +549,17 @@ function Handle({ k, index, label, dnd }: { k: string; index: string; label: str
   );
 }
 
-/** Outils d’un bloc : dupliquer, supprimer, et un menu « Plus » (monter, descendre, sortir de la répétition). */
+/** Outils d’un bloc : dupliquer, supprimer et, dans une répétition, « Sortir de la répétition ». On déplace un bloc par sa poignée (D-185). */
 function Tools({ k, index, inside, dnd, onDuplicate, onRemove }: { k: string; index: string; inside: boolean; dnd: DnD; onDuplicate: () => void; onRemove: () => void }) {
   return (
     <span className={s.tools}>
       <IconButton icon="copy" size="sm" onClick={onDuplicate} label={`Dupliquer le bloc ${index}`} />
       <IconButton icon="trash" size="sm" onClick={onRemove} label={`Supprimer le bloc ${index}`} />
-      <Popover iconOnly icon="more" label={`Plus d’actions pour le bloc ${index}`}>
-        {(close) => (
-          <>
-            <MenuItem onClick={() => { dnd.shift(k, -1); close(); }}>Monter</MenuItem>
-            <MenuItem onClick={() => { dnd.shift(k, 1); close(); }}>Descendre</MenuItem>
-            {inside ? <MenuItem onClick={() => { dnd.lift(k); close(); }}>Sortir de la répétition</MenuItem> : null}
-          </>
-        )}
-      </Popover>
+      {inside ? (
+        <Popover iconOnly icon="more" label={`Plus d’actions pour le bloc ${index}`}>
+          {(close) => <MenuItem onClick={() => { dnd.lift(k); close(); }}>Sortir de la répétition</MenuItem>}
+        </Popover>
+      ) : null}
     </span>
   );
 }
@@ -583,7 +578,7 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools, series }:
   const est = stepEstimate(plain, sport, refs);
   const strength = stepSport === 'strength' || sport === 'strength';
   const allExercises = useContext(ExercisesCtx);
-  // D-184 : séries différentes (charge, répétitions), dans une carte de plusieurs séries.
+  // D-185 : séries différentes (charge, répétitions), dans une carte de plusieurs séries.
   const canVary = Boolean(series && series.sets > 1 && strength && (step.measure.kind === 'reps' || step.intensity.kind === 'load'));
   const perSet = canVary && step.perSet ? fitSetsToTimes(step, series!.sets).perSet ?? null : null;
   const fitSets = (x: EStep): EStep => (series && series.sets > 1 && x.perSet ? { ...fitSetsToTimes(x, series.sets), _k: x._k } : x);
@@ -701,7 +696,7 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools, series }:
 
 // ---------- Exercice en séries (D-165) ----------
 
-/** D-184 · Première série = réglages de la carte ; les suivantes reprennent la même chose, à ajuster. */
+/** D-185 · Première série = réglages de la carte ; les suivantes reprennent la même chose, à ajuster. */
 function varySets(step: EStep, sets: number): EStep {
   const reps = step.measure.kind === 'reps' ? step.measure.reps : null;
   const kg = step.intensity.kind === 'load' ? step.intensity.min : null;
@@ -713,7 +708,7 @@ function withoutSets(step: EStep): EStep {
 }
 
 /**
- * D-184 · Les séries une par une (« 12 × 10 kg, 10 × 12 kg, 8 × 14 kg ») : répétitions et charge propres à chaque série.
+ * D-185 · Les séries une par une (« 12 × 10 kg, 10 × 12 kg, 8 × 14 kg ») : répétitions et charge propres à chaque série.
  * La première série reste celle de la carte (résumés, montre, ancien affichage).
  */
 function SetsTable({ id, step, sets, onChange }: { id: string; step: EStep; sets: SetPlan[]; onChange: (s: EStep) => void }) {
@@ -976,7 +971,6 @@ export function WorkoutBuilder({ wid, sport, value, onChange, refs, athleteFirst
       e.preventDefault();
       apply(key, shift(valueRef.current, key, e.key === 'ArrowUp' ? -1 : 1), 'clavier');
     },
-    shift: (key, d) => apply(key, shift(valueRef.current, key, d), 'menu'),
     lift: (key) => apply(key, lift(valueRef.current, key), 'menu'),
   };
 

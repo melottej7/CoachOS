@@ -2596,3 +2596,11 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
   - totaux, retour de l’élève prérempli série par série.
 - **Élève** : chaque série montre et annonce sa charge. Pendant la récupération, « Prépare 12 kg (au lieu de 10 kg) », à l’écran et à la voix.
 - **Vérifié** : 4 tests du domaine ; parcours complet sur téléphone (coach règle, enregistre, rouvre ; élève lit, suit, case « Fait » préremplie).
+
+## D-185 · Logo chrono, recherche de machine sur Safari, plus de « Monter / Descendre » · 2026-11-26
+
+- **Nom** : le fondateur garde CoachOS (pistes écartées : Relais, Cordée, Palier, Sillage, Lane, Stint, Duet ; « Relay » est pris par Relay Athletic, concurrent direct).
+- **Logo** : un chrono blanc, le premier quart en orange, sur fond encre (`#0E1116`, `#FF5A1F`). Il sert pour l’icône de l’app installée (iPhone, Android, onglet) et pour la marque de la page publique. Barre d’état et manifeste aux couleurs Chrono ; bouton de l’e-mail d’invitation en encre.
+- **Recherche de machine** : la liste du sélecteur et la fenêtre « Machine prise ? » défilaient avec `flex: 1`, que Safari écrase à zéro dans une fenêtre sans hauteur fixe ; elles passent à `flex: 1 1 auto`. La recherche ignore maintenant les accents et l’ordre des mots (« developpe », « row seated »).
+- **Blocs** : « Monter / Descendre » retiré, on déplace par la poignée (souris, doigt, flèches au clavier). Le menu « … » ne reste que dans une répétition (« Sortir de la répétition »).
+- **Vérifié** : 504 tests, typecheck, construction, 22 parcours (salle étendu à la recherche). Vu à 1440 et 390 px dans Chromium. **Non vérifié** : Safari lui-même (cause déduite de la capture du fondateur).

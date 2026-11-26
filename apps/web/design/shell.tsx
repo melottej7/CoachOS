@@ -28,7 +28,7 @@ export function PublicShell({ children, wide, page, aside, home = '/' }: { child
   return (
     <div className={`chrono ${s.athlete} ${s.public}`} data-accent="emerald">
       <header className={s.publicHeader}>
-        <Link href={home} className={s.publicBrand}><span className={s.publicMark} aria-hidden="true">C</span>CoachOS</Link>
+        <Link href={home} className={s.publicBrand}><svg className={s.publicMark} viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#0E1116" /><rect x="44" y="14" width="12" height="9" rx="2" fill="#fff" /><circle cx="50" cy="54" r="26" fill="none" stroke="#fff" strokeWidth="9" /><path d="M50 28A26 26 0 0 1 76 54" fill="none" stroke="#FF5A1F" strokeWidth="9" strokeLinecap="round" /></svg>CoachOS</Link>
         {aside ? <div className={s.publicAside}>{aside}</div> : null}
       </header>
       <main id="contenu" className={page ? s.page : wide ? s.wide : s.narrow}>{children}</main>
