@@ -14,6 +14,7 @@ import {
 import { StrengthLog } from '@/views/athlete/strength-log';
 import { MarkReviewed, QuickReply, ReviewKeys, SnoozeReview, TestResultActions } from '@/views/coach/review-actions';
 import s from '@/views/coach/review/review.module.css';
+import { AthleteLink } from '@/views/coach/athlete-link';
 
 export const metadata = { title: 'Retour' };
 
@@ -104,7 +105,7 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
       {notice === 'reviewed' && done ? <Banner tone="success" title="Retour marqué comme traité" /> : null}
       {notice === 'enchaine' ? <Banner tone="success" title="Retour précédent traité · voici le suivant" /> : null}
       <Stack gap={2}>
-        <Eyebrow tone="coach">{item.athleteName}{observed ? ` · ${formatLongDate(observed.localDate)}` : ''}</Eyebrow>
+        <Eyebrow tone="coach"><AthleteLink wid={wid} id={item.athleteId}>{item.athleteName}</AthleteLink>{observed ? ` · ${formatLongDate(observed.localDate)}` : ''}</Eyebrow>
         <Heading level={1} size={1}>Retour de {first}</Heading>
         <Cluster gap={2}>
           {done ? <Badge tone="success" dot>Traité</Badge> : <Badge tone="signal" dot>À traiter</Badge>}

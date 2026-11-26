@@ -11,6 +11,7 @@ import { WeekAdapt } from '@/views/coach/calendar/week-adapt';
 import { WeekGrid } from '@/views/coach/calendar/week-grid';
 import { WeekTools } from '@/views/coach/calendar/week-tools';
 import s from '@/views/coach/calendar/calendar.module.css';
+import { AthleteLink } from '@/views/coach/athlete-link';
 
 export const metadata = { title: 'Calendrier' };
 
@@ -61,7 +62,7 @@ export default async function Calendar({ params, searchParams }: { params: Promi
         <Cluster between gap={3} align="end">
           <Stack gap={1}>
             <Eyebrow tone="coach">{formatWeekRange(monday)} · heure de {first} ({athlete.timeZone.replace(/_/g, ' ')})</Eyebrow>
-            <Heading level={1} size={1}>Semaine de {first}</Heading>
+            <Heading level={1} size={1}>Semaine de <AthleteLink wid={wid} id={athlete.id}>{first}</AthleteLink></Heading>
           </Stack>
           <LinkButton href={newHref(tourDay)} variant="primary" icon="plus">Nouvelle séance</LinkButton>
         </Cluster>

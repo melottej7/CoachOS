@@ -26,6 +26,7 @@ export default async function CoachTeamThread({ params }: { params: Promise<{ wi
   return (
     <MessagesLayout rows={rows} active>
       <ChatHeader back={base} backLabel="Toutes les discussions" name={t.name} team
+        href={`/coach/${wid}/athletes?team=${tid}&by=none`} hrefLabel={`Voir les élèves du groupe ${t.name}`}
         subtitle={members.length ? `${members.length} membre${members.length > 1 ? 's' : ''} · ${members.join(', ')}` : 'Aucun membre : ajoute des élèves depuis leur fiche'}
         actions={<LinkButton size="sm" icon="users" title="Voir le groupe" href={`/coach/${wid}/athletes?team=${tid}&by=none`}><span className="ds-hide-narrow">Groupe</span></LinkButton>} />
       <Text size="sm" muted>Tous les membres lisent ce fil et voient le prénom de qui écrit.</Text>
