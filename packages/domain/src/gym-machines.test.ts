@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  alternativeName, GYM_MACHINES, machineExercise, machineInstructions, machineLibrary, MACHINE_EXERCISES, MACHINES, STARTER_EXERCISES, starterKey,
+  alternativeName, CHAIN_NUMBERS, chainLabel, GYM_MACHINES, machineExercise, machineInstructions, machineLibrary, MACHINE_EXERCISES, MACHINES, STARTER_EXERCISES, starterKey,
 } from './index';
 
 // D-178 : bibliothèque des machines de salle, rangée par type de machine.
@@ -45,6 +45,13 @@ describe('bibliothèque des machines', () => {
     expect(GYM_MACHINES.every((m) => m.chains['basic-fit-be'])).toBe(true);
     expect(GYM_MACHINES.filter((m) => m.chains['basic-fit-be'] === 'sure').map((m) => m.key).sort())
       .toEqual(['developpe-incline', 'leg-extension', 'shoulder-press', 'tapis', 'velo-elliptique']);
+  });
+
+  it('vue Basic-Fit : nom anglais de chaque machine, numéro du club quand il est relevé', () => {
+    expect(GYM_MACHINES.every((m) => /^[A-Z][A-Za-z /]+$/.test(m.en))).toBe(true);
+    const press = GYM_MACHINES.find((m) => m.key === 'presse-cuisses')!;
+    expect(chainLabel(press)).toBe('Leg Press');
+    for (const k of Object.keys(CHAIN_NUMBERS['basic-fit-be'] ?? {})) expect(GYM_MACHINES.some((m) => m.key === k), k).toBe(true);
   });
 
   it('consignes écrites lisibles pour la bibliothèque du coach', () => {

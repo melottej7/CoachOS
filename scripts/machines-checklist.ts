@@ -15,7 +15,7 @@ const out: string[] = [
 for (const g of machineLibrary()) {
   out.push(`## ${g.label}`, '');
   for (const { machine, exercises } of g.machines) {
-    out.push(`- [ ] **${machine.name}** · ${AVAILABILITY_LABELS[machine.chains[chain] ?? 'verify']} · ${machine.looks}`);
+    out.push(`- [ ] **${machine.name}** (« ${machine.en} » sur la machine ?) · n° dans ton club : ____ · ${AVAILABILITY_LABELS[machine.chains[chain] ?? 'verify']} · ${machine.looks}`);
     out.push(`  ${exercises.map((e) => e.name).join(' · ')}`);
   }
   out.push('');

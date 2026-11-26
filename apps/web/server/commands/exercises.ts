@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
-  detectVideoType, EXERCISE_CLIP_MAX_BYTES, EXERCISE_CLIP_STORAGE_MAX_BYTES, EXERCISE_CLIP_TYPES, exerciseInputSchema, parseWith, STARTER_EXERCISES, starterKey, type ExerciseInput,
+  detectVideoType, EXERCISE_CLIP_MAX_BYTES, EXERCISE_CLIP_STORAGE_MAX_BYTES, EXERCISE_CLIP_TYPES, exerciseInputSchema, machineExercise, machineInstructions, parseWith,
+  STARTER_EXERCISES, starterKey, type ExerciseInput, type MachineExercise,
 } from '@coachos/domain';
 import { z } from 'zod';
 import { commandAs, type Tx } from '../db/client';
@@ -91,6 +92,38 @@ export async function addStarterExercises(meta: Meta): Promise<StoredResponse> {
       }
       await audit(tx, wid, meta.actorId, 'exercise.starter', wid, meta.requestId);
       return { status: 200, body: { added, skipped: STARTER_EXERCISES.length - added } };
+    });
+  });
+}
+
+const machineSchema = z.object({ keys: z.array(z.string().max(80)).min(1, { message: 'Choisis au moins un exercice' }).max(80) }).strict();
+
+/**
+ * addMachineExercises · C (D-178) : exercices de la bibliothèque des machines ajoutés à celle du coach, avec leurs
+ * réglages et consignes, sans doublon de nom. La clé du catalogue est gardée : l’animation suit, une fois validée.
+ */
+export async function addMachineExercises(meta: Meta, body: unknown): Promise<StoredResponse> {
+  const wid = meta.workspaceId;
+  const { keys } = parse<{ keys: string[] }>(machineSchema, body);
+  const picked = [...new Set(keys)].map((k) => machineExercise(k));
+  if (picked.some((e) => !e)) throw invalid([{ path: 'keys', rule: 'Exercice inconnu dans la bibliothèque des machines' }]);
+  return commandAs(meta.actorId, async (tx) => {
+    await requireCoach(tx, wid);
+    return idempotent(tx, { workspaceId: wid, actorId: meta.actorId, action: 'exercise.machines', key: meta.idempotencyKey, body: { keys } }, async () => {
+      const rows = (await tx.query<{ n: string; k: string | null }>('select lower(name) as n, starter_key as k from public.exercises where workspace_id = $1 and not archived', [wid])).rows;
+      const names = new Set(rows.map((r) => r.n)), have = new Set(rows.map((r) => r.k));
+      let added = 0;
+      for (const e of picked as MachineExercise[]) {
+        if (names.has(e.name.toLowerCase()) || have.has(e.key)) continue;
+        await tx.query(
+          `insert into public.exercises(workspace_id, owner_id, name, instructions, muscle, equipment, starter, starter_key) values ($1, auth.uid(), $2, $3, $4, $5, false, $6)`,
+          [wid, e.name, machineInstructions(e), e.muscle, ['machine'], e.key],
+        );
+        names.add(e.name.toLowerCase());
+        added++;
+      }
+      await audit(tx, wid, meta.actorId, 'exercise.machines', wid, meta.requestId);
+      return { status: 200, body: { added, skipped: picked.length - added } };
     });
   });
 }

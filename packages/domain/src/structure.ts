@@ -451,7 +451,7 @@ export function describeStep(s: Step, sessionSport?: Sport): string {
 /** Une ligne par bloc, lisible par l’athlète : « 5 × (400 m · Z5 / 200 m · Z1) ». */
 export function describeBlock(b: Block, sessionSport?: Sport): string {
   if (b.type === 'step') return describeStep(b, sessionSport);
-  const inner = b.steps.map((s) => (s.type === 'step' && s.cardio ? describeStep(s, sessionSport) : s.type === 'step' ? `${s.exercise ? `${s.exercise.name} · ` : s.phase === 'rest' ? 'repos ' : ''}${describeMeasure(s.measure)}${describeIntensity(s.intensity) ? ` · ${describeIntensity(s.intensity)}` : ''}` : describeBlock(s, sessionSport)));
+  const inner = b.steps.map((s) => (s.type === 'step' && s.cardio ? describeStep(s, sessionSport) : s.type === 'step' ? `${s.exercise ? `${s.exercise.name} · ` : s.phase === 'rest' ? 'repos ' : s.phase === 'recovery' && sessionSport === 'strength' ? 'récup ' : ''}${describeMeasure(s.measure)}${describeIntensity(s.intensity) ? ` · ${describeIntensity(s.intensity)}` : ''}` : describeBlock(s, sessionSport)));
   return `${b.times} × (${inner.join(' / ')})`;
 }
 

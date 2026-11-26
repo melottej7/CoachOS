@@ -14,6 +14,7 @@ const STRENGTH_EXAMPLES: [write: string, means: string][] = [
   ['10 squats', '10 répétitions de squat (l’exercice de ta bibliothèque, avec sa vidéo)'],
   ['10 squat goblet 16kg', 'avec une charge de 16 kg'],
   ["4×(10 pompes + repos 1'30)", '4 séries de 10 pompes, 1 min 30 de repos entre les séries'],
+  ["4×10 presse à cuisses 60kg R2'", '4 séries de 10 à 60 kg, 2 min de récupération entre les séries'],
   ['30" planche', '30 secondes de planche'],
   ["3×(12 fentes arrière + 30\" planche + repos 1')", 'un circuit de 3 tours'],
   ['« Garde le dos droit »', 'une consigne pour l’exercice juste avant'],

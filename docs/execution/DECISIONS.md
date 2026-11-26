@@ -2536,3 +2536,13 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Suivi de séance** : pas de flèche, « Quitter » y joue ce rôle. Quitter cet écran de n’importe quelle façon (barre du bas, notification) met désormais la séance en pause, comme « Quitter ».
 - Les liens « ‹ Élèves », « ‹ Semaine de… » dans les pages restent : ce sont les seuls retours sur ordinateur.
 - **Vérifié** : parcours d’invitation (coach, 390 px : dossier ↔ liste filtrée, arrivée directe) et cardio (élève : pas de flèche pendant le suivi, fiche de séance → programme).
+
+## D-178 · Exercices sur machine : bibliothèque, animations dessinées, fiche dans la séance · 2026-11-26
+
+- **Bibliothèque des machines** rangée par type (guidées, poulies, Smith, disques, cardio) : 31 machines, 68 exercices, chacun avec muscles, niveau, réglages, trois consignes, erreur fréquente, alternative sur une autre machine. « Basic-Fit » n’est qu’une étiquette avec son degré de certitude ; vue Basic-Fit (demande du fondateur) : nom anglais de la machine et numéro du club, à relever.
+- **Animations dessinées** retenues après comparaison (vidéo du fondateur, bibliothèque achetée, IA) : un gabarit, chaque exercice décrit par départ et arrivée, genoux et coudes placés seuls, angles vérifiés par les tests ; SVG de 8 à 11 Ko dans la page, donc hors ligne. Trois pilotes faits (presse, tirage vertical, développé machine). Détail : [VIDEOS_MACHINES.md](VIDEOS_MACHINES.md).
+- **Aucune animation montrée à un élève avant validation du fondateur** (`MOTION_REVIEWS`, comme D-099) ; le coach la voit « À relire ».
+- **Séance** : le coach ajoute les exercices cochés à sa bibliothèque (commande `addMachineExercises`, sans migration) ; « 4×10 presse 60kg R2' » s’écrit sans parenthèses ; l’élève touche l’exercice et lit réglages, consignes, erreur, alternative, aussi en mode « Suivre ». La course ne change pas.
+- **Hors ligne** : en ouvrant Aujourd’hui, les séances des sept jours sont gardées d’avance par le service worker.
+- Filmer chez Basic-Fit pour CoachOS demande une **autorisation écrite** (règlement intérieur : activité commerciale).
+- **Vérifié** : tests (485), typecheck, construction, parcours coach 1440 px et élève 390 px, hors ligne. **Non vérifié** : vraies machines Basic-Fit et leurs numéros.

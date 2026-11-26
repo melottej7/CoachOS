@@ -5,79 +5,79 @@ Coche ce que tu vois. Pour une machine que tu ne reconnais pas, prends-la en pho
 
 ## Musculation guidée (charge à broche)
 
-- [ ] **Presse à cuisses** · Très probable · Siège incliné et grande plateforme pour les pieds, devant toi.
+- [ ] **Presse à cuisses** (« Leg Press » sur la machine ?) · n° dans ton club : ____ · Très probable · Siège incliné et grande plateforme pour les pieds, devant toi.
   Presse à cuisses · Presse à cuisses pieds hauts · Presse à cuisses une jambe · Mollets à la presse
-- [ ] **Leg extension** · Sûr · Siège avec un boudin devant les chevilles, qui monte quand tu tends les jambes.
+- [ ] **Leg extension** (« Leg Extension » sur la machine ?) · n° dans ton club : ____ · Sûr · Siège avec un boudin devant les chevilles, qui monte quand tu tends les jambes.
   Leg extension · Leg extension une jambe
-- [ ] **Leg curl assis** · Très probable · Siège, jambes tendues sur un boudin, une barre qui bloque le haut des cuisses.
+- [ ] **Leg curl assis** (« Seated Leg Curl » sur la machine ?) · n° dans ton club : ____ · Très probable · Siège, jambes tendues sur un boudin, une barre qui bloque le haut des cuisses.
   Leg curl assis
-- [ ] **Leg curl allongé** · Selon le club · Banc sur lequel on s’allonge sur le ventre, boudin derrière les chevilles.
+- [ ] **Leg curl allongé** (« Prone Leg Curl » sur la machine ?) · n° dans ton club : ____ · Selon le club · Banc sur lequel on s’allonge sur le ventre, boudin derrière les chevilles.
   Leg curl allongé
-- [ ] **Abducteurs et adducteurs** · Très probable · Siège avec deux bras rembourrés le long des cuisses ; un levier choisit écarter ou serrer.
+- [ ] **Abducteurs et adducteurs** (« Abductor / Adductor » sur la machine ?) · n° dans ton club : ____ · Très probable · Siège avec deux bras rembourrés le long des cuisses ; un levier choisit écarter ou serrer.
   Abducteurs à la machine · Adducteurs à la machine
-- [ ] **Machine à fessiers** · Selon le club · Appui pour le buste et une plaque à pousser vers l’arrière avec un pied.
+- [ ] **Machine à fessiers** (« Glute » sur la machine ?) · n° dans ton club : ____ · Selon le club · Appui pour le buste et une plaque à pousser vers l’arrière avec un pied.
   Extension de hanche à la machine
-- [ ] **Machine à mollets** · Selon le club · Épaulières au-dessus des épaules et une marche sous l’avant des pieds.
+- [ ] **Machine à mollets** (« Calf Raise » sur la machine ?) · n° dans ton club : ____ · Selon le club · Épaulières au-dessus des épaules et une marche sous l’avant des pieds.
   Mollets debout à la machine
-- [ ] **Développé assis (chest press)** · Très probable · Siège avec dossier droit et deux poignées à hauteur de poitrine, poussées vers l’avant.
+- [ ] **Développé assis (chest press)** (« Chest Press » sur la machine ?) · n° dans ton club : ____ · Très probable · Siège avec dossier droit et deux poignées à hauteur de poitrine, poussées vers l’avant.
   Développé assis à la machine · Développé assis un bras
-- [ ] **Développé incliné à la machine** · Sûr · Comme le développé assis, mais le dossier est incliné et les poignées montent en avant.
+- [ ] **Développé incliné à la machine** (« Incline Press » sur la machine ?) · n° dans ton club : ____ · Sûr · Comme le développé assis, mais le dossier est incliné et les poignées montent en avant.
   Développé incliné à la machine
-- [ ] **Pec deck (butterfly et oiseau)** · Très probable · Siège et deux bras pivotants à hauteur d’épaules ; se fait face au dossier ou face à la machine.
+- [ ] **Pec deck (butterfly et oiseau)** (« Pec Fly / Rear Delt » sur la machine ?) · n° dans ton club : ____ · Très probable · Siège et deux bras pivotants à hauteur d’épaules ; se fait face au dossier ou face à la machine.
   Écarté à la machine (butterfly) · Oiseau à la machine (pec deck inversé)
-- [ ] **Développé épaules à la machine** · Sûr · Siège droit, poignées au-dessus des épaules, poussées vers le haut.
+- [ ] **Développé épaules à la machine** (« Shoulder Press » sur la machine ?) · n° dans ton club : ____ · Sûr · Siège droit, poignées au-dessus des épaules, poussées vers le haut.
   Développé épaules à la machine
-- [ ] **Élévations latérales à la machine** · Selon le club · Siège face à un appui pour la poitrine, deux coussins contre l’extérieur des bras.
+- [ ] **Élévations latérales à la machine** (« Lateral Raise » sur la machine ?) · n° dans ton club : ____ · Selon le club · Siège face à un appui pour la poitrine, deux coussins contre l’extérieur des bras.
   Élévations latérales à la machine
-- [ ] **Tirage vertical (lat pulldown)** · Très probable · Siège, boudins sur les cuisses, longue barre suspendue à un câble au-dessus de la tête.
+- [ ] **Tirage vertical (lat pulldown)** (« Lat Pulldown » sur la machine ?) · n° dans ton club : ____ · Très probable · Siège, boudins sur les cuisses, longue barre suspendue à un câble au-dessus de la tête.
   Tirage vertical · Tirage vertical prise serrée · Tirage vertical prise inversée
-- [ ] **Rowing assis** · Très probable · Siège ou banc, appui pour la poitrine ou les pieds, poignées tirées vers le ventre.
+- [ ] **Rowing assis** (« Seated Row » sur la machine ?) · n° dans ton club : ____ · Très probable · Siège ou banc, appui pour la poitrine ou les pieds, poignées tirées vers le ventre.
   Rowing assis · Rowing assis prise large
-- [ ] **Curl biceps à la machine** · Très probable · Siège, pupitre incliné sous les bras, poignées à ramener vers les épaules.
+- [ ] **Curl biceps à la machine** (« Biceps Curl » sur la machine ?) · n° dans ton club : ____ · Très probable · Siège, pupitre incliné sous les bras, poignées à ramener vers les épaules.
   Curl biceps à la machine
-- [ ] **Triceps à la machine (dips assis)** · Très probable · Siège avec deux poignées sur les côtés, poussées vers le bas.
+- [ ] **Triceps à la machine (dips assis)** (« Seated Dip » sur la machine ?) · n° dans ton club : ____ · Très probable · Siège avec deux poignées sur les côtés, poussées vers le bas.
   Dips assis à la machine
-- [ ] **Machine à abdominaux** · Très probable · Siège avec des poignées ou des coussins au-dessus des épaules, on s’enroule vers l’avant.
+- [ ] **Machine à abdominaux** (« Abdominal Crunch » sur la machine ?) · n° dans ton club : ____ · Très probable · Siège avec des poignées ou des coussins au-dessus des épaules, on s’enroule vers l’avant.
   Crunch à la machine
-- [ ] **Machine à lombaires** · Selon le club · Siège avec un dossier haut qui pivote vers l’arrière.
+- [ ] **Machine à lombaires** (« Back Extension » sur la machine ?) · n° dans ton club : ____ · Selon le club · Siège avec un dossier haut qui pivote vers l’arrière.
   Extension lombaire à la machine
-- [ ] **Banc à lombaires (45°)** · Très probable · Banc incliné, chevilles bloquées sous des rouleaux, bassin sur un coussin.
+- [ ] **Banc à lombaires (45°)** (« Hyperextension » sur la machine ?) · n° dans ton club : ____ · Très probable · Banc incliné, chevilles bloquées sous des rouleaux, bassin sur un coussin.
   Extension lombaire au banc à 45°
-- [ ] **Tractions et dips assistés** · Selon le club · Grande machine avec une plateforme pour les genoux qui aide à monter, barres de traction et de dips.
+- [ ] **Tractions et dips assistés** (« Assisted Chin / Dip » sur la machine ?) · n° dans ton club : ____ · Selon le club · Grande machine avec une plateforme pour les genoux qui aide à monter, barres de traction et de dips.
   Traction assistée · Dips assistés
 
 ## Poulies
 
-- [ ] **Double poulie réglable (vis-à-vis)** · Très probable · Deux colonnes avec chacune une poulie qui coulisse de haut en bas ; poignées, corde, barre.
+- [ ] **Double poulie réglable (vis-à-vis)** (« Cable Crossover » sur la machine ?) · n° dans ton club : ____ · Très probable · Deux colonnes avec chacune une poulie qui coulisse de haut en bas ; poignées, corde, barre.
   Écarté aux poulies de haut en bas · Écarté aux poulies de bas en haut · Extension des triceps à la corde · Extension des triceps au-dessus de la tête · Curl biceps à la poulie basse · Élévation latérale à la poulie · Face pull · Tirage bras tendus à la poulie · Rowing un bras à la poulie · Bûcheron à la poulie · Pallof press · Extension de hanche à la poulie basse · Abduction de hanche à la poulie · Crunch à genoux à la corde · Pull-through à la poulie basse · Oiseau aux poulies croisées
 
 ## Smith machine (barre guidée)
 
-- [ ] **Smith machine** · Très probable · Barre fixée sur deux rails verticaux, crochets pour la bloquer à chaque cran.
+- [ ] **Smith machine** (« Smith Machine » sur la machine ?) · n° dans ton club : ____ · Très probable · Barre fixée sur deux rails verticaux, crochets pour la bloquer à chaque cran.
   Squat à la Smith machine · Fente à la Smith machine · Développé couché à la Smith machine · Développé incliné à la Smith machine · Développé épaules assis à la Smith machine · Rowing buste penché à la Smith machine · Hip thrust à la Smith machine · Soulevé de terre jambes tendues à la Smith machine · Mollets debout à la Smith machine · Rowing inversé sous la barre · Pompes mains sur la barre
 
 ## Machines à disques
 
-- [ ] **Hack squat** · Selon le club · Dossier incliné et épaulières qui glissent sur des rails, plateforme au sol, disques sur les côtés.
+- [ ] **Hack squat** (« Hack Squat » sur la machine ?) · n° dans ton club : ____ · Selon le club · Dossier incliné et épaulières qui glissent sur des rails, plateforme au sol, disques sur les côtés.
   Hack squat
 
 ## Cardio
 
-- [ ] **Tapis de course** · Sûr · Tapis roulant avec console, vitesse et pente.
+- [ ] **Tapis de course** (« Treadmill » sur la machine ?) · n° dans ton club : ____ · Sûr · Tapis roulant avec console, vitesse et pente.
   Marche inclinée sur tapis · Course sur tapis
-- [ ] **Vélo elliptique** · Sûr · Pédales en ovale et grandes poignées mobiles.
+- [ ] **Vélo elliptique** (« Elliptical » sur la machine ?) · n° dans ton club : ____ · Sûr · Pédales en ovale et grandes poignées mobiles.
   Vélo elliptique
-- [ ] **Vélo droit** · Très probable · Vélo d’appartement classique, selle haute, guidon devant.
+- [ ] **Vélo droit** (« Upright Bike » sur la machine ?) · n° dans ton club : ____ · Très probable · Vélo d’appartement classique, selle haute, guidon devant.
   Vélo droit
-- [ ] **Vélo semi-allongé** · Très probable · Siège avec dossier, pédales devant toi.
+- [ ] **Vélo semi-allongé** (« Recumbent Bike » sur la machine ?) · n° dans ton club : ____ · Très probable · Siège avec dossier, pédales devant toi.
   Vélo semi-allongé
-- [ ] **Rameur** · Très probable · Long rail au sol, siège qui glisse, poignée reliée à un volant.
+- [ ] **Rameur** (« Rower » sur la machine ?) · n° dans ton club : ____ · Très probable · Long rail au sol, siège qui glisse, poignée reliée à un volant.
   Rameur
-- [ ] **Escalier (stair climber)** · Selon le club · Marches qui défilent comme un escalator, rampes de chaque côté.
+- [ ] **Escalier (stair climber)** (« Stair Climber » sur la machine ?) · n° dans ton club : ____ · Selon le club · Marches qui défilent comme un escalator, rampes de chaque côté.
   Escalier
-- [ ] **Vélo à air (air bike)** · Selon le club · Grand ventilateur à l’avant, poignées qui bougent avec les pédales.
+- [ ] **Vélo à air (air bike)** (« Air Bike » sur la machine ?) · n° dans ton club : ____ · Selon le club · Grand ventilateur à l’avant, poignées qui bougent avec les pédales.
   Vélo à air
-- [ ] **SkiErg** · Selon le club · Colonne verticale fixée au mur ou au sol, deux poignées à tirer vers le bas.
+- [ ] **SkiErg** (« SkiErg » sur la machine ?) · n° dans ton club : ____ · Selon le club · Colonne verticale fixée au mur ou au sol, deux poignées à tirer vers le bas.
   SkiErg
 
 ## Détail des exercices

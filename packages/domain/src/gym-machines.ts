@@ -27,6 +27,8 @@ export type GymChain = keyof typeof GYM_CHAINS;
 export interface GymMachine {
   key: string;
   name: string;
+  /** Nom anglais habituel des fabricants, souvent celui écrit sur la plaque de la machine (à vérifier sur place). */
+  en: string;
   kind: MachineKind;
   /** Étiquettes « Disponible chez … », avec le degré de certitude. */
   chains: Partial<Record<GymChain, Availability>>;
@@ -61,42 +63,55 @@ const BF = (a: Availability): GymMachine['chains'] => ({ 'basic-fit-be': a });
 
 export const GYM_MACHINES: GymMachine[] = [
   // Musculation guidée
-  { key: 'presse-cuisses', name: 'Presse à cuisses', kind: 'guided', chains: BF('likely'), looks: 'Siège incliné et grande plateforme pour les pieds, devant toi.' },
-  { key: 'leg-extension', name: 'Leg extension', kind: 'guided', chains: BF('sure'), looks: 'Siège avec un boudin devant les chevilles, qui monte quand tu tends les jambes.' },
-  { key: 'leg-curl-assis', name: 'Leg curl assis', kind: 'guided', chains: BF('likely'), looks: 'Siège, jambes tendues sur un boudin, une barre qui bloque le haut des cuisses.' },
-  { key: 'leg-curl-allonge', name: 'Leg curl allongé', kind: 'guided', chains: BF('verify'), looks: 'Banc sur lequel on s’allonge sur le ventre, boudin derrière les chevilles.' },
-  { key: 'abducteurs-adducteurs', name: 'Abducteurs et adducteurs', kind: 'guided', chains: BF('likely'), looks: 'Siège avec deux bras rembourrés le long des cuisses ; un levier choisit écarter ou serrer.' },
-  { key: 'fessiers-machine', name: 'Machine à fessiers', kind: 'guided', chains: BF('verify'), looks: 'Appui pour le buste et une plaque à pousser vers l’arrière avec un pied.' },
-  { key: 'mollets-machine', name: 'Machine à mollets', kind: 'guided', chains: BF('verify'), looks: 'Épaulières au-dessus des épaules et une marche sous l’avant des pieds.' },
-  { key: 'chest-press', name: 'Développé assis (chest press)', kind: 'guided', chains: BF('likely'), looks: 'Siège avec dossier droit et deux poignées à hauteur de poitrine, poussées vers l’avant.' },
-  { key: 'developpe-incline', name: 'Développé incliné à la machine', kind: 'guided', chains: BF('sure'), looks: 'Comme le développé assis, mais le dossier est incliné et les poignées montent en avant.' },
-  { key: 'pec-deck', name: 'Pec deck (butterfly et oiseau)', kind: 'guided', chains: BF('likely'), looks: 'Siège et deux bras pivotants à hauteur d’épaules ; se fait face au dossier ou face à la machine.' },
-  { key: 'shoulder-press', name: 'Développé épaules à la machine', kind: 'guided', chains: BF('sure'), looks: 'Siège droit, poignées au-dessus des épaules, poussées vers le haut.' },
-  { key: 'elevations-laterales-machine', name: 'Élévations latérales à la machine', kind: 'guided', chains: BF('verify'), looks: 'Siège face à un appui pour la poitrine, deux coussins contre l’extérieur des bras.' },
-  { key: 'lat-pulldown', name: 'Tirage vertical (lat pulldown)', kind: 'guided', chains: BF('likely'), looks: 'Siège, boudins sur les cuisses, longue barre suspendue à un câble au-dessus de la tête.' },
-  { key: 'seated-row', name: 'Rowing assis', kind: 'guided', chains: BF('likely'), looks: 'Siège ou banc, appui pour la poitrine ou les pieds, poignées tirées vers le ventre.' },
-  { key: 'biceps-machine', name: 'Curl biceps à la machine', kind: 'guided', chains: BF('likely'), looks: 'Siège, pupitre incliné sous les bras, poignées à ramener vers les épaules.' },
-  { key: 'triceps-machine', name: 'Triceps à la machine (dips assis)', kind: 'guided', chains: BF('likely'), looks: 'Siège avec deux poignées sur les côtés, poussées vers le bas.' },
-  { key: 'abdos-machine', name: 'Machine à abdominaux', kind: 'guided', chains: BF('likely'), looks: 'Siège avec des poignées ou des coussins au-dessus des épaules, on s’enroule vers l’avant.' },
-  { key: 'lombaires-machine', name: 'Machine à lombaires', kind: 'guided', chains: BF('verify'), looks: 'Siège avec un dossier haut qui pivote vers l’arrière.' },
-  { key: 'banc-lombaires', name: 'Banc à lombaires (45°)', kind: 'guided', chains: BF('likely'), looks: 'Banc incliné, chevilles bloquées sous des rouleaux, bassin sur un coussin.' },
-  { key: 'traction-dips-assistes', name: 'Tractions et dips assistés', kind: 'guided', chains: BF('verify'), looks: 'Grande machine avec une plateforme pour les genoux qui aide à monter, barres de traction et de dips.' },
+  { key: 'presse-cuisses', name: 'Presse à cuisses', en: 'Leg Press', kind: 'guided', chains: BF('likely'), looks: 'Siège incliné et grande plateforme pour les pieds, devant toi.' },
+  { key: 'leg-extension', name: 'Leg extension', en: 'Leg Extension', kind: 'guided', chains: BF('sure'), looks: 'Siège avec un boudin devant les chevilles, qui monte quand tu tends les jambes.' },
+  { key: 'leg-curl-assis', name: 'Leg curl assis', en: 'Seated Leg Curl', kind: 'guided', chains: BF('likely'), looks: 'Siège, jambes tendues sur un boudin, une barre qui bloque le haut des cuisses.' },
+  { key: 'leg-curl-allonge', name: 'Leg curl allongé', en: 'Prone Leg Curl', kind: 'guided', chains: BF('verify'), looks: 'Banc sur lequel on s’allonge sur le ventre, boudin derrière les chevilles.' },
+  { key: 'abducteurs-adducteurs', name: 'Abducteurs et adducteurs', en: 'Abductor / Adductor', kind: 'guided', chains: BF('likely'), looks: 'Siège avec deux bras rembourrés le long des cuisses ; un levier choisit écarter ou serrer.' },
+  { key: 'fessiers-machine', name: 'Machine à fessiers', en: 'Glute', kind: 'guided', chains: BF('verify'), looks: 'Appui pour le buste et une plaque à pousser vers l’arrière avec un pied.' },
+  { key: 'mollets-machine', name: 'Machine à mollets', en: 'Calf Raise', kind: 'guided', chains: BF('verify'), looks: 'Épaulières au-dessus des épaules et une marche sous l’avant des pieds.' },
+  { key: 'chest-press', name: 'Développé assis (chest press)', en: 'Chest Press', kind: 'guided', chains: BF('likely'), looks: 'Siège avec dossier droit et deux poignées à hauteur de poitrine, poussées vers l’avant.' },
+  { key: 'developpe-incline', name: 'Développé incliné à la machine', en: 'Incline Press', kind: 'guided', chains: BF('sure'), looks: 'Comme le développé assis, mais le dossier est incliné et les poignées montent en avant.' },
+  { key: 'pec-deck', name: 'Pec deck (butterfly et oiseau)', en: 'Pec Fly / Rear Delt', kind: 'guided', chains: BF('likely'), looks: 'Siège et deux bras pivotants à hauteur d’épaules ; se fait face au dossier ou face à la machine.' },
+  { key: 'shoulder-press', name: 'Développé épaules à la machine', en: 'Shoulder Press', kind: 'guided', chains: BF('sure'), looks: 'Siège droit, poignées au-dessus des épaules, poussées vers le haut.' },
+  { key: 'elevations-laterales-machine', name: 'Élévations latérales à la machine', en: 'Lateral Raise', kind: 'guided', chains: BF('verify'), looks: 'Siège face à un appui pour la poitrine, deux coussins contre l’extérieur des bras.' },
+  { key: 'lat-pulldown', name: 'Tirage vertical (lat pulldown)', en: 'Lat Pulldown', kind: 'guided', chains: BF('likely'), looks: 'Siège, boudins sur les cuisses, longue barre suspendue à un câble au-dessus de la tête.' },
+  { key: 'seated-row', name: 'Rowing assis', en: 'Seated Row', kind: 'guided', chains: BF('likely'), looks: 'Siège ou banc, appui pour la poitrine ou les pieds, poignées tirées vers le ventre.' },
+  { key: 'biceps-machine', name: 'Curl biceps à la machine', en: 'Biceps Curl', kind: 'guided', chains: BF('likely'), looks: 'Siège, pupitre incliné sous les bras, poignées à ramener vers les épaules.' },
+  { key: 'triceps-machine', name: 'Triceps à la machine (dips assis)', en: 'Seated Dip', kind: 'guided', chains: BF('likely'), looks: 'Siège avec deux poignées sur les côtés, poussées vers le bas.' },
+  { key: 'abdos-machine', name: 'Machine à abdominaux', en: 'Abdominal Crunch', kind: 'guided', chains: BF('likely'), looks: 'Siège avec des poignées ou des coussins au-dessus des épaules, on s’enroule vers l’avant.' },
+  { key: 'lombaires-machine', name: 'Machine à lombaires', en: 'Back Extension', kind: 'guided', chains: BF('verify'), looks: 'Siège avec un dossier haut qui pivote vers l’arrière.' },
+  { key: 'banc-lombaires', name: 'Banc à lombaires (45°)', en: 'Hyperextension', kind: 'guided', chains: BF('likely'), looks: 'Banc incliné, chevilles bloquées sous des rouleaux, bassin sur un coussin.' },
+  { key: 'traction-dips-assistes', name: 'Tractions et dips assistés', en: 'Assisted Chin / Dip', kind: 'guided', chains: BF('verify'), looks: 'Grande machine avec une plateforme pour les genoux qui aide à monter, barres de traction et de dips.' },
   // Machines à disques
-  { key: 'hack-squat', name: 'Hack squat', kind: 'plate', chains: BF('verify'), looks: 'Dossier incliné et épaulières qui glissent sur des rails, plateforme au sol, disques sur les côtés.' },
+  { key: 'hack-squat', name: 'Hack squat', en: 'Hack Squat', kind: 'plate', chains: BF('verify'), looks: 'Dossier incliné et épaulières qui glissent sur des rails, plateforme au sol, disques sur les côtés.' },
   // Poulies
-  { key: 'poulie-double', name: 'Double poulie réglable (vis-à-vis)', kind: 'cable', chains: BF('likely'), looks: 'Deux colonnes avec chacune une poulie qui coulisse de haut en bas ; poignées, corde, barre.' },
+  { key: 'poulie-double', name: 'Double poulie réglable (vis-à-vis)', en: 'Cable Crossover', kind: 'cable', chains: BF('likely'), looks: 'Deux colonnes avec chacune une poulie qui coulisse de haut en bas ; poignées, corde, barre.' },
   // Smith machine
-  { key: 'smith', name: 'Smith machine', kind: 'smith', chains: BF('likely'), looks: 'Barre fixée sur deux rails verticaux, crochets pour la bloquer à chaque cran.' },
+  { key: 'smith', name: 'Smith machine', en: 'Smith Machine', kind: 'smith', chains: BF('likely'), looks: 'Barre fixée sur deux rails verticaux, crochets pour la bloquer à chaque cran.' },
   // Cardio
-  { key: 'tapis', name: 'Tapis de course', kind: 'cardio', chains: BF('sure'), looks: 'Tapis roulant avec console, vitesse et pente.' },
-  { key: 'velo-elliptique', name: 'Vélo elliptique', kind: 'cardio', chains: BF('sure'), looks: 'Pédales en ovale et grandes poignées mobiles.' },
-  { key: 'velo-droit', name: 'Vélo droit', kind: 'cardio', chains: BF('likely'), looks: 'Vélo d’appartement classique, selle haute, guidon devant.' },
-  { key: 'velo-allonge', name: 'Vélo semi-allongé', kind: 'cardio', chains: BF('likely'), looks: 'Siège avec dossier, pédales devant toi.' },
-  { key: 'rameur', name: 'Rameur', kind: 'cardio', chains: BF('likely'), looks: 'Long rail au sol, siège qui glisse, poignée reliée à un volant.' },
-  { key: 'escalier', name: 'Escalier (stair climber)', kind: 'cardio', chains: BF('verify'), looks: 'Marches qui défilent comme un escalator, rampes de chaque côté.' },
-  { key: 'velo-air', name: 'Vélo à air (air bike)', kind: 'cardio', chains: BF('verify'), looks: 'Grand ventilateur à l’avant, poignées qui bougent avec les pédales.' },
-  { key: 'skierg', name: 'SkiErg', kind: 'cardio', chains: BF('verify'), looks: 'Colonne verticale fixée au mur ou au sol, deux poignées à tirer vers le bas.' },
+  { key: 'tapis', name: 'Tapis de course', en: 'Treadmill', kind: 'cardio', chains: BF('sure'), looks: 'Tapis roulant avec console, vitesse et pente.' },
+  { key: 'velo-elliptique', name: 'Vélo elliptique', en: 'Elliptical', kind: 'cardio', chains: BF('sure'), looks: 'Pédales en ovale et grandes poignées mobiles.' },
+  { key: 'velo-droit', name: 'Vélo droit', en: 'Upright Bike', kind: 'cardio', chains: BF('likely'), looks: 'Vélo d’appartement classique, selle haute, guidon devant.' },
+  { key: 'velo-allonge', name: 'Vélo semi-allongé', en: 'Recumbent Bike', kind: 'cardio', chains: BF('likely'), looks: 'Siège avec dossier, pédales devant toi.' },
+  { key: 'rameur', name: 'Rameur', en: 'Rower', kind: 'cardio', chains: BF('likely'), looks: 'Long rail au sol, siège qui glisse, poignée reliée à un volant.' },
+  { key: 'escalier', name: 'Escalier (stair climber)', en: 'Stair Climber', kind: 'cardio', chains: BF('verify'), looks: 'Marches qui défilent comme un escalator, rampes de chaque côté.' },
+  { key: 'velo-air', name: 'Vélo à air (air bike)', en: 'Air Bike', kind: 'cardio', chains: BF('verify'), looks: 'Grand ventilateur à l’avant, poignées qui bougent avec les pédales.' },
+  { key: 'skierg', name: 'SkiErg', en: 'SkiErg', kind: 'cardio', chains: BF('verify'), looks: 'Colonne verticale fixée au mur ou au sol, deux poignées à tirer vers le bas.' },
 ];
+
+/**
+ * Vue Basic-Fit (demande du fondateur, 26 novembre) : numéro de la machine dans le club, tel qu’affiché sur place.
+ * Vide tant qu’il n’est pas relevé dans un club (liste à cocher, photos) ; si les numéros changent d’un club à l’autre,
+ * ils passeront par club.
+ */
+export const CHAIN_NUMBERS: Readonly<Partial<Record<GymChain, Readonly<Record<string, string>>>>> = { 'basic-fit-be': {} };
+
+/** « n° 12 · Leg Press », ou le seul nom anglais tant que le numéro n’est pas relevé. */
+export function chainLabel(m: Pick<GymMachine, 'key' | 'en'>, chain: GymChain = 'basic-fit-be'): string {
+  const n = CHAIN_NUMBERS[chain]?.[m.key];
+  return n ? `n° ${n} · ${m.en}` : m.en;
+}
 
 const x = (
   key: string, name: string, machine: string, muscle: Muscle, muscles: string, level: MachineLevel,
@@ -440,4 +455,14 @@ export function machineInstructions(e: MachineExercise): string {
     `Erreur fréquente : ${e.mistake}`,
     alt ? `Si la machine est prise : ${alt}.` : null,
   ].filter(Boolean).join('\n').slice(0, 1500);
+}
+
+/**
+ * Fiche d’un exercice de la bibliothèque du coach venu des machines : réglages, consignes, erreur et alternative
+ * affichés en clair tant que le coach n’a pas réécrit les consignes ; sinon, son texte prime (`structured` faux).
+ */
+export function machineHowTo(e: { starterKey?: string | null; instructions: string | null }): { machine: MachineExercise; structured: boolean } | null {
+  const m = machineExercise(e.starterKey);
+  if (!m) return null;
+  return { machine: m, structured: !e.instructions || e.instructions.trim() === machineInstructions(m) };
 }

@@ -19,11 +19,35 @@ self.addEventListener('activate', (event) => {
 
 const clearAll = () => Promise.all([caches.delete(PAGES), caches.delete(ASSETS)]);
 
+const isAthletePage = (url) => /^\/athlete\/[^/]+\/(today|schedule|workouts|progress|coach|setup)(\/|$)/.test(url.pathname);
+
+/** Garde une page de l’élève telle que reçue ; faux si la session n’est plus valable. */
+async function keepPage(key, res) {
+  if (res.redirected && /^\/(login|demo)\b/.test(new URL(res.url).pathname)) { await clearAll(); return false; }
+  if (res.ok && (res.headers.get('content-type') || '').includes('text/html')) {
+    const body = await res.clone().text();
+    const c = await caches.open(PAGES);
+    await c.delete(key);
+    await c.put(key, new Response(body, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-saved-at': new Date().toISOString() } }));
+  }
+  return true;
+}
+
 self.addEventListener('message', (event) => {
   if (event.data === 'clear') event.waitUntil(clearAll());
+  // D-178 : séances de la semaine gardées d’avance (consignes et animations sont dans la page), 16 au plus.
+  if (event.data && event.data.type === 'coachos-keep' && Array.isArray(event.data.urls)) {
+    event.waitUntil((async () => {
+      for (const raw of event.data.urls.slice(0, 16)) {
+        let url;
+        try { url = new URL(raw, self.location.origin); } catch { continue; }
+        if (url.origin !== self.location.origin || !isAthletePage(url)) continue;
+        try { if (!(await keepPage(url.href, await fetch(url.href, { credentials: 'same-origin' })))) return; } catch { return; }
+      }
+      await trim(PAGES, MAX_PAGES);
+    })());
+  }
 });
-
-const isAthletePage = (url) => /^\/athlete\/[^/]+\/(today|schedule|workouts|progress|coach|setup)(\/|$)/.test(url.pathname);
 const isAsset = (url) => url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/icons/') || url.pathname === '/apple-touch-icon.png' || url.pathname === '/manifest.webmanifest';
 
 const MAX_ASSETS = 200;
@@ -60,15 +84,7 @@ self.addEventListener('fetch', (event) => {
       try {
         const res = await fetch(req);
         // Une redirection vers la connexion veut dire : plus de session ; on n’affichera plus rien de gardé.
-        if (res.redirected && /^\/(login|demo)\b/.test(new URL(res.url).pathname)) { await clearAll(); return res; }
-        if (res.ok && (res.headers.get('content-type') || '').includes('text/html')) {
-          const copy = res.clone();
-          const body = await copy.text();
-          const c = await caches.open(PAGES);
-          await c.delete(req.url);
-          await c.put(req.url, new Response(body, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-saved-at': new Date().toISOString() } }));
-          event.waitUntil(trim(PAGES, MAX_PAGES));
-        }
+        if (await keepPage(req.url, res)) event.waitUntil(trim(PAGES, MAX_PAGES));
         return res;
       } catch {
         const c = await caches.open(PAGES);

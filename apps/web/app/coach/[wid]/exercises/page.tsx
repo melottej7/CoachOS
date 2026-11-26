@@ -4,6 +4,7 @@ import { coachContext } from '@/server/repo/context';
 import { listExercises } from '@/server/repo/exercises';
 import { Banner, Heading, LinkButton, Stack, Text } from '@/design';
 import { ExerciseLibrary } from '@/views/coach/library/exercises';
+import { MachineCatalog } from '@/views/coach/library/machine-catalog';
 
 export const metadata = { title: 'Exercices' };
 
@@ -27,6 +28,7 @@ export default async function Exercises({ params }: { params: Promise<{ wid: str
         </Banner>
       ) : null}
       <ExerciseLibrary wid={wid} items={items} />
+      <MachineCatalog wid={wid} have={items.flatMap((e) => (e.starterKey ? [e.starterKey] : []))} />
     </Stack>
   );
 }
