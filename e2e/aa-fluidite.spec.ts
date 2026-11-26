@@ -25,6 +25,13 @@ test('élève : la séance du jour et « Faite » sur le premier écran, sans d�
   expect(box!.y + box!.height).toBeLessThan(PHONE.height - 80); // au-dessus de la barre basse
   // Le bilan et l’installation restent proposés, plus bas.
   await expect(p.getByText('Ton bilan')).toBeAttached();
+  // D-178 · « Pas faite » laisse 5 s pour se raviser : « Annuler » et rien ne part.
+  await p.getByRole('button', { name: 'Pas faite', exact: true }).click();
+  await expect(p.getByText(/Envoi à ton coach dans \d s/)).toBeVisible();
+  await p.getByRole('button', { name: 'Annuler', exact: true }).click();
+  await p.waitForTimeout(6000);
+  await expect(faite).toBeVisible();
+  await expect(p.getByText('Retour envoyé')).toHaveCount(0);
 });
 
 test('coach : traiter d’un geste les retours sans signal, puis annuler', async ({ browser }) => {
@@ -73,6 +80,12 @@ test('coach : retirer un élève en un toucher, « Annuler », puis le rétablir
   await p.getByRole('list', { name: 'Élèves retirés' }).getByRole('button', { name: 'Rétablir' }).click();
   await p.waitForURL((u) => u.pathname === dossier);
   await expect(p.getByText('Invité·e, pas encore connecté·e').first()).toBeVisible();
+});
+
+test('coach : sans bilan, le sport de l’élève vient de ses séances', async ({ browser }) => {
+  const p = await as(browser, /Marine Roy/);
+  await p.goto(`/coach/${WS_A}/athletes`);
+  await expect(p.getByText(/Course à pied \(d’après ses séances\)/).first()).toBeVisible();
 });
 
 test('coach : le nom de l’élève ouvre sa fiche, depuis la conversation, un retour et sa semaine', async ({ browser }) => {

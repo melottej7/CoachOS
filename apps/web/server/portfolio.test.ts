@@ -30,6 +30,14 @@ beforeAll(async () => {
 describe('lot G · groupes, niveaux, objectifs, notes', () => {
   let marathon = '', mardi = '';
 
+  it('D-178 · sans bilan, le sport vient de ses séances ; sans séance, il reste inconnu', async () => {
+    const roster = (await portfolio(USERS.marine, WORKSPACE_A, TIME_ZONE)).roster;
+    const camille = roster.find((r) => r.id === ATHLETES.camille)!;
+    expect(camille.sport).toBeNull();
+    expect(camille.sessionSport).toBe('running');
+    expect(roster.find((r) => r.name === 'Inès Martin')!.sessionSport).toBeNull();
+  });
+
   it('le propriétaire crée des groupes ; nom unique ; ni élève ni coach d’un autre espace', async () => {
     marathon = idOf(await createTeam(meta(USERS.marine), { name: 'Préparation marathon' }));
     mardi = idOf(await createTeam(meta(USERS.marine), { name: 'Groupe du mardi' }));
