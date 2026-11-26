@@ -185,7 +185,7 @@ const PROGRAM_EXAMPLE = [
   "Dim · Sortie longue 50' Z1-2",
 ].join('\n');
 
-export function ProgramImport({ wid }: { wid: string }) {
+export function ProgramImport({ wid, ai = false }: { wid: string; ai?: boolean }) {
   const router = useRouter();
   const { run, pending, error } = useIntent<{ id: string; sessions: number; weeks: number }>();
   const [text, setText] = useState('');
@@ -197,6 +197,23 @@ export function ProgramImport({ wid }: { wid: string }) {
   const [off, setOff] = useState<Set<number>>(new Set());
   const [days, setDays] = useState<Map<number, number>>(new Map());
   const [done, setDone] = useState<{ sessions: number; weeks: number } | null>(null);
+  // IA-5 (D-193) : photo ou PDF recopié par l’IA dans le champ texte ; l’aperçu habituel prend la suite.
+  const photoRef = useRef<HTMLInputElement>(null);
+  const [reading, setReading] = useState(false);
+  const [aiNote, setAiNote] = useState<{ tone: 'info' | 'warning'; text: string } | null>(null);
+  async function readDocument(f: File) {
+    setAiNote(null);
+    if (f.size > 4 * 1024 * 1024) { setAiNote({ tone: 'warning', text: 'Fichier trop lourd (4 Mo au plus) : photographie une page à la fois.' }); return; }
+    setReading(true);
+    try {
+      const res = await fetch(`/api/v1/workspaces/${wid}/ai-import`, { method: 'POST', body: f, credentials: 'same-origin', headers: { 'content-type': f.type || 'application/octet-stream' } });
+      const p = (await res.json().catch(() => null)) as { status?: 'ready' | 'abstain'; text?: string; note?: string; source?: string; error?: { message?: string; fields?: { rule: string }[] } } | null;
+      if (!res.ok) setAiNote({ tone: 'warning', text: res.status === 413 ? 'Fichier trop lourd pour l’envoi (4 Mo au plus).' : p?.error?.fields?.[0]?.rule ?? p?.error?.message ?? 'Lecture impossible. Réessaie.' });
+      else if (p?.status === 'ready' && p.text) { setText(p.text); setPick(0); reset(); setAiNote({ tone: 'info', text: `${p.source === 'claude' ? 'Recopié par Claude' : 'IA simulée'} : relis le texte et l’aperçu ligne par ligne avant d’importer.${p.note ? ` ${p.note}` : ''}` }); }
+      else setAiNote({ tone: 'warning', text: p?.note || 'Je n’ai pas reconnu de programme dans ce fichier.' });
+    } catch { setAiNote({ tone: 'warning', text: 'Connexion perdue. Réessaie.' }); }
+    setReading(false);
+  }
 
   const detected = detectShiftedZones(text);
   const shifted = zones === 'auto' ? detected : zones === 'shifted';
@@ -221,6 +238,17 @@ export function ProgramImport({ wid }: { wid: string }) {
             <SportDefault id="pimp-sport" label="Sport quand la séance n’en dit rien" value={sport} onChange={(v) => { setSport(v); reset(); }} />
             <ZoneScale id="pimp-zones" value={zones} detected={detected} onChange={(v) => { setZones(v); reset(); }} />
           </Grid>
+          {ai ? (
+            <Stack gap={2}>
+              <Cluster gap={2}>
+                <Button icon="upload" loading={reading} onClick={() => photoRef.current?.click()}>Depuis une photo ou un PDF</Button>
+                <Text as="span" size="sm" muted>L’IA recopie le programme dans le champ ci-dessus ; le fichier n’est pas conservé.</Text>
+              </Cluster>
+              <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="ds-visually-hidden" tabIndex={-1} aria-hidden="true"
+                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void readDocument(f); }} />
+              {aiNote ? <Banner tone={aiNote.tone}>{aiNote.text}</Banner> : null}
+            </Stack>
+          ) : null}
           <Cluster gap={2}>
             <Button size="sm" variant="ghost" onClick={() => { setText(PROGRAM_EXAMPLE); setPick(0); reset(); }}>Voir un exemple</Button>
             {text ? <Button size="sm" variant="ghost" onClick={() => { setText(''); reset(); }}>Effacer</Button> : null}

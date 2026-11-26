@@ -100,12 +100,19 @@ function readFinal<T>(message: Anthropic.Beta.BetaMessage, schema: z.ZodType<T>,
 }
 
 /** Un appel, sortie JSON structurée. Sans clé : `simulate()` (déterministe, validé de la même façon). */
-export async function askStructured<T>(o: CommonOptions<T> & { simulate: () => T }): Promise<AiResult<T>> {
+export async function askStructured<T>(o: Omit<CommonOptions<T>, 'user'> & {
+  /** Texte, ou blocs (IA-5 : image ou PDF suivi d’un texte) ; le contenu d’un document reste une donnée. */
+  user: string | Anthropic.Beta.BetaContentBlockParam[];
+  /** IA-5 : jetons d’entrée estimés des blocs non textuels (image, PDF), pour la réserve du budget. */
+  extraInputTokens?: number;
+  simulate: () => T;
+}): Promise<AiResult<T>> {
   await checkSwitch(o.actorId, o.workspaceId, o.manual);
   if (aiSource() === 'simulation') return { source: 'simulation', model: 'simulation', output: o.schema.parse(o.simulate()), declined: null, usage: null, toolCalls: [] };
   const model = aiModel();
   const prefix = cachedPrefix(o.system, o.method);
-  const inputChars = prefix.system.reduce((n, b) => n + b.text.length, 0) + o.user.length;
+  const userChars = typeof o.user === 'string' ? o.user.length : o.user.reduce((n, b) => n + (b.type === 'text' ? b.text.length : 0), 0);
+  const inputChars = prefix.system.reduce((n, b) => n + b.text.length, 0) + userChars + (o.extraInputTokens ?? 0) * 3;
   return withBudget(o.workspaceId, o.actorId, aiReserveMicros(o.maxTokens, inputChars, model), o.manual, async () => {
     let response: Anthropic.Beta.BetaMessage;
     try {
@@ -188,7 +195,7 @@ export async function runWithTools<T>(o: CommonOptions<T> & {
 }
 
 /** Modules du journal ai_suggestions (contrainte de la table). */
-export type AiModule = 'summary' | 'fatigue' | 'anomaly' | 'adaptation' | 'feedback' | 'alert' | 'dictation' | 'method' | 'program';
+export type AiModule = 'summary' | 'fatigue' | 'anomaly' | 'adaptation' | 'feedback' | 'alert' | 'dictation' | 'method' | 'program' | 'import' | 'exercise';
 
 /** Journal ai_suggestions : module, version de consigne, empreinte, sortie et usage. Renvoie l’identifiant. */
 export async function recordSuggestion(tx: Tx, s: {

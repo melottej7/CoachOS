@@ -5,6 +5,7 @@ import { listExercises } from '@/server/repo/exercises';
 import { Banner, Heading, LinkButton, Stack, Text } from '@/design';
 import { ExerciseLibrary } from '@/views/coach/library/exercises';
 import { MachineCatalog } from '@/views/coach/library/machine-catalog';
+import { aiEnabled } from '@/server/ai/settings';
 
 export const metadata = { title: 'Exercices' };
 
@@ -27,7 +28,7 @@ export default async function Exercises({ params }: { params: Promise<{ wid: str
           L’onglet Exercices est masqué et le sport « Musculation » n’est pas proposé dans tes séances.
         </Banner>
       ) : null}
-      <ExerciseLibrary wid={wid} items={items} />
+      <ExerciseLibrary wid={wid} items={items} ai={await aiEnabled(actor.userId, wid)} />
       <MachineCatalog wid={wid} have={items.flatMap((e) => (e.starterKey ? [e.starterKey] : []))} />
     </Stack>
   );

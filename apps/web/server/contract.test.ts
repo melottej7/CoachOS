@@ -34,6 +34,7 @@ import { dictateWorkout } from './commands/ai-dictation';
 import { proposeMethod } from './commands/ai-method';
 import { proposeProgramDraft, saveAiProgram } from './commands/ai-program';
 import { askAssistant } from './commands/ai-assistant';
+import { proposeExerciseCues, transcribeProgramDocument } from './commands/ai-library';
 import { applyWeekProposal, weekProposals } from './commands/week-proposals';
 
 // Test de contrat : chaque réponse réelle des commandes est validée contre contracts/openapi.json
@@ -243,6 +244,10 @@ describe('réponses conformes au contrat OpenAPI', () => {
       const aiAsk = await askAssistant(m(), { text: q });
       check('/workspaces/{wid}/ai-assistant', 'post', aiAsk.status, aiAsk.body);
     }
+    const aiImp = await transcribeProgramDocument(m(), new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    check('/workspaces/{wid}/ai-import', 'post', aiImp.status, aiImp.body);
+    const aiEx = await proposeExerciseCues(m(), { name: 'Presse à cuisses', muscle: 'legs', equipment: [] });
+    check('/workspaces/{wid}/ai-exercise', 'post', aiEx.status, aiEx.body);
     const appt = await createAppointment(m(), { athleteId: ATHLETES.noah, title: 'Appel', kind: 'call', startsLocal: '2026-12-02T12:00', timeZone: TIME_ZONE, durationMin: 20 });
     check('/workspaces/{wid}/appointments', 'post', appt.status, appt.body);
     const apptUp = await updateAppointment({ ...m(), appointmentId: id(appt) }, { expectedRevision: 1, status: 'canceled' });

@@ -4,7 +4,7 @@
  * Les tables privacy_notices et privacy_notice_views du contrat restent réservées à un texte propre à chaque espace.
  */
 
-export const PRIVACY_VERSION = '2 · 26 novembre 2026'; // v2 (IA-0) : Anthropic sous-traitant de l’assistant IA, à faire relire par un professionnel
+export const PRIVACY_VERSION = '2 · 27 novembre 2026'; // v2 (IA-0) : Anthropic sous-traitant de l’assistant IA, à faire relire par un professionnel
 
 export interface NoticeSection {
   id: string;
@@ -63,7 +63,7 @@ export const PRIVACY_SECTIONS: NoticeSection[] = [
       'Supabase (Irlande, Union européenne) : base de données et comptes.',
       'Vercel (serveurs à Dublin, Union européenne ; réseau mondial pour la diffusion des pages) : hébergement de l’application.',
       'Resend : envoi des e-mails (invitation, mot de passe oublié, notifications sans le contenu des messages).',
-      'Anthropic (États-Unis), sous-traitant pour l’assistant IA (Claude) : uniquement si l’IA est allumée dans l’espace de ton coach et qu’il lui demande un brouillon. Il reçoit des faits d’entraînement utiles à cette demande (sport, distance visée, niveau, repères comme la VMA ou la FTP, jours disponibles, date de l’objectif, séries et charges réalisées en musculation), où tu es désigné par une référence anonyme. Il ne reçoit ni ton nom, ni ton adresse, ni tes messages, ni tes commentaires, ni tes notes, ni aucune donnée Strava ou de santé. Ton coach relit chaque proposition : rien n’est publié ni envoyé sans lui.',
+      'Anthropic (États-Unis), sous-traitant pour l’assistant IA (Claude) : uniquement si l’IA est allumée dans l’espace de ton coach et qu’il lui demande un brouillon. Il reçoit des faits d’entraînement utiles à cette demande (sport, distance visée, niveau, repères comme la VMA ou la FTP, jours disponibles, date de l’objectif, séries et charges réalisées en musculation), où tu es désigné par une référence anonyme. Le commentaire d’un de tes retours ne part que si ton coach demande un brouillon de réponse à ce retour, ton nom remplacé par la référence. Si ton coach lui confie la photo ou le PDF d’un ancien programme, le fichier sert à la recopie et n’est pas conservé par CoachOS. Il ne reçoit ni ton nom, ni ton adresse, ni tes messages, ni tes notes, ni aucune donnée Strava ou de santé. Ton coach relit chaque proposition : rien n’est publié ni envoyé sans lui.',
     ],
   },
   {

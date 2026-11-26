@@ -42,6 +42,7 @@ export * from './ai-dictation';
 export * from './ai-method';
 export * from './ai-program';
 export * from './ai-assistant';
+export * from './ai-import';
 export * from './coach-method';
 export * from './week-review';
 export * from './measure-freshness';
