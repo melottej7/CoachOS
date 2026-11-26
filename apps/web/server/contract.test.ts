@@ -33,6 +33,7 @@ import { setWorkspaceAi } from './ai/settings';
 import { dictateWorkout } from './commands/ai-dictation';
 import { proposeMethod } from './commands/ai-method';
 import { proposeProgramDraft, saveAiProgram } from './commands/ai-program';
+import { askAssistant } from './commands/ai-assistant';
 import { applyWeekProposal, weekProposals } from './commands/week-proposals';
 
 // Test de contrat : chaque réponse réelle des commandes est validée contre contracts/openapi.json
@@ -238,6 +239,10 @@ describe('réponses conformes au contrat OpenAPI', () => {
     const pb = aiProg.body as { suggestionId: string; program: { weeks: { sessions: { date: string; sport: string; title: string; notation: string }[] }[] } };
     const progSaved = await saveAiProgram(m(), { suggestionId: pb.suggestionId, sessions: pb.program.weeks[0]!.sessions.map((x) => ({ date: x.date, sport: x.sport, title: x.title, notation: x.notation })) });
     check('/workspaces/{wid}/ai-program/save', 'post', progSaved.status, progSaved.body);
+    for (const q of ['Qui n’a pas fait ses séances cette semaine ?', 'Prépare une réponse au retour de Noah', 'Crée une tâche : appeler Noah']) {
+      const aiAsk = await askAssistant(m(), { text: q });
+      check('/workspaces/{wid}/ai-assistant', 'post', aiAsk.status, aiAsk.body);
+    }
     const appt = await createAppointment(m(), { athleteId: ATHLETES.noah, title: 'Appel', kind: 'call', startsLocal: '2026-12-02T12:00', timeZone: TIME_ZONE, durationMin: 20 });
     check('/workspaces/{wid}/appointments', 'post', appt.status, appt.body);
     const apptUp = await updateAppointment({ ...m(), appointmentId: id(appt) }, { expectedRevision: 1, status: 'canceled' });

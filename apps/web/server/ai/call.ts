@@ -134,13 +134,16 @@ export async function runWithTools<T>(o: CommonOptions<T> & {
   maxIterations: number;
   /** IA-3 : travail long (programme) : réponses en flux, délai de 2 minutes par tour. */
   long?: boolean;
+  /** IA-4 : liste d’outils propre à l’usage (ordre fixe, pour le cache) ; par défaut, les outils en lecture. */
+  tools?: readonly AiReadTool<never>[];
   simulate: (call: (name: string, input: unknown) => Promise<unknown>) => Promise<T>;
 }): Promise<AiResult<T>> {
   await checkSwitch(o.actorId, o.workspaceId, o.manual);
   const scope = o.scope ?? await openScope(o.actorId, o.workspaceId);
   if (scope.workspaceId !== o.workspaceId || scope.actorId !== o.actorId) throw new Error('Portée des outils incohérente');
   const trace: ToolCallTrace[] = [];
-  const byName = new Map(READ_TOOLS.map((t) => [t.name, t]));
+  const toolList = o.tools ?? READ_TOOLS;
+  const byName = new Map(toolList.map((t) => [t.name, t]));
   const call = async (name: string, input: unknown): Promise<unknown> => {
     const tool = byName.get(name);
     if (!tool) { trace.push({ name, input, ok: false }); return { erreur: 'Outil inconnu.' }; }
@@ -149,7 +152,7 @@ export async function runWithTools<T>(o: CommonOptions<T> & {
   if (aiSource() === 'simulation') return { source: 'simulation', model: 'simulation', output: o.schema.parse(await o.simulate(call)), declined: null, usage: null, toolCalls: trace };
 
   const model = aiModel();
-  const prefix = cachedPrefix(o.system, o.method, READ_TOOLS);
+  const prefix = cachedPrefix(o.system, o.method, toolList);
   const tools = prefix.toolDefs.map((t) => betaZodTool({
     name: t.name, description: t.description, inputSchema: t.wire, strict: true,
     ...(t.cache ? { cache_control: EPHEMERAL } : {}),

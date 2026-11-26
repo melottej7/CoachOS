@@ -22095,6 +22095,335 @@
         }
       }
     },
+    "/workspaces/{wid}/ai-assistant": {
+      "post": {
+        "operationId": "askAssistant",
+        "summary": "« Demander » : réponse courte du coach avec ses sources et des brouillons (réponse, séance, tâche) ; rien n’est envoyé, publié ni créé (IA-4, D-192).",
+        "tags": [
+          "ai"
+        ],
+        "x-release": "MVP",
+        "x-role": "C",
+        "x-requests-per-minute": 20,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wid",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "text"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 500
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Résultat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "suggestionId",
+                    "source",
+                    "status",
+                    "answer",
+                    "facts",
+                    "replies",
+                    "sessions",
+                    "tasks"
+                  ],
+                  "properties": {
+                    "suggestionId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "simulation",
+                        "claude"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ready",
+                        "insufficient"
+                      ]
+                    },
+                    "answer": {
+                      "type": "string"
+                    },
+                    "facts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "text",
+                          "href"
+                        ],
+                        "properties": {
+                          "text": {
+                            "type": "string"
+                          },
+                          "href": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "replies": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "athleteId",
+                          "name",
+                          "text",
+                          "href"
+                        ],
+                        "properties": {
+                          "athleteId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "href": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "sessions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "name",
+                          "date",
+                          "sport",
+                          "title",
+                          "notation",
+                          "unread",
+                          "href"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "sport": {
+                            "type": "string",
+                            "enum": [
+                              "running",
+                              "trail",
+                              "cycling",
+                              "swimming",
+                              "triathlon",
+                              "duathlon",
+                              "strength"
+                            ]
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "notation": {
+                            "type": "string"
+                          },
+                          "unread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "href": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "tasks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "title",
+                          "athleteId",
+                          "dueOn"
+                        ],
+                        "properties": {
+                          "title": {
+                            "type": "string"
+                          },
+                          "athleteId": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "dueOn": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MALFORMED_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "AUTH_REQUIRED_OR_INVALID_SIGNATURE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACTION_FORBIDDEN_OR_FEATURE_DISABLED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RESOURCE_NOT_VISIBLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT_OR_QUOTA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_FIELDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "TEMPORARILY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/workspaces/{wid}/ai-settings": {
       "put": {
         "operationId": "setWorkspaceAi",

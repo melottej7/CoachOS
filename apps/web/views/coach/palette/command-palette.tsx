@@ -76,6 +76,7 @@ export function CommandPalette({ wid, owner, strength }: { wid: string; owner: b
     ];
     const actions: Entry[] = [
       ...(owner ? [{ id: 'a-add', group: 'Actions', label: 'Ajouter un élève', icon: 'plus' as IconName, href: `${base}/athletes/new`, keywords: 'inviter' }] : []),
+      { id: 'a-ask', group: 'Actions', label: 'Demander à l’IA', icon: 'bolt', href: `${base}/assistant`, keywords: 'ia assistant question resume brouillon' },
       { id: 'a-tpl', group: 'Actions', label: 'Nouvelle séance type', icon: 'plus', href: `${base}/library/new` },
       { id: 'a-imp', group: 'Actions', label: 'Importer des séances', icon: 'upload', href: `${base}/library/import` },
       { id: 'a-prep', group: 'Actions', label: 'Semaines à préparer', icon: 'calendar', href: `${base}/to-plan` },

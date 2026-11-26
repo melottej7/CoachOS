@@ -20,6 +20,8 @@ import { Relances } from '@/views/coach/home/relances';
 import { TaskItem } from '@/views/coach/home/task-item';
 import { taskView } from '@/views/coach/home/task-view';
 import s from '@/views/coach/home/home.module.css';
+import { aiEnabled } from '@/server/ai/settings';
+import { AskPanel } from '@/views/coach/home/ask-panel';
 
 export const metadata = { title: 'Accueil' };
 
@@ -107,6 +109,7 @@ export default async function CoachHome({ params, searchParams }: { params: Prom
           <Text className={s.brief}>{brief}</Text>
         </Stack>
         {simple ? null : <HomeActions wid={wid} athletes={athletes} teams={data.teams} today={today} timeZone={tz} />}
+        {data.roster.length && await aiEnabled(actor.userId, wid) ? <AskPanel wid={wid} compact /> : null}
       </Stack>
 
       {showSteps ? <FirstSteps base={base} state={stepsState} /> : !data.roster.length ? (

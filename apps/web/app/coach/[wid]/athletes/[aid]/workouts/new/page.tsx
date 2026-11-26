@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { isLocalDate, todayIn, weekStart, lastDoneByExercise, loadProgress, sportsFor } from '@coachos/domain';
+import { isLocalDate, todayIn, weekStart, lastDoneByExercise, loadProgress, parseNotation, sportsFor } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { listAssignedAthletes } from '@/server/repo/coach';
 import { listBlockTemplates, readTemplate } from '@/server/repo/library';
@@ -16,9 +16,9 @@ import { aiEnabled } from '@/server/ai/settings';
 export const metadata = { title: 'Nouvelle séance' };
 
 /** X20, refonte Chrono (D-147) : créer une prescription, enregistrée en brouillon. Lectures en parallèle. */
-export default async function NewWorkout({ params, searchParams }: { params: Promise<{ wid: string; aid: string }>; searchParams: Promise<{ date?: string; template?: string }> }) {
+export default async function NewWorkout({ params, searchParams }: { params: Promise<{ wid: string; aid: string }>; searchParams: Promise<{ date?: string; template?: string; sport?: string; titre?: string; notation?: string }> }) {
   const { wid, aid } = await params;
-  const { date, template } = await searchParams;
+  const { date, template, sport: sportParam, titre, notation } = await searchParams;
   const actor = await requireActor();
   const athlete = (await listAssignedAthletes(actor.userId, wid)).find((a) => a.id === aid);
   if (!athlete) notFound();
@@ -41,6 +41,10 @@ export default async function NewWorkout({ params, searchParams }: { params: Pro
   const allowed = sportsFor(modules);
   const defaultSport = profile?.sport && allowed.includes(profile.sport) ? profile.sport : (allowed[0] ?? 'running');
   const first = athlete.displayName.split(' ')[0] ?? athlete.displayName;
+  // IA-4 (D-192) : brouillon de séance de l’assistant (sport, titre, notation) ; relu ici, rien n’est enregistré sans le coach.
+  const aiSport = sportParam && (allowed as string[]).includes(sportParam) ? (sportParam as typeof defaultSport) : null;
+  const aiDraft = !w && aiSport && notation && notation.length <= 700 ? parseNotation(notation, aiSport) : null;
+  const fromAi = aiDraft && !aiDraft.errors.length && aiDraft.blocks.length ? { title: (titre ?? '').slice(0, 120), sport: aiSport!, intervals: aiDraft.blocks } : null;
   return (
     <Stack gap={6} className="ds-narrow-wide">
       <Cluster><LinkButton href={back} variant="ghost" size="sm" icon="chevronLeft">Semaine de {first}</LinkButton></Cluster>
@@ -48,11 +52,13 @@ export default async function NewWorkout({ params, searchParams }: { params: Pro
         <Eyebrow tone="coach"><AthleteLink wid={wid} id={aid}>{athlete.displayName}</AthleteLink></Eyebrow>
         <Heading level={1} size={1}>Nouvelle séance</Heading>
         {w ? <Text muted>À partir de « {w.title} » (bibliothèque). Ajuste-la pour {first} : la séance de la bibliothèque ne change pas.</Text> : null}
+        {fromAi ? <Text muted>Brouillon préparé par l’IA : relis-le et corrige-le ; rien n’est enregistré ni publié tant que tu ne le fais pas.</Text> : null}
       </Stack>
       <WorkoutForm ai={await aiEnabled(actor.userId, wid)} modules={modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name, equipment: x.equipment }))} gear={gear} lastDone={lastDoneByExercise(loadProgress(history))}
         savedBlocks={savedBlocks} refs={refs} wid={wid} aid={aid} athleteName={athlete.displayName} timeZone={athlete.timeZone} cancelHref={back}
         initial={w
           ? { title: w.title, localDate, sport: w.sport, minutes: w.durationSeconds ? String(Math.round(w.durationSeconds / 60)) : '', instructions: w.instructions ?? '', intervals: w.intervals }
+          : fromAi ? { title: fromAi.title, localDate, sport: fromAi.sport, minutes: '', instructions: '', intervals: fromAi.intervals }
           : { title: '', localDate, sport: defaultSport, minutes: '45', instructions: '' }} />
     </Stack>
   );
