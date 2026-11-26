@@ -4,7 +4,8 @@ import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { methodCandidates, readCoachMethod } from '@/server/commands/coach-method';
 import { Disclosure, Eyebrow, Heading, Stack, Text } from '@/design';
-import { MethodCandidates, MethodIdentity, MethodRules } from '@/views/coach/library/method';
+import { MethodCandidates, MethodIdentity, MethodNotesForm, MethodRules } from '@/views/coach/library/method';
+import { aiEnabled } from '@/server/ai/settings';
 
 export const metadata = { title: 'Ma méthode' };
 
@@ -41,6 +42,14 @@ export default async function MethodPage({ params }: { params: Promise<{ wid: st
           <Text size="sm" muted>Sur les {LEARNING.windowDays} derniers jours. CoachOS observe tes retouches sur les programmes générés (sortie longue déplacée, VMA retirée, footing raccourci…) et les réglages que tu appliques. Une règle n’est proposée qu’avec au moins {LEARNING.minSupport} observations sur {LEARNING.minWeeks} semaines et {Math.round(LEARNING.minConcordance * 100)} % dans le même sens. Elle ne s’applique que si tu l’acceptes.</Text>
         </Stack>
         <MethodCandidates wid={wid} version={view.version} method={view.method} items={candidates} />
+      </Stack>
+
+      <Stack as="section" gap={3} aria-labelledby="m-notes">
+        <Stack gap={1}>
+          <Heading level={2} size={3} id="m-notes">Ma méthode en quelques mots</Heading>
+          <Text size="sm" muted>L’IA les lit quand elle te prépare un brouillon (séance dictée, programme, réponse), pour écrire comme toi. Laisse vide ce qui ne te parle pas : une méthode vide ne change rien.</Text>
+        </Stack>
+        <MethodNotesForm wid={wid} version={view.version} method={view.method} ai={await aiEnabled(actor.userId, wid)} />
       </Stack>
 
       <Stack as="section" gap={3} aria-labelledby="m-identity">

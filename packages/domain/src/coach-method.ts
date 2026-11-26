@@ -37,6 +37,22 @@ export const methodRuleSchema = z.discriminatedUnion('kind', [
 export type MethodRule = z.output<typeof methodRuleSchema>;
 export type MethodRuleKind = MethodRule['kind'];
 
+/** IA-2 (D-190) · Champs de la méthode, dans l’ordre d’affichage, avec leur libellé et un exemple. */
+export const METHOD_NOTE_KEYS = ['principes', 'progression', 'echauffement', 'repos', 'vocabulaire', 'jamais'] as const;
+export type MethodNoteKey = (typeof METHOD_NOTE_KEYS)[number];
+export const METHOD_NOTE_INFO: Record<MethodNoteKey, { label: string; example: string }> = {
+  principes: { label: 'Mes principes', example: 'Technique avant charge ; on progresse quand les 3 séries sont propres.' },
+  progression: { label: 'Ma progression habituelle', example: '+2,5 kg quand toutes les répétitions passent ; 3 semaines de montée, 1 de récupération.' },
+  echauffement: { label: 'Mon échauffement type', example: '10 min de cardio léger, puis 2 séries légères du premier exercice.' },
+  repos: { label: 'Mes temps de repos', example: '2 min sur les gros exercices, 1 min sur le gainage.' },
+  vocabulaire: { label: 'Mes mots', example: 'Je dis « récup » plutôt que « repos », « tranquille » pour la zone 2.' },
+  jamais: { label: 'Ce que je ne fais jamais', example: 'Pas de charge maximale ; pas de fractionné la veille d’une sortie longue.' },
+};
+const noteText = z.string().trim().max(300, { message: '300 caractères au plus' }).nullish().transform((v) => (v ? v : null));
+export const methodNotesSchema = z.object(Object.fromEntries(METHOD_NOTE_KEYS.map((k) => [k, noteText])) as Record<MethodNoteKey, typeof noteText>).strict();
+export type MethodNotes = z.output<typeof methodNotesSchema>;
+export const EMPTY_NOTES: MethodNotes = { principes: null, progression: null, echauffement: null, repos: null, vocabulaire: null, jamais: null };
+
 export const coachMethodSchema = z.object({
   schemaVersion: z.literal(1).default(1),
   philosophy: z.string().trim().max(500, { message: '500 caractères au plus' }).nullish().transform((v) => (v ? v : null)),
@@ -44,9 +60,11 @@ export const coachMethodSchema = z.object({
   rules: z.array(methodRuleSchema).max(20, { message: '20 règles au plus' }).default([]),
   /** Propositions écartées par le coach (clé de candidate) : elles ne reviennent pas. */
   dismissed: z.array(z.string().max(60)).max(200).default([]),
+  /** IA-2 (D-190) : la méthode en quelques champs courts, lue par l’IA pour écrire comme ce coach. Absent = vide. */
+  notes: methodNotesSchema.nullish().transform((v) => v ?? EMPTY_NOTES),
 }).strict();
 export type CoachMethod = z.output<typeof coachMethodSchema>;
-export const EMPTY_METHOD: CoachMethod = { schemaVersion: 1, philosophy: null, style: null, rules: [], dismissed: [] };
+export const EMPTY_METHOD: CoachMethod = { schemaVersion: 1, philosophy: null, style: null, rules: [], dismissed: [], notes: EMPTY_NOTES };
 
 export const saveMethodSchema = z.object({ expectedVersion: z.number().int().min(0), method: coachMethodSchema, reason: z.string().max(120).nullish().transform((v) => v ?? null) }).strict();
 

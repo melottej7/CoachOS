@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import Anthropic from '@anthropic-ai/sdk';
-import { addDays, aiModelFrom, todayIn, weekStart, type CoachMethod } from '@coachos/domain';
+import { addDays, aiModelFrom, EMPTY_NOTES, todayIn, weekStart, type CoachMethod } from '@coachos/domain';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { commandAs, openDatabase, setDb } from './db/client';
@@ -108,15 +108,15 @@ describe('socle IA (IA-0)', () => {
   });
 
   it('préfixe avec outils et méthode du coach : ordre fixe, points de cache, rien de variable avant le message', async () => {
-    const method: CoachMethod = { schemaVersion: 1, philosophy: 'La régularité avant l’intensité.', style: 'direct', rules: [], dismissed: [] };
+    const method: CoachMethod = { schemaVersion: 1, philosophy: 'La régularité avant l’intensité.', style: 'direct', rules: [], dismissed: [], notes: EMPTY_NOTES };
     const a = cachedPrefix('Consigne fixe.', method, READ_TOOLS);
     const b = cachedPrefix('Consigne fixe.', method, READ_TOOLS);
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
     expect(a.system).toHaveLength(2);
     expect(a.system.every((x) => x.cache_control)).toBe(true);
     expect(a.system[1]!.text).toMatch(/^<methode_du_coach>/);
-    expect(a.toolDefs.map((t) => t.name)).toEqual(['listerExercices', 'lireGroupe', 'lireEleve', 'lireChargesRecentes']);
-    expect(a.toolDefs.map((t) => t.cache)).toEqual([false, false, false, true]);
+    expect(a.toolDefs.map((t) => t.name)).toEqual(['listerExercices', 'lireGroupe', 'lireEleve', 'lireChargesRecentes', 'lireSeancesBibliotheque']);
+    expect(a.toolDefs.map((t) => t.cache)).toEqual([false, false, false, false, true]);
     expect(JSON.stringify(a)).not.toMatch(new RegExp(today));
 
     claudeOn();

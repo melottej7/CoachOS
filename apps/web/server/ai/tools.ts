@@ -1,4 +1,4 @@
-import { gymMachine, MACHINE_EXERCISES, MUSCLES, strengthLogSchema, type StrengthEntry } from '@coachos/domain';
+import { gymMachine, MACHINE_EXERCISES, MUSCLES, strengthLogSchema, toNotation, type Block, type Sport, type StrengthEntry } from '@coachos/domain';
 import { z } from 'zod';
 import { commandAs, readAs } from '../db/client';
 import { requireCoach } from '../commands/portfolio';
@@ -167,13 +167,35 @@ const lireChargesRecentes: AiReadTool<{ eleve: string; exercice: string | null }
   },
 };
 
+const lireSeancesBibliotheque: AiReadTool<{ limite: number }> = {
+  name: 'lireSeancesBibliotheque',
+  description: 'Séances de la bibliothèque écrites par le coach (IA-2) : titre, sport et déroulé en notation CoachOS, les plus récentes d’abord. Ni consignes libres, ni élèves.',
+  input: z.object({ limite: z.number().int().min(1).max(20) }).strict(),
+  wire: z.object({ limite: z.number().describe('Nombre de séances, entier de 1 à 20') }).strict(),
+  run: async (scope, { limite }) => readAs(scope.actorId, async (tx) => {
+    const r = await tx.query<{ title: string; payload: { workout?: { sport?: Sport; intervals?: Block[] | null } } }>(
+      `select title, payload from public.templates
+        where workspace_id = $1 and kind = 'workout' and not archived and owner_id = auth.uid()
+        order by created_at desc, id limit $2`, [scope.workspaceId, limite],
+    );
+    return {
+      seances: r.rows.map((x) => {
+        const sport = x.payload.workout?.sport ?? 'running';
+        let deroule = '';
+        try { deroule = toNotation(x.payload.workout?.intervals ?? [], sport); } catch { deroule = ''; }
+        return { titre: x.title, sport, deroule: deroule.slice(0, 600) };
+      }),
+    };
+  }),
+};
+
 const isoDate = (d: string | Date) => (d instanceof Date ? d.toISOString() : new Date(d).toISOString()).slice(0, 10);
 
 /** Les outils en lecture, dans un ordre fixe (le préfixe mis en cache n’en dépend pas d’un appel à l’autre). */
-export const READ_TOOLS: readonly AiReadTool<never>[] = [listerExercices, lireGroupe, lireEleve, lireChargesRecentes] as unknown as AiReadTool<never>[];
+export const READ_TOOLS: readonly AiReadTool<never>[] = [listerExercices, lireGroupe, lireEleve, lireChargesRecentes, lireSeancesBibliotheque] as unknown as AiReadTool<never>[];
 
-export type ReadToolName = 'listerExercices' | 'lireGroupe' | 'lireEleve' | 'lireChargesRecentes';
-export const READ_TOOL_NAMES: readonly ReadToolName[] = ['listerExercices', 'lireGroupe', 'lireEleve', 'lireChargesRecentes'];
+export type ReadToolName = 'listerExercices' | 'lireGroupe' | 'lireEleve' | 'lireChargesRecentes' | 'lireSeancesBibliotheque';
+export const READ_TOOL_NAMES: readonly ReadToolName[] = ['listerExercices', 'lireGroupe', 'lireEleve', 'lireChargesRecentes', 'lireSeancesBibliotheque'];
 
 /** Trace de ce que l’IA a lu (affichée avec le brouillon, gardée dans ai_suggestions). */
 export interface ToolCallTrace { name: string; input: unknown; ok: boolean }

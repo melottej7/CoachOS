@@ -177,7 +177,7 @@ export async function runWithTools<T>(o: CommonOptions<T> & {
 }
 
 /** Modules du journal ai_suggestions (contrainte de la table). */
-export type AiModule = 'summary' | 'fatigue' | 'anomaly' | 'adaptation' | 'feedback' | 'alert' | 'dictation';
+export type AiModule = 'summary' | 'fatigue' | 'anomaly' | 'adaptation' | 'feedback' | 'alert' | 'dictation' | 'method';
 
 /** Journal ai_suggestions : module, version de consigne, empreinte, sortie et usage. Renvoie l’identifiant. */
 export async function recordSuggestion(tx: Tx, s: {

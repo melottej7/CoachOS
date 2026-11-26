@@ -3,8 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
-  LEVELS, LEVEL_LABELS, METHOD_STYLES, METHOD_STYLE_LABELS, QUALITY_KINDS, QUALITY_KIND_LABELS, ruleLabel,
-  type CoachMethod, type Level, type MethodCandidate, type MethodRule, type MethodRuleDraft, type MethodStyle, type QualityKind,
+  EMPTY_NOTES, LEVELS, LEVEL_LABELS, METHOD_NOTE_INFO, METHOD_NOTE_KEYS, METHOD_STYLES, METHOD_STYLE_LABELS, QUALITY_KINDS, QUALITY_KIND_LABELS, ruleLabel,
+  type CoachMethod, type MethodNoteKey, type MethodNotes, type Level, type MethodCandidate, type MethodRule, type MethodRuleDraft, type MethodStyle, type QualityKind,
 } from '@coachos/domain';
 import { newKey } from '@/components/api-client';
 import { useIntent } from '@/components/use-intent';
@@ -53,6 +53,66 @@ export function MethodIdentity({ wid, version, method }: { wid: string; version:
         <Cluster><Button type="submit" size="sm" variant="primary" loading={pending} disabled={!changed}>Enregistrer</Button></Cluster>
       </Stack>
     </form>
+  );
+}
+
+/**
+ * IA-2 (D-190) · Ma méthode en six champs courts, lus par l’IA pour écrire comme toi. « Proposer depuis ma
+ * bibliothèque » remplit une proposition à relire : rien n’est enregistré tant que tu n’enregistres pas.
+ */
+export function MethodNotesForm({ wid, version, method, ai }: { wid: string; version: number; method: CoachMethod; ai: boolean }) {
+  const { save, pending, error } = useSave(wid, version);
+  const initial = method.notes ?? EMPTY_NOTES;
+  const [notes, setNotes] = useState<MethodNotes>(initial);
+  const [fromAi, setFromAi] = useState(false);
+  const proposal = useIntent<{ source: 'simulation' | 'claude'; status: 'ready' | 'abstain'; notes: MethodNotes; note: string }>();
+  const [offer, setOffer] = useState<{ source: 'simulation' | 'claude'; status: 'ready' | 'abstain'; notes: MethodNotes; note: string } | null>(null);
+  const changed = METHOD_NOTE_KEYS.some((k) => (notes[k] ?? '') !== (initial[k] ?? ''));
+  const set = (k: MethodNoteKey, v: string) => setNotes((n) => ({ ...n, [k]: v }));
+  const clean = (n: MethodNotes): MethodNotes => Object.fromEntries(METHOD_NOTE_KEYS.map((k) => [k, n[k]?.trim() ? n[k]!.trim() : null])) as MethodNotes;
+  return (
+    <Stack gap={4}>
+      {ai ? (
+        <Card pad={4}>
+          <Stack gap={3}>
+            <Cluster gap={2}>
+              <Button size="sm" icon="bolt" loading={proposal.pending} onClick={async () => { const r = await proposal.run('POST', `/api/v1/workspaces/${wid}/method/proposal`, {}); if (r) setOffer(r); }}>Proposer depuis ma bibliothèque</Button>
+              <Text as="span" size="sm" muted>L’IA lit jusqu’à 20 de tes séances et propose un texte ; tu reprends, corriges ou écartes.</Text>
+            </Cluster>
+            <ErrorLine e={proposal.error} />
+            {offer ? (
+              <Stack gap={2} aria-live="polite">
+                <Cluster gap={2}><Text strong>Proposition</Text><Badge tone={offer.source === 'claude' ? 'coach' : 'neutral'}>{offer.source === 'claude' ? 'Claude' : 'IA simulée'}</Badge></Cluster>
+                {offer.note ? <Text size="sm">{offer.note}</Text> : null}
+                {offer.status === 'ready' ? (
+                  <>
+                    <ul className={s.list} aria-label="Méthode proposée">
+                      {METHOD_NOTE_KEYS.filter((k) => offer.notes[k]).map((k) => <li key={k}><Text size="sm"><strong>{METHOD_NOTE_INFO[k].label}</strong> · {offer.notes[k]}</Text></li>)}
+                    </ul>
+                    <Cluster gap={2}>
+                      <Button size="sm" variant="primary" icon="check" onClick={() => { setNotes((n) => Object.fromEntries(METHOD_NOTE_KEYS.map((k) => [k, offer.notes[k] ?? n[k]])) as MethodNotes); setFromAi(true); setOffer(null); }}>Reprendre dans le formulaire</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setOffer(null)}>Écarter</Button>
+                    </Cluster>
+                  </>
+                ) : <Cluster><Button size="sm" variant="ghost" onClick={() => setOffer(null)}>Fermer</Button></Cluster>}
+              </Stack>
+            ) : null}
+          </Stack>
+        </Card>
+      ) : null}
+      <form onSubmit={async (e) => { e.preventDefault(); if (await save({ ...method, notes: clean(notes) }, fromAi ? 'Méthode proposée par l’IA, relue' : 'Méthode en quelques mots')) setFromAi(false); }}>
+        <Stack gap={4}>
+          {fromAi ? <Text size="sm" tone="success" role="status">Proposition reprise : relis et corrige chaque champ, puis enregistre.</Text> : null}
+          {METHOD_NOTE_KEYS.map((k) => (
+            <Field key={k} id={`m-note-${k}`} label={METHOD_NOTE_INFO[k].label} hint={`300 caractères au plus · ex. « ${METHOD_NOTE_INFO[k].example} »`}>
+              <Textarea id={`m-note-${k}`} rows={2} maxLength={300} value={notes[k] ?? ''} onChange={(e) => set(k, e.target.value)} hasHint />
+            </Field>
+          ))}
+          <ErrorLine e={error} />
+          <Cluster><Button type="submit" size="sm" variant="primary" loading={pending} disabled={!changed}>Enregistrer une nouvelle version</Button></Cluster>
+        </Stack>
+      </form>
+    </Stack>
   );
 }
 

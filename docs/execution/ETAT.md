@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-26 (D-161 à D-184, D-187, D-189). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
+Dernière mise à jour : 2026-11-26 (D-161 à D-184, D-187, D-189, D-190). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
 
 ## Où en est CoachOS
 
@@ -12,7 +12,7 @@ Dernière mise à jour : 2026-11-26 (D-161 à D-184, D-187, D-189). Reprendre ic
 
 **Pas prouvé** : la boucle complète en ligne avec un vrai élève (il faut un domaine pour que les e-mails partent vers d’autres adresses) ; réception d’un rappel push sur un téléphone ; suppression d’un compte Auth en ligne ; sauvegarde de la base en ligne (`npm run db:backup`) jamais exécutée (la restauration est essayée en local, D-163) ; migrations automatiques à la construction (variables Vercel à saisir) ; Action GitHub (premier push à venir).
 
-**Chiffres** : `npm test` 524 passés au 27 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, 16 fichiers de parcours de bout en bout (24 parcours, verts le 27 novembre), revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
+**Chiffres** : `npm test` 528 passés au 27 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, 17 fichiers de parcours de bout en bout (25 parcours, verts le 27 novembre), revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
 
 **Ce que le produit fait** : la matrice [COUVERTURE.md](COUVERTURE.md) (cible coach et élève, D-024) et les décisions D-001 à D-122 dans [DECISIONS.md](DECISIONS.md). En deux lignes : un coach planifie des séances structurées par sport (zones VMA, FTP, CSS), des programmes générés selon sa méthode, des groupes, des tâches, des relances, des bilans ; l’élève lit sa séance sur téléphone (hors ligne, montre, pas à pas en musculation), envoie son retour, échange avec son coach ; les données personnelles ont leur page, leur export et leur effacement.
 
@@ -28,7 +28,7 @@ Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en dire
 
 **Branche `fluidite`** : le bilan produit (16 commits, sans migration) est en ligne par la Pull Request n° 14 (26 novembre ; `/api/health` répond `"db":"ok"`). D-178 (trois retouches) est en ligne par la Pull Request n° 15 (26 novembre).
 
-**Chantier IA (branche `claude/ia-socle-a07d62`)** : IA-0 faite (D-187, sans migration) : socle commun `apps/web/server/ai/` (client, modèle par `COACHOS_AI_MODEL`, budget sur tous les tours, cache, repli, simulation), quatre outils en lecture bornés à l’espace, interrupteur par espace et modèle dans Paramètres › IA, Anthropic sous-traitant dans la notice (v2, à faire relire). IA-1 faite (D-189) : « Dicter ou écrire avec l’IA » dans l’éditeur de séance, proposition en notation relue ligne par ligne, insérée en brouillon. **IA-1 demande la migration `20261127010000_ai_dictation.sql`** (point 12). Appel réel à Claude non vérifié (pas de clé). **Prochaine action : IA-2** (prompt dans MARCHE_IA.md).
+**Chantier IA (branche `claude/ia-socle-a07d62`)** : IA-0 faite (D-187, sans migration) : socle commun `apps/web/server/ai/` (client, modèle par `COACHOS_AI_MODEL`, budget sur tous les tours, cache, repli, simulation), quatre outils en lecture bornés à l’espace, interrupteur par espace et modèle dans Paramètres › IA, Anthropic sous-traitant dans la notice (v2, à faire relire). IA-1 faite (D-189) : « Dicter ou écrire avec l’IA » dans l’éditeur de séance, proposition en notation relue ligne par ligne, insérée en brouillon. IA-2 faite (D-190) : « Ma méthode en quelques mots » (six champs versionnés) et « Proposer depuis ma bibliothèque », méthode lue par l’IA. **IA-1 et IA-2 demandent la migration `20261127010000_ai_dictation.sql`** (point 12). Appel réel à Claude non vérifié (pas de clé). **Prochaine action : IA-3** (prompt dans MARCHE_IA.md).
 
 **Exercices sur machine (D-179, branche `machines-videos`, en ligne (Pull Request n° 16), sans migration)** : bibliothèque des machines (31 machines, 68 exercices, étiquette et vue Basic-Fit), animations dessinées (trois pilotes, « À relire »), fiche de l’exercice dans la séance et en mode « Suivre », notation `4×10 presse 60kg R2'`, séances de la semaine gardées hors ligne. Les 68 exercices ont leur animation, toutes validées par le fondateur le 26 novembre (« Oui, tout validé »). Essai ChatGPT fait, non admis (machine déformée). Suite : Pull Request vers `main` ; numéros des machines Basic-Fit à relever. Détail : [VIDEOS_MACHINES.md](VIDEOS_MACHINES.md).
 
@@ -70,7 +70,7 @@ Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, p
 9. **Paiement en mode test** · quand le chantier 3 commence · 10 minutes · https://stripe.com › compte › **mode test** (interrupteur en haut à droite) › Developers › API keys › copie la **clé secrète de test** (`sk_test_…`) dans Vercel `STRIPE_SECRET_KEY` (Sensitive). Rien ne sera facturé : l’interrupteur reste éteint en production jusqu’à ta décision. Le prix final et le nom du produit sont à toi (hypothèses : 29/59/99 € HT par mois).
 10. **Hygiène des comptes** · 5 minutes · Vercel › Account Settings › Authentication › **« Regenerate »** les codes de récupération (apparus sur une capture) et supprime cette capture. GitHub › ton avatar › **Settings** › **« Developer settings »** › **« Personal access tokens »** › **« Fine-grained tokens »** › le jeton collé dans la conversation (il commence par `github_pat_11CUYS`) › **« Delete »** : il a circulé en clair, il ne doit plus servir.
 11. **Clé Anthropic, avant le chantier IA** · 10 minutes · marche pas à pas dans [MARCHE_IA.md](MARCHE_IA.md) › « Pour le fondateur » (crédit, clé `ANTHROPIC_API_KEY` dans Vercel et en local ; budget 10 $ par espace et par mois par défaut). **Facultatif** : vidéos de base des 34 exercices ([VIDEOS_DE_BASE.md](VIDEOS_DE_BASE.md)) ; cocher « Musculation » dans Paramètres › sports encadrés de ton espace si tu veux la musculation.
-12. **Migration de la dictée IA, avant de fusionner la branche IA** · 2 minutes · après la fusion de l’abonnement si elle passe avant · Terminal, dossier CoachOS : `npx supabase db push --remote`, puis colle-moi la sortie. Elle ajoute la dictée au journal de l’IA (élève facultatif), sans toucher aux données. En local : `npm run supabase:migrate`.
+12. **Migration de la dictée IA, avant de fusionner la branche IA** · 2 minutes · après la fusion de l’abonnement si elle passe avant · Terminal, dossier CoachOS : `npx supabase db push --remote`, puis colle-moi la sortie. Elle ajoute la dictée et la méthode au journal de l’IA (élève facultatif), sans toucher aux données. En local : `npm run supabase:migrate`.
 
 ## Lancer en local
 

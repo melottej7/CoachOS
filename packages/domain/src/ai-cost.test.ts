@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aiCostMicros, aiMonthlyBudgetMicros, aiReserveMicros, aiToolsReserveMicros, budgetPeriod, formatUsd, methodPromptText } from './index';
+import { aiCostMicros, aiMonthlyBudgetMicros, aiReserveMicros, aiToolsReserveMicros, budgetPeriod, EMPTY_NOTES, formatUsd, methodPromptText } from './index';
 
 describe('coût de l’IA (D-081)', () => {
   it('prix par jeton, modèle inconnu estimé, réserve, budget, affichage', () => {
@@ -21,7 +21,7 @@ describe('coût de l’IA (D-081)', () => {
 
   it('IA-0 : méthode du coach balisée, rien si elle est vide', () => {
     expect(methodPromptText(null)).toBeNull();
-    expect(methodPromptText({ schemaVersion: 1, philosophy: null, style: null, rules: [], dismissed: [] })).toBeNull();
-    expect(methodPromptText({ schemaVersion: 1, philosophy: 'Régularité', style: 'direct', rules: [], dismissed: [] })).toBe('<methode_du_coach>\nPhilosophie : Régularité\nStyle : Direct\n</methode_du_coach>');
+    expect(methodPromptText({ schemaVersion: 1, philosophy: null, style: null, rules: [], dismissed: [], notes: EMPTY_NOTES })).toBeNull();
+    expect(methodPromptText({ schemaVersion: 1, philosophy: 'Régularité', style: 'direct', rules: [], dismissed: [], notes: EMPTY_NOTES })).toBe('<methode_du_coach>\nPhilosophie : Régularité\nStyle : Direct\n</methode_du_coach>');
   });
 });

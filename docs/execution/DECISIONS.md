@@ -2615,3 +2615,10 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Journal** : `ai_suggestions`, module `dictation`. **Migration additive** `20261127010000_ai_dictation.sql` : élève facultatif, module ajouté. Testée sur PGlite, **pas encore appliquée** à Supabase local, partagé avec les autres branches.
 - **Simulation** : lecteur de règles pour les phrases courantes (échauffement, séries, charges, repos, secondes, % VMA, « tranquille »).
 - **Vérifié** : 8 tests (exemples, injection, texte vide ou trop long, autre espace, budget, panne, refus, sortie hors schéma), contrat OpenAPI, parcours à 390 et 1440 px. **Non vérifié** : appel réel à Claude (pas de clé).
+
+## D-190 · La méthode du coach, lue par l’IA (IA-2) · 2026-11-27
+
+- **Ma méthode › « Ma méthode en quelques mots »** : six champs courts (principes, progression habituelle, échauffement type, temps de repos, mots du coach, ce qu’il ne fait jamais), 300 caractères chacun. Ils sont rangés dans `coach_dna.profile` : versionnés comme avant, sans migration. Les anciennes versions se lisent avec des champs vides.
+- **« Proposer depuis ma bibliothèque »** (si l’IA est allumée) : l’IA lit jusqu’à 20 séances écrites par ce coach avec un cinquième outil en lecture, `lireSeancesBibliotheque` (ses séances seulement, en notation, sans consignes libres). Elle propose les six champs ; le coach reprend dans le formulaire, corrige ou écarte. Rien n’est enregistré sans « Enregistrer une nouvelle version ». Le brouillon est tracé dans `ai_suggestions`, module `method` (même migration que la dictée).
+- **Lecture par l’IA** : la méthode acceptée suit la consigne fixe, dans un bloc balisé et mis en cache. Le texte du coach ne peut pas fermer ce bloc. Une méthode vide n’ajoute rien. Elle sert à la dictée (IA-1), puis au programme (IA-3) et à l’assistant (IA-4).
+- **Vérifié** : 7 tests (versions, droits entre coachs du même espace et d’un autre espace, méthode vide, injection, cache conservé, abstention sous trois séances), contrat, parcours à 390 et 1440 px. **Non vérifié** : proposition réelle par Claude (pas de clé).

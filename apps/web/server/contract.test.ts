@@ -31,6 +31,7 @@ import { createExercise, finishExerciseClipUpload, startExerciseClipUpload } fro
 import { setVideoStore } from './storage/video-store';
 import { setWorkspaceAi } from './ai/settings';
 import { dictateWorkout } from './commands/ai-dictation';
+import { proposeMethod } from './commands/ai-method';
 import { applyWeekProposal, weekProposals } from './commands/week-proposals';
 
 // Test de contrat : chaque réponse réelle des commandes est validée contre contracts/openapi.json
@@ -229,6 +230,8 @@ describe('réponses conformes au contrat OpenAPI', () => {
     check('/workspaces/{wid}/ai-settings', 'put', aiSet.status, aiSet.body);
     const dict = await dictateWorkout(m(), { text: 'presse 4 séries de 10 à 60 kilos, 2 minutes de repos, n’importe quoi', sport: 'strength', athleteId: ATHLETES.noah });
     check('/workspaces/{wid}/ai-dictation', 'post', dict.status, dict.body);
+    const prop = await proposeMethod(m(), {});
+    check('/workspaces/{wid}/method/proposal', 'post', prop.status, prop.body);
     const appt = await createAppointment(m(), { athleteId: ATHLETES.noah, title: 'Appel', kind: 'call', startsLocal: '2026-12-02T12:00', timeZone: TIME_ZONE, durationMin: 20 });
     check('/workspaces/{wid}/appointments', 'post', appt.status, appt.body);
     const apptUp = await updateAppointment({ ...m(), appointmentId: id(appt) }, { expectedRevision: 1, status: 'canceled' });

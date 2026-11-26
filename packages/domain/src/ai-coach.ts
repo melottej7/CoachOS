@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { METHOD_STYLE_LABELS, ruleLabel, type CoachMethod } from './coach-method';
+import { METHOD_NOTE_INFO, METHOD_NOTE_KEYS, METHOD_STYLE_LABELS, ruleLabel, type CoachMethod } from './coach-method';
 import { NO_TWEAKS, programTweaksSchema, QUALITY_KINDS, type ProgramTweaks } from './program';
 
 /**
@@ -35,9 +35,12 @@ export type AiEffort = 'low' | 'medium' | 'high';
  */
 export function methodPromptText(method: CoachMethod | null): string | null {
   if (!method) return null;
+  // Le texte du coach ne peut pas fermer le bloc balisé (IA-2 : injection dans la méthode sans effet).
+  const clean = (t: string) => t.replace(/<\/?\s*methode_du_coach\s*>/gi, ' ').replace(/\s+/g, ' ').trim();
   const lines = [
-    method.philosophy ? `Philosophie : ${method.philosophy}` : null,
+    method.philosophy ? `Philosophie : ${clean(method.philosophy)}` : null,
     method.style ? `Style : ${METHOD_STYLE_LABELS[method.style]}` : null,
+    ...METHOD_NOTE_KEYS.map((k) => (method.notes?.[k] ? `${METHOD_NOTE_INFO[k].label} : ${clean(method.notes[k]!)}` : null)),
     ...method.rules.map((r) => `Règle : ${ruleLabel(r)}`),
   ].filter((x): x is string => Boolean(x));
   return lines.length ? `<methode_du_coach>\n${lines.join('\n')}\n</methode_du_coach>` : null;
