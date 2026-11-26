@@ -58,3 +58,15 @@ Vidéos IA : protocole pour qu’une vidéo soit admise, mesuré image par image
 ## Relecture
 
 Aucune animation n’est montrée à un élève avant ta validation : elle reste « À relire » dans la bibliothèque du coach. Pour valider : ouvre la page de comparaison, regarde chaque boucle, dis-moi « validé : presse, tirage, développé » ou ce qui cloche. Je l’inscris avec la date (`MOTION_REVIEWS`).
+
+## Essai ChatGPT (26 novembre 2026, compte du fondateur)
+
+ChatGPT ne produit plus de vidéo MP4 réaliste (Sora arrêté le 26 avril 2026) ; il propose des GIF animés photoréalistes. Essayé sur les trois pilotes, rien téléchargé :
+
+| Pilote | Ce qui va | Ce qui ne va pas |
+|---|---|---|
+| Presse à cuisses | Très réaliste ; amplitude juste (jambes presque tendues, environ 90° en bas) | La plateforme change de forme et de place d’une image à l’autre |
+| Tirage vertical | Barre au haut de la poitrine, coudes vers les hanches | Boudins à côté des cuisses (la consigne n° 1 manque) ; vue de trois quarts ; la barre change d’orientation |
+| Développé machine (deux versions) | Dos au dossier, poussée droit devant | Version 1 : la poignée change de forme et traverse le bras ; version 2 : poignées flottantes sans bras de machine |
+
+Verdict au protocole : critère 4 (machine indéformable) raté sur les trois ; non admis. À retenter quand un outil vidéo garde la machine stable ; sinon, le réalisme passe par les vidéos du fondateur.
