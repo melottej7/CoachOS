@@ -9,7 +9,8 @@ import { ErrorSummary } from '@/views/error-summary';
 import { fromEditor, toEditor, WorkoutBuilder, type EBlock, type ExerciseOption, type SavedBlock } from '@/views/coach/workout/builder';
 
 /** Créer ou modifier une séance type (D-035), refonte Chrono (D-154) : titre, sport, catégorie, déroulé par blocs, consignes. */
-export function LibraryForm({ wid, initial, savedBlocks, exercises, modules }: {
+export function LibraryForm({ wid, initial, savedBlocks, exercises, modules, ai }: {
+  ai?: boolean;
   wid: string;
   modules?: Modules;
   savedBlocks?: SavedBlock[];
@@ -55,7 +56,7 @@ export function LibraryForm({ wid, initial, savedBlocks, exercises, modules }: {
           </Field>
         </Grid>
         <WorkoutBuilder wid={wid} strengthOn={modules?.strength ?? true} sport={sport} value={blocks} onChange={setBlocks}
-          library={savedBlocks ? { wid, blocks: savedBlocks } : undefined} exercises={exercises} />
+          library={savedBlocks ? { wid, blocks: savedBlocks } : undefined} exercises={exercises} dictation={ai ? { athleteId: null } : undefined} />
         <Field id="lib-instructions" label="Consignes" hint="Facultatif · reprises dans chaque séance créée à partir de celle-ci">
           <Textarea id="lib-instructions" maxLength={5000} value={instructions} onChange={(e) => setInstructions(e.target.value)} hasHint />
         </Field>

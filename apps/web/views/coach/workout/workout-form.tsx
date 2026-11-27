@@ -18,6 +18,8 @@ export interface WorkoutFormValues {
 }
 
 interface Props {
+  /** IA-1 (D-189) : IA allumée pour l’espace (« Dicter ou écrire avec l’IA »). */
+  ai?: boolean;
   wid: string;
   aid: string;
   athleteName: string;
@@ -42,7 +44,7 @@ interface Props {
   modules?: Modules;
 }
 
-export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, cancelHref, refs, returnTo, savedBlocks, exercises, modules, gear, lastDone }: Props) {
+export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, cancelHref, refs, returnTo, savedBlocks, exercises, modules, gear, lastDone, ai }: Props) {
   const router = useRouter();
   const [values, setValues] = useState(initial);
   const [blocks, setBlocks] = useState<EBlock[]>(() => toEditor(initial.intervals ?? [], 'i'));
@@ -100,7 +102,7 @@ export function WorkoutForm({ wid, aid, athleteName, timeZone, initial, edit, ca
           </Field>
         </Grid>
         <WorkoutBuilder wid={wid} strengthOn={modules?.strength ?? true} sport={values.sport} value={blocks} onChange={setBlocks} refs={refs} athleteFirst={athleteName.split(' ')[0] ?? athleteName} vmaHref={athleteFileHref(wid, aid, 'refs-title')}
-          library={savedBlocks ? { wid, blocks: savedBlocks } : undefined} exercises={exercises} gear={gear} lastDone={lastDone} />
+          library={savedBlocks ? { wid, blocks: savedBlocks } : undefined} exercises={exercises} gear={gear} lastDone={lastDone} dictation={ai ? { athleteId: aid } : undefined} />
         {blocks.length ? null : (
           <Field id="duration" label="Durée en minutes" hint="Facultatif" error={err('data.durationSeconds')}>
             <Input id="duration" type="number" inputMode="numeric" min={1} max={1440} value={values.minutes} onChange={set('minutes')} invalid={!!err('data.durationSeconds')} hasHint />

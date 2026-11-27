@@ -2613,6 +2613,16 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Correctif D-184** : « Varier d’une série à l’autre » (libellé raccourci) débordait de 11 px sur téléphone.
 - **Vérifié** : parcours à 390 px (repli à l’ajout, résumé, réouverture, tout réduire et déplier, copie d’une carte réduite).
 
+## D-187 · Socle commun de l’IA (IA-0) · 2026-11-26
+
+- **Contexte** : chantier « IA du coach » ([MARCHE_IA.md](MARCHE_IA.md)), tranche IA-0. « Ajuster avec l’IA » (D-071) garde son comportement.
+- **Module `apps/web/server/ai/`** : client unique ; modèle par `COACHOS_AI_MODEL` (défaut `claude-opus-5-5`, Sonnet 5.5 au tarif connu) ; effort écrit par usage ; repli serveur `fallbacks: "default"`. `askStructured` (un appel) et `runWithTools` (Tool Runner, `betaZodTool` strict, `thread: false`) partagent l’interrupteur, le budget (réserve, puis coût réel de tous les tours, même en panne) et la validation zod. Refus, sortie tronquée ou outils sans fin donnent « l’IA n’a pas pu traiter ».
+- **Cache** : outils en ordre fixe, consigne fixe, puis méthode du coach, chacun avec `cache_control` ; préfixe identique d’un appel à l’autre (testé).
+- **Outils en lecture** : `listerExercices`, `lireGroupe`, `lireEleve`, `lireChargesRecentes`, sous RLS dans la transaction du coach, bornés à l’espace. Élèves désignés par une référence d’appel (« E1 ») : ni nom ni identifiant. Ni commentaire, ni Strava, ni santé.
+- **Interrupteur par espace** (propriétaire, Paramètres › IA), sans migration (`workspace_flags`, drapeau `ai_off`). Paramètres › IA montre aussi le modèle. Notice de confidentialité v2 : Anthropic sous-traitant (à faire relire par un professionnel).
+- **À savoir pour IA-1** : `ai_suggestions` exige un élève et un module de la liste existante ; une dictée sans élève demandera une migration additive.
+- **Vérifié** : 7 tests du socle (préfixe, injection, autre espace, budget, panne, simulation, interrupteur), contrat OpenAPI, parcours Paramètres › IA à 1440 et 390 px. **Non vérifié** : appel réel à Claude (pas de clé).
+
 ## D-188 · Abonnement Stripe en mode test, derrière l’interrupteur · 2026-11-27
 
 - **Pourquoi** : « De quoi vendre », suite (D-120, docs/13). Tout est éteint en production tant que `COACHOS_BILLING` n’est pas à 1 et que `STRIPE_SECRET_KEY` (clé de test) manque.
@@ -2624,3 +2634,44 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
   - Arrêt pendant l’essai : retour aux jours d’essai.
   - Pas de lecture seule sans clé Stripe. La phase pilote ne se voit rien proposer.
 - **Vérifié** : 6 tests (signatures, droits, événements uniques, grâce, impayé, arrêt, point d’arrivée) et le contrat. Au navigateur à 1440 et 390 px, avec un faux Stripe local qui signe comme Stripe : essai, paiement, portail, refus, arrêt, lecture seule, élève prévenu. **Non vérifié** : avec le vrai Stripe (clé de test à venir).
+
+## D-189 · Dicter ou écrire une séance avec l’IA (IA-1) · 2026-11-27
+
+- **Geste** : « Dicter ou écrire avec l’IA » dans l’éditeur de séance (séance d’élève, bibliothèque, séances de groupe), si l’IA est allumée pour l’espace. Le coach écrit ou dicte : micro du clavier, ou bouton « Dicter » quand le navigateur reconnaît la voix. Aucun audio n’est envoyé à l’IA.
+- **Chaîne** : `runWithTools` (effort low, 3 tours). Le modèle reçoit le texte balisé, le sport et les repères de l’élève sans nom, avec l’outil `listerExercices`. Il rend des lignes en notation (pourcentages de VMA convertis en zones). Le serveur relit chaque ligne avec `parseNotation` : une ligne illisible est signalée et laissée de côté, rien n’est inventé. Le serveur indique aussi où vit chaque exercice (bibliothèque, machine à ajouter, inconnu).
+- **Coach** : il corrige le texte, voit l’aperçu, puis « Insérer dans la séance ». La séance reste un brouillon ; rien n’est publié.
+- **Journal** : `ai_suggestions`, module `dictation`. **Migration additive** `20261127010000_ai_dictation.sql` : élève facultatif, module ajouté. Testée sur PGlite, **pas encore appliquée** à Supabase local, partagé avec les autres branches.
+- **Simulation** : lecteur de règles pour les phrases courantes (échauffement, séries, charges, repos, secondes, % VMA, « tranquille »).
+- **Vérifié** : 8 tests (exemples, injection, texte vide ou trop long, autre espace, budget, panne, refus, sortie hors schéma), contrat OpenAPI, parcours à 390 et 1440 px. **Non vérifié** : appel réel à Claude (pas de clé).
+
+## D-190 · La méthode du coach, lue par l’IA (IA-2) · 2026-11-27
+
+- **Ma méthode › « Ma méthode en quelques mots »** : six champs courts (principes, progression habituelle, échauffement type, temps de repos, mots du coach, ce qu’il ne fait jamais), 300 caractères chacun. Ils sont rangés dans `coach_dna.profile` : versionnés comme avant, sans migration. Les anciennes versions se lisent avec des champs vides.
+- **« Proposer depuis ma bibliothèque »** (si l’IA est allumée) : l’IA lit jusqu’à 20 séances écrites par ce coach avec un cinquième outil en lecture, `lireSeancesBibliotheque` (ses séances seulement, en notation, sans consignes libres). Elle propose les six champs ; le coach reprend dans le formulaire, corrige ou écarte. Rien n’est enregistré sans « Enregistrer une nouvelle version ». Le brouillon est tracé dans `ai_suggestions`, module `method` (même migration que la dictée).
+- **Lecture par l’IA** : la méthode acceptée suit la consigne fixe, dans un bloc balisé et mis en cache. Le texte du coach ne peut pas fermer ce bloc. Une méthode vide n’ajoute rien. Elle sert à la dictée (IA-1), puis au programme (IA-3) et à l’assistant (IA-4).
+- **Vérifié** : 7 tests (versions, droits entre coachs du même espace et d’un autre espace, méthode vide, injection, cache conservé, abstention sous trois séances), contrat, parcours à 390 et 1440 px. **Non vérifié** : proposition réelle par Claude (pas de clé).
+
+## D-191 · Un programme rédigé par l’agent (IA-3) · 2026-11-27
+
+- **Geste** : « Programme avec l’IA » depuis le dossier d’un élève ou la semaine d’un groupe (si l’IA est allumée). Le coach écrit sa demande, le nombre de semaines (12 au plus) et le premier lundi.
+- **Agent** : `runWithTools` en flux, effort medium, 8 tours au plus, 2 minutes par tour (`maxDuration` 120 s). Outils en lecture : groupe, profil et repères, charges réalisées, bibliothèque et machines, plus le nouvel outil `lireSeancesPrevues` (calendrier de l’élève, sans doublon). La méthode du coach est lue aussi. Sans charge réalisée : « charge à choisir », jamais de pourcentage du maximum.
+- **Relecture serveur** (`checkProgramDraft`) : chaque séance par `parseNotation`, puis les bornes (6 séances par semaine, deux séances le même jour, 4 h par séance, semaines hors programme) et la hausse de volume au-delà de 30 %. Rien n’est corrigé : les écarts sont montrés.
+- **Enregistrer en brouillon** : chaque séance est relue de nouveau, et une seule erreur empêche toute création. Pour un élève, des séances non publiées ; pour un groupe, une séance de groupe par date (un brouillon par membre affecté). Les clés d’idempotence sont dérivées : une reprise ne crée pas de doublon. La proposition passe « acceptée ». Journal : module `program` (même migration).
+- **Simulation** : programme prudent et déterministe (un exercice par grand groupe musculaire, semaine légère toutes les 4) ; abstention au-delà de 6 séances par semaine.
+- **Vérifié** : 8 tests (élève sans historique, groupe et élève d’un autre espace refusés, demande impossible, tours plafonnés, modèle indisponible, enregistrement refusé si une séance ne se lit pas, sans doublon), contrat, parcours élève à 390 px et groupe à 1440 px. **Non vérifié** : programme réel par Claude (pas de clé), durée réelle face au plafond de Vercel.
+
+## D-192 · L’assistant du coach, « Demander » (IA-4) · 2026-11-27
+
+- **Où** : sur l’Accueil (si l’espace a des élèves et que l’IA est allumée), page « Demander à l’IA », et palette ⌘K (« Demander à l’IA »). Questions ou brouillons ; chaque demande repart des données, sans mémoire.
+- **Lecture** : outils communs plus `listerEleves`, `lireSemaine` (séances et leur état), `lireRetours`, `lireRetour` (le texte d’un retour, balisé, seulement pour y répondre), `lireTaches`. Le tout sous RLS, élèves affectés au coach seulement. Séances et retours ont des références d’appel (S1, R1).
+- **Brouillons seulement** : `brouillonReponse` (copier, ou « Ouvrir la conversation » pour l’envoyer soi-même), `brouillonSeance` (« Ouvrir dans l’éditeur », prérempli, rien d’enregistré), `proposerTache` (bouton « Créer la tâche »). Aucun outil d’envoi ni de publication.
+- **Noms** : remplacés par E1, E2… dans la question, les titres et les retours avant tout envoi ; un prénom porté par deux élèves devient « un élève ». Les prénoms sont remis à l’affichage, côté serveur ; le journal (`summary`, sans élève) garde les références.
+- **Vérifié** : 4 tests (fuite entre espaces, injection dans un retour, envoi direct refusé et rien envoyé, aucun nom ni identifiant transmis, budget), contrat, parcours Accueil à 390 px et palette à 1440 px. **Non vérifié** : réponses réelles de Claude (pas de clé).
+
+## D-193 · Photo ou PDF à l’import, consignes d’exercice (IA-5) · 2026-11-27
+
+- **Import d’un ancien programme** (bibliothèque › importer un programme) : « Depuis une photo ou un PDF » (JPEG, PNG, WebP ou PDF, 4 Mo au plus, type lu dans les octets). Le modèle reçoit l’image ou le document et rend le texte au format de l’import (D-085). Le texte arrive dans le champ, et l’aperçu ligne par ligne habituel prend la suite : rien n’est importé sans le coach. Le fichier n’est jamais conservé ; le journal (`import`) garde son type, sa taille et son empreinte. Document hors sujet ou illisible : abstention expliquée.
+- **Simulation** : la photo n’est pas lue. Un exemple fixe, annoncé comme tel, permet d’essayer l’aperçu.
+- **Exercices › « Proposer les consignes »** : trois consignes, l’erreur fréquente, une version plus facile, sans conseil médical, marquées « À relire ». Le coach les reprend dans le champ « Consignes » ou les écarte, puis enregistre. En simulation : la fiche de la machine si l’exercice y est, sinon des consignes générales par groupe musculaire. Journal `exercise`.
+- **Notice de confidentialité** (v2, à faire relire) : le commentaire d’un retour ne part au modèle que pour un brouillon de réponse (IA-4), sans le nom ; la photo ou le PDF confié par le coach n’est pas conservé.
+- **Vérifié** : 5 tests (types et tailles, droits, hors sujet, injection dans le document, sortie hors schéma, budget, refus), contrat, parcours à 390 et 1440 px. **Non vérifié** : lecture réelle d’une photo par Claude (pas de clé).

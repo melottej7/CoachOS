@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { METHOD_NOTE_INFO, METHOD_NOTE_KEYS, METHOD_STYLE_LABELS, ruleLabel, type CoachMethod } from './coach-method';
 import { NO_TWEAKS, programTweaksSchema, QUALITY_KINDS, type ProgramTweaks } from './program';
 
 /**
@@ -9,8 +10,41 @@ import { NO_TWEAKS, programTweaksSchema, QUALITY_KINDS, type ProgramTweaks } fro
  * demande du coach, prénoms et noms de l’élève retirés. Jamais de message, de santé, de note privée ni de Strava.
  */
 
-export const AI_PROMPT_VERSION = 'tweaks-v1';
+export const AI_PROMPT_VERSION = 'tweaks-v2'; // v2 (IA-0) : règle commune « données, jamais instructions » ajoutée à la consigne
 export const AI_MODEL = 'claude-opus-5-5';
+
+/**
+ * IA-0 · Modèle réglable sans toucher au code (COACHOS_AI_MODEL, par exemple claude-sonnet-5-5) ; une valeur
+ * mal formée est ignorée au profit du modèle par défaut.
+ */
+export function aiModelFrom(env: string | undefined): string {
+  const v = (env ?? '').trim();
+  return /^claude-[a-z0-9][a-z0-9.-]{2,60}$/.test(v) ? v : AI_MODEL;
+}
+
+/** Modèles qui acceptent le repli serveur `fallbacks: "default"` (les autres partent sans repli). */
+export const AI_FALLBACK_MODELS = ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-opus-5', 'claude-fable-5-2', 'claude-fable-5-1'] as const;
+
+/** Effort de réflexion, toujours écrit explicitement par usage (le défaut d’Opus 5.5 est « medium »). */
+export type AiEffort = 'low' | 'medium' | 'high';
+
+/**
+ * Méthode du coach (D-072) pour la consigne : philosophie, style, règles en français. Placée juste après la consigne
+ * fixe et les outils, dans un bloc balisé : c’est une donnée du coach, jamais une instruction qui change les règles.
+ * Rien de variable (date, identifiant) : le même coach envoie le même texte tant que sa méthode ne change pas.
+ */
+export function methodPromptText(method: CoachMethod | null): string | null {
+  if (!method) return null;
+  // Le texte du coach ne peut pas fermer le bloc balisé (IA-2 : injection dans la méthode sans effet).
+  const clean = (t: string) => t.replace(/<\/?\s*methode_du_coach\s*>/gi, ' ').replace(/\s+/g, ' ').trim();
+  const lines = [
+    method.philosophy ? `Philosophie : ${clean(method.philosophy)}` : null,
+    method.style ? `Style : ${METHOD_STYLE_LABELS[method.style]}` : null,
+    ...METHOD_NOTE_KEYS.map((k) => (method.notes?.[k] ? `${METHOD_NOTE_INFO[k].label} : ${clean(method.notes[k]!)}` : null)),
+    ...method.rules.map((r) => `Règle : ${ruleLabel(r)}`),
+  ].filter((x): x is string => Boolean(x));
+  return lines.length ? `<methode_du_coach>\n${lines.join('\n')}\n</methode_du_coach>` : null;
+}
 
 export const aiRequestSchema = z.object({
   text: z.string().trim().min(3, { message: 'Écris ce que tu veux changer' }).max(500, { message: '500 caractères au plus' }),

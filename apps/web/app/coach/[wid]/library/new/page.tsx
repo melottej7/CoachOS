@@ -5,6 +5,7 @@ import { listBlockTemplates } from '@/server/repo/library';
 import { listExercises } from '@/server/repo/exercises';
 import { Cluster, Heading, LinkButton, Stack } from '@/design';
 import { LibraryForm } from '@/views/coach/library/library-form';
+import { aiEnabled } from '@/server/ai/settings';
 
 export const metadata = { title: 'Nouvelle séance type' };
 
@@ -21,7 +22,7 @@ export default async function NewLibraryWorkout({ params }: { params: Promise<{ 
         <Cluster><LinkButton href={`/coach/${wid}/library`} variant="ghost" size="sm" icon="chevronLeft">Séances types</LinkButton></Cluster>
         <Heading level={1} size={1}>Nouvelle séance type</Heading>
       </Stack>
-      <LibraryForm wid={wid} modules={ctx.modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name }))} savedBlocks={savedBlocks} />
+      <LibraryForm ai={await aiEnabled(actor.userId, wid)} wid={wid} modules={ctx.modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name }))} savedBlocks={savedBlocks} />
     </Stack>
   );
 }

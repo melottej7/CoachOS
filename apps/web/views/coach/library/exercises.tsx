@@ -17,7 +17,7 @@ type Draft = { name: string; muscle: Muscle; equipment: ExerciseEquipment[]; ins
 const empty: Draft = { name: '', muscle: 'legs', equipment: [], instructions: '', videoUrl: '', useBaseVideo: true };
 const toDraft = (e: Exercise): Draft => ({ name: e.name, muscle: e.muscle, equipment: e.equipment, instructions: e.instructions ?? '', videoUrl: e.videoUrl ?? '', useBaseVideo: e.useBaseVideo });
 
-export function ExerciseLibrary({ wid, items }: { wid: string; items: Exercise[] }) {
+export function ExerciseLibrary({ wid, items, ai = false }: { wid: string; items: Exercise[]; ai?: boolean }) {
   const router = useRouter();
   const [q, setQ] = useState('');
   const [muscle, setMuscle] = useState<Muscle | ''>('');
@@ -52,7 +52,7 @@ export function ExerciseLibrary({ wid, items }: { wid: string; items: Exercise[]
 
       {creating ? (
         <div className={s.exNew}>
-          <ExerciseForm wid={wid} initial={empty} onDone={(id) => { setCreating(false); if (id) setOpen(id); router.refresh(); }} />
+          <ExerciseForm wid={wid} ai={ai} initial={empty} onDone={(id) => { setCreating(false); if (id) setOpen(id); router.refresh(); }} />
         </div>
       ) : null}
 
@@ -82,7 +82,7 @@ export function ExerciseLibrary({ wid, items }: { wid: string; items: Exercise[]
                       <Badge tone={motionStatus(e.starterKey) === 'validated' ? 'neutral' : 'warning'}>Animation {MOTION_STATUS_LABELS[motionStatus(e.starterKey)!].toLowerCase()}</Badge>
                     ) : null}
                 </button>
-                {open === e.id ? <div className={s.exOpen}><ExerciseForm wid={wid} initial={toDraft(e)} exercise={e} onDone={() => router.refresh()} /></div> : null}
+                {open === e.id ? <div className={s.exOpen}><ExerciseForm wid={wid} ai={ai} initial={toDraft(e)} exercise={e} onDone={() => router.refresh()} /></div> : null}
               </li>
             );
           })}
@@ -94,7 +94,7 @@ export function ExerciseLibrary({ wid, items }: { wid: string; items: Exercise[]
   );
 }
 
-function ExerciseForm({ wid, initial, exercise, onDone }: { wid: string; initial: Draft; exercise?: Exercise; onDone: (id?: string) => void }) {
+function ExerciseForm({ wid, ai = false, initial, exercise, onDone }: { wid: string; ai?: boolean; initial: Draft; exercise?: Exercise; onDone: (id?: string) => void }) {
   const [d, setD] = useState<Draft>(initial);
   const [state, setState] = useState<'idle' | 'saving' | 'uploading'>('idle');
   const [progress, setProgress] = useState<number | null>(null);
@@ -102,6 +102,18 @@ function ExerciseForm({ wid, initial, exercise, onDone }: { wid: string; initial
   const [saved, setSaved] = useState<string | null>(null);
   const [key, setKey] = useState(newKey());
   const file = useRef<HTMLInputElement>(null);
+  // IA-5 (D-193) : consignes proposées « À relire », reprises dans le champ seulement si le coach le veut.
+  const [cues, setCues] = useState<{ text: string; note: string; source: string } | null>(null);
+  const [cuesState, setCuesState] = useState<'idle' | 'busy'>('idle');
+  const [cuesError, setCuesError] = useState<string | null>(null);
+  const [toReview, setToReview] = useState(false);
+  async function proposeCues() {
+    setCuesState('busy'); setCuesError(null); setCues(null);
+    const r = await mutate<{ status: 'ready' | 'abstain'; text: string; note: string; source: string }>('POST', `/api/v1/workspaces/${wid}/ai-exercise`, { name: d.name, muscle: d.muscle, equipment: d.equipment }, newKey());
+    setCuesState('idle');
+    if (!r.ok) { setCuesError(r.kind === 'error' ? (r.fields[0]?.rule ?? r.message) : 'Connexion perdue. Réessaie.'); return; }
+    if (r.data.status === 'ready') setCues(r.data); else setCuesError(r.data.note || 'Pas de proposition pour cet exercice.');
+  }
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => { setD((x) => ({ ...x, [k]: v })); setSaved(null); };
   const body = { name: d.name, muscle: d.muscle, equipment: d.equipment, instructions: d.instructions || null, videoUrl: d.videoUrl || null, useBaseVideo: d.useBaseVideo };
   const base = exercise?.starterKey ? BASE_VIDEOS[exercise.starterKey] : undefined;
@@ -119,6 +131,7 @@ function ExerciseForm({ wid, initial, exercise, onDone }: { wid: string; initial
     if (!r.ok) { setError(r.kind === 'error' ? (r.fields[0]?.rule ?? r.message) : 'Connexion perdue. Réessaie.'); return; }
     setKey(newKey());
     setSaved(archive ? 'Exercice retiré.' : 'Enregistré.');
+    setToReview(false);
     onDone(r.data.id);
   }
 
@@ -178,6 +191,26 @@ function ExerciseForm({ wid, initial, exercise, onDone }: { wid: string; initial
         <Field id={`ex-instr-${id}`} label="Consignes" hint="Placement, respiration, erreurs à éviter, version plus facile">
           <Textarea id={`ex-instr-${id}`} rows={3} maxLength={1500} value={d.instructions} onChange={(e) => set('instructions', e.target.value)} hasHint />
         </Field>
+        {ai ? (
+          <Stack gap={2}>
+            <Cluster gap={2}>
+              <Button size="sm" icon="bolt" loading={cuesState === 'busy'} disabled={d.name.trim().length < 2} onClick={() => void proposeCues()}>Proposer les consignes</Button>
+              {toReview ? <Badge tone="warning">À relire</Badge> : null}
+            </Cluster>
+            {cuesError ? <Text size="sm" tone="danger" role="alert">{cuesError}</Text> : null}
+            {cues ? (
+              <Stack gap={2} aria-live="polite">
+                <Cluster gap={2}><Badge tone="warning">À relire</Badge><Badge tone={cues.source === 'claude' ? 'coach' : 'neutral'}>{cues.source === 'claude' ? 'Claude' : 'IA simulée'}</Badge></Cluster>
+                <Text size="sm" style={{ whiteSpace: 'pre-line' }}>{cues.text}</Text>
+                {cues.note ? <Text size="sm" muted>{cues.note}</Text> : null}
+                <Cluster gap={2}>
+                  <Button size="sm" variant="primary" icon="check" onClick={() => { set('instructions', d.instructions.trim() ? `${d.instructions.trim()}\n${cues.text}`.slice(0, 1500) : cues.text); setToReview(true); setCues(null); }}>Reprendre dans les consignes</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setCues(null)}>Écarter</Button>
+                </Cluster>
+              </Stack>
+            ) : null}
+          </Stack>
+        ) : null}
         <Field id={`ex-url-${id}`} label="Lien de vidéo" hint="YouTube, Vimeo, Google Drive… (adresse en https://)">
           <Input id={`ex-url-${id}`} type="url" inputMode="url" maxLength={500} value={d.videoUrl} onChange={(e) => set('videoUrl', e.target.value)} placeholder="https://youtu.be/…" hasHint />
         </Field>

@@ -121,3 +121,5 @@ input.control { min-width: 0; }
 .fold svg, .foldAllOpen svg { transition: transform var(--ds-fast, 150ms) var(--ds-ease, ease); }
 .foldOpen svg, .foldAllOpen svg { transform: rotate(180deg); }
 @media (prefers-reduced-motion: reduce) { .fold svg, .foldAllOpen svg { transition: none; } }
+/* IA-1 (D-189) : le texte en langage courant garde la police du texte, pas celle du code. */
+.aiInput { font-family: inherit; }

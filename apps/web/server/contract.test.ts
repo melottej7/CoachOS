@@ -31,6 +31,12 @@ import { applyStripeEvent, openBillingPortal, startCheckout } from './commands/b
 import { setStripeFetch } from './billing/stripe';
 import { createExercise, finishExerciseClipUpload, startExerciseClipUpload } from './commands/exercises';
 import { setVideoStore } from './storage/video-store';
+import { setWorkspaceAi } from './ai/settings';
+import { dictateWorkout } from './commands/ai-dictation';
+import { proposeMethod } from './commands/ai-method';
+import { proposeProgramDraft, saveAiProgram } from './commands/ai-program';
+import { askAssistant } from './commands/ai-assistant';
+import { proposeExerciseCues, transcribeProgramDocument } from './commands/ai-library';
 import { applyWeekProposal, weekProposals } from './commands/week-proposals';
 
 // Test de contrat : chaque réponse réelle des commandes est validée contre contracts/openapi.json
@@ -246,6 +252,25 @@ describe('réponses conformes au contrat OpenAPI', () => {
     check('/workspaces/{wid}/auto-tasks/{ref}', 'put', snooze.status, snooze.body);
     const rules = await saveAutoRuleSettings(m(), { rules: [{ rule: 'feedback_review', enabled: true, delayDays: 3 }, { rule: 'vma_missing', enabled: false, delayDays: null }] });
     check('/workspaces/{wid}/auto-task-rules', 'put', rules.status, rules.body);
+    const aiSet = await setWorkspaceAi(m(), { enabled: true });
+    check('/workspaces/{wid}/ai-settings', 'put', aiSet.status, aiSet.body);
+    const dict = await dictateWorkout(m(), { text: 'presse 4 séries de 10 à 60 kilos, 2 minutes de repos, n’importe quoi', sport: 'strength', athleteId: ATHLETES.noah });
+    check('/workspaces/{wid}/ai-dictation', 'post', dict.status, dict.body);
+    const prop = await proposeMethod(m(), {});
+    check('/workspaces/{wid}/method/proposal', 'post', prop.status, prop.body);
+    const aiProg = await proposeProgramDraft(m(), { text: 'Force, 2 séances par semaine', weeks: 1, startMonday: '2026-11-30', target: { kind: 'athlete', id: ATHLETES.noah } });
+    check('/workspaces/{wid}/ai-program', 'post', aiProg.status, aiProg.body);
+    const pb = aiProg.body as { suggestionId: string; program: { weeks: { sessions: { date: string; sport: string; title: string; notation: string }[] }[] } };
+    const progSaved = await saveAiProgram(m(), { suggestionId: pb.suggestionId, sessions: pb.program.weeks[0]!.sessions.map((x) => ({ date: x.date, sport: x.sport, title: x.title, notation: x.notation })) });
+    check('/workspaces/{wid}/ai-program/save', 'post', progSaved.status, progSaved.body);
+    for (const q of ['Qui n’a pas fait ses séances cette semaine ?', 'Prépare une réponse au retour de Noah', 'Crée une tâche : appeler Noah']) {
+      const aiAsk = await askAssistant(m(), { text: q });
+      check('/workspaces/{wid}/ai-assistant', 'post', aiAsk.status, aiAsk.body);
+    }
+    const aiImp = await transcribeProgramDocument(m(), new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    check('/workspaces/{wid}/ai-import', 'post', aiImp.status, aiImp.body);
+    const aiEx = await proposeExerciseCues(m(), { name: 'Presse à cuisses', muscle: 'legs', equipment: [] });
+    check('/workspaces/{wid}/ai-exercise', 'post', aiEx.status, aiEx.body);
     const appt = await createAppointment(m(), { athleteId: ATHLETES.noah, title: 'Appel', kind: 'call', startsLocal: '2026-12-02T12:00', timeZone: TIME_ZONE, durationMin: 20 });
     check('/workspaces/{wid}/appointments', 'post', appt.status, appt.body);
     const apptUp = await updateAppointment({ ...m(), appointmentId: id(appt) }, { expectedRevision: 1, status: 'canceled' });

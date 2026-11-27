@@ -7,6 +7,7 @@ import { listExercises } from '@/server/repo/exercises';
 import { Cluster, Eyebrow, Heading, LinkButton, Stack, Text } from '@/design';
 import { GroupBaseForm } from '@/views/coach/group/group-base-form';
 import { GroupPublish } from '@/views/coach/group/group-publish';
+import { aiEnabled } from '@/server/ai/settings';
 
 export const metadata = { title: 'Séance de groupe' };
 
@@ -28,7 +29,7 @@ export default async function GroupSessionPage({ params }: { params: Promise<{ w
         <Heading level={1} size={1}>{v.title}</Heading>
         <Text muted>{formatLongDate(v.localDate)} · {v.rows.length} élève{v.rows.length > 1 ? 's' : ''}</Text>
       </Stack>
-      <GroupBaseForm modules={ctx.modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name }))} wid={wid} gid={gid} revision={v.revision} base={v.base}
+      <GroupBaseForm ai={await aiEnabled(actor.userId, wid)} modules={ctx.modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name }))} wid={wid} gid={gid} revision={v.revision} base={v.base}
         rows={v.rows.map((r) => ({ name: r.athleteName, followsBase: r.followsBase, published: r.publishedRevision !== null }))} />
       <Stack as="section" gap={3} aria-labelledby="gp-title">
         <Stack gap={1}>

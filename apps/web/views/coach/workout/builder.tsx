@@ -13,6 +13,7 @@ import { mutate, newKey } from '@/components/api-client';
 import { Button, Checkbox, Cluster, Field, Icon, IconButton, Input, MenuItem, Popover, Select, SessionStrip, Stack, Text } from '@/design';
 import { cx } from '@/design/cx';
 import { QuickNotation } from './quick-notation';
+import { AiDictation } from './ai-dictation';
 import { MachinePicker, readGym, type Gym, type PickedExercise } from './machine-picker';
 import s from './builder.module.css';
 
@@ -891,9 +892,11 @@ function BlockList({ blocks, sport, depth, prefix, parent, refs, dnd, onChange }
 type Indicator = { top: number; left: number; width: number };
 
 /** Constructeur complet, contrôlé par le formulaire de séance. */
-export function WorkoutBuilder({ wid, sport, value, onChange, refs, athleteFirst, vmaHref, library, exercises: listed = [], strengthOn = true, gear, lastDone }: {
+export function WorkoutBuilder({ wid, sport, value, onChange, refs, athleteFirst, vmaHref, library, exercises: listed = [], strengthOn = true, gear, lastDone, dictation }: {
   /** D-181 : espace du coach, pour ajouter des exercices de machine à sa bibliothèque depuis la séance. */
   wid?: string;
+  /** IA-1 (D-189) : « Dicter ou écrire avec l’IA », quand l’IA est allumée pour l’espace ; élève visé ou null. */
+  dictation?: { athleteId: string | null };
   sport: Sport; value: EBlock[]; onChange: (b: EBlock[]) => void; refs?: References; athleteFirst?: string; vmaHref?: string;
   /** D-074 : blocs réutilisables du coach (insérer, garder). Absent : seulement les modèles rapides. */
   library?: { wid: string; blocks: SavedBlock[] };
@@ -1115,6 +1118,10 @@ export function WorkoutBuilder({ wid, sport, value, onChange, refs, athleteFirst
         ) : null}
       </Cluster>
       {library ? <KeepBlocks wid={library.wid} sport={sport} blocks={blocks} onSaved={(b) => setMine((m) => [...m, b].sort((x, y) => x.title.localeCompare(y.title, 'fr')))} /> : null}
+      {dictation && wid ? (
+        <AiDictation wid={wid} sport={sport} athleteId={dictation.athleteId} hasBlocks={blocks.length > 0}
+          onApply={(raw, mode) => { const bs = linkExercises(raw, exercises); onChange(mode === 'replace' ? toEditor(bs) : [...value, ...toEditor(bs)]); }} />
+      ) : null}
       <QuickNotation sport={sport} blocks={blocks} refs={refs}
         onApply={(raw, mode) => { const bs = linkExercises(raw, exercises); onChange(mode === 'replace' ? toEditor(bs) : [...value, ...toEditor(bs)]); }} />
       {view ? (

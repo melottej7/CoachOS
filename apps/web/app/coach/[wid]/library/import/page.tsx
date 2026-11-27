@@ -4,6 +4,7 @@ import { coachContext } from '@/server/repo/context';
 import { listLibrary } from '@/server/repo/library';
 import { Cluster, Heading, LinkButton, SegmentedLinks, Stack, Text } from '@/design';
 import { LibraryImport, ProgramImport } from '@/views/coach/library/import';
+import { aiEnabled } from '@/server/ai/settings';
 
 export const metadata = { title: 'Importer' };
 
@@ -31,7 +32,7 @@ export default async function ImportLibraryPage({ params, searchParams }: { para
         { href: base, label: 'Des séances', current: !program },
         { href: `${base}?mode=programme`, label: 'Un programme entier', current: program },
       ]} />
-      {program ? <ProgramImport wid={wid} /> : <LibraryImport wid={wid} existing={existing} />}
+      {program ? <ProgramImport wid={wid} ai={await aiEnabled(actor.userId, wid)} /> : <LibraryImport wid={wid} existing={existing} />}
     </Stack>
   );
 }

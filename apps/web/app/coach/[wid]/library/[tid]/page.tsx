@@ -5,6 +5,7 @@ import { listBlockTemplates, readTemplate } from '@/server/repo/library';
 import { listExercises } from '@/server/repo/exercises';
 import { Cluster, Heading, LinkButton, Stack, Text } from '@/design';
 import { LibraryForm } from '@/views/coach/library/library-form';
+import { aiEnabled } from '@/server/ai/settings';
 
 export const metadata = { title: 'Séance type' };
 
@@ -23,7 +24,7 @@ export default async function EditLibraryWorkout({ params }: { params: Promise<{
         <Heading level={1} size={1}>{t.workout.title}</Heading>
         <Text muted>Les séances déjà créées à partir de celle-ci ne changent pas.</Text>
       </Stack>
-      <LibraryForm wid={wid} modules={ctx.modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name }))} savedBlocks={savedBlocks}
+      <LibraryForm ai={await aiEnabled(actor.userId, wid)} wid={wid} modules={ctx.modules} exercises={exercises.map((x) => ({ id: x.id, name: x.name }))} savedBlocks={savedBlocks}
         initial={{ id: t.id, revision: t.revision, category: t.category, workout: t.workout }} />
     </Stack>
   );

@@ -38,6 +38,7 @@ import { ReferencesForm } from '@/views/coach/athlete/references-form';
 import { LoadProgress } from '@/views/stats/load-progress';
 import { StatsPanel } from '@/views/stats/stats-panel';
 import s from '@/views/coach/athlete/fiche.module.css';
+import { aiEnabled } from '@/server/ai/settings';
 
 export const metadata = { title: 'Fiche élève' };
 
@@ -87,6 +88,7 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
   const a = file.entry;
   if (!a) notFound();
   const owner = ctx.role === 'owner';
+  const aiOn = await aiEnabled(actor.userId, wid);
   const tab: Tab = TABS.some((t) => t.k === onglet) && (onglet !== 'donnees' || owner) ? (onglet as Tab) : 'apercu';
   const today = todayIn(tz);
   const goalToday = todayIn(a.timeZone);
@@ -198,6 +200,7 @@ export default async function AthletePage({ params, searchParams }: { params: Pr
         <Cluster gap={2}>
           <LinkButton href={`${base}/calendar?athlete=${aid}`} variant="primary" icon="calendar">Préparer ses séances</LinkButton>
           <LinkButton href={`${base}/messages/${aid}`} icon="chat">Écrire à {first}</LinkButton>
+          {aiOn ? <LinkButton href={`${base}/athletes/${aid}/programme-ia`} icon="bolt">Programme avec l’IA</LinkButton> : null}
         </Cluster>
         <HomeActions wid={wid} athletes={[self]} teams={[]} today={today} timeZone={a.timeZone} athleteId={a.id} labels={{ task: 'Tâche', appointment: 'Planifier un appel' }} />
       </Stack>
