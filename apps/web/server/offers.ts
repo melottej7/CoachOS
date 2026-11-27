@@ -6,6 +6,8 @@
  * - `COACHOS_BILLING=1` est l’interrupteur commercial : prix affichés, essai et abonnement (mode test).
  *   Éteint (par défaut, donc en production) : phase pilote gratuite, aucun prix publié, rien n’est facturé.
  * - `COACHOS_TRIAL_DAYS` : durée de l’essai gratuit (30 jours par défaut, de 7 à 90).
+ * - D-188 · `STRIPE_SECRET_KEY` (clé de test `sk_test_…`) et `STRIPE_WEBHOOK_SECRET` : le paiement. Sans la clé, rien n’est
+ *   bloqué : un essai terminé reste affiché sans lecture seule, puisqu’on ne peut pas encore payer.
  */
 
 export type OfferId = 'starter' | 'pro' | 'elite';
@@ -83,35 +85,73 @@ export function offerFor(activeAthletes: number, list: Offer[] = offers()): Offe
 /** D-175 · Pendant l’essai, l’espace a les limites de cette offre (assez large pour reprendre un vrai portefeuille). */
 export const TRIAL_OFFER: OfferId = 'pro';
 
+/** D-188 · État Stripe de l’abonnement d’un espace (statuts de Stripe), tel que les événements l’ont décrit. */
+export type SubscriptionStatus = 'incomplete' | 'incomplete_expired' | 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
+export interface BillingState { status: SubscriptionStatus | null; pastDueSince: Date | null; periodEnd: Date | null }
+
 export interface WorkspaceOffer {
   plan: OfferId | null;
   trialEndsAt: Date | null;
+  billing?: BillingState | null;
 }
 
-/** Où en est un espace : phase pilote (sans limite), essai, essai terminé ou offre payée. */
+/**
+ * Où en est un espace : phase pilote (sans limite), essai, essai terminé, offre payée ; D-188 : paiement refusé
+ * (14 jours de grâce, tout marche), impayé après la grâce, abonnement arrêté.
+ */
 export type Standing =
   | { kind: 'pilot' }
   | { kind: 'trial'; offer: Offer; endsAt: Date; daysLeft: number }
   | { kind: 'trial_over'; offer: Offer; endedAt: Date }
-  | { kind: 'plan'; offer: Offer };
+  | { kind: 'plan'; offer: Offer; renewsAt: Date | null }
+  | { kind: 'grace'; offer: Offer; since: Date; until: Date; daysLeft: number }
+  | { kind: 'unpaid'; offer: Offer; since: Date }
+  | { kind: 'canceled'; offer: Offer };
 
 const DAY = 86_400_000;
+/** docs/13 : sur retard de paiement, grâce de 14 jours, puis lecture et export. */
+export const GRACE_DAYS = 14;
 
 export function standing(ws: WorkspaceOffer, now: Date = new Date(), env: Env = process.env): Standing {
   if (!billingEnabled(env)) return { kind: 'pilot' };
   const list = offers(env);
   const find = (id: OfferId) => list.find((o) => o.id === id)!;
-  if (ws.plan) return { kind: 'plan', offer: find(ws.plan) };
+  const b = ws.billing ?? null;
+  const offer = find(ws.plan ?? TRIAL_OFFER);
+  if (b?.status === 'past_due' || b?.status === 'unpaid') {
+    const since = b.pastDueSince ?? now;
+    const until = new Date(since.getTime() + GRACE_DAYS * DAY);
+    const left = until.getTime() - now.getTime();
+    return left > 0 ? { kind: 'grace', offer, since, until, daysLeft: Math.ceil(left / DAY) } : { kind: 'unpaid', offer, since };
+  }
+  if (b && (b.status === 'canceled' || b.status === 'incomplete_expired' || b.status === 'paused') && !(ws.trialEndsAt && ws.trialEndsAt > now)) {
+    return { kind: 'canceled', offer };
+  }
+  // Offre payée (ou attribuée à la main par le fondateur, sans Stripe).
+  if (ws.plan && (!b || b.status === 'active' || b.status === 'trialing' || b.status === null)) return { kind: 'plan', offer: find(ws.plan), renewsAt: b?.periodEnd ?? null };
   if (!ws.trialEndsAt) return { kind: 'pilot' };
-  const offer = find(TRIAL_OFFER);
+  const trial = find(TRIAL_OFFER);
   const left = ws.trialEndsAt.getTime() - now.getTime();
-  if (left <= 0) return { kind: 'trial_over', offer, endedAt: ws.trialEndsAt };
-  return { kind: 'trial', offer, endsAt: ws.trialEndsAt, daysLeft: Math.ceil(left / DAY) };
+  if (left <= 0) return { kind: 'trial_over', offer: trial, endedAt: ws.trialEndsAt };
+  return { kind: 'trial', offer: trial, endsAt: ws.trialEndsAt, daysLeft: Math.ceil(left / DAY) };
 }
 
 /** Élèves actifs au plus ; null : sans limite (phase pilote). */
 export function athleteLimit(s: Standing): number | null {
   return s.kind === 'pilot' ? null : s.offer.athletes;
+}
+
+/** D-188 · Le paiement est possible : interrupteur allumé et clé Stripe présente. */
+export function paymentsReady(env: Env = process.env): boolean {
+  return billingEnabled(env) && /^sk_(test|live)_[A-Za-z0-9]+$/.test(env.STRIPE_SECRET_KEY ?? '');
+}
+
+/**
+ * D-188 · Espace en lecture (et export) : essai terminé sans offre, impayé après la grâce, abonnement arrêté —
+ * seulement quand on peut payer (sinon on bloquerait un coach qui n’a aucun moyen de régler).
+ */
+export function readOnly(s: Standing, env: Env = process.env): boolean {
+  return paymentsReady(env) && (s.kind === 'trial_over' || s.kind === 'unpaid' || s.kind === 'canceled');
 }
 
 /** Fin d’essai d’un espace créé maintenant ; null quand l’interrupteur est éteint (phase pilote). */

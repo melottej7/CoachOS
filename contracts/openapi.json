@@ -12588,22 +12588,22 @@
     },
     "/workspaces/{wid}/billing/checkout": {
       "post": {
-        "operationId": "createCheckout",
-        "summary": "Choisir Stripe priceId serveur, pas du client",
+        "operationId": "startCheckout",
+        "summary": "Page de paiement Stripe (abonnement mensuel, mode test) pour l’offre choisie ; propriétaire de l’espace seulement ; 403 tant que le paiement n’est pas ouvert, 409 si un abonnement est déjà en place (D-188).",
         "tags": [
           "billing"
         ],
         "x-release": "V1",
         "x-role": "O",
-        "x-requests-per-minute": 5,
+        "x-requests-per-minute": 20,
         "security": [
           {
             "bearerAuth": []
           }
         ],
         "responses": {
-          "201": {
-            "description": "Résultat",
+          "200": {
+            "description": "Adresse de la page Stripe où envoyer le navigateur",
             "content": {
               "application/json": {
                 "schema": {
@@ -12663,7 +12663,7 @@
             }
           },
           "409": {
-            "description": "CONFLICT_OR_QUOTA",
+            "description": "CONFLICT",
             "content": {
               "application/json": {
                 "schema": {
@@ -12681,56 +12681,8 @@
                 }
               }
             }
-          },
-          "429": {
-            "description": "RATE_LIMITED",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "headers": {
-              "Retry-After": {
-                "schema": {
-                  "type": "integer",
-                  "minimum": 1
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "TEMPORARILY_UNAVAILABLE",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
           }
         },
-        "parameters": [
-          {
-            "in": "path",
-            "name": "wid",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Idempotency-Key",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -12739,10 +12691,10 @@
                 "type": "object",
                 "additionalProperties": false,
                 "required": [
-                  "tier"
+                  "offer"
                 ],
                 "properties": {
-                  "tier": {
+                  "offer": {
                     "type": "string",
                     "enum": [
                       "starter",
@@ -12759,22 +12711,22 @@
     },
     "/workspaces/{wid}/billing/portal": {
       "post": {
-        "operationId": "createPortal",
-        "summary": "Redirection vers portail client lié",
+        "operationId": "openBillingPortal",
+        "summary": "Portail client de Stripe (carte, factures, offre, arrêt) ; propriétaire seulement ; 409 sans abonnement (D-188).",
         "tags": [
           "billing"
         ],
         "x-release": "V1",
         "x-role": "O",
-        "x-requests-per-minute": 5,
+        "x-requests-per-minute": 20,
         "security": [
           {
             "bearerAuth": []
           }
         ],
         "responses": {
-          "201": {
-            "description": "Résultat",
+          "200": {
+            "description": "Adresse de la page Stripe où envoyer le navigateur",
             "content": {
               "application/json": {
                 "schema": {
@@ -12834,7 +12786,7 @@
             }
           },
           "409": {
-            "description": "CONFLICT_OR_QUOTA",
+            "description": "CONFLICT",
             "content": {
               "application/json": {
                 "schema": {
@@ -12852,56 +12804,8 @@
                 }
               }
             }
-          },
-          "429": {
-            "description": "RATE_LIMITED",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "headers": {
-              "Retry-After": {
-                "schema": {
-                  "type": "integer",
-                  "minimum": 1
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "TEMPORARILY_UNAVAILABLE",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
           }
-        },
-        "parameters": [
-          {
-            "in": "path",
-            "name": "wid",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Idempotency-Key",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ]
+        }
       }
     },
     "/workspaces/{wid}/billing/invoices": {

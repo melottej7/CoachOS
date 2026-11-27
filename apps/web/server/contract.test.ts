@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { openDatabase, setDb } from './db/client';
 import { ATHLETES, TIME_ZONE, USERS, WORKSPACE_A } from './db/fixtures';
 import { repoRoot } from './db/migrate';
@@ -27,6 +27,8 @@ import { coachWorkout, openReviews } from './repo/coach';
 import { decideGoal } from './commands/goal-decisions';
 import { buildRegeneration, createProgram, regenContext, regenerateProgram, seenOf } from './commands/programs';
 import { addPerformance, deletePerformance } from './commands/performances';
+import { applyStripeEvent, openBillingPortal, startCheckout } from './commands/billing';
+import { setStripeFetch } from './billing/stripe';
 import { createExercise, finishExerciseClipUpload, startExerciseClipUpload } from './commands/exercises';
 import { setVideoStore } from './storage/video-store';
 import { setWorkspaceAi } from './ai/settings';
@@ -66,6 +68,27 @@ beforeAll(async () => {
 });
 
 describe('réponses conformes au contrat OpenAPI', () => {
+  it('abonnement (D-188) : page de paiement et portail, réponses conformes', async () => {
+    vi.stubEnv('COACHOS_BILLING', '1');
+    vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_contrat');
+    setStripeFetch((async (url: string) => new Response(JSON.stringify(String(url).includes('billing_portal')
+      ? { url: 'https://billing.stripe.com/p/session/test_c' } : { id: 'cs_test_c', url: 'https://checkout.stripe.com/c/pay/cs_test_c' }), { status: 200 })) as typeof fetch);
+    try {
+      const m = () => ({ ...meta(USERS.marine), workspaceId: WORKSPACE_A, origin: 'http://localhost:3000' });
+      const c = await startCheckout(m(), { offer: 'starter' });
+      check('/workspaces/{wid}/billing/checkout', 'post', c.status, c.body);
+      await applyStripeEvent({ id: `evt_${randomUUID().replace(/-/g, '')}`, type: 'checkout.session.completed', data: { object: { customer: 'cus_Contrat', subscription: 'sub_Contrat', metadata: { workspace_id: WORKSPACE_A, offer: 'starter' } } } });
+      const p = await openBillingPortal(m());
+      check('/workspaces/{wid}/billing/portal', 'post', p.status, p.body);
+    } finally {
+      setStripeFetch(null);
+      vi.unstubAllEnvs();
+      const db = await import('./db/client').then((x) => x.getDb());
+      await db.query('delete from public.workspace_billing where workspace_id = $1', [WORKSPACE_A]);
+      await db.query('update public.workspaces set plan = null where id = $1', [WORKSPACE_A]);
+    }
+  });
+
   it('vidéo envoyée au stockage (D-173) : lien d’envoi, rattachement, repli sans stockage', async () => {
     const files = new Map<string, Uint8Array>();
     setVideoStore({

@@ -2623,6 +2623,18 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **À savoir pour IA-1** : `ai_suggestions` exige un élève et un module de la liste existante ; une dictée sans élève demandera une migration additive.
 - **Vérifié** : 7 tests du socle (préfixe, injection, autre espace, budget, panne, simulation, interrupteur), contrat OpenAPI, parcours Paramètres › IA à 1440 et 390 px. **Non vérifié** : appel réel à Claude (pas de clé).
 
+## D-188 · Abonnement Stripe en mode test, derrière l’interrupteur · 2026-11-27
+
+- **Pourquoi** : « De quoi vendre », suite (D-120, docs/13). Tout est éteint en production tant que `COACHOS_BILLING` n’est pas à 1 et que `STRIPE_SECRET_KEY` (clé de test) manque.
+- **Migration additive** `20261127000000` : `workspace_billing` (client, abonnement, statut Stripe, fin de période, début d’impayé), lisible par le seul serveur ; `billing_events`, pour traiter chaque événement Stripe une seule fois.
+- **Paiement** : le propriétaire choisit une offre (Paramètres › Abonnement) ; page de paiement et portail client hébergés par Stripe, prix venus des offres (`COACHOS_OFFERS`), sans produit à créer. Événements signés reçus sur `/api/billing/stripe` (`STRIPE_WEBHOOK_SECRET`) : payé, modifié, refusé, réglé, arrêté.
+- **Règles** (docs/13) :
+  - paiement refusé : 14 jours de grâce, tout marche, bandeau ;
+  - après la grâce, essai terminé, ou abonnement arrêté : lecture seule. Exporter, régler et gérer ses notifications restent possibles ; l’élève est prévenu et garde son historique.
+  - Arrêt pendant l’essai : retour aux jours d’essai.
+  - Pas de lecture seule sans clé Stripe. La phase pilote ne se voit rien proposer.
+- **Vérifié** : 6 tests (signatures, droits, événements uniques, grâce, impayé, arrêt, point d’arrivée) et le contrat. Au navigateur à 1440 et 390 px, avec un faux Stripe local qui signe comme Stripe : essai, paiement, portail, refus, arrêt, lecture seule, élève prévenu. **Non vérifié** : avec le vrai Stripe (clé de test à venir).
+
 ## D-189 · Dicter ou écrire une séance avec l’IA (IA-1) · 2026-11-27
 
 - **Geste** : « Dicter ou écrire avec l’IA » dans l’éditeur de séance (séance d’élève, bibliothèque, séances de groupe), si l’IA est allumée pour l’espace. Le coach écrit ou dicte : micro du clavier, ou bouton « Dicter » quand le navigateur reconnaît la voix. Aucun audio n’est envoyé à l’IA.
