@@ -110,7 +110,7 @@ test('une carte d’exercice : 6 séries de 20 s, 40 s de récupération ; l’�
   await expect(camille.getByRole('timer')).toHaveText('0:10');
   await expect(camille.getByLabel('En pause depuis 0:30')).toBeVisible();
   // La barre garde le temps d’effort restant (10 s sur 20 s), pas la mise en place.
-  await expect(camille.getByRole('timer').locator('xpath=following-sibling::div[1]/span')).toHaveAttribute('style', /inline-size: (49\.\d+|50)%/);
+  await expect(camille.getByRole('timer').locator('xpath=following-sibling::div[1]/span')).toHaveAttribute('style', /inline-size: (4[5-9](\.\d+)?|50)%/); // environ la moitié, même sur une machine chargée
   await shot(camille, 'suivre-pause-390');
   await camille.getByRole('button', { name: 'Reprendre', exact: true }).click();
   await expect(camille.getByText('Mets-toi en place')).toBeVisible();

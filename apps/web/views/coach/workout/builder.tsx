@@ -27,6 +27,8 @@ export interface AthleteGearInfo { first: string; gear: AthleteGear }
 const GearCtx = createContext<AthleteGearInfo | null>(null);
 /** D-112 : ce que l’élève a fait la dernière fois, par exercice. */
 const LastCtx = createContext<Record<string, LastDone>>({});
+/** D-186 · Cartes réduites à une ligne : l’exercice écrit se replie pour se concentrer sur la suite. */
+const FoldCtx = createContext<{ folded: ReadonlySet<string>; toggle: (k: string) => void }>({ folded: new Set(), toggle: () => undefined });
 
 /** Bloc réutilisable de la bibliothèque du coach (D-074). */
 export interface SavedBlock { id: string; title: string; sport: Sport | null; blocks: Block[] }
@@ -532,7 +534,6 @@ interface DnD {
   dragging: string | null;
   start: (key: string, e: ReactPointerEvent<HTMLElement>, label: string) => void;
   onHandleKey: (key: string, e: ReactKeyboardEvent<HTMLElement>) => void;
-  shift: (key: string, d: -1 | 1) => void;
   lift: (key: string) => void;
 }
 
@@ -551,21 +552,17 @@ function Handle({ k, index, label, dnd }: { k: string; index: string; label: str
   );
 }
 
-/** Outils d’un bloc : dupliquer, supprimer, et un menu « Plus » (monter, descendre, sortir de la répétition). */
+/** Outils d’un bloc : dupliquer, supprimer et, dans une répétition, « Sortir de la répétition ». On déplace un bloc par sa poignée (D-185). */
 function Tools({ k, index, inside, dnd, onDuplicate, onRemove }: { k: string; index: string; inside: boolean; dnd: DnD; onDuplicate: () => void; onRemove: () => void }) {
   return (
     <span className={s.tools}>
       <IconButton icon="copy" size="sm" onClick={onDuplicate} label={`Dupliquer le bloc ${index}`} />
       <IconButton icon="trash" size="sm" onClick={onRemove} label={`Supprimer le bloc ${index}`} />
-      <Popover iconOnly icon="more" label={`Plus d’actions pour le bloc ${index}`}>
-        {(close) => (
-          <>
-            <MenuItem onClick={() => { dnd.shift(k, -1); close(); }}>Monter</MenuItem>
-            <MenuItem onClick={() => { dnd.shift(k, 1); close(); }}>Descendre</MenuItem>
-            {inside ? <MenuItem onClick={() => { dnd.lift(k); close(); }}>Sortir de la répétition</MenuItem> : null}
-          </>
-        )}
-      </Popover>
+      {inside ? (
+        <Popover iconOnly icon="more" label={`Plus d’actions pour le bloc ${index}`}>
+          {(close) => <MenuItem onClick={() => { dnd.lift(k); close(); }}>Sortir de la répétition</MenuItem>}
+        </Popover>
+      ) : null}
     </span>
   );
 }
@@ -584,7 +581,7 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools, series }:
   const est = stepEstimate(plain, sport, refs);
   const strength = stepSport === 'strength' || sport === 'strength';
   const allExercises = useContext(ExercisesCtx);
-  // D-184 : séries différentes (charge, répétitions), dans une carte de plusieurs séries.
+  // D-185 : séries différentes (charge, répétitions), dans une carte de plusieurs séries.
   const canVary = Boolean(series && series.sets > 1 && strength && (step.measure.kind === 'reps' || step.intensity.kind === 'load'));
   const perSet = canVary && step.perSet ? fitSetsToTimes(step, series!.sets).perSet ?? null : null;
   const fitSets = (x: EStep): EStep => (series && series.sets > 1 && x.perSet ? { ...fitSetsToTimes(x, series.sets), _k: x._k } : x);
@@ -664,7 +661,7 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools, series }:
             {perSet ? (
               <SetsTable id={id} step={step} sets={perSet} onChange={onChange} />
             ) : canVary ? (
-              <span><Button size="sm" variant="ghost" icon="list" onClick={() => onChange(varySets(step, series!.sets))}>Varier la charge ou les répétitions d’une série à l’autre</Button></span>
+              <span><Button size="sm" variant="ghost" icon="list" onClick={() => onChange(varySets(step, series!.sets))} title="Charge et répétitions propres à chaque série (ex. 12 × 10 kg, 10 × 12 kg, 8 × 14 kg)">Varier d’une série à l’autre</Button></span>
             ) : null}
             {series && series.sets > 1 ? (
               <div className={s.field}>
@@ -702,7 +699,7 @@ function StepEditor({ step, sport, index, refs, onChange, head, tools, series }:
 
 // ---------- Exercice en séries (D-165) ----------
 
-/** D-184 · Première série = réglages de la carte ; les suivantes reprennent la même chose, à ajuster. */
+/** D-185 · Première série = réglages de la carte ; les suivantes reprennent la même chose, à ajuster. */
 function varySets(step: EStep, sets: number): EStep {
   const reps = step.measure.kind === 'reps' ? step.measure.reps : null;
   const kg = step.intensity.kind === 'load' ? step.intensity.min : null;
@@ -714,7 +711,7 @@ function withoutSets(step: EStep): EStep {
 }
 
 /**
- * D-184 · Les séries une par une (« 12 × 10 kg, 10 × 12 kg, 8 × 14 kg ») : répétitions et charge propres à chaque série.
+ * D-185 · Les séries une par une (« 12 × 10 kg, 10 × 12 kg, 8 × 14 kg ») : répétitions et charge propres à chaque série.
  * La première série reste celle de la carte (résumés, montre, ancien affichage).
  */
 function SetsTable({ id, step, sets, onChange }: { id: string; step: EStep; sets: SetPlan[]; onChange: (s: EStep) => void }) {
@@ -815,6 +812,7 @@ function BlockList({ blocks, sport, depth, prefix, parent, refs, dnd, onChange }
   blocks: EBlock[]; sport: Sport; depth: number; prefix: string; parent: string | null; refs?: References; dnd: DnD; onChange: (b: EBlock[]) => void;
 }) {
   const update = (k: number, b: EBlock) => onChange(blocks.map((x, i) => (i === k ? b : x)));
+  const fold = useContext(FoldCtx);
   return (
     <ol className={s.list} data-b="list" data-depth={depth} data-parent={parent ?? ''}>
       {blocks.map((b, k) => {
@@ -826,15 +824,40 @@ function BlockList({ blocks, sport, depth, prefix, parent, refs, dnd, onChange }
             <span className={s.index} aria-hidden="true">{index}</span>
           </>
         );
+        const folded = depth === 0 && fold.folded.has(b._k);
+        // Résumé de la carte réduite : « Squat goblet » puis « 3 séries · 10 répétitions · repos 1 min 30 s ».
+        const row = folded ? sessionView(fromEditor([b]), sport, refs).rows[0] : undefined;
+        const foldButton = depth === 0 ? (
+          <button type="button" className={cx(s.fold, !folded && s.foldOpen)} aria-expanded={!folded}
+            aria-label={folded ? `Déplier le bloc ${index}` : `Réduire le bloc ${index}`} onClick={() => fold.toggle(b._k)}>
+            <Icon name="chevronDown" size={18} />
+          </button>
+        ) : null;
         const tools = (
-          <Tools k={b._k} index={index} inside={parent !== null} dnd={dnd}
-            onDuplicate={() => onChange([...blocks.slice(0, k + 1), clone(b), ...blocks.slice(k + 1)])}
-            onRemove={() => onChange(blocks.filter((_, i) => i !== k))} />
+          <>
+            {foldButton}
+            <Tools k={b._k} index={index} inside={parent !== null} dnd={dnd}
+              onDuplicate={() => onChange([...blocks.slice(0, k + 1), clone(b), ...blocks.slice(k + 1)])}
+              onRemove={() => onChange(blocks.filter((_, i) => i !== k))} />
+          </>
         );
         const shape = depth === 0 ? seriesOf(b, sport === 'strength') : null;
         return (
           <li key={b._k} data-bk={b._k} data-kind={b.type} className={dnd.dragging === b._k ? s.dragging : undefined}>
-            {shape ? (
+            {folded ? (
+              // D-186 : une ligne, le résumé que lira l’élève ; toucher le résumé déplie la carte.
+              <div className={cx(s.step, s.folded)} role="group" aria-label={`Bloc ${index}`}>
+                <div className={s.head}>
+                  {head}
+                  <span className={s.spacer} />
+                  {tools}
+                </div>
+                <button type="button" className={s.foldSummary} onClick={() => fold.toggle(b._k)}>
+                  {row?.title ? <span className={s.foldTitle}>{row.title}</span> : null}
+                  <span className={s.foldDetail}>{row?.detail ?? (row?.title ? null : label)}</span>
+                </button>
+              </div>
+            ) : shape ? (
               <SeriesCard block={b} shape={shape} sport={sport} index={index} refs={refs} head={head} tools={tools} onChange={(x) => update(k, x)} />
             ) : b.type === 'step' ? (
               <StepEditor step={b} sport={sport} index={index} refs={refs} onChange={(s) => update(k, s)} head={head} tools={tools} />
@@ -902,6 +925,11 @@ export function WorkoutBuilder({ wid, sport, value, onChange, refs, athleteFirst
   const defaultSport = MULTISPORT.includes(sport) ? (MULTI_STEP_SPORTS[sport]?.[0] ?? null) : null;
   const root = useRef<HTMLElement>(null);
   const [drag, setDrag] = useState<{ key: string; label: string; x: number; y: number; active: boolean } | null>(null);
+  // D-186 : cartes réduites ; en ajouter une replie celles déjà écrites, pour se concentrer sur la nouvelle.
+  const [folded, setFolded] = useState<ReadonlySet<string>>(() => new Set());
+  const toggleFold = (k: string) => setFolded((f) => { const n = new Set(f); if (n.has(k)) n.delete(k); else n.add(k); return n; });
+  const add = (...more: EBlock[]) => { setFolded(new Set(value.map((b) => b._k))); onChange([...value, ...more]); };
+  const allFolded = value.length > 0 && value.every((b) => folded.has(b._k));
   const [drop, setDrop] = useState<(DropTarget & Indicator) | null>(null);
   const [announce, setAnnounce] = useState('');
   const focusKey = useRef<string | null>(null);
@@ -979,7 +1007,6 @@ export function WorkoutBuilder({ wid, sport, value, onChange, refs, athleteFirst
       e.preventDefault();
       apply(key, shift(valueRef.current, key, e.key === 'ArrowUp' ? -1 : 1), 'clavier');
     },
-    shift: (key, d) => apply(key, shift(valueRef.current, key, d), 'menu'),
     lift: (key) => apply(key, lift(valueRef.current, key), 'menu'),
   };
 
@@ -1039,25 +1066,34 @@ export function WorkoutBuilder({ wid, sport, value, onChange, refs, athleteFirst
           ? '« Exercice » : ses séries, ce qu’on fait à chaque série (répétitions ou durée), la charge et la récupération. « Circuit » enchaîne plusieurs exercices en tours ; « Cardio » programme une machine en paliers. Glisse un bloc par sa poignée pour le déplacer.'
           : 'Construis la séance bloc par bloc : durée ou distance, zone, répétitions et séries. Glisse un bloc par sa poignée pour le déplacer.'}</Text>
       </Stack>
+      {value.length > 1 ? (
+        <Cluster between align="center">
+          <Text size="sm" muted>{value.length} blocs{folded.size ? ` · ${value.filter((b) => folded.has(b._k)).length} réduit${value.filter((b) => folded.has(b._k)).length > 1 ? 's' : ''}` : ''}</Text>
+          <Button size="sm" variant="ghost" icon="chevronDown" className={allFolded ? undefined : s.foldAllOpen}
+            onClick={() => setFolded(allFolded ? new Set() : new Set(value.map((b) => b._k)))}>{allFolded ? 'Tout déplier' : 'Tout réduire'}</Button>
+        </Cluster>
+      ) : null}
       {value.length ? (
-        <BlockList blocks={value} sport={sport} depth={0} prefix="" parent={null} refs={refs} dnd={dnd} onChange={onChange} />
+        <FoldCtx.Provider value={{ folded, toggle: toggleFold }}>
+          <BlockList blocks={value} sport={sport} depth={0} prefix="" parent={null} refs={refs} dnd={dnd} onChange={onChange} />
+        </FoldCtx.Provider>
       ) : (
         <p className={s.empty}>Aucun bloc pour l’instant. Ajoute une étape, une répétition ou pars d’un modèle.</p>
       )}
       <Cluster gap={2} data-tour="builder-add">
         {strength ? (
           <>
-            <Button icon="plus" onClick={() => onChange([...value, newStrengthRepeat()])}>Exercice</Button>
+            <Button icon="plus" onClick={() => add(newStrengthRepeat())}>Exercice</Button>
             {wid ? <Button icon="list" title="Choisir des exercices sur machine, Basic-Fit ou toutes les machines" onClick={() => setPicker({ mode: 'many' })}>{gym === 'all' ? 'Machines' : 'Machines Basic-Fit'}</Button> : null}
-            <Button icon="repeat" title="Plusieurs exercices enchaînés, en tours" onClick={() => onChange([...value, newCircuit()])}>Circuit</Button>
-            <Button icon="plus" title="Tapis, elliptique, vélo, rameur… en paliers (niveau, vitesse, pente)" onClick={() => onChange([...value, newCardioStep(value.length ? 'work' : 'warmup')])}>Cardio</Button>
+            <Button icon="repeat" title="Plusieurs exercices enchaînés, en tours" onClick={() => add(newCircuit())}>Circuit</Button>
+            <Button icon="plus" title="Tapis, elliptique, vélo, rameur… en paliers (niveau, vitesse, pente)" onClick={() => add(newCardioStep(value.length ? 'work' : 'warmup'))}>Cardio</Button>
           </>
         ) : (
           <>
-            <Button icon="plus" onClick={() => onChange([...value, newStep(value.length ? 'work' : 'warmup', defaultSport)])}>Étape</Button>
-            <Button icon="repeat" onClick={() => onChange([...value, newRepeat()])}>Répétition</Button>
+            <Button icon="plus" onClick={() => add(newStep(value.length ? 'work' : 'warmup', defaultSport))}>Étape</Button>
+            <Button icon="repeat" onClick={() => add(newRepeat())}>Répétition</Button>
             {strengthOn && !MULTISPORT.includes(sport) ? (
-              <Button icon="plus" title="Séance mixte : renforcement après la course" onClick={() => onChange([...value, newMixedStrength()])}>Renforcement</Button>
+              <Button icon="plus" title="Séance mixte : renforcement après la course" onClick={() => add(newMixedStrength())}>Renforcement</Button>
             ) : null}
           </>
         )}
@@ -1065,7 +1101,7 @@ export function WorkoutBuilder({ wid, sport, value, onChange, refs, athleteFirst
         <Select id="preset" className={s.auto} value="" data-tour="presets"
           onChange={(e) => {
             const p = presets.find((x) => x.id === e.target.value);
-            if (p) onChange([...value, ...toEditor(p.blocks())]);
+            if (p) add(...toEditor(p.blocks()));
           }}>
           <option value="">Modèle rapide…</option>
           {presets.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
@@ -1074,7 +1110,7 @@ export function WorkoutBuilder({ wid, sport, value, onChange, refs, athleteFirst
           <>
             <label className="ds-visually-hidden" htmlFor="my-block">Ajouter un de mes blocs</label>
             <Select id="my-block" className={s.auto} value="" disabled={!usable.length}
-              onChange={(e) => { const b = usable.find((x) => x.id === e.target.value); if (b) onChange([...value, ...toEditor(b.blocks)]); }}>
+              onChange={(e) => { const b = usable.find((x) => x.id === e.target.value); if (b) add(...toEditor(b.blocks)); }}>
               <option value="">{usable.length ? 'Mon bloc…' : 'Aucun bloc gardé'}</option>
               {usable.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}
             </Select>
@@ -1114,7 +1150,7 @@ export function WorkoutBuilder({ wid, sport, value, onChange, refs, athleteFirst
           onPick={(items) => {
             remember(items);
             if (picker.mode === 'one') { if (items[0]) picker.onPick(items[0]); }
-            else onChange([...value, ...items.map(withExercise)]);
+            else add(...items.map(withExercise));
             setPicker(null);
           }} />
       ) : null}

@@ -2588,7 +2588,7 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 
 - **Retour du fondateur** : entre les séries, on change souvent la charge. « Logique pratique, à appliquer partout. »
 - **Modèle** : `perSet` sur l’étape d’une carte répétée, une entrée par série (répétitions si la carte est en répétitions, charge si elle est en kg). Le nombre d’entrées suit le nombre de séries : complété par la dernière, ou coupé. Ajout facultatif, au contrat d’API compris, sans migration.
-- **Coach** : « Varier la charge ou les répétitions d’une série à l’autre » ouvre un tableau série par série, avec les raccourcis « +2,5 kg par série », « +5 kg par série » et « Mêmes réglages pour toutes ».
+- **Coach** : « Varier d’une série à l’autre » ouvre un tableau série par série, avec les raccourcis « +2,5 kg par série », « +5 kg par série » et « Mêmes réglages pour toutes ».
 - **Partout** :
   - résumés : « 12 × 10 kg, 10 × 12 kg, 8 × 14 kg » ;
   - écriture en texte : `3×12/10/8 Tirer latéral 10/12/14kg R1'30`, lue et écrite ;
@@ -2596,6 +2596,22 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
   - totaux, retour de l’élève prérempli série par série.
 - **Élève** : chaque série montre et annonce sa charge. Pendant la récupération, « Prépare 12 kg (au lieu de 10 kg) », à l’écran et à la voix.
 - **Vérifié** : 4 tests du domaine ; parcours complet sur téléphone (coach règle, enregistre, rouvre ; élève lit, suit, case « Fait » préremplie).
+
+## D-185 · Logo chrono, recherche de machine sur Safari, plus de « Monter / Descendre » · 2026-11-26
+
+- **Nom** : le fondateur garde CoachOS (pistes écartées : Relais, Cordée, Palier, Sillage, Lane, Stint, Duet ; « Relay » est pris par Relay Athletic, concurrent direct).
+- **Logo** : un chrono blanc, le premier quart en orange, sur fond encre (`#0E1116`, `#FF5A1F`). Il sert pour l’icône de l’app installée (iPhone, Android, onglet) et pour la marque de la page publique. Barre d’état et manifeste aux couleurs Chrono ; bouton de l’e-mail d’invitation en encre.
+- **Recherche de machine** : la liste du sélecteur et la fenêtre « Machine prise ? » défilaient avec `flex: 1`, que Safari écrase à zéro dans une fenêtre sans hauteur fixe ; elles passent à `flex: 1 1 auto`. La recherche ignore maintenant les accents et l’ordre des mots (« developpe », « row seated »).
+- **Blocs** : « Monter / Descendre » retiré, on déplace par la poignée (souris, doigt, flèches au clavier). Le menu « … » ne reste que dans une répétition (« Sortir de la répétition »).
+- **Vérifié** : 504 tests, typecheck, construction, 22 parcours (salle étendu à la recherche). Vu à 1440 et 390 px dans Chromium. **Non vérifié** : Safari lui-même (cause déduite de la capture du fondateur).
+
+## D-186 · Réduire un exercice écrit pour se concentrer sur la suite · 2026-11-26
+
+- **Retour du fondateur** : une fois un exercice écrit, pouvoir en réduire le détail.
+- **Éditeur de séance** : chaque carte a un chevron « Réduire ». Réduite, elle tient en deux lignes : le nom (« Squat goblet ») et le résumé (« 3 séries · 10 répétitions · repos 1 min 30 s »). Toucher le résumé la rouvre. Poignée, copie et suppression restent là, ce qui facilite le rangement.
+- **Repli automatique** : ajouter un bloc (Exercice, Machines, Circuit, Cardio, modèle, bloc gardé) replie ceux déjà écrits ; le nouveau reste ouvert. « Tout réduire » et « Tout déplier » au-dessus de la liste. Une copie s’ouvre, prête à modifier. L’état replié n’est pas enregistré.
+- **Correctif D-184** : « Varier d’une série à l’autre » (libellé raccourci) débordait de 11 px sur téléphone.
+- **Vérifié** : parcours à 390 px (repli à l’ajout, résumé, réouverture, tout réduire et déplier, copie d’une carte réduite).
 
 ## D-187 · Socle commun de l’IA (IA-0) · 2026-11-26
 

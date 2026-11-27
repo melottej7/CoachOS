@@ -9,7 +9,7 @@
 /* Pages hors espace : en-tête simple, colonne étroite (formulaire lisible d’un coup d’œil). */
 .publicHeader { display: flex; align-items: center; height: 56px; padding: 0 var(--ds-4); border-bottom: 1px solid var(--ds-rule); }
 .publicBrand { display: inline-flex; align-items: center; gap: var(--ds-2); min-height: 44px; font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-xl); color: var(--ds-ink); text-decoration: none; }
-.publicMark { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: var(--ds-radius); background: var(--ds-primary); color: var(--ds-on-primary); font-size: var(--ds-text-lg); }
+.publicMark { flex: none; width: 32px; height: 32px; border-radius: 7px; box-shadow: 0 0 0 1px var(--ds-rule); } /* D-185 : le chrono, comme l’icône de l’app */
 .narrow { max-width: 520px; margin: 0 auto; padding: var(--ds-6) var(--ds-4) var(--ds-12); }
 .wide { max-width: 860px; margin: 0 auto; padding: var(--ds-6) var(--ds-4) var(--ds-12); }
 @media (min-width: 768px) { .narrow, .wide { padding-top: var(--ds-10); } }

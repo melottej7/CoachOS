@@ -9,7 +9,7 @@
 .gym { min-block-size: 40px; padding: 0 var(--ds-2); border: 0; border-radius: calc(var(--ds-radius-md) - 2px); background: transparent; color: var(--ds-ink-2); font: inherit; font-weight: 600; cursor: pointer; }
 .gymOn { background: var(--ds-surface); color: var(--ds-ink); box-shadow: var(--ds-shadow); }
 .gym:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 1px; }
-.list { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: var(--ds-2) var(--ds-5) var(--ds-4); }
+.list { flex: 1 1 auto; min-block-size: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--ds-2) var(--ds-5) var(--ds-4); }
 .kind { margin: var(--ds-4) 0 var(--ds-1); font-size: var(--ds-text-sm); text-transform: uppercase; letter-spacing: .06em; color: var(--ds-ink-2); }
 .machine + .machine { border-top: 1px solid var(--ds-rule); }
 .machine { padding: var(--ds-2) 0; }

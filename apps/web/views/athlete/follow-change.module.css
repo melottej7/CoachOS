@@ -4,7 +4,7 @@
 .sheet::backdrop { background: var(--ds-overlay, rgb(0 0 0 / .45)); }
 .head { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-3); padding: var(--ds-3) var(--ds-3) var(--ds-3) var(--ds-5); border-bottom: 1px solid var(--ds-rule); }
 .title { margin: 0; font-family: var(--ds-font-display); font-weight: 700; font-size: var(--ds-text-xl); }
-.body { flex: 1; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: var(--ds-5); padding: var(--ds-4) var(--ds-5); }
+.body { flex: 1 1 auto; min-block-size: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: var(--ds-5); padding: var(--ds-4) var(--ds-5); }
 .part { display: flex; flex-direction: column; gap: var(--ds-2); }
 .part + .part { padding-top: var(--ds-4); border-top: 1px solid var(--ds-rule); }
 .h { margin: 0; font-size: var(--ds-text-md); font-weight: 700; }

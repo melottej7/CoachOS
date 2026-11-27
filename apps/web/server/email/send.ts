@@ -73,7 +73,7 @@ export function invitationEmail(to: string, workspaceName: string, link: string,
 <p style="margin:0 0 16px;font-size:16px;line-height:24px">Bonjour,</p>
 <p style="margin:0 0 20px;font-size:16px;line-height:24px">${esc(who)} à rejoindre l’espace <strong>${esc(workspaceName)}</strong> sur CoachOS pour retrouver tes séances et lui envoyer tes retours.</p>
 ${tagline ? `<p style="margin:0 0 20px;font-size:15px;line-height:22px;font-style:italic;color:#50646a">« ${esc(tagline)} »</p>` : ''}
-<p style="margin:0 0 24px"><a href="${esc(link)}" style="display:inline-block;background:#0a6452;color:#fff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:8px">Rejoindre l’espace</a></p>
+<p style="margin:0 0 24px"><a href="${esc(link)}" style="display:inline-block;background:#0E1116;color:#fff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:8px">Rejoindre l’espace</a></p>
 <p style="margin:0 0 8px;font-size:13px;line-height:18px;color:#50646a">Ce lien est personnel, valable ${days} jours et utilisable une seule fois. Tu y choisiras ton mot de passe (ou tu te connecteras si tu as déjà un compte avec cette adresse).</p>
 <p style="margin:0;font-size:13px;line-height:18px;color:#50646a">Si tu ne connais pas ce coach, ignore simplement cet e-mail.</p>
 </td></tr></table></body></html>`;
