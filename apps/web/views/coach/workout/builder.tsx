@@ -1064,7 +1064,8 @@ export function WorkoutBuilder({ wid, sport, value, onChange, refs, athleteFirst
         <h2 id="builder-title" className={s.title}>Déroulé de la séance</h2>
         <Text size="sm" muted>{strength
           ? '« Exercice » : ses séries, ce qu’on fait à chaque série (répétitions ou durée), la charge et la récupération. « Circuit » enchaîne plusieurs exercices en tours ; « Cardio » programme une machine en paliers. Glisse un bloc par sa poignée pour le déplacer.'
-          : 'Construis la séance bloc par bloc : durée ou distance, zone, répétitions et séries. Glisse un bloc par sa poignée pour le déplacer.'}</Text>
+          : 'Construis la séance bloc par bloc : durée ou distance, zone, répétitions et séries. Glisse un bloc par sa poignée pour le déplacer.'}
+          {wid ? <> <a href={`/coach/${wid}/aide/ecrire-seance`}>Aide</a></> : null}</Text>
       </Stack>
       {value.length > 1 ? (
         <Cluster between align="center">

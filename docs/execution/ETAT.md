@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-27 (D-161 à D-193). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
+Dernière mise à jour : 2026-11-27 (D-161 à D-194). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
 
 ## Où en est CoachOS
 
@@ -39,6 +39,8 @@ Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en dire
 **Réduire un exercice écrit (D-186, sans migration, en ligne (Pull Request n° 19))** : retour du fondateur ; dans l’éditeur de séance, chevron « Réduire » par carte avec un résumé sur deux lignes, repli automatique à l’ajout, « Tout réduire / Tout déplier » ; libellé D-184 corrigé (« Varier d’une série à l’autre ») ; 23 parcours sur 23 vérifiés par la session qui l’a fait. Contrôlé le 26 novembre : `/api/health` répond `"db":"ok"`.
 
 **Abonnement Stripe en mode test (D-188, en ligne par la Pull Request n° 21, 27 novembre ; migration `20261127000000` appliquée en ligne par le fondateur avant la fusion, avec `--include-all` car celle de l’IA était passée avant)** : choix de l’offre, page de paiement et portail Stripe, événements signés, 14 jours de grâce, lecture seule et export ; éteint en production. Vérifié au navigateur avec un faux Stripe local ; reste l’essai avec la vraie clé de test (point 9).
+
+**Centre d’aide (D-194, branche `aide`, sans migration)** : 15 articles coach, 7 élève, recherche, ⌘K, liens « Aide » sur Élèves et dans l’éditeur, point d’interrogation de l’élève. Attend sa Pull Request. Suite de « De quoi vendre » ensuite : mesure du temps gagné sans identité d’élève.
 
 **Prochaine tranche** : essai réel de l’IA avec la clé Anthropic (point 11) ; contrôlé le 27 novembre : `/api/health` répond `"db":"ok"` et `"ai":"simulation"`, la route de l’assistant répond 401 sans session, « / », `/offres` et `/login` répondent 200. Ensuite : « De quoi vendre », suite : aide intégrée ; mesure du temps gagné sans identité d’élève. D-174 à D-177 sont en ligne (Pull Request n° 12) ; contrôlé le 25 novembre : « / », `/offres`, `/conditions`, `/mentions-legales` répondent 200, la page publique s’affiche sans prix (« pendant la phase pilote »), `/api/health` répond `"db":"ok"`. Les migrations D-173 et D-175 ne sont passées en ligne qu’après la fusion (« Remote database is up to date. » contrôlé dans le Terminal le 25 novembre) : avant toute fusion, faire coller au fondateur la sortie de `npx supabase db push --remote`. D-179 à D-183 sont en ligne (Pull Request n° 16, sans migration) ; contrôlé le 26 novembre : `/api/health` répond `"db":"ok"`, « / » et `/offres` répondent 200. D-184 (charge et répétitions série par série, retour du fondateur) attend sa Pull Request, sur la branche `machines-videos`, sans migration.
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { HELP_ARTICLES } from '@/help/articles';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PaletteData } from '@/server/repo/palette';
 import { Icon, IconButton, type IconName } from '@/design';
@@ -89,7 +90,12 @@ export function CommandPalette({ wid, owner, strength }: { wid: string; owner: b
     ]);
     const teams: Entry[] = (data?.teams ?? []).map((t) => ({ id: `t-${t.id}`, group: 'Groupes', label: t.name, meta: 'semaine du groupe', icon: 'users', href: `${base}/groups/${t.id}/week` }));
     const tpls: Entry[] = (data?.templates ?? []).map((t) => ({ id: `l-${t.id}`, group: 'Séances types', label: t.title, meta: t.mine ? 'modifier' : 'bibliothèque', icon: 'library', href: t.mine ? `${base}/library/${t.id}` : `${base}/library` }));
-    return [...nav, ...actions, ...people, ...teams, ...tpls];
+    // D-194 : l’aide, par sa question (« Inviter tes élèves »), et le centre d’aide.
+    const help: Entry[] = [
+      { id: 'h-center', group: 'Aide', label: 'Centre d’aide', icon: 'info', href: `${base}/aide`, keywords: 'aide question comment faire' },
+      ...HELP_ARTICLES.filter((a) => a.audience === 'coach').map((a) => ({ id: `h-${a.slug}`, group: 'Aide', label: a.title, meta: 'aide', icon: 'info' as IconName, href: `${base}/aide/${a.slug}`, keywords: `aide comment ${a.keywords}` })),
+    ];
+    return [...nav, ...actions, ...people, ...teams, ...tpls, ...help];
   }, [base, data, owner, strength]);
 
   const shown = useMemo(() => {

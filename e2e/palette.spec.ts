@@ -25,7 +25,7 @@ test('⌘K / Ctrl+K : chercher « Cam », Entrée ouvre la fiche ; bouton de rec
   // Une page par son nom, sans accent ; Échap ferme.
   await p.keyboard.press('ControlOrMeta+k');
   await dialog.getByRole('combobox').fill('biblio');
-  await expect(dialog.getByRole('option', { name: /Séances types/ })).toBeVisible();
+  await expect(dialog.getByRole('option', { name: 'Séances types', exact: true })).toBeVisible();
   await p.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
 

@@ -2675,3 +2675,13 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **Exercices › « Proposer les consignes »** : trois consignes, l’erreur fréquente, une version plus facile, sans conseil médical, marquées « À relire ». Le coach les reprend dans le champ « Consignes » ou les écarte, puis enregistre. En simulation : la fiche de la machine si l’exercice y est, sinon des consignes générales par groupe musculaire. Journal `exercise`.
 - **Notice de confidentialité** (v2, à faire relire) : le commentaire d’un retour ne part au modèle que pour un brouillon de réponse (IA-4), sans le nom ; la photo ou le PDF confié par le coach n’est pas conservé.
 - **Vérifié** : 5 tests (types et tailles, droits, hors sujet, injection dans le document, sortie hors schéma, budget, refus), contrat, parcours à 390 et 1440 px. **Non vérifié** : lecture réelle d’une photo par Claude (pas de clé).
+
+## D-194 · Centre d’aide intégré · 2026-11-27
+
+- **Pourquoi** : « De quoi vendre », suite (docs/18 : « pas de centre d’aide »). Un coach inconnu doit trouver seul comment faire, sans écrire au fondateur.
+- **Contenu** (`apps/web/help/articles.ts`) : 15 articles pour le coach, 7 pour l’élève, courts, avec les mots de l’écran. Chacun a ses étapes, un « Bon à savoir » et des boutons « Y aller » vers la bonne page. Le contenu vit dans le code et change avec l’app.
+- **Accès** :
+  - coach : « Aide » dans le menu du compte, ⌘K (chaque article, par sa question), lien « Aide » sur Élèves et dans l’éditeur de séance ;
+  - élève : point d’interrogation dans l’en-tête.
+- **Recherche** : chaque mot doit se trouver ; le titre compte plus que les mots-clés, eux-mêmes plus que le texte. Accents et majuscules ignorés ; l’élève ne voit que son aide.
+- **Vérifié** : 3 tests (articles complets, chaque « Y aller » vers une page existante, recherche) ; parcours à 390 et 1440 px (Élèves → article → « Y aller », recherche, ⌘K, élève). Sans migration.

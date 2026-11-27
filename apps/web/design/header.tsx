@@ -24,6 +24,17 @@ export function BrandName({ children }: { children: ReactNode }) {
   return <span className={s.brandName}>{children}</span>;
 }
 
+/** D-194 · Aide : un point d’interrogation discret à côté de la cloche. */
+export function HelpLink({ href }: { href: string }) {
+  return (
+    <Link href={href} className={s.bell} aria-label="Aide">
+      <svg width={22} height={22} viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01" />
+      </svg>
+    </Link>
+  );
+}
+
 /** Cloche des notifications : un point signale du nouveau, le nombre est annoncé. */
 export function BellLink({ href, unread }: { href: string; unread: number }) {
   return (

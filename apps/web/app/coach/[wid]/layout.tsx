@@ -50,6 +50,7 @@ export default async function CoachLayout({ children, params }: { children: Reac
     { href: `${base}/settings`, label: 'Paramètres de l’espace', icon: 'settings' },
     { href: '/profile', label: 'Mon compte', icon: 'user' },
     { href: '/choose-workspace', label: 'Changer d’espace', icon: 'arrowRight' },
+    { href: `${base}/aide`, label: 'Aide', icon: 'info' }, // D-194
     { href: `${base}/planning?tour=start`, label: 'Revoir la visite guidée', icon: 'info', tour: 'tour-relaunch' },
   ];
   const mark = <Avatar name={ctx.workspace.name} coach src={ws ? logoUrl(ws) : null} size={36} />;
