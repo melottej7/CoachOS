@@ -117,6 +117,7 @@ export default async function Roster({ params, searchParams }: { params: Promise
         </Stack>
         {owner ? (
           <Cluster gap={2}>
+            <LinkButton href={`${base}/aide/inviter-eleves`} variant="ghost" icon="info">Aide</LinkButton>
             <LinkButton href={`${base}/athletes/import`} icon="users">Ajouter plusieurs élèves</LinkButton>
             <LinkButton href={`${base}/athletes/new`} variant="primary" icon="plus" data-tour="add-athlete-list">Ajouter un élève</LinkButton>
           </Cluster>

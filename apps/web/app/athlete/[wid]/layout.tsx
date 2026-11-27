@@ -8,7 +8,7 @@ import { workspaceAlert } from '@/server/commands/workspace-offer';
 import { BillingAlert } from '@/views/billing-alert';
 import { logoUrl } from '@/components/coach-card';
 import { TourHost } from '@/components/tour-host';
-import { AppHeader, AthleteColumn, AthleteShell, Avatar, BellLink, BrandName, ProfileLink } from '@/design';
+import { AppHeader, AthleteColumn, AthleteShell, Avatar, BellLink, BrandName, HelpLink, ProfileLink } from '@/design';
 import { TabBar, type TabItem } from '@/design/nav';
 
 /**
@@ -38,6 +38,7 @@ export default async function AthleteLayout({ children, params }: { children: Re
   return (
     <AthleteShell accent={ws?.profile?.accent ?? 'emerald'}>
       <AppHeader home={`${base}/today`} roots={tabs.map(({ href, also }) => ({ href, also }))} except={['/suivre']} brand={<><Avatar name={ctx.workspace.name} coach src={logo} size={32} /><BrandName>{ctx.workspace.name}</BrandName></>}>
+        <HelpLink href={`${base}/aide`} />
         <BellLink href={`${base}/notifications`} unread={notifs} />
         <ProfileLink href={`${base}/setup`} label={`Mon profil, ${ctx.athlete.displayName}`} tour="tab-profile"><Avatar name={ctx.athlete.displayName} size={34} /></ProfileLink>
       </AppHeader>
