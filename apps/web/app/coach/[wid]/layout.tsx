@@ -6,6 +6,8 @@ import { coachContext } from '@/server/repo/context';
 import { coachInbox } from '@/server/repo/messages';
 import { isSimpleMode } from '@/server/simple-mode';
 import { unreadNotificationCount } from '@/server/commands/notifications';
+import { workspaceAlert } from '@/server/commands/workspace-offer';
+import { BillingAlert } from '@/views/billing-alert';
 import { logoUrl } from '@/components/coach-card';
 import { TourHost } from '@/components/tour-host';
 import { AccountMenu, AppHeader, Avatar, BottomNav, BrandName, CoachRail, CoachShell, RailBrand, type MenuEntry, type NavItem } from '@/design';
@@ -22,12 +24,13 @@ export default async function CoachLayout({ children, params }: { children: Reac
   const actor = await requireActor();
   const ctx = await coachContext(actor.userId, wid);
   if (!ctx) notFound();
-  const [pending, inbox, ws, notifs, simple] = await Promise.all([
+  const [pending, inbox, ws, notifs, simple, billing] = await Promise.all([
     openReviewCount(actor.userId, wid),
     coachInbox(actor.userId, wid),
     readWorkspacePublic(actor.userId, wid),
     unreadNotificationCount(actor.userId, wid),
     isSimpleMode(),
+    workspaceAlert(actor.userId, wid), // D-188 : rien tant que le paiement n’est pas ouvert
   ]);
   const unread = inbox.reduce((n, e) => n + e.unread, 0);
   const base = `/coach/${wid}`;
@@ -71,6 +74,7 @@ export default async function CoachLayout({ children, params }: { children: Reac
       )}
       bottom={<BottomNav label="Espace coach" items={items} />}>
       <CoachSectionTabs base={base} strength={ctx.modules.strength} simple={simple} counts={{ review: pending, messages: unread, notifications: notifs }} />
+      {billing ? <BillingAlert s={billing} role={ctx.role === 'owner' ? 'owner' : 'coach'} wid={wid} timeZone={ctx.workspace.timeZone} /> : null}
       {children}
       <TourHost space="coach" wid={wid} />
       <CommandPalette wid={wid} owner={ctx.role === 'owner'} strength={ctx.modules.strength} />
