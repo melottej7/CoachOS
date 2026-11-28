@@ -319,6 +319,8 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
   const progress = done ? seq.length : Math.min(seq.length,
     [...new Set([...doneParts, ...skipped])].reduce((n, k) => n + (parts[k] && k !== partOf(i) ? parts[k]!.last - parts[k]!.first + 1 : 0), 0) + (cur ? i - cur.first : i));
   const curK = partOf(i);
+  // D-196 : l’échauffement et le retour au calme ne comptent pas comme des exercices (« Exercice 1 sur 2 »).
+  const coreCount = parts.filter((p) => !p.phase).length;
   const openParts = parts.map((p, k) => ({ k, name: p.name, summary: p.summary })).filter((o) => o.k !== curK && !doneParts.includes(o.k) && !skipped.includes(o.k));
   const swapList = Object.values(swaps);
   if (!seq.length) return <Text muted>Cette séance n’a pas de déroulé à suivre.</Text>;
@@ -379,7 +381,8 @@ export function FollowSession({ wid, sid, title, blocks, exercises, backHref, fe
           </Stack>
         </section>
       ) : gate && gate.at === i && parts[partOf(i)] ? (
-        <GateScreen key={`pret-${i}`} wid={wid} f={seq[i]!} part={parts[partOf(i)]!} k={Math.min(parts.length, new Set([...doneParts, ...skipped].filter((x) => x !== curK)).size + 1)} n={parts.length} seq={seq} after={gate.after}
+        <GateScreen key={`pret-${i}`} wid={wid} f={seq[i]!} part={parts[partOf(i)]!} k={Math.min(parts.length, new Set([...doneParts, ...skipped].filter((x) => x !== curK)).size + 1)} n={parts.length}
+          nth={{ k: Math.min(coreCount, new Set([...doneParts, ...skipped].filter((x) => x !== curK && !parts[x]?.phase)).size + 1), n: coreCount }} seq={seq} after={gate.after}
           exercises={shownExercises} lastDone={lastDone} started={clock.started} pausedFor={clock.pausedFor} cues={cues} speak={entry === 'flow'}
           onGo={ready} onSkip={skipPart} onPrev={i > 0 ? () => go(i - 1) : null} onChange={() => setSheet('change')} />
       ) : (
@@ -536,8 +539,10 @@ function StepScreen({ wid, sid, f, prev, next, exercises, logged, onLog, onNext,
  * qui court. L’élève prend son temps (boire, aller aux toilettes, changer de machine) et lance quand il est prêt :
  * 5 s de mise en place, puis le chrono part. Le chronomètre de séance est en pause pendant ce temps.
  */
-function GateScreen({ wid, f, part, k, n, seq, after, exercises, lastDone, started, pausedFor, cues, speak, onGo, onSkip, onPrev, onChange }: {
+function GateScreen({ wid, f, part, k, n, nth, seq, after, exercises, lastDone, started, pausedFor, cues, speak, onGo, onSkip, onPrev, onChange }: {
   wid: string; f: FollowStep; part: FollowExercise; k: number; n: number; seq: FollowStep[]; after: string | null;
+  /** D-196 : rang parmi les exercices seuls (sans l’échauffement ni le retour au calme), pour l’affichage et la voix. */
+  nth: { k: number; n: number };
   exercises: Record<string, Exercise>; lastDone: Record<string, LastDone>; started: boolean; pausedFor: number; cues: Cues;
   speak: boolean; onGo: () => void; onSkip: () => void; onPrev: (() => void) | null;
   /** D-182 : machine prise : un autre exercice d’abord, un remplacement, un ajout. */
@@ -549,7 +554,7 @@ function GateScreen({ wid, f, part, k, n, seq, after, exercises, lastDone, start
   const last = st.exercise ? lastDone[exerciseKey(st.exercise.id, st.exercise.name)] : undefined;
   const zone = zoneOf(f);
   const stages = f.stage ? seq.slice(part.first, part.last + 1).filter((x) => x.stage) : [];
-  const phrase = announceExercise(part, k, n, after !== null);
+  const phrase = announceExercise(part, nth.k, nth.n, after !== null);
   useEffect(() => {
     // Annoncé en arrivant par le fil de la séance, pas après un rechargement.
     if (speak && started) cues.voice(phrase);
@@ -562,7 +567,7 @@ function GateScreen({ wid, f, part, k, n, seq, after, exercises, lastDone, start
         <p className={s.gateDone}><span className={s.gateCheck} aria-hidden="true"><Icon name="check" size={16} /></span>Bravo, {after} : fait !</p>
       ) : null}
       <Stack gap={2}>
-        <Eyebrow tone="coach">{n > 1 ? `Exercice ${k} sur ${n}${k === n ? ' · le dernier' : ''}` : 'Ta séance'}</Eyebrow>
+        <Eyebrow tone="coach">{part.phase === 'warmup' ? 'Échauffement' : part.phase === 'cooldown' ? 'Retour au calme' : nth.n > 1 ? `Exercice ${nth.k} sur ${nth.n}${nth.k === nth.n ? ' · le dernier' : ''}` : n > 1 ? 'Exercice' : 'Ta séance'}</Eyebrow>
         <Cluster gap={3} align="center" nowrap>
           {zone ? <ZoneChip zone={zone} size="lg" /> : null}
           <h2 id="fw-gate" className={s.name}>{part.name}</h2>
@@ -598,7 +603,7 @@ function GateScreen({ wid, f, part, k, n, seq, after, exercises, lastDone, start
         {onPrev || n > 1 ? (
           <Cluster gap={2} nowrap grow>
             {onPrev ? <Button size="lg" icon="chevronLeft" onClick={onPrev} aria-label="Étape précédente" className={s.square} /> : null}
-            {n > 1 ? <Button size="lg" variant="ghost" iconRight="chevronRight" onClick={onSkip}>{k < n ? 'Passer cet exercice' : 'Finir sans cet exercice'}</Button> : null}
+            {n > 1 ? <Button size="lg" variant="ghost" iconRight="chevronRight" onClick={onSkip}>{k < n ? (part.phase === 'warmup' ? 'Passer l’échauffement' : part.phase === 'cooldown' ? 'Passer le retour au calme' : 'Passer cet exercice') : part.phase === 'cooldown' ? 'Finir sans le retour au calme' : 'Finir sans cet exercice'}</Button> : null}
           </Cluster>
         ) : null}
       </Stack>

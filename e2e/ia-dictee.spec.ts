@@ -36,7 +36,7 @@ test('dicter une séance : proposition relue, corrigée, insérée en brouillon'
   // Ce qui ne se lit pas est signalé et laissé de côté ; le reste est prêt à relire.
   await expect(coach.getByText(/« fais un truc sympa » ·/)).toBeVisible();
   const draft = coach.getByLabel('Texte de la séance (modifiable)');
-  await expect(draft).toHaveValue("échauffement 10' RPE3 « vélo » + 4×10 presse à cuisses 60kg R2' + 3×12 tirage poitrine");
+  await expect(draft).toHaveValue("échauffement 10' vélo RPE3 + 4×10 presse à cuisses 60kg R2' + 3×12 tirage poitrine");
   await expect(coach.getByText(/machine : ajoute-la depuis « Machines »/)).toBeVisible();
   // Le coach corrige : 3 séries de tirage passent à 15 répétitions, et il ajoute du gainage.
   await draft.fill("échauffement 10' RPE3 « vélo » + 4×10 presse à cuisses 60kg R2' + 3×15 tirage poitrine + 3×45\" gainage");

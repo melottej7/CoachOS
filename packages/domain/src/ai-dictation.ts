@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { parseNotation, type NotationError } from './notation';
+import { machineOf, parseNotation, type NotationError } from './notation';
 import type { Sport } from './sports';
 import { ZONE_FTP_PCT, ZONE_TARGET_PCT, type Block, type Zone } from './structure';
 import { SPORTS } from './workout';
@@ -12,7 +12,7 @@ import { SPORTS } from './workout';
  * Aucun audio n’est envoyé : seulement le texte, le sport et les repères de l’élève sans nom.
  */
 
-export const AI_DICTATION_PROMPT_VERSION = 'dictation-v1';
+export const AI_DICTATION_PROMPT_VERSION = 'dictation-v2'; // v2 (D-196) : cardio sur machine
 export const DICTATION_MAX_CHARS = 1000;
 const MAX_LINES = 30;
 
@@ -51,7 +51,8 @@ export const AI_DICTATION_SYSTEM_PROMPT = [
   '- durées 10\' 1\'30 45" 1h30 ; distances 400m 10km ; intensités Z1 à Z7, @4\'30/km, RPE7, 95%FTP, 250W ;',
   '- répétitions d’un bloc : 3×(8\' Z4 + R2\') où R2\' est la récupération ; repos : « repos 1\'30 » ;',
   '- musculation : 4×10 presse à cuisses 60kg R2\' (4 séries de 10 à 60 kg, 2 min de récupération) ; 3×12 tirage vertical ; 3×45" gainage ; 3×(12 fentes + 30" planche + repos 1\') pour un circuit ;',
-  '- échauffement : « échauffement 10\' RPE3 » ; retour au calme : « calme 5\' Z1 » ; une consigne entre guillemets « Dos droit » après l’étape.',
+  '- échauffement : « échauffement 10\' RPE3 » ; retour au calme : « calme 5\' Z1 » ; une consigne entre guillemets « Dos droit » après l’étape ;',
+  '- cardio sur machine en salle : la durée, puis la machine (tapis, vélo, elliptique, rameur, stepper, SkiErg) et ses réglages : « échauffement 10\' vélo RPE3 », « 12\' rameur 2\'10/500m », « 10\' tapis 6km/h 5% » ; la marche en salle s’écrit sur le tapis.',
   `Pourcentages de VMA en course : convertis en zone (${pctTable(ZONE_TARGET_PCT)}). Pourcentages de FTP à vélo : écris 95%FTP ou la zone (${pctTable(ZONE_FTP_PCT)}).`,
   'Exercices : appelle listerExercices pour trouver le nom exact dans la bibliothèque du coach ou parmi les machines ; écris ce nom exact. S’il n’existe pas, garde le mot du coach tel quel : n’invente ni exercice, ni charge, ni durée.',
   'N’ajoute rien que le coach n’a pas dit. Si une partie est ambiguë, écris-la au plus près et signale-la dans remarque (une phrase, tutoiement).',
@@ -89,7 +90,10 @@ export function checkDictation(lines: string[], sport: Sport): DictationCheck {
     out.push({ text, error });
     if (!error) { ok.push(text); blocks.push(...r.blocks); }
   }
-  return { lines: out, notation: ok.join(' + '), blocks, exerciseNames: [...new Set(namesOf(blocks))] };
+  // D-196 : la séance se relit en entier, comme à l’enregistrement : l’échauffement en tête (« 10' vélo ») se déduit de la suite.
+  const whole = ok.length > 1 ? parseNotation(ok.join(' + '), sport) : null;
+  const settled = whole && !whole.errors.length ? whole.blocks : blocks;
+  return { lines: out, notation: ok.join(' + '), blocks: settled, exerciseNames: [...new Set(namesOf(settled))] };
 }
 
 /** Zone de course pour un pourcentage de VMA (table du domaine). */
@@ -123,7 +127,11 @@ export function simulateDictation(text: string, sport: Sport, known: string[]): 
   let m: RegExpMatchArray | null;
   for (const p of parts) {
     if ((m = p.match(new RegExp(`^(?:échauffement|echauffement|échauf)\\s+(\\d+)\\s*${MIN}\\s*(.*)$`, 'i')))) {
-      lines.push(`échauffement ${m[1]}' RPE3${m[2] ? ` « ${m[2].trim()} »` : ''}`); open = null;
+      // D-196 : en salle, « 10 minutes vélo » est l’échauffement sur la machine.
+      const on = m[2] ? m[2].trim().replace(/^(?:de|du|sur|au|en)\s+(?:l[ae']\s*)?/i, '') : '';
+      if (sport === 'strength' && on && machineOf(on)) lines.push(`échauffement ${m[1]}' ${on} RPE3`);
+      else lines.push(`échauffement ${m[1]}' RPE3${m[2] ? ` « ${m[2].trim()} »` : ''}`);
+      open = null;
     } else if ((m = p.match(new RegExp(`^(?:(\\d+)\\s*${MIN}\\s*(?:de\\s+)?(?:repos|récup[ée]ration|récup|recup)|(?:repos|récup[ée]ration|récup|recup)\\s+(?:de\\s+)?(\\d+)\\s*${MIN})$`, 'i')))) {
       const r = m[1] ?? m[2];
       const last = lines.length - 1;

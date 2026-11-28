@@ -1,6 +1,6 @@
 import { stepLevel } from './session-profile';
 import type { Sport } from './sports';
-import { cardioName, type Block, type Intensity, type Measure, type Phase, type Step } from './structure';
+import { cardioName, type Block, type Cardio, type Intensity, type Machine, type Measure, type Phase, type Stage, type Step } from './structure';
 
 // CE-B-09 (D-041) : saisie rapide d’une séance en notation texte, comme sur papier, et l’inverse.
 //   « 15' Z1 + 8×(400m Z5 + R200m) + 10' Z1 »
@@ -135,19 +135,78 @@ const exerciseName = (words: string) => {
   return w ? w[0]!.toUpperCase() + w.slice(1) : null;
 };
 
+/**
+ * D-196 · Cardio sur machine en salle : dans une séance de musculation, une durée suivie du seul nom d’une machine
+ * (et de ses réglages) est une étape de cardio, plus un exercice : « échauffement 10' vélo RPE3 », « 10' tapis 6km/h 5% »,
+ * « 12' rameur 2'10/500m ». « Marche », « marche rapide » : le tapis. Un nom d’exercice (« crunch vélo ») reste un exercice.
+ */
+const MACHINE_WORDS: [RegExp, Machine][] = [
+  [/^(?:tapis(?: de course| roulant)?|treadmill)$/, 'treadmill'],
+  [/^(?:velo )?elliptique$/, 'elliptical'],
+  [/^(?:velo(?: d'appartement| stationnaire| assis| droit)?|bike|spinning|assault bike|air bike|home trainer)$/, 'bike'],
+  [/^(?:rameur|aviron|rower)$/, 'rower'],
+  [/^(?:stepper|escaliers?|escalier ou stepper|stairmaster|simulateur d'escalier)$/, 'stairs'],
+  [/^(?:ski ?-?erg)$/, 'skierg'],
+  [/^autre machine$/, 'other'],
+];
+const plain = (w: string) => w.normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/[’‘´`]/g, "'").toLowerCase().replace(/[\s,;·:–-]+/g, ' ').trim();
+/** La machine nommée par ces mots, et ce qui décrit l’allure (« marche rapide ») ; null si ce n’est pas que cela. */
+export function machineOf(words: string): { machine: Machine; how: string | null } | null {
+  let w = plain(words).replace(/^(?:sur|au|en) (?:le |la |l')?/, '');
+  const act = w.match(/^(marche|course|footing|jogging)(?: (rapide|inclinee|active|lente|tranquille|douce))?(?:$| (?:sur|au|en) (?:le |la |l')?)/);
+  let how: string | null = null;
+  if (act) {
+    how = words.trim().split(/\s+/).slice(0, act[2] ? 2 : 1).join(' ');
+    w = w.slice(act[0].length).trim();
+    if (!w) return act[1] === 'marche' ? { machine: 'treadmill', how: act[2] ? how : null } : null;
+  }
+  const hit = MACHINE_WORDS.find(([re]) => re.test(w));
+  return hit ? { machine: hit[1], how } : null;
+}
+const decimal = (x: string) => Number(x.replace(',', '.'));
+/** Réglages d’un palier écrits après la machine ; le reste doit nommer la machine. */
+function cardioFrom(body: string, seconds: number): { cardio: Cardio; note: string | null } | null {
+  if (seconds < 5 || seconds > 14_400) return null;
+  const st: Stage = { seconds, level: null, speedKmh: null, inclinePct: null, cadence: null, watts: null, split500: null, rpe: null, note: null };
+  const notes: string[] = [];
+  let t = ` ${body} `;
+  const take = (re: RegExp, set: (m: RegExpMatchArray) => boolean) => {
+    const m = t.match(re);
+    if (m && set(m)) t = t.replace(m[0], ' ');
+  };
+  const within = (v: number, lo: number, hi: number) => Number.isFinite(v) && v >= lo && v <= hi;
+  take(/@?\s*(\d)\s*['′:](\d{2})\s*\/\s*500\s*m\b/i, (m) => { const v = mmss(m[1]!, m[2]!); return within(v, 60, 600) && ((st.split500 = v), true); });
+  take(/(\d{1,2}(?:[.,]\d{1,2})?)\s*km\s*\/\s*h\b/i, (m) => { const v = decimal(m[1]!); return within(v, 0.5, 40) && ((st.speedKmh = v), true); });
+  take(/(?:pente|inclinaison)\s*(?:de\s*)?(-?\d{1,2}(?:[.,]\d)?)\s*%|(-?\d{1,2}(?:[.,]\d)?)\s*%(?!\s*(?:ftp|fc|vma))(?:\s*(?:de\s+)?(?:pente|inclinaison))?/i,
+    (m) => { const v = decimal(m[1] ?? m[2]!); return within(v, -10, 40) && ((st.inclinePct = v), true); });
+  take(/\b(?:niveau|niv\.?|level|r[ée]sistance)\s*(\d{1,2})\b/i, (m) => { const v = Number(m[1]); return within(v, 1, 40) && ((st.level = v), true); });
+  take(/(\d{2,3})\s*(?:rpm|tr\s*\/\s*min|tours?\s*\/\s*min|coups?\s*\/\s*min|spm|pas\s*\/\s*min)(?![a-zà-ÿ])/i, (m) => { const v = Number(m[1]); return within(v, 10, 250) && ((st.cadence = v), true); });
+  take(/(\d{2,4})\s*w(?:atts?)?\b/i, (m) => { const v = Number(m[1]); return within(v, 1, 2500) && ((st.watts = v), true); });
+  take(/\brpe\s*(\d{1,2})(?:\s*[-–]\s*\d{1,2})?\b/i, (m) => { const v = Number(m[1]); return within(v, 1, 10) && ((st.rpe = v), true); });
+  take(/\bz\s*([1-7])(?:\s*[-–]\s*z?\s*[1-7])?\b/i, (m) => (notes.push(m[0].replace(/\s+/g, '').toUpperCase()), true));
+  const named = machineOf(t.replace(/[\s,;·]+/g, ' ').trim());
+  if (!named) return null;
+  if (named.how) notes.unshift(named.how);
+  return { cardio: { machine: named.machine, stages: [st] }, note: notes.join(' · ') || null };
+}
+
 function parseStep(raw: string, errors: NotationError[], lenient = false, inRepeat = false, strength = false): ParsedStep | LooseText | null {
   let t = raw.trim();
   let note: string | null = null;
   const q = t.match(/[«"]\s*([^»"]*?)\s*[»"]\s*$/);
   if (q && !(lenient && /\d\s*"\s*$/.test(t))) { note = q[1]!.slice(0, 200) || null; t = t.slice(0, q.index).trim(); }
   let sport: Sport | null = null;
-  for (const [re, s] of SPORT_WORDS) { const m = t.match(re); if (m) { sport = s; t = t.slice(m[0].length).replace(/^\s*:?\s*/, ''); break; } }
+  const gym = strength;
+  // D-196 : en salle, « vélo » est la machine, pas une étape de vélo.
+  for (const [re, s] of SPORT_WORDS) { const m = t.match(re); if (m && !(gym && s === 'cycling')) { sport = s; t = t.slice(m[0].length).replace(/^\s*:?\s*/, ''); break; } }
   // Une étape marquée « renfo » se lit comme de la musculation (répétitions, exercice), même dans une séance de course.
   if (sport === 'strength') strength = true;
   let phase: Phase | null = null;
   for (const [re, p] of PHASE_WORDS) { const m = t.match(re); if (m) { phase = p; t = t.slice(m[0].length).replace(/^\s*:?\s*/, ''); break; } }
   if (!phase && /^r\s*(?=\d)/i.test(t)) { phase = 'recovery'; t = t.replace(/^r\s*/i, ''); }
   if (lenient && !phase && /^r\b\s*/i.test(t)) { phase = 'recovery'; t = t.replace(/^r\b\s*/i, ''); }
+  // D-196 : « vélo 10' RPE3 », « rameur 12' » : la machine en tête passe après la durée.
+  if (gym) { const h = t.match(/^([a-zà-ÿ'’ -]+?)\s*(?=\d)/i); if (h && machineOf(h[1]!)) t = `${t.slice(h[0].length)} ${h[1]!.trim()}`; }
   // D-184 : séries différentes, « 12/10/8 Tirage 10/12/14kg » : la première se lit comme d’habitude, la liste suit la carte.
   let lists: { reps: number[] | null; kg: number[] | null } | null = null;
   if (strength) {
@@ -176,6 +235,10 @@ function parseStep(raw: string, errors: NotationError[], lenient = false, inRepe
   }
   const meas = found;
   let body = `${meas.prefix} ${meas.rest}`;
+  if (strength && meas.measure.kind === 'time' && phase !== 'recovery' && phase !== 'rest' && !lists) {
+    const c = cardioFrom(body, meas.measure.seconds);
+    if (c) return { type: 'step', phase: phase ?? 'work', implicit: phase === null, sport: null, measure: meas.measure, intensity: { kind: 'none' }, cadence: null, cardio: c.cardio, note: [c.note, note].filter(Boolean).join(' · ').slice(0, 200) || null };
+  }
   // D-084 : un plafond cardiaque (« < 160 bpm ») reste une consigne écrite, pas une intensité enregistrée.
   const cap = lenient ? body.match(/(?:<|sous|max\.?|moins de)\s*(\d{2,3})\s*bpm/i) : null;
   if (cap) { body = body.replace(cap[0], ' '); note = [`sous ${cap[1]} bpm`, note].filter(Boolean).join(' · '); }
@@ -277,6 +340,12 @@ function settle(items: Parsed[], sport: Sport, inRepeat: boolean): Block[] {
     if (implicit && recup && inRepeat) return { ...step, phase: 'recovery' };
     // Lecture tolérante : la marche est un échauffement en tête, un retour au calme en fin, sinon une récupération.
     if (implicit && walk && (inRepeat || items.length > 1)) return { ...step, phase: inRepeat ? 'recovery' : i === 0 ? 'warmup' : i === items.length - 1 ? 'cooldown' : 'recovery' };
+    // D-196 : en salle, le cardio en tête de séance est l’échauffement ; en fin et facile, le retour au calme.
+    if (implicit && step.cardio && !inRepeat && items.length > 1) {
+      if (i === 0) return { ...step, phase: 'warmup' };
+      if (i === items.length - 1 && step.cardio.stages.every((x) => x.rpe === null || x.rpe <= 4)) return { ...step, phase: 'cooldown' };
+      return step;
+    }
     if (!implicit || inRepeat || items.length < 2 || step.exercise) return step;
     const me = levelOf(b, sport);
     if (i === 0 && Math.max(...items.slice(1).map((x) => levelOf(x, sport))) > me) return { ...step, phase: 'warmup' };
@@ -418,6 +487,16 @@ function fmtIntensity(i: Intensity): string {
   }
 }
 
+/** D-196 · Réglages d’un cardio à un seul palier, relus par cardioFrom. */
+function fmtStage(x: Stage): string {
+  const n = (v: number) => String(v).replace('.', ',');
+  return [
+    x.level !== null ? `niveau ${x.level}` : '', x.speedKmh !== null ? `${n(x.speedKmh)}km/h` : '', x.inclinePct !== null ? `${n(x.inclinePct)}%` : '',
+    x.cadence !== null ? `${x.cadence}rpm` : '', x.watts !== null ? `${x.watts}W` : '',
+    x.split500 !== null ? `${Math.floor(x.split500 / 60)}'${String(x.split500 % 60).padStart(2, '0')}/500m` : '', x.rpe !== null ? `RPE${x.rpe}` : '',
+  ].filter(Boolean).map((v) => ` ${v}`).join('');
+}
+
 function fmtStep(s: Step, sport: Sport, inRepeat: boolean, explicit: boolean): string {
   const sp = s.sport && s.sport !== sport ? `${SPORT_WORD[s.sport] ?? ''} ` : '';
   let ph = '';
@@ -431,7 +510,7 @@ function fmtStep(s: Step, sport: Sport, inRepeat: boolean, explicit: boolean): s
   const each = inRepeat && s.perSet ? s.perSet : null;
   const reps = s.measure.kind === 'reps' ? (each ? each.map((p) => p.reps ?? (s.measure as { reps: number }).reps).join('/') : String(s.measure.reps)) : null;
   const load = each && s.intensity.kind === 'load' ? `${each.map((p) => String(p.kg ?? (s.intensity as { min: number }).min).replace('.', ',')).join('/')}kg` : intensity;
-  const measure = s.cardio ? `${fmtMeasure(s.measure)} ${cardioName(s)}` : s.exercise ? (reps !== null ? `${reps} ${s.exercise.name}` : `${fmtMeasure(s.measure)} ${s.exercise.name}`) : fmtMeasure(s.measure);
+  const measure = s.cardio ? `${fmtMeasure(s.measure)} ${cardioName(s)}${s.cardio.stages.length === 1 ? fmtStage(s.cardio.stages[0]!) : ''}` : s.exercise ? (reps !== null ? `${reps} ${s.exercise.name}` : `${fmtMeasure(s.measure)} ${s.exercise.name}`) : fmtMeasure(s.measure);
   return `${sp}${ph}${measure}${load ? ` ${load}` : ''}${s.note ? ` « ${s.note} »` : ''}`;
 }
 

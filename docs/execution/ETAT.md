@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-27 (D-161 à D-194). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
+Dernière mise à jour : 2026-11-28 (D-161 à D-196). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
 
 ## Où en est CoachOS
 
@@ -12,7 +12,7 @@ Dernière mise à jour : 2026-11-27 (D-161 à D-194). Reprendre ici : ce fichier
 
 **Pas prouvé** : la boucle complète en ligne avec un vrai élève (il faut un domaine pour que les e-mails partent vers d’autres adresses) ; réception d’un rappel push sur un téléphone ; suppression d’un compte Auth en ligne ; sauvegarde de la base en ligne (`npm run db:backup`) jamais exécutée (la restauration est essayée en local, D-163) ; migrations automatiques à la construction (variables Vercel à saisir) ; Action GitHub (premier push à venir).
 
-**Chiffres** : `npm test` 545 passés au 27 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, 20 fichiers de parcours de bout en bout (28 parcours, verts le 27 novembre), revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
+**Chiffres** : `npm test` 565 passés au 28 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, 22 fichiers de parcours de bout en bout (31 parcours, verts le 28 novembre), revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
 
 **Ce que le produit fait** : la matrice [COUVERTURE.md](COUVERTURE.md) (cible coach et élève, D-024) et les décisions D-001 à D-122 dans [DECISIONS.md](DECISIONS.md). En deux lignes : un coach planifie des séances structurées par sport (zones VMA, FTP, CSS), des programmes générés selon sa méthode, des groupes, des tâches, des relances, des bilans ; l’élève lit sa séance sur téléphone (hors ligne, montre, pas à pas en musculation), envoie son retour, échange avec son coach ; les données personnelles ont leur page, leur export et leur effacement.
 
@@ -40,9 +40,11 @@ Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en dire
 
 **Abonnement Stripe en mode test (D-188, en ligne par la Pull Request n° 21, 27 novembre ; migration `20261127000000` appliquée en ligne par le fondateur avant la fusion, avec `--include-all` car celle de l’IA était passée avant)** : choix de l’offre, page de paiement et portail Stripe, événements signés, 14 jours de grâce, lecture seule et export ; éteint en production. Vérifié au navigateur avec un faux Stripe local ; reste l’essai avec la vraie clé de test (point 9).
 
-**Centre d’aide (D-194, branche `aide`, sans migration)** : 15 articles coach, 7 élève, recherche, ⌘K, liens « Aide » sur Élèves et dans l’éditeur, point d’interrogation de l’élève. Attend sa Pull Request. Suite de « De quoi vendre » ensuite : mesure du temps gagné sans identité d’élève.
+**Centre d’aide (D-194, en ligne par la Pull Request n° 24, 28 novembre, sans migration ; `/api/health` répond `"db":"ok"`)** : 15 articles coach, 7 élève, recherche, ⌘K, liens « Aide » sur Élèves et dans l’éditeur, point d’interrogation de l’élève. Suite de « De quoi vendre » ensuite : mesure du temps gagné sans identité d’élève.
 
-**Prochaine tranche** : essai réel de l’IA avec la clé Anthropic (point 11) ; contrôlé le 27 novembre : `/api/health` répond `"db":"ok"` et `"ai":"simulation"`, la route de l’assistant répond 401 sans session, « / », `/offres` et `/login` répondent 200. Ensuite : « De quoi vendre », suite : aide intégrée ; mesure du temps gagné sans identité d’élève. D-174 à D-177 sont en ligne (Pull Request n° 12) ; contrôlé le 25 novembre : « / », `/offres`, `/conditions`, `/mentions-legales` répondent 200, la page publique s’affiche sans prix (« pendant la phase pilote »), `/api/health` répond `"db":"ok"`. Les migrations D-173 et D-175 ne sont passées en ligne qu’après la fusion (« Remote database is up to date. » contrôlé dans le Terminal le 25 novembre) : avant toute fusion, faire coller au fondateur la sortie de `npx supabase db push --remote`. D-179 à D-183 sont en ligne (Pull Request n° 16, sans migration) ; contrôlé le 26 novembre : `/api/health` répond `"db":"ok"`, « / » et `/offres` répondent 200. D-184 (charge et répétitions série par série, retour du fondateur) attend sa Pull Request, sur la branche `machines-videos`, sans migration.
+**Échauffement sur machine cardio (D-196, retour du fondateur du 28 novembre, sans migration, branche `echauffement-cardio`, attend sa Pull Request)** : en musculation, « échauffement 10' vélo RPE3 », « 10' tapis 6km/h 5% » ou « 10' marche » deviennent un cardio sur machine, échauffement en tête et retour au calme en fin ; consignes de l’IA program-v2 et dictation-v2 ; l’élève lit « Échauffement » dans la fiche et dans « Suivre ».
+
+**Prochaine tranche** : l’IA réelle répond en ligne depuis le 28 novembre (`/api/health` : `"ai":"claude"`, clé « CoachOS en ligne »). Après la fusion de D-196 : le plan « utilisable d’abord » proposé au fondateur le 28 novembre, à valider : (1) l’IA essayée sur de vrais usages, (2) boucle quotidienne sans friction et bouton « Une idée, un souci ? », (3) mesure du temps gagné, (4) besoins manquants (notifications ; Strava et Garmin quand la société existe), (5) trois à cinq coachs testeurs gratuits, (6) seulement ensuite le paiement, le domaine, les textes légaux et les prix.
 
 ## Pour le fondateur
 
@@ -82,7 +84,7 @@ Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, p
    - **Settings › Billing › Customer portal** › **« Activate »** (mode test).
    - Dis-moi « Stripe test prêt » : on essaiera ensemble sur un espace de test, carte `4242 4242 4242 4242`. Le prix final et le nom du produit sont à toi (hypothèses : 29/59/99 € HT par mois).
 10. **Hygiène des comptes** · 5 minutes · Vercel › Account Settings › Authentication › **« Regenerate »** les codes de récupération (apparus sur une capture) et supprime cette capture. GitHub › ton avatar › **Settings** › **« Developer settings »** › **« Personal access tokens »** › **« Fine-grained tokens »** › le jeton collé dans la conversation (il commence par `github_pat_11CUYS`) › **« Delete »** : il a circulé en clair, il ne doit plus servir.
-11. **Clé Anthropic, avant le chantier IA** · 10 minutes · marche pas à pas dans [MARCHE_IA.md](MARCHE_IA.md) › « Pour le fondateur » (crédit, clé `ANTHROPIC_API_KEY` dans Vercel et en local ; budget 10 $ par espace et par mois par défaut). **Facultatif** : vidéos de base des 34 exercices ([VIDEOS_DE_BASE.md](VIDEOS_DE_BASE.md)) ; cocher « Musculation » dans Paramètres › sports encadrés de ton espace si tu veux la musculation.
+11. **Clé Anthropic** · fait le 28 novembre (clé « CoachOS en ligne » dans Vercel, `/api/health` répond `"ai":"claude"` ; coût réel visible sur platform.claude.com). **Facultatif** : vidéos de base des 34 exercices ([VIDEOS_DE_BASE.md](VIDEOS_DE_BASE.md)) ; cocher « Musculation » dans Paramètres › sports encadrés de ton espace si tu veux la musculation.
 12. **Migration de la dictée IA** · **fait le 27 novembre** : `20261127010000_ai_dictation.sql` appliquée en ligne (« Finished supabase db push. »). La migration de l’abonnement (`20261127000000`) devra donc passer avec `npx supabase db push --remote --include-all`.
 
 ## Lancer en local

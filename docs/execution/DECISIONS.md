@@ -2685,3 +2685,13 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
   - élève : point d’interrogation dans l’en-tête.
 - **Recherche** : chaque mot doit se trouver ; le titre compte plus que les mots-clés, eux-mêmes plus que le texte. Accents et majuscules ignorés ; l’élève ne voit que son aide.
 - **Vérifié** : 3 tests (articles complets, chaque « Y aller » vers une page existante, recherche) ; parcours à 390 et 1440 px (Élèves → article → « Y aller », recherche, ⌘K, élève). Sans migration.
+
+## D-196 · Échauffement sur machine cardio en salle · 2026-11-28
+
+- **Retour du fondateur** : un programme demandé à l’IA commençait par « de la marche » comme un exercice normal, au lieu d’un échauffement sur une machine cardio. **Cause** : la notation ne savait pas écrire une machine ; « 10' marche » devenait l’exercice « Marche », en phase d’effort.
+- **Lecture** (`notation.ts`) : en musculation, une durée suivie du seul nom d’une machine et de ses réglages devient une étape de cardio (D-164) : « échauffement 10' vélo RPE3 », « 10' tapis 6km/h 5% », « 12' rameur 2'10/500m », « vélo 10' niveau 6 ».
+  - La marche se lit sur le tapis. Un nom d’exercice reste un exercice (« crunch vélo », « marche du fermier »). Hors musculation, rien ne change.
+  - En tête de séance, le cardio est l’échauffement ; en fin et facile (RPE 4 au plus), le retour au calme. Un cardio à un palier s’écrit avec ses réglages et se relit à l’identique.
+- **IA** : consignes program-v2 et dictation-v2 (échauffement sur machine, jamais la marche comme exercice) ; la séance dictée se relit en entier, comme à l’enregistrement ; la simulation suit.
+- **Élève** : la fiche dit « Échauffement · 10 min » et ne compte plus ce cardio parmi les exercices. « Suivre » annonce « Échauffement : Tapis de course » puis « Exercice 1 sur 2 », avec « Passer l’échauffement ».
+- **Vérifié** : 11 tests, 565 au total ; typecheck ; construction ; 31 parcours de bout en bout. Navigateur : coach et élève à 1440 et 390 px, de la demande à l’IA au mode Suivre. Aucune route ni droit nouveau.
