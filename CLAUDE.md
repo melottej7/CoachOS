@@ -9,6 +9,7 @@ Construire une application d’endurance fluide pour deux personnes. Le coach pl
 1. **Reprendre depuis docs/execution/ETAT.md, lu jusqu’à « Pour le fondateur » inclus.** Ce fichier et la mémoire suffisent pour repartir. Les autres documents (README, docs/16, COUVERTURE, docs/03_UX, docs/11_ROADMAP, docs/12_CLAUDE_CODE, DECISIONS) ne s’ouvrent que pour la section utile à la tranche en cours (recherche ciblée, extrait), jamais en entier.
 2. **Priorités en vigueur**, à appliquer sans relire leurs décisions :
    - **D-120** (23 novembre 2026, prévaut sur les priorités antérieures) : produit professionnel vendable ; chantiers dans l’ordre Confiance, Coach inconnu, De quoi vendre ; avancer seul sur tout ce qui est réversible.
+   - **D-200** (28 novembre 2026, précise l’ordre de D-120) : utilisable d’abord, vendre ensuite ; IA essayée sur de vrais usages, boucle quotidienne sans friction et bouton « Une idée, un souci ? », temps gagné mesuré, besoins manquants, coachs testeurs gratuits, puis seulement paiement, domaine, textes légaux et prix.
    - **D-123** : refonte carte blanche (structure et interface), socle audité et protégé, direction Chrono (D-128) : clair, sombre ou automatique, palette ⌘K, deux densités.
    - **docs/16** (17 novembre 2026) : cible coach et élève (groupes et niveaux, dossier élève, accueil et tâches, bibliothèque, bilan, programmes supervisés, statistiques, activités et Garmin) ; prévaut en cas de divergence (D-024).
    - **Les demandes du fondateur dans la conversation passent avant la tranche prévue.**

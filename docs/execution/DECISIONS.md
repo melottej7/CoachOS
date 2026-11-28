@@ -2705,3 +2705,15 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **En-tête** : icônes de 44 px sans écart entre elles, pour que le nom de l’espace tienne à 390 px malgré l’icône de plus.
 - **Aide** : un article « Passer en mode sombre » pour chaque public, trouvé par « sombre », « thème », « nuit ».
 - **Vérifié** : 565 tests (dont la recherche « sombre »), typecheck, construction ; 33 parcours (la page publique a raté une fois sous charge, verte seule), dont `theme.spec.ts` ; navigateur coach et élève à 1440 et 390 px. Aucune route ni droit nouveau.
+
+## D-200 · Utilisable d’abord, vendre ensuite · 2026-11-28
+
+- **Demande du fondateur** : « avoir l’application la mieux utilisable et qui réponde le mieux aux besoins avant de vouloir la faire payer ». Plan validé le 28 novembre ; il précise D-120 sans l’annuler : la confiance reste acquise, « De quoi vendre » attend les preuves d’usage.
+- **Ordre** :
+  1. l’IA essayée sur de vrais usages (dictée, programme), retours du fondateur traités d’abord ;
+  2. boucle quotidienne sans friction, et bouton « Une idée, un souci ? » dans l’app ;
+  3. mesure du temps gagné par le coach ;
+  4. besoins manquants : notifications ; Strava et Garmin quand la société existe ;
+  5. trois à cinq coachs testeurs gratuits ;
+  6. seulement ensuite le paiement, le domaine, les textes légaux et les prix.
+- **Reste en vigueur** : paiement éteint en ligne (`COACHOS_BILLING`), rien d’envoyé ni de publié sans geste du coach, base en ligne jamais terrain d’essai.

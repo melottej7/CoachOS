@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-28 (D-161 à D-198). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
+Dernière mise à jour : 2026-11-28 (D-161 à D-200). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
 
 ## Où en est CoachOS
 
@@ -46,11 +46,15 @@ Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en dire
 
 **Interrupteur clair ou sombre (D-198, retour du fondateur du 28 novembre, sans migration, en ligne par la Pull Request n° 26 ; `/api/health` répond `"db":"ok"`)** : « Mode sombre » dans le menu du compte du coach, lune ou soleil dans l’en-tête de l’élève ; article d’aide pour chacun.
 
-**Prochaine tranche** : l’IA réelle répond en ligne depuis le 28 novembre (`/api/health` : `"ai":"claude"`, clé « CoachOS en ligne »). Après la fusion de D-196 : le plan « utilisable d’abord » proposé au fondateur le 28 novembre, à valider : (1) l’IA essayée sur de vrais usages, (2) boucle quotidienne sans friction et bouton « Une idée, un souci ? », (3) mesure du temps gagné, (4) besoins manquants (notifications ; Strava et Garmin quand la société existe), (5) trois à cinq coachs testeurs gratuits, (6) seulement ensuite le paiement, le domaine, les textes légaux et les prix.
+**Plan en vigueur (D-200, validé par le fondateur le 28 novembre)** : utilisable d’abord, vendre ensuite. (1) l’IA essayée sur de vrais usages ; (2) boucle quotidienne sans friction et bouton « Une idée, un souci ? » ; (3) mesure du temps gagné ; (4) notifications, puis Strava et Garmin quand la société existe ; (5) trois à cinq coachs testeurs gratuits ; (6) seulement ensuite paiement, domaine, textes légaux, prix. L’IA réelle répond en ligne depuis le 28 novembre (`"ai":"claude"`).
+
+**Prochaine tranche** : traiter d’abord les retours du fondateur sur l’IA (point 0 ci-dessous). Sinon, étape 2 : le bouton « Une idée, un souci ? », coach et élève, qui range le message avec la page d’où il part, l’espace et le rôle, sans donnée de santé ; le fondateur les lit dans une liste. À concevoir : table additive ou envoi par e-mail (Resend en ligne, `contact` encore éteint) ; puis la boucle quotidienne jouée de bout en bout par un coach et un élève, chaque friction notée et corrigée.
 
 ## Pour le fondateur
 
 Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, pourquoi, ce que ça débloque, le temps, les clics. Tout le reste avance sans toi.
+
+0. **Essayer l’IA sur tes vrais usages** · 20 minutes, en ligne · plan D-200, étape 1 · (a) dicte une vraie séance (éditeur de séance › « Dicter ou écrire avec l’IA ») ; (b) demande un vrai programme (dossier d’un élève › « Programme avec l’IA ») ; (c) importe un ancien programme en photo ou PDF (Bibliothèque › « Importer » › « Un programme entier » › « Depuis une photo ou un PDF »). Pour chaque essai, envoie-moi une photo d’écran de ce qui ne va pas : je corrige avant tout le reste. Coût : quelques centimes par dictée, 30 centimes à 1 $ par programme.
 
 00 bis. **Cocher les machines de ton club Basic-Fit** · 15 minutes à la salle · [MACHINES_A_COCHER.md](MACHINES_A_COCHER.md) › coche ce que tu vois, note le numéro de chaque machine et son nom écrit en anglais ; photographie (de côté, plaque visible) celles que tu ne reconnais pas. Débloque : la vue Basic-Fit avec les bons numéros. Pour filmer au club, il faut d’abord l’accord écrit de Basic-Fit (règlement intérieur).
 0. **Envoyer une vidéo filmée, en ligne** · 3 minutes, c’est en ligne (D-173) · sur ton téléphone, Bibliothèque › Exercices › un exercice › « Ajouter ma vidéo (filmée au téléphone) » › filme 30 secondes à une minute. À vérifier : la barre d’avancement, « Vidéo enregistrée. », la vidéo qui se lit dans l’aperçu, puis chez un élève dans sa séance. Dis-moi ce qui accroche.
