@@ -64,7 +64,7 @@ describe('cardio sur machine en paliers (D-164)', () => {
 
   it('chaque cardio est une ligne avec ses paliers', () => {
     const v = sessionView(program, 'strength');
-    expect(v.rows[0]).toMatchObject({ title: 'Vélo elliptique', detail: '19 min · 4 paliers', stages: ['5 min · niveau 1', '7 min · niveau 2', '5 min · niveau 3', '2 min · niveau 1'] });
+    expect(v.rows[0]).toMatchObject({ title: 'Vélo elliptique', detail: 'Échauffement · 19 min · 4 paliers', stages: ['5 min · niveau 1', '7 min · niveau 2', '5 min · niveau 3', '2 min · niveau 1'] });
     expect(v.rows[2]).toMatchObject({ title: 'Rameur', badge: '4×' });
     expect(v.rows[3]!.title).toBe('Marche rapide');
     expect(v.minutes).toBe(Math.round(structureTotals(program).seconds / 60));

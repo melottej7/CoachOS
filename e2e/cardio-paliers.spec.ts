@@ -90,7 +90,8 @@ test('le coach programme un cardio en paliers ; l’élève le lit et le suit pa
   await camille.clock.install();
   await camille.goto(`/athlete/${WS_A}/workouts/${sid}/suivre`);
   // D-172 : l’écran « prêt·e ? » montre l’exercice et ses paliers ; « C’est parti », 5 s de mise en place, puis le palier 1.
-  await expect(camille.getByText('Exercice 1 sur 2', { exact: true })).toBeVisible();
+  // D-196 : le cardio en tête de séance est l’échauffement ; l’exercice qui suit est le seul.
+  await expect(camille.getByText('Échauffement', { exact: true })).toBeVisible();
   await expect(camille.getByRole('heading', { name: 'Vélo elliptique' })).toBeVisible();
   await expect(camille.getByText('19 min · 4 paliers', { exact: true })).toBeVisible();
   await expect(camille.getByRole('list', { name: 'Paliers à venir' }).getByRole('listitem')).toHaveCount(4);
@@ -118,7 +119,7 @@ test('le coach programme un cardio en paliers ; l’élève le lit et le suit pa
   await expect(camille.getByText('Palier 4 sur 4', { exact: true })).toBeVisible();
   await camille.clock.fastForward(2 * 60_000 + 1000);
   await expect(camille.getByText('Bravo, Vélo elliptique : fait !')).toBeVisible();
-  await expect(camille.getByText('Exercice 2 sur 2 · le dernier', { exact: true })).toBeVisible();
+  await expect(camille.getByText('Exercice', { exact: true })).toBeVisible();
   await expect(camille.getByRole('heading', { name: 'Squat goblet' })).toBeVisible();
   const elapsed = camille.getByLabel(/^Temps de séance/);
   await expect(elapsed).toHaveAttribute('aria-label', /, en pause$/);

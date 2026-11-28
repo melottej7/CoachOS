@@ -63,7 +63,9 @@ export function announce(f: FollowStep, next: FollowStep | null, prev: FollowSte
 
 /** D-172 · Annonce de l’écran entre deux exercices : bravo pour celui qui finit, ce qui vient, à son rythme. */
 export function announceExercise(e: FollowExercise, k: number, n: number, after: boolean): string {
-  const head = n > 1 && k === n ? 'Dernier exercice' : k === 1 ? 'Premier exercice' : 'Exercice suivant';
+  // D-196 : l’échauffement et le retour au calme s’annoncent comme tels ; k et n ne comptent que les exercices.
+  const head = e.phase === 'warmup' ? 'Échauffement' : e.phase === 'cooldown' ? 'Retour au calme'
+    : n > 1 && k === n ? 'Dernier exercice' : k === 1 ? 'Premier exercice' : 'Exercice suivant';
   return spoken([after ? 'Exercice terminé, bravo !' : null, `${head} : ${e.name}.`, e.summary ? `${e.summary}.` : null, 'Lance-toi quand tu veux.'].filter(Boolean).join(' '));
 }
 

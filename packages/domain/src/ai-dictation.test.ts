@@ -6,7 +6,7 @@ import { checkDictation, dictationRequestSchema, dictationUserMessage, simulateD
 describe('dicter une séance (IA-1)', () => {
   it('les exemples de la marche à suivre deviennent une séance lisible, exercices nommés comme connus', () => {
     const r = simulateDictation('échauffement 10 minutes vélo, puis presse 4 séries de 10 à 60 kilos, 2 minutes de repos, tirage poitrine 3 fois 12, gainage 3 fois 45 secondes', 'strength', ['Presse à cuisses', 'Gainage']);
-    expect(r.lignes).toEqual(["échauffement 10' RPE3 « vélo »", "4×10 presse à cuisses 60kg R2'", '3×12 tirage poitrine', '3×45" gainage']);
+    expect(r.lignes).toEqual(["échauffement 10' vélo RPE3", "4×10 presse à cuisses 60kg R2'", '3×12 tirage poitrine', '3×45" gainage']);
     const c = checkDictation(r.lignes, 'strength');
     expect(c.lines.every((l) => !l.error)).toBe(true);
     expect(c.notation).toBe(r.lignes.join(' + '));

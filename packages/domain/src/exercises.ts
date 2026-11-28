@@ -263,7 +263,11 @@ export function lastSetLabel(f: FollowStep): string | null {
 }
 
 /** D-172 · Un exercice du mode « Suivre » : une carte de la séance (un repos seul entre deux cartes n’en est pas un). */
-export interface FollowExercise { block: number; first: number; last: number; name: string; summary: string }
+export interface FollowExercise {
+  block: number; first: number; last: number; name: string; summary: string;
+  /** D-196 : un échauffement ou un retour au calme (cardio sur machine en tête ou en fin de séance) ; null pour un exercice. */
+  phase: 'warmup' | 'cooldown' | null;
+}
 
 /** Les exercices de la séance, dans l’ordre, avec un résumé lisible : « 19 min · 4 paliers », « 6 séries · 20 s · repos 40 s ». */
 export function followExercises(seq: FollowStep[]): FollowExercise[] {
@@ -294,7 +298,8 @@ export function followExercises(seq: FollowStep[]): FollowExercise[] {
         : null;
       summary = [rounds || null, each ?? measure(first), each ? null : describeIntensity(first.step.intensity), rest && measure(rest) ? `repos ${measure(rest)}` : null].filter(Boolean).join(' · ');
     }
-    return { block: first.block, first: g[0]!.index, last: g[g.length - 1]!.index, name: circuit ? 'Circuit' : stepName(first), summary };
+    const phase = first.step.phase === 'warmup' || first.step.phase === 'cooldown' ? first.step.phase : null;
+    return { block: first.block, first: g[0]!.index, last: g[g.length - 1]!.index, name: circuit ? 'Circuit' : stepName(first), summary, phase };
   });
 }
 

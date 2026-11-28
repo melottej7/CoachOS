@@ -63,7 +63,8 @@ function stepRow(s: Step, sport: Sport, refs?: References): SessionRow {
     const one = c.stages.length === 1 ? describeStageSettings(c.stages[0]!, c.machine) : null;
     return {
       zone: 0, title: cardioName(s),
-      detail: [total, c.stages.length > 1 ? `${c.stages.length} paliers` : one, s.note].filter(Boolean).join(' · '),
+      // D-196 : le cardio d’échauffement ou de retour au calme dit son rôle.
+      detail: [s.phase === 'warmup' ? 'Échauffement' : s.phase === 'cooldown' ? 'Retour au calme' : null, total, c.stages.length > 1 ? `${c.stages.length} paliers` : one, s.note].filter(Boolean).join(' · '),
       target: null, repeat: false, badge: null, exerciseIds: s.exercise?.id ? [s.exercise.id] : [],
       stages: c.stages.length > 1 ? c.stages.map((x) => describeStage(x, c.machine)) : [],
       stageBars: stageProfile(c),
@@ -131,7 +132,8 @@ export function sessionView(blocks: Block[], sport: Sport, refs?: References, de
     return { zone: maxZone(b), title: describeBlock(b, sport).replace(/ · Z\d \([^)]*\)/g, (m) => m.replace(/ \([^)]*\)/, '')), detail: null, target: key ? personalTarget(key, sport, refs) : null, repeat: true, badge: null, exerciseIds: [], stages: [], stageBars: [] };
   });
   const strengthSession = sport === 'strength' || blocks.some(hasExercise);
-  const exerciseNames = new Set(flat(blocks).filter((x) => x.exercise || x.cardio).map((x) => cardioName(x) || x.exercise!.name));
+  // D-196 : l’échauffement et le retour au calme ne comptent pas parmi les exercices.
+  const exerciseNames = new Set(flat(blocks).filter((x) => (x.exercise || x.cardio) && !(x.cardio && (x.phase === 'warmup' || x.phase === 'cooldown'))).map((x) => cardioName(x) || x.exercise!.name));
   const sets = blocks.reduce((n, b) => n + (b.type === 'repeat' && hasExercise(b) ? b.times : b.type === 'step' && b.exercise ? 1 : 0), 0);
   return {
     kind: strengthSession ? 'strength' : 'endurance',

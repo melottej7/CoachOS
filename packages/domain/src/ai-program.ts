@@ -14,7 +14,7 @@ import { SPORTS } from './workout';
  * « Enregistrer en brouillon » crée des séances non publiées.
  */
 
-export const AI_PROGRAM_PROMPT_VERSION = 'program-v1';
+export const AI_PROGRAM_PROMPT_VERSION = 'program-v2'; // v2 (D-196) : échauffement sur machine cardio en salle
 export const AI_PROGRAM_MAX_WEEKS = 12;
 const MAX_PER_WEEK = 6;
 const MAX_SESSION_SECONDS = 4 * 3600;
@@ -71,6 +71,7 @@ export const AI_PROGRAM_SYSTEM_PROMPT = [
   'Rôle : assistant interne d’un coach d’endurance et de musculation. Tu rédiges un brouillon de programme que le coach relira, corrigera et enregistrera lui-même. La décision est humaine ; rien n’est publié.',
   'Avant d’écrire, lis ce qui est utile avec les outils : lireEleve ou lireGroupe (niveau, repères), lireChargesRecentes (charges réellement faites), lireSeancesPrevues (séances déjà au calendrier, à ne pas doubler), listerExercices (bibliothèque et machines de la salle). Une dizaine d’appels au plus.',
   'Rends exactement le nombre de semaines demandé, numérotées à partir de 1, avec l’intention de chaque semaine en une phrase. Chaque séance : jour (1 = lundi … 7 = dimanche), sport, titre court, lignes dans la notation de CoachOS (la même que pour une séance dictée : 4×10 presse à cuisses 60kg R2\', 3×(8\' Z4 + R2\'), échauffement 10\' RPE3, 3×45" gainage).',
+  'Musculation en salle : la première ligne est l’échauffement sur une machine cardio, avec le mot échauffement, la durée, la machine et l’effort : échauffement 10\' vélo RPE3. Machines : tapis, vélo, elliptique, rameur, stepper, SkiErg ; réglages possibles : niveau 6, 6km/h, 5%, 90rpm, 2\'10/500m. La marche s’écrit sur le tapis (échauffement 10\' tapis 5km/h 5%), jamais comme un exercice. Retour au calme éventuel en dernière ligne : calme 5\' vélo RPE2.',
   'Charges : pars des charges réalisées quand elles existent ; sinon n’écris pas de kilos et ajoute la consigne « charge à choisir » entre guillemets après l’exercice. Pas de pourcentage du maximum.',
   'Progression prudente : pas plus de 10 % de volume en plus d’une semaine à l’autre, une semaine plus légère toutes les 3 ou 4 semaines, au plus 6 séances par semaine, jamais deux séances le même jour.',
   'Exercices : le nom exact de la bibliothèque ou des machines quand il existe ; sinon le mot du coach. N’invente pas de données sur l’élève.',
@@ -159,7 +160,7 @@ export function simulateProgram(input: ProgramSimInput): ProgramDraft {
           return of.length ? [of[si % of.length]!] : [];
         }) : [];
         if (!ex.length) ex.push(...(pool.length ? pick(pool, 4, si * 4) : [{ nom: 'squats', muscle: 'legs', machine: false }]));
-        const lignes = ["échauffement 10' RPE3", ...ex.map((e) => {
+        const lignes = ["échauffement 10' vélo RPE3", ...ex.map((e) => {
           const kg = input.loads[e.nom.toLowerCase()];
           return `3×${reps} ${e.nom.toLowerCase()}${kg ? ` ${Math.round(kg * 2) / 2}kg` : ' « charge à choisir »'} R1'30`;
         })];

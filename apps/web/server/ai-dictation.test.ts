@@ -49,11 +49,11 @@ describe('dicter une séance (IA-1)', () => {
   it('simulation : séance de salle lue ligne par ligne, exercices situés, journal sans élève ; endurance en zones', async () => {
     const r = await dictateWorkout(meta(USERS.marine), { text: GYM, sport: 'strength' });
     const b = r.body as DictationResponse;
-    expect(b).toMatchObject({ source: 'simulation', status: 'ready', notation: "échauffement 10' RPE3 « vélo » + 4×10 presse à cuisses 60kg R2' + 3×12 tirage poitrine + 3×45\" gainage" });
+    expect(b).toMatchObject({ source: 'simulation', status: 'ready', notation: "échauffement 10' vélo RPE3 + 4×10 presse à cuisses 60kg R2' + 3×12 tirage poitrine + 3×45\" gainage" });
     expect(b.lines.every((l) => !l.error)).toBe(true);
     expect(b.exercises).toEqual([{ name: 'Presse à cuisses', where: 'machine' }, { name: 'Tirage poitrine', where: 'unknown' }, { name: 'Gainage', where: 'library' }]);
     const row = (await commandAs(USERS.marine, (tx) => tx.query<{ module: string; athlete_id: string | null; prompt_version: string }>('select module, athlete_id, prompt_version from public.ai_suggestions where id = $1', [b.suggestionId]))).rows[0]!;
-    expect(row).toEqual({ module: 'dictation', athlete_id: null, prompt_version: 'dictation-v1' });
+    expect(row).toEqual({ module: 'dictation', athlete_id: null, prompt_version: 'dictation-v2' });
     const e = await dictateWorkout(meta(USERS.marine), { text: '3 fois 8 minutes à 90 % de VMA, récup 2 minutes', sport: 'running', athleteId: ATHLETES.noah });
     expect((e.body as DictationResponse).notation).toBe("3×(8' Z4 + R2')");
     const er = (await commandAs(USERS.marine, (tx) => tx.query<{ athlete_id: string }>('select athlete_id from public.ai_suggestions where id = $1', [(e.body as DictationResponse).suggestionId]))).rows[0]!;
