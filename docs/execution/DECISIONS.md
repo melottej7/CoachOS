@@ -2717,3 +2717,16 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
   5. trois à cinq coachs testeurs gratuits ;
   6. seulement ensuite le paiement, le domaine, les textes légaux et les prix.
 - **Reste en vigueur** : paiement éteint en ligne (`COACHOS_BILLING`), rien d’envoyé ni de publié sans geste du coach, base en ligne jamais terrain d’essai.
+
+## D-202 · Journée réelle : répondre, c’est traiter ; « à préparer » juste · 2026-11-28
+
+- **Pourquoi** : plan D-200, étape 2. Journée jouée en démonstration, élève au téléphone et coach sur ordinateur et téléphone ; les frictions sont corrigées par ordre d’utilité.
+- **Répondre, c’est traiter** : depuis un retour à traiter, la réponse rapide ou écrite part, marque le retour traité et ouvre le suivant (« Réponse envoyée, retour précédent traité · voici le suivant »). Même route et mêmes droits que « Marquer comme traité », qui reste pour traiter sans message.
+- **À préparer** : seuls comptent les 7 jours qui suivent aujourd’hui. Une séance du jour déjà faite n’est plus « prochaine ». Avant, un élève sans rien après sa séance du jour passait pour « prêt » ; il est maintenant à préparer, avec la ligne « séance aujourd’hui, rien ensuite ».
+- **Accueil** : majuscule en tête de phrase ; le groupe de tâches « Dans les 7 jours » remplace « Cette semaine », qui comptait déjà la semaine suivante.
+- **Séance** : plus de case « Intensité — libre » quand le coach n’a pas fixé de zone ; ses consignes disent l’allure.
+- **Écarté après examen** :
+  - « Suivre » pour la course : le mode Suivre est fait pour la salle ; question produit à trancher ;
+  - le tiret des séances sans zone garde l’alignement des listes ;
+  - l’échelle de ressenti reste cohérente (« facile » jusqu’à 4 sur 10).
+- **Vérifié** : 566 tests (dont « à préparer », qui échoue sans la correction), typecheck, construction ; 34 parcours, dont `repondre-traiter.spec.ts` et `coach-inconnu` mis à jour (Léa à préparer après sa seule séance) ; navigateur coach à 1440 et 390 px, élève à 390 px.

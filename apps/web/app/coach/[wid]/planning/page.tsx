@@ -30,6 +30,8 @@ type Search = { week?: string; athlete?: string; team?: string; kind?: string; p
 
 /** « une tâche », « un rendez-vous », « 3 élèves » : le nombre en lettres pour un, accordé au genre. */
 const n = (k: number, one: string, many: string, fem = false) => `${k === 1 ? (fem ? 'une' : 'un') : k} ${k > 1 ? many : one}`;
+/** D-202 : en tête de phrase, la majuscule (« Un élève n’a pas… »). */
+const N = (k: number, one: string, many: string) => { const t = n(k, one, many); return t[0]!.toUpperCase() + t.slice(1); };
 const list = (parts: ReactNode[]) => parts.flatMap((p, i) => (i === 0 ? [p] : [i === parts.length - 1 ? ' et ' : ', ', p]));
 
 /**
@@ -87,8 +89,8 @@ export default async function CoachHome({ params, searchParams }: { params: Prom
     ? (
       <>
         {parts.length ? <>Aujourd’hui, tu as {list(parts)}.</> : 'Rien d’urgent aujourd’hui : tout le monde est en rythme.'}
-        {toPlan ? <> <Link href={`${base}/to-plan`}>{n(toPlan, 'élève n’a', 'élèves n’ont')} pas de séance publiée</Link> sur les 7 prochains jours.</> : null}
-        {invited ? <> <Link href={`${base}/athletes?status=invited`}>{n(invited, 'élève n’a', 'élèves n’ont')} pas encore rejoint ton espace</Link>.</> : null}
+        {toPlan ? <> <Link href={`${base}/to-plan`}>{N(toPlan, 'élève n’a', 'élèves n’ont')} pas de séance publiée</Link> sur les 7 prochains jours.</> : null}
+        {invited ? <> <Link href={`${base}/athletes?status=invited`}>{N(invited, 'élève n’a', 'élèves n’ont')} pas encore rejoint ton espace</Link>.</> : null}
         {!simple && load.minutes + apptMin ? <> Environ {formatEstimate(load.minutes + apptMin)} de travail prévu.</> : null}
       </>
     )

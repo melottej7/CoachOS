@@ -296,7 +296,8 @@ export const updateAppointmentSchema = z
 
 export type Bucket = 'overdue' | 'today' | 'week' | 'later' | 'none';
 export const BUCKET_LABELS: Record<Bucket, string> = {
-  overdue: 'En retard', today: 'Aujourd’hui', week: 'Cette semaine', later: 'Plus tard', none: 'Sans échéance',
+  // D-202 : « dans les 7 jours » (un lundi vu un samedi n’est pas « cette semaine »).
+  overdue: 'En retard', today: 'Aujourd’hui', week: 'Dans les 7 jours', later: 'Plus tard', none: 'Sans échéance',
 };
 export const BUCKETS: Bucket[] = ['overdue', 'today', 'week', 'later', 'none'];
 

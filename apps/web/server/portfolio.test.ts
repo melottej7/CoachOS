@@ -247,3 +247,22 @@ describe('lot H · tâches, suivis automatiques, rendez-vous', () => {
     expect((await readAs(USERS.camille, (tx) => tx.query('select 1 from public.auto_rule_settings'))).rows).toHaveLength(0);
   });
 });
+
+describe('D-202 · à préparer : les 7 jours après aujourd’hui ; une séance du jour faite n’est plus « prochaine »', () => {
+  it('le retour envoyé retire la séance du jour de « prochaine » ; le compte ne regarde que la suite', async () => {
+    const { saveFeedback } = await import('./commands/feedback');
+    const { SEED_WORKOUTS } = await import('./db/seed');
+    const camille = async () => (await portfolio(USERS.marine, WORKSPACE_A, TIME_ZONE)).roster.find((r) => r.id === ATHLETES.camille)!;
+    const day = todayIn(TIME_ZONE);
+    const before = await camille();
+    expect(before.nextWorkout).toBe(day);
+    await saveFeedback({ actorId: USERS.camille, idempotencyKey: randomUUID(), requestId: randomUUID(), workspaceId: WORKSPACE_A, athleteId: ATHLETES.camille, workoutId: SEED_WORKOUTS.camilleToday } as never,
+      { publishedRevision: 1, state: 'completed', durationSeconds: 1800 });
+    const after = await camille();
+    expect(after.upcoming7).toBe(before.upcoming7);
+    expect(after.nextWorkout).not.toBe(day);
+    // La séance du jour ne compte jamais dans les 7 jours à préparer : seule la suite compte.
+    const sansSuite = (await portfolio(USERS.marine, WORKSPACE_A, TIME_ZONE)).roster.filter((r) => r.state === 'active' && !r.upcoming7);
+    for (const r of sansSuite) expect(r.nextWorkout === null || r.nextWorkout === day || r.nextWorkout > addDays(day, 7)).toBe(true);
+  });
+});

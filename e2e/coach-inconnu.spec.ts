@@ -128,10 +128,11 @@ test('club à trois groupes : de la création de l’espace au premier retour tr
   // Bilan produit : s’il reste un retour dans la file, le traitement enchaîne sur lui.
   await expect(coach.getByText(/Traité le|Retour précédent traité/).first()).toBeVisible();
 
-  // 9. Premiers pas terminés : la carte disparaît ; le brief rassure et signale les élèves à inviter ; mode simple.
+  // 9. Premiers pas terminés : la carte disparaît ; le brief signale les élèves à inviter ; mode simple.
+  // D-202 : Léa n’a rien après sa séance du jour : le brief dit qu’elle est à préparer (avant : « tout le monde est en rythme », à tort).
   await coach.goto(`/coach/${wid}/planning`);
   await expect(coach.getByRole('region', { name: 'Premiers pas' })).toHaveCount(0);
-  await expect(coach.getByText(/tout le monde est en rythme/)).toBeVisible();
+  await expect(coach.getByRole('link', { name: /Un élève n’a pas de séance publiée/ })).toBeVisible();
   await expect(coach.getByRole('link', { name: /4 élèves n’ont pas encore rejoint/ })).toBeVisible();
   await expect(coach.getByText(/Mode simple :/)).toBeVisible();
   await expect(coach.getByRole('button', { name: /Tâche/ })).toHaveCount(0);

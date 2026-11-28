@@ -62,6 +62,10 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
     ? `${base}/review/${next.id}${keep('notice=enchaine')}`
     : `${base}/review/${rid}${keep(`notice=reviewed${from ? `&from=${from}` : ''}`)}`;
   const tz = ctx.workspace.timeZone;
+  // D-202 : après une réponse, le retour est traité ; on enchaîne sur le suivant comme après « Marquer comme traité ».
+  const afterReply = next && from !== 'calendar'
+    ? `${base}/review/${next.id}${keep('notice=repondu-suivant')}`
+    : `${base}/review/${rid}${keep(`notice=repondu${from ? `&from=${from}` : ''}`)}`;
   const snoozeAfter = from === 'calendar' ? calendarHref : `${base}/review${keep('notice=snoozed')}`;
   const done = fb.reviewedAt !== null;
   const view = observed ? sessionView(observed.intervals, observed.sport, refs, observed.durationSeconds) : null;
@@ -104,6 +108,8 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
       <Cluster><LinkButton href={back.href} variant="ghost" size="sm" icon="chevronLeft">{back.label}</LinkButton></Cluster>
       {notice === 'reviewed' && done ? <Banner tone="success" title="Retour marqué comme traité" /> : null}
       {notice === 'enchaine' ? <Banner tone="success" title="Retour précédent traité · voici le suivant" /> : null}
+      {notice === 'repondu' && done ? <Banner tone="success" title="Réponse envoyée, retour traité" /> : null}
+      {notice === 'repondu-suivant' ? <Banner tone="success" title="Réponse envoyée, retour précédent traité · voici le suivant" /> : null}
       <Stack gap={2}>
         <Eyebrow tone="coach"><AthleteLink wid={wid} id={item.athleteId}>{item.athleteName}</AthleteLink>{observed ? ` · ${formatLongDate(observed.localDate)}` : ''}</Eyebrow>
         <Heading level={1} size={1}>Retour de {first}</Heading>
@@ -176,7 +182,8 @@ export default async function ReviewDetail({ params, searchParams }: { params: P
       <Card as="section" pad={5} aria-labelledby="treat">
         <Stack gap={5}>
           <Heading level={2} size={4} id="treat">Traiter</Heading>
-          <QuickReply wid={wid} athleteId={item.athleteId} first={first} workoutId={w.id} />
+          <QuickReply wid={wid} athleteId={item.athleteId} first={first} workoutId={w.id}
+            review={done ? undefined : { sid: w.id, expectedRevision: fb.revision, after: afterReply }} />
           {done ? (
             <Text>Traité le {new Intl.DateTimeFormat('fr-BE', { dateStyle: 'long', timeStyle: 'short', timeZone: w.athlete.timeZone }).format(new Date(fb.reviewedAt!))}.</Text>
           ) : (

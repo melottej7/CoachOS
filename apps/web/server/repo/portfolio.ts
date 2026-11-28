@@ -153,6 +153,9 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
        from public.workouts w join public.workout_revisions r
          on r.workspace_id = w.workspace_id and r.athlete_id = w.athlete_id and r.workout_id = w.id and r.number = w.published_revision
        where w.workspace_id = $1 and w.athlete_id = any($2::uuid[]) and w.published_revision is not null and not r.canceled and r.local_date >= $3::date
+         -- D-202 : une séance du jour déjà faite (retour envoyé) n’est plus « à venir » : sinon « tout le monde est prêt » à tort.
+         and (r.local_date > $3::date or not exists (select 1 from public.workout_results res
+              where res.workspace_id = w.workspace_id and res.athlete_id = w.athlete_id and res.workout_id = w.id))
        order by r.local_date`, [today]);
   const lastFromAthlete = await q<{ athlete_id: string; conversation_id: string; created_at: Date; body: string }>(
     `select c.athlete_id, c.id as conversation_id, lm.created_at, lm.body
@@ -217,7 +220,8 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
     const vmaRaw = refsBy.get(a.id)?.[0]?.vma_kmh ?? null;
     const vmaKmh = vmaRaw === null ? null : Number(vmaRaw);
     const upcoming = (workoutsBy.get(a.id) ?? []).map((w) => w.local_date);
-    const upcoming7 = upcoming.filter((d) => d <= end).length;
+    // D-202 : « à préparer » regarde les 7 jours après aujourd’hui ; la séance du jour est déjà entre les mains de l’élève.
+    const upcoming7 = upcoming.filter((d) => d > today && d <= addDays(end, 1)).length;
     const athleteRef = { id: a.id, name: a.display_name, timeZone: a.time_zone };
     const auto: HomeTask[] = [];
     const push = (rule: AutoRule, ref: string, dueOn: string | null, link: string, detail?: string | null) => {
@@ -238,7 +242,7 @@ async function loadRoster(tx: Tx, wid: string, today: LocalDate, tz: string): Pr
     }
     if (a.state === 'invited') push('invite_pending', a.id, addDays(localDay(a.created_at), delay('invite_pending')), athleteFileHref(wid, a.id, 'inv-title'));
     if (a.state === 'active') {
-      if (!upcoming.some((d) => d <= horizonEnd)) push('no_upcoming', a.id, today, `${base}/calendar?athlete=${a.id}`);
+      if (!upcoming.some((d) => d > today && d <= addDays(horizonEnd, 1))) push('no_upcoming', a.id, today, `${base}/calendar?athlete=${a.id}`);
       if (!profile) {
         const d = drafts.get(a.id);
         push('profile_missing', a.id, null, athleteFileHref(wid, a.id, 'bilan'), d ? `bilan commencé, ${d.answered} réponse${d.answered > 1 ? 's' : ''} sur ${d.total}` : null);
