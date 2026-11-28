@@ -1,8 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { cx } from './cx';
 import { ChoiceGroup } from './form';
+import { Icon } from './icons';
+import nav from './nav.module.css';
 
 export type ThemeChoice = 'system' | 'light' | 'dark';
 export type DensityChoice = 'comfortable' | 'compact';
@@ -26,6 +29,53 @@ export function ThemeChoiceGroup({ initial, hideLegend }: { initial: ThemeChoice
         else document.documentElement.setAttribute('data-theme', v);
         router.refresh();
       }} />
+  );
+}
+
+/**
+ * D-198 · Thème réellement affiché (le choix, sinon celui du système), suivi en direct, et le geste qui bascule.
+ * Le choix est mémorisé sur cet appareil comme dans les réglages ; « Automatique » reste dans les réglages.
+ */
+function useDarkTheme(): [boolean, () => void] {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    const root = document.documentElement;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const read = () => { const t = root.getAttribute('data-theme'); setDark(t ? t === 'dark' : mq.matches); };
+    read();
+    mq.addEventListener('change', read);
+    const mo = new MutationObserver(read);
+    mo.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => { mq.removeEventListener('change', read); mo.disconnect(); };
+  }, []);
+  const toggle = () => {
+    const v = dark ? 'light' : 'dark';
+    setCookie('coachos_theme', v);
+    document.documentElement.setAttribute('data-theme', v);
+    setDark(!dark);
+  };
+  return [dark, toggle];
+}
+
+/** D-198 · Interrupteur de l’en-tête : la lune passe en sombre, le soleil revient en clair. */
+export function ThemeSwitch() {
+  const [dark, toggle] = useDarkTheme();
+  return (
+    <button type="button" role="switch" aria-checked={dark} aria-label="Mode sombre" title={dark ? 'Passer en clair' : 'Passer en sombre'}
+      className={cx(nav.bell, nav.themeSwitch)} onClick={toggle}>
+      <Icon name={dark ? 'sun' : 'moon'} size={22} />
+    </button>
+  );
+}
+
+/** D-198 · Ligne « Mode sombre » du menu du compte, avec son interrupteur. */
+export function ThemeMenuSwitch({ className }: { className?: string }) {
+  const [dark, toggle] = useDarkTheme();
+  return (
+    <button type="button" role="switch" aria-checked={dark} className={cx(className, nav.themeRow)} onClick={toggle}>
+      <Icon name="moon" size={18} />Mode sombre
+      <span className={nav.track} data-on={dark || undefined} aria-hidden="true"><span className={nav.thumb} /></span>
+    </button>
   );
 }
 

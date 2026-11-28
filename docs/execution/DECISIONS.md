@@ -2695,3 +2695,13 @@ Reçue le 23 novembre 2026, après D-120 qu’elle précise et prolonge ; relue 
 - **IA** : consignes program-v2 et dictation-v2 (échauffement sur machine, jamais la marche comme exercice) ; la séance dictée se relit en entier, comme à l’enregistrement ; la simulation suit.
 - **Élève** : la fiche dit « Échauffement · 10 min » et ne compte plus ce cardio parmi les exercices. « Suivre » annonce « Échauffement : Tapis de course » puis « Exercice 1 sur 2 », avec « Passer l’échauffement ».
 - **Vérifié** : 11 tests, 565 au total ; typecheck ; construction ; 31 parcours de bout en bout. Navigateur : coach et élève à 1440 et 390 px, de la demande à l’IA au mode Suivre. Aucune route ni droit nouveau.
+
+## D-198 · Interrupteur clair ou sombre à portée de main · 2026-11-28
+
+- **Retour du fondateur** : « je ne trouve pas le mode clair et sombre ». Le choix existait (D-128), mais caché dans Paramètres, Mon compte et le profil de l’élève.
+- **Coach** : ligne « Mode sombre » avec son interrupteur dans le menu du compte (avatar), sur ordinateur comme sur téléphone ; le menu reste ouvert pour voir le changement.
+- **Élève** : une lune dans l’en-tête, à côté de l’aide ; le soleil remet en clair.
+- **Comportement** : l’interrupteur part du thème réellement affiché (choix, sinon celui du système) et le garde sur cet appareil, dans le même cookie que les réglages. « Automatique » reste dans Mon compte et dans le profil.
+- **En-tête** : icônes de 44 px sans écart entre elles, pour que le nom de l’espace tienne à 390 px malgré l’icône de plus.
+- **Aide** : un article « Passer en mode sombre » pour chaque public, trouvé par « sombre », « thème », « nuit ».
+- **Vérifié** : 565 tests (dont la recherche « sombre »), typecheck, construction ; 33 parcours (la page publique a raté une fois sous charge, verte seule), dont `theme.spec.ts` ; navigateur coach et élève à 1440 et 390 px. Aucune route ni droit nouveau.

@@ -14,10 +14,11 @@
 }
 
 /* En-tête compact */
-.header { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: var(--ds-3); height: 56px; padding: 0 var(--ds-4); background: color-mix(in srgb, var(--ds-bg) 88%, transparent); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid var(--ds-rule); }
+.header { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: var(--ds-2); height: 56px; padding: 0 var(--ds-4); background: color-mix(in srgb, var(--ds-bg) 88%, transparent); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid var(--ds-rule); }
 .brand { display: flex; align-items: center; gap: var(--ds-3); min-width: 0; text-decoration: none; color: var(--ds-ink); font-weight: 700; }
 .brandName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.headerActions { display: flex; align-items: center; gap: var(--ds-1); }
+/* D-198 : icônes de 44 px côte à côte, sans écart (leur dessin de 22 px laisse déjà l’air) : le nom de l’espace garde sa place. */
+.headerActions { display: flex; align-items: center; gap: 0; }
 /* Flèche de retour des pages intérieures (retour du fondateur) : cible de 44 px, au bord gauche. */
 .headerStart { display: flex; align-items: center; gap: var(--ds-1); min-width: 0; }
 .back { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-inline-start: calc(-1 * var(--ds-2)); padding: 0; border: 0; border-radius: var(--ds-radius); background: transparent; color: var(--ds-ink); cursor: pointer; }
@@ -26,3 +27,13 @@
 .bell { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: var(--ds-radius); color: var(--ds-ink); text-decoration: none; }
 .bell:hover { background: var(--ds-surface-2); }
 .bellDot { position: absolute; top: 9px; right: 9px; width: 9px; height: 9px; border-radius: 50%; background: var(--ds-signal); box-shadow: 0 0 0 2px var(--ds-bg); }
+
+/* D-198 · Interrupteur clair ou sombre : bouton de l’en-tête, et ligne du menu du compte avec sa glissière. */
+.themeSwitch { border: 0; background: transparent; font: inherit; cursor: pointer; }
+.themeSwitch:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+.themeRow { justify-content: flex-start; }
+.track { position: relative; flex: none; width: 36px; height: 20px; margin-left: auto; border-radius: 999px; background: var(--ds-rule-strong); transition: background 0.15s; }
+.track[data-on] { background: var(--ds-coach); }
+.thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--ds-surface); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25); transition: transform 0.15s; }
+.track[data-on] .thumb { transform: translateX(16px); }
+@media (prefers-reduced-motion: reduce) { .track, .thumb { transition: none; } }

@@ -6,6 +6,7 @@ import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { Icon, type IconName } from './icons';
 import { cx } from './cx';
 import s from './coach-nav.module.css';
+import { ThemeMenuSwitch } from './theme';
 
 export interface NavItem { href: string; label: string; short?: string; icon: IconName; count?: number; countLabel?: string; also?: string[]; tour?: string }
 
@@ -118,6 +119,7 @@ export function AccountMenu({ trigger, name, role, entries, signOut, placement =
         {entries.map((e) => (
           <Link key={e.href} href={e.href} className={s.menuItem} data-tour={e.tour}><Icon name={e.icon} size={18} />{e.label}</Link>
         ))}
+        <ThemeMenuSwitch className={s.menuItem} />
         <form action={signOut} method="post">
           <button type="submit" className={s.menuItem}><Icon name="logout" size={18} />Se déconnecter</button>
         </form>
