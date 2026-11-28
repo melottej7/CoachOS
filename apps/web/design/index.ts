@@ -17,5 +17,5 @@ export { Disclosure, MediaVideo } from './disclosure';
 export { SegmentedLinks, WeekDays, MonthGrid, type CalendarDay, type CalendarItem } from './calendar';
 export { WeekBars, type ChartBar } from './chart';
 export { DataTable } from './table';
-export { ThemeChoiceGroup, DensityChoiceGroup, ModeChoiceGroup, setSimpleMode, type ThemeChoice, type DensityChoice, type ModeChoice } from './theme';
+export { ThemeChoiceGroup, ThemeSwitch, ThemeMenuSwitch, DensityChoiceGroup, ModeChoiceGroup, setSimpleMode, type ThemeChoice, type DensityChoice, type ModeChoice } from './theme';
 export { Popover, MenuItem } from './popover';

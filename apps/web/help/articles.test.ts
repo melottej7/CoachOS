@@ -37,6 +37,9 @@ describe('centre d’aide (D-194)', () => {
     expect(searchHelp('ecrire', 'coach')[0]!.slug).toBe('ecrire-seance');
     expect(searchHelp('INVITER', 'coach')[0]!.slug).toBe('inviter-eleves');
     expect(searchHelp('pyramide', 'coach')[0]!.slug).toBe('series-charges');
+    // D-198 : l’interrupteur clair ou sombre se trouve par la recherche, des deux côtés.
+    expect(searchHelp('sombre', 'coach')[0]!.slug).toBe('mode-sombre');
+    expect(searchHelp('thème nuit', 'athlete')[0]!.slug).toBe('mode-sombre');
     expect(searchHelp('carte bancaire', 'coach').map((a) => a.slug)).toContain('abonnement');
     expect(searchHelp('silencieux', 'athlete')[0]!.slug).toBe('son-voix');
     expect(searchHelp('pause', 'athlete')[0]!.slug).toBe('suivre-seance');

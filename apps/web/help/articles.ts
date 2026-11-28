@@ -248,6 +248,18 @@ export const HELP_ARTICLES: readonly HelpArticle[] = [
     ],
     links: [{ label: 'Mes données', to: 'settings?onglet=donnees' }, { label: 'Confidentialité', to: '/confidentialite' }],
   },
+  {
+    slug: 'mode-sombre', audience: 'coach', theme: 'Compte et données',
+    title: 'Passer en mode sombre',
+    summary: 'Clair ou sombre en un geste, gardé sur cet appareil.',
+    keywords: 'mode sombre clair theme apparence nuit noir fonce couleurs ecran',
+    steps: [
+      'Touche ton avatar : en bas à gauche sur ordinateur, en haut à droite sur téléphone.',
+      'Active ou coupe l’interrupteur « Mode sombre ».',
+    ],
+    tips: ['« Automatique » (comme ton ordinateur ou ton téléphone) se choisit dans Mon compte › Apparence.'],
+    links: [{ label: 'Mon compte', to: '/profile' }],
+  },
 
   // ---------- Élève ----------
   {
@@ -320,6 +332,15 @@ export const HELP_ARTICLES: readonly HelpArticle[] = [
     summary: 'Ce que tu as dit à ton coach à ton arrivée, et comment le mettre à jour.',
     keywords: 'profil bilan questionnaire niveau objectif disponibilites materiel',
     steps: ['Touche ta photo en haut à droite.', 'Mets à jour ton bilan quand ta situation change : ton coach le voit.'],
+    links: [{ label: 'Mon profil', to: 'setup' }],
+  },
+  {
+    slug: 'mode-sombre', audience: 'athlete', theme: 'Mon coach',
+    title: 'Passer en mode sombre',
+    summary: 'Clair ou sombre en un geste, gardé sur ce téléphone.',
+    keywords: 'mode sombre clair theme apparence nuit noir fonce couleurs ecran lune soleil',
+    steps: ['Touche la lune en haut de l’écran : l’app passe en sombre.', 'Le soleil, au même endroit, la remet en clair.'],
+    tips: ['« Automatique » (comme ton téléphone) se choisit dans ton profil : touche ta photo, puis Apparence.'],
     links: [{ label: 'Mon profil', to: 'setup' }],
   },
   {
