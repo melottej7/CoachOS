@@ -44,7 +44,7 @@ Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en dire
 
 **Échauffement sur machine cardio (D-196, retour du fondateur du 28 novembre, sans migration, en ligne par la Pull Request n° 25 ; `/api/health` répond `"db":"ok"` et `"ai":"claude"`)** : en musculation, « échauffement 10' vélo RPE3 », « 10' tapis 6km/h 5% » ou « 10' marche » deviennent un cardio sur machine, échauffement en tête et retour au calme en fin ; consignes de l’IA program-v2 et dictation-v2 ; l’élève lit « Échauffement » dans la fiche et dans « Suivre ».
 
-**Interrupteur clair ou sombre (D-198, retour du fondateur du 28 novembre, sans migration, branche `interrupteur-theme`, attend sa Pull Request)** : « Mode sombre » dans le menu du compte du coach, lune ou soleil dans l’en-tête de l’élève ; article d’aide pour chacun.
+**Interrupteur clair ou sombre (D-198, retour du fondateur du 28 novembre, sans migration, en ligne par la Pull Request n° 26 ; `/api/health` répond `"db":"ok"`)** : « Mode sombre » dans le menu du compte du coach, lune ou soleil dans l’en-tête de l’élève ; article d’aide pour chacun.
 
 **Prochaine tranche** : l’IA réelle répond en ligne depuis le 28 novembre (`/api/health` : `"ai":"claude"`, clé « CoachOS en ligne »). Après la fusion de D-196 : le plan « utilisable d’abord » proposé au fondateur le 28 novembre, à valider : (1) l’IA essayée sur de vrais usages, (2) boucle quotidienne sans friction et bouton « Une idée, un souci ? », (3) mesure du temps gagné, (4) besoins manquants (notifications ; Strava et Garmin quand la société existe), (5) trois à cinq coachs testeurs gratuits, (6) seulement ensuite le paiement, le domaine, les textes légaux et les prix.
 
