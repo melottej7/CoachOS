@@ -1,6 +1,6 @@
 # État d’exécution
 
-Dernière mise à jour : 2026-11-28 (D-161 à D-198). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
+Dernière mise à jour : 2026-11-28 (D-161 à D-200). Reprendre ici : ce fichier suffit pour repartir ; n’ouvrir les autres documents (DECISIONS, COUVERTURE, docs/16…) que pour la section utile à la tranche en cours. Historique : [HISTORIQUE.md](HISTORIQUE.md).
 
 ## Où en est CoachOS
 
@@ -12,7 +12,7 @@ Dernière mise à jour : 2026-11-28 (D-161 à D-198). Reprendre ici : ce fichier
 
 **Pas prouvé** : la boucle complète en ligne avec un vrai élève (il faut un domaine pour que les e-mails partent vers d’autres adresses) ; réception d’un rappel push sur un téléphone ; suppression d’un compte Auth en ligne ; sauvegarde de la base en ligne (`npm run db:backup`) jamais exécutée (la restauration est essayée en local, D-163) ; migrations automatiques à la construction (variables Vercel à saisir) ; Action GitHub (premier push à venir).
 
-**Chiffres** : `npm test` 565 passés au 28 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, 23 fichiers de parcours de bout en bout (33 parcours, verts le 28 novembre), revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
+**Chiffres** : `npm test` 566 passés au 28 novembre (3 ignorés sans Docker), typecheck OK, `npm run build` OK, 24 fichiers de parcours de bout en bout (34 parcours, verts le 28 novembre), revue de sécurité du 23 novembre sans faille haute ou moyenne (D-115).
 
 **Ce que le produit fait** : la matrice [COUVERTURE.md](COUVERTURE.md) (cible coach et élève, D-024) et les décisions D-001 à D-122 dans [DECISIONS.md](DECISIONS.md). En deux lignes : un coach planifie des séances structurées par sport (zones VMA, FTP, CSS), des programmes générés selon sa méthode, des groupes, des tâches, des relances, des bilans ; l’élève lit sa séance sur téléphone (hors ligne, montre, pas à pas en musculation), envoie son retour, échange avec son coach ; les données personnelles ont leur page, leur export et leur effacement.
 
@@ -44,13 +44,19 @@ Espace élève (D-129 à D-141) et espace coach (D-143 à D-160) refaits en dire
 
 **Échauffement sur machine cardio (D-196, retour du fondateur du 28 novembre, sans migration, en ligne par la Pull Request n° 25 ; `/api/health` répond `"db":"ok"` et `"ai":"claude"`)** : en musculation, « échauffement 10' vélo RPE3 », « 10' tapis 6km/h 5% » ou « 10' marche » deviennent un cardio sur machine, échauffement en tête et retour au calme en fin ; consignes de l’IA program-v2 et dictation-v2 ; l’élève lit « Échauffement » dans la fiche et dans « Suivre ».
 
-**Interrupteur clair ou sombre (D-198, retour du fondateur du 28 novembre, sans migration, branche `interrupteur-theme`, attend sa Pull Request)** : « Mode sombre » dans le menu du compte du coach, lune ou soleil dans l’en-tête de l’élève ; article d’aide pour chacun.
+**Interrupteur clair ou sombre (D-198, retour du fondateur du 28 novembre, sans migration, en ligne par la Pull Request n° 26 ; `/api/health` répond `"db":"ok"`)** : « Mode sombre » dans le menu du compte du coach, lune ou soleil dans l’en-tête de l’élève ; article d’aide pour chacun.
 
-**Prochaine tranche** : l’IA réelle répond en ligne depuis le 28 novembre (`/api/health` : `"ai":"claude"`, clé « CoachOS en ligne »). Après la fusion de D-196 : le plan « utilisable d’abord » proposé au fondateur le 28 novembre, à valider : (1) l’IA essayée sur de vrais usages, (2) boucle quotidienne sans friction et bouton « Une idée, un souci ? », (3) mesure du temps gagné, (4) besoins manquants (notifications ; Strava et Garmin quand la société existe), (5) trois à cinq coachs testeurs gratuits, (6) seulement ensuite le paiement, le domaine, les textes légaux et les prix.
+**Journée réelle (D-202, plan D-200 étape 2, sans migration, branche `fluidite-quotidienne`, attend sa Pull Request)** : répondre à un retour le traite et passe au suivant ; « à préparer » ne regarde que les 7 jours après aujourd’hui ; Accueil corrigé (majuscule, « Dans les 7 jours ») ; plus de case « Intensité — libre ».
+
+**Plan en vigueur (D-200, validé par le fondateur le 28 novembre)** : utilisable d’abord, vendre ensuite. (1) l’IA essayée sur de vrais usages ; (2) boucle quotidienne sans friction et bouton « Une idée, un souci ? » ; (3) mesure du temps gagné ; (4) notifications, puis Strava et Garmin quand la société existe ; (5) trois à cinq coachs testeurs gratuits ; (6) seulement ensuite paiement, domaine, textes légaux, prix. L’IA réelle répond en ligne depuis le 28 novembre (`"ai":"claude"`).
+
+**Prochaine tranche** : traiter d’abord les retours du fondateur sur l’IA (point 0 ci-dessous). Sinon, suite de l’étape 2 : le bouton « Une idée, un souci ? », coach et élève, qui range le message avec la page d’où il part, l’espace et le rôle, sans donnée de santé ; le fondateur les lit dans une liste. À concevoir : table additive ou envoi par e-mail (Resend en ligne, `contact` encore éteint) ; puis la boucle quotidienne jouée de bout en bout par un coach et un élève, chaque friction notée et corrigée.
 
 ## Pour le fondateur
 
 Liste unique, dans l’ordre d’utilité. Pour chaque point : ce que c’est, pourquoi, ce que ça débloque, le temps, les clics. Tout le reste avance sans toi.
+
+0. **Essayer l’IA sur tes vrais usages** · 20 minutes, en ligne · plan D-200, étape 1 · (a) dicte une vraie séance (éditeur de séance › « Dicter ou écrire avec l’IA ») ; (b) demande un vrai programme (dossier d’un élève › « Programme avec l’IA ») ; (c) importe un ancien programme en photo ou PDF (Bibliothèque › « Importer » › « Un programme entier » › « Depuis une photo ou un PDF »). Pour chaque essai, envoie-moi une photo d’écran de ce qui ne va pas : je corrige avant tout le reste. Coût : quelques centimes par dictée, 30 centimes à 1 $ par programme.
 
 00 bis. **Cocher les machines de ton club Basic-Fit** · 15 minutes à la salle · [MACHINES_A_COCHER.md](MACHINES_A_COCHER.md) › coche ce que tu vois, note le numéro de chaque machine et son nom écrit en anglais ; photographie (de côté, plaque visible) celles que tu ne reconnais pas. Débloque : la vue Basic-Fit avec les bons numéros. Pour filmer au club, il faut d’abord l’accord écrit de Basic-Fit (règlement intérieur).
 0. **Envoyer une vidéo filmée, en ligne** · 3 minutes, c’est en ligne (D-173) · sur ton téléphone, Bibliothèque › Exercices › un exercice › « Ajouter ma vidéo (filmée au téléphone) » › filme 30 secondes à une minute. À vérifier : la barre d’avancement, « Vidéo enregistrée. », la vidéo qui se lit dans l’aperçu, puis chez un élève dans sa séance. Dis-moi ce qui accroche.

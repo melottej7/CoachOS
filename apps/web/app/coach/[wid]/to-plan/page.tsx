@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { formatShortDate, formatWeekday, SPORT_LABELS } from '@coachos/domain';
+import { formatShortDate, formatWeekday, SPORT_LABELS, todayIn } from '@coachos/domain';
 import { requireActor } from '@/server/auth/session';
 import { coachContext } from '@/server/repo/context';
 import { portfolio } from '@/server/repo/portfolio';
@@ -22,11 +22,14 @@ export default async function ToPlan({ params }: { params: Promise<{ wid: string
   const todo = roster.filter((a) => a.state === 'active' && !a.upcoming7);
   const later = roster.filter((a) => a.state === 'active' && a.upcoming7 > 0).sort((a, b) => (a.nextWorkout ?? '').localeCompare(b.nextWorkout ?? ''));
   const invited = roster.filter((a) => a.state === 'invited');
+  const today = todayIn(ctx.workspace.timeZone);
+  // D-202 : la séance du jour seule, puis rien : on le dit tel quel.
+  const next = (d: string) => (d === today ? 'séance aujourd’hui, rien ensuite' : `prochaine séance ${short(d)}`);
   return (
     <Stack gap={8}>
       <Stack gap={1}>
         <Heading level={1} size={1}>À préparer</Heading>
-        <Text muted>Les élèves sans séance publiée sur les 7 prochains jours, d’abord.</Text>
+        <Text muted>Les élèves sans séance publiée sur les 7 jours qui suivent aujourd’hui, d’abord.</Text>
       </Stack>
       <Stack as="section" gap={3} aria-labelledby="todo-plan">
         <Cluster gap={2}><Heading level={2} size={4} id="todo-plan">Programme à préparer</Heading>{todo.length ? <Badge tone="signal">{todo.length} élève{todo.length > 1 ? 's' : ''}</Badge> : null}</Cluster>
@@ -37,7 +40,7 @@ export default async function ToPlan({ params }: { params: Promise<{ wid: string
                 <Avatar name={a.name} size={40} />
                 <span className={s.rowText}>
                   <Link className={s.rowTitle} href={`${base}/athletes/${a.id}`}>{a.name}</Link>
-                  <span className={s.rowMeta}>{a.sport ? SPORT_LABELS[a.sport] : 'Sport non renseigné'}{a.teams.length ? ` · ${a.teams.map((t) => t.name).join(', ')}` : ''}{a.nextWorkout ? ` · prochaine séance ${short(a.nextWorkout)}` : ' · aucune séance à venir'}</span>
+                  <span className={s.rowMeta}>{a.sport ? SPORT_LABELS[a.sport] : 'Sport non renseigné'}{a.teams.length ? ` · ${a.teams.map((t) => t.name).join(', ')}` : ''}{a.nextWorkout ? ` · ${next(a.nextWorkout)}` : ' · aucune séance à venir'}</span>
                 </span>
                 <Cluster gap={2}>
                   <LinkButton href={`${base}/library?pour=${a.id}`} size="sm">Depuis la bibliothèque</LinkButton>

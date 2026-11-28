@@ -60,8 +60,15 @@ export function RequeueReview({ wid, rid }: { wid: string; rid: string }) {
   );
 }
 
-/** Répondre en un geste : phrases toutes faites ou texte libre ; le message part seulement quand on clique. */
-export function QuickReply({ wid, athleteId, first, workoutId }: { wid: string; athleteId: string; first: string; workoutId?: string }) {
+/**
+ * Répondre en un geste : phrases toutes faites ou texte libre ; le message part seulement quand on clique.
+ * D-202 : depuis un retour à traiter (`review`), répondre le marque aussi traité et passe au suivant : répondre, c’est traiter.
+ */
+export function QuickReply({ wid, athleteId, first, workoutId, review }: {
+  wid: string; athleteId: string; first: string; workoutId?: string;
+  review?: { sid: string; expectedRevision: number; after: string };
+}) {
+  const router = useRouter();
   const [sent, setSent] = useState<string | null>(null);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -71,12 +78,21 @@ export function QuickReply({ wid, athleteId, first, workoutId }: { wid: string; 
     setBusy(true); setError(null);
     const c = await mutate<{ id: string }>('POST', `/api/v1/workspaces/${wid}/athletes/${athleteId}/conversations`, {}, newKey());
     const r = c.ok ? await mutate('POST', `/api/v1/workspaces/${wid}/conversations/${c.data.id}/messages`, { body, workoutId: workoutId ?? null }, newKey()) : null;
+    if (!r?.ok) { setBusy(false); setError('Envoi impossible. Ton texte est gardé : réessaie.'); return; }
+    setSent(body); setText('');
+    if (review) {
+      const done = await mutate('POST', `/api/v1/workspaces/${wid}/athletes/${athleteId}/workouts/${review.sid}/feedback/review`, { expectedRevision: review.expectedRevision }, newKey());
+      if (done.ok) { router.replace(review.after); router.refresh(); return; }
+      setError('Message envoyé. Le retour a changé entre-temps : relis-le, puis marque-le traité.');
+      router.refresh();
+    }
     setBusy(false);
-    if (r?.ok) { setSent(body); setText(''); } else setError('Envoi impossible. Ton texte est gardé : réessaie.');
   }
   return (
     <Stack gap={3}>
-      <Text size="sm" muted>Répondre à {first} en un geste : le message part seulement quand tu cliques.</Text>
+      <Text size="sm" muted>{review
+        ? <>Répondre à {first} en un geste : le message part quand tu cliques, et le retour est marqué traité.</>
+        : <>Répondre à {first} en un geste : le message part seulement quand tu cliques.</>}</Text>
       <Cluster gap={2} className={s.quick}>
         {QUICK_REPLIES.map((q) => <Button key={q} size="sm" disabled={busy} onClick={() => void send(q)}>{q}</Button>)}
       </Cluster>

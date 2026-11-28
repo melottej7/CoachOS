@@ -26,7 +26,8 @@ export function SessionStats({ view }: { view: SessionView }) {
       // Sans durée calculable (distance sans allure connue), on dit pourquoi au lieu d’un « environ » sans valeur.
       { label: 'Durée', value: view.minutes ?? '—', unit: view.minutes ? ' min' : undefined, sub: view.minutes ? (view.minutesApprox ? 'environ' : undefined) : 'selon l’allure' },
       ...(view.km ? [{ label: 'Distance', value: view.km.replace(/\s?(km|m)$/, ''), unit: ` ${view.km.endsWith('km') ? 'km' : 'm'}`, sub: view.kmApprox ? 'environ' : undefined }] : []),
-      { label: 'Intensité', value: view.keyZone ? `Z${view.keyZone}` : '—', sub: view.keyZone ? ZONE_NAMES[view.keyZone as Zone] : 'libre' },
+      // D-202 : de même, sans zone, pas de case « Intensité — libre » ; les consignes du coach disent l’allure.
+      ...(view.keyZone ? [{ label: 'Intensité', value: `Z${view.keyZone}`, sub: ZONE_NAMES[view.keyZone as Zone] }] : []),
     ]} />
   );
 }
